@@ -91,11 +91,6 @@
 
             <fieldset class="filter-section year-range-filter">
               <legend>发行年份</legend>
-              <div class="year-range-labels" aria-live="polite">
-                <output id="release-year-start-label">1989</output>
-                <span>至</span>
-                <output id="release-year-end-label">2026</output>
-              </div>
               <div class="year-number-inputs">
                 <label for="release-year-start-number">
                   <span>最早年份</span>
@@ -106,14 +101,13 @@
                   <input id="release-year-end-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
                 </label>
               </div>
-              <label for="release-year-start">
-                <span class="visually-hidden">最早发行年份</span>
-                <input id="release-year-start" type="range" min="1989" max="2026" step="1">
-              </label>
-              <label for="release-year-end">
-                <span class="visually-hidden">最晚发行年份</span>
-                <input id="release-year-end" type="range" min="1989" max="2026" step="1">
-              </label>
+              <div class="year-range-slider" aria-label="发行年份范围">
+                <input id="release-year-start" class="year-range-input year-range-start" type="range" min="1989" max="2026" step="1" aria-label="最早发行年份">
+                <input id="release-year-end" class="year-range-input year-range-end" type="range" min="1989" max="2026" step="1" aria-label="最晚发行年份">
+                <span class="year-range-track" aria-hidden="true">
+                  <span id="release-year-range-selection" class="year-range-selection"></span>
+                </span>
+              </div>
               <output id="release-year-result-preview" aria-live="polite">预计 -- 个结果</output>
             </fieldset>
 

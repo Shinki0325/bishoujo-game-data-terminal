@@ -176,6 +176,7 @@ export function createFilterView({
     releaseYearEndNumber: optionalElement(root, 'release-year-end-number'),
     releaseYearStartLabel: optionalElement(root, 'release-year-start-label'),
     releaseYearEndLabel: optionalElement(root, 'release-year-end-label'),
+    releaseYearRangeSelection: optionalElement(root, 'release-year-range-selection'),
     releaseYearPreview: optionalElement(root, 'release-year-result-preview'),
     companySearch: requiredElement(root, 'company-search'),
     companySelected: requiredElement(root, 'company-selected'),
@@ -716,6 +717,14 @@ export function createFilterView({
     }
     if (elements.releaseYearEndLabel) {
       elements.releaseYearEndLabel.textContent = endText;
+    }
+    if (elements.releaseYearRangeSelection) {
+      const minimum = DEFAULT_FILTER_STATE.releaseYearStart;
+      const span = DEFAULT_FILTER_STATE.releaseYearEnd - minimum;
+      const startPercent = ((values.releaseYearStart - minimum) / span) * 100;
+      const endPercent = 100 - (((values.releaseYearEnd - minimum) / span) * 100);
+      elements.releaseYearRangeSelection.style.setProperty('--year-range-start', `${startPercent}%`);
+      elements.releaseYearRangeSelection.style.setProperty('--year-range-end', `${endPercent}%`);
     }
     for (const element of [elements.releaseYearStart, elements.releaseYearStartNumber]) {
       element?.setAttribute('aria-valuetext', `最早发行年份 ${startText}`);

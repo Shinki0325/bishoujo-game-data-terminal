@@ -584,20 +584,6 @@ h3 {
   gap: 8px;
 }
 
-.year-range-labels {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.year-range-filter label {
-  display: block;
-}
-
 .year-number-inputs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -614,6 +600,88 @@ h3 {
 #release-year-result-preview {
   color: var(--text-muted);
   font-size: 12px;
+}
+
+.year-range-slider {
+  position: relative;
+  height: 44px;
+}
+
+.year-range-track,
+.year-range-selection {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+.year-range-track {
+  right: 10px;
+  left: 10px;
+  background: var(--border-strong);
+}
+
+.year-range-selection {
+  right: var(--year-range-end, 0%);
+  left: var(--year-range-start, 0%);
+  background: var(--accent);
+}
+
+.year-range-input {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  min-height: 44px;
+  margin: 0;
+  appearance: none;
+  pointer-events: none;
+  background: transparent;
+}
+
+.year-range-input::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.year-range-input::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  appearance: none;
+  pointer-events: auto;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: grab;
+}
+
+.year-range-input::-moz-range-track {
+  height: 4px;
+  background: transparent;
+  border: 0;
+}
+
+.year-range-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  pointer-events: auto;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: grab;
+}
+
+.year-range-input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.year-range-input:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 input[type="number"],

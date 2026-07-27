@@ -123,7 +123,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   card.type = 'button';
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
-  card.draggable = false;
+  card.draggable = true;
   card.setAttribute('aria-label', `${work.title} 操作菜单`);
   card.setAttribute('aria-haspopup', 'dialog');
 
