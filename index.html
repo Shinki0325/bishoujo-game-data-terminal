@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="egs-tier-asset-base" content="https://shinki0325.github.io/bishoujo-game-cover-assets/">
+    <title>美少女游戏数据终端</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="tool-header">
+      <div class="tool-heading">
+        <h1>美少女游戏数据终端</h1>
+      </div>
+
+      <div id="workspace-mode" class="mode-switch" role="tablist" aria-label="工作模式">
+        <button
+          id="mode-selection"
+          type="button"
+          role="tab"
+          tabindex="0"
+          aria-controls="selection-view"
+          aria-selected="true"
+        >选片</button>
+        <button
+          id="mode-ranking"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-controls="ranking-view"
+          aria-selected="false"
+        >排榜</button>
+      </div>
+
+      <div class="workspace-counts" aria-label="作品计数">
+        <div class="count-item">
+          <span>已选</span>
+          <output id="selected-count">0</output>
+        </div>
+        <div class="count-item">
+          <span>已排</span>
+          <output id="ranked-count">0</output>
+        </div>
+        <div class="count-item">
+          <span>未排</span>
+          <output id="global-unranked-count">0</output>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection">
+        <button
+          id="filter-backdrop"
+          class="filter-backdrop"
+          type="button"
+          aria-label="关闭筛选"
+          tabindex="-1"
+          hidden
+        ></button>
+
+        <aside
+          id="filter-drawer"
+          class="filter-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="作品筛选"
+          aria-hidden="true"
+        >
+          <div class="panel-heading">
+            <h2>筛选</h2>
+            <div class="filter-mode-switch" role="group" aria-label="标签筛选模式">
+              <button id="mode-basic" type="button" aria-pressed="true">基础</button>
+              <button id="mode-advanced" type="button" aria-pressed="false">公式</button>
+            </div>
+            <button id="filter-close" class="icon-button" type="button" aria-label="关闭筛选" title="关闭筛选">×</button>
+          </div>
+
+          <div class="filter-scroll">
+            <fieldset class="filter-section numeric-filters">
+              <legend>评分与票数</legend>
+              <label for="minimum-score">
+                <span>最低中位评分</span>
+                <input id="minimum-score" type="number" min="0" max="100" step="1" inputmode="decimal">
+              </label>
+              <label for="minimum-votes">
+                <span>最低评分人数</span>
+                <input id="minimum-votes" type="number" min="0" step="1" inputmode="numeric">
+              </label>
+            </fieldset>
+
+            <fieldset class="filter-section year-range-filter">
+              <legend>发行年份</legend>
+              <div class="year-range-labels" aria-live="polite">
+                <output id="release-year-start-label">1989</output>
+                <span>至</span>
+                <output id="release-year-end-label">2026</output>
+              </div>
+              <div class="year-number-inputs">
+                <label for="release-year-start-number">
+                  <span>最早年份</span>
+                  <input id="release-year-start-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
+                </label>
+                <label for="release-year-end-number">
+                  <span>最晚年份</span>
+                  <input id="release-year-end-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
+                </label>
+              </div>
+              <label for="release-year-start">
+                <span class="visually-hidden">最早发行年份</span>
+                <input id="release-year-start" type="range" min="1989" max="2026" step="1">
+              </label>
+              <label for="release-year-end">
+                <span class="visually-hidden">最晚发行年份</span>
+                <input id="release-year-end" type="range" min="1989" max="2026" step="1">
+              </label>
+              <output id="release-year-result-preview" aria-live="polite">预计 -- 个结果</output>
+            </fieldset>
+
+            <section id="advanced-panel" class="filter-section formula-filter" hidden>
+              <label for="advanced-expression">筛选公式</label>
+              <div class="formula-input-shell">
+                <textarea
+                  id="advanced-expression"
+                  rows="4"
+                  spellcheck="false"
+                  aria-autocomplete="list"
+                  aria-controls="formula-suggestions"
+                  aria-expanded="false"
+                ></textarea>
+                <div
+                  id="formula-suggestions"
+                  class="formula-suggestions"
+                  role="listbox"
+                  hidden
+                ></div>
+              </div>
+              <p id="advanced-error" role="alert" hidden></p>
+              <button id="format-formula" type="button">格式化</button>
+            </section>
+
+            <section class="filter-section" aria-labelledby="company-filter-title">
+              <h3 id="company-filter-title">会社</h3>
+              <label class="search-field" for="company-search">
+                <span class="visually-hidden">搜索会社</span>
+                <input id="company-search" type="search" placeholder="搜索会社" autocomplete="off">
+              </label>
+              <div id="company-selected" class="company-selected" aria-live="polite"></div>
+              <div id="company-options" class="checkbox-list" role="group" aria-label="会社多选"></div>
+            </section>
+
+            <section class="filter-section" aria-labelledby="tag-filter-title">
+              <h3 id="tag-filter-title">标签</h3>
+              <div class="tag-actions" role="group" aria-label="标签筛选逻辑">
+                <button id="tag-action-and" type="button" aria-pressed="true">全部满足</button>
+                <button id="tag-action-or" type="button" aria-pressed="false">任一满足</button>
+                <button id="tag-action-not" type="button" aria-pressed="false">排除</button>
+              </div>
+              <div id="tag-selected" class="tag-selected" aria-live="polite"></div>
+              <div id="filter-groups" class="filter-groups"></div>
+            </section>
+          </div>
+
+          <div class="filter-footer">
+            <output id="filter-result-count" aria-live="polite">-- 项</output>
+            <button id="filter-apply" type="button">应用</button>
+          </div>
+        </aside>
+
+        <section id="catalog-results" class="catalog-results" aria-labelledby="catalog-title">
+          <div class="results-toolbar">
+            <div class="results-heading">
+              <button id="filter-toggle" type="button" aria-controls="filter-drawer" aria-expanded="false">筛选</button>
+              <h2 id="catalog-title">作品目录</h2>
+              <div class="active-filter-state">
+                <output id="active-filter-summary">全部作品</output>
+                <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
+              </div>
+              <button id="clear-filters" type="button">清除筛选</button>
+            </div>
+
+            <div class="catalog-controls">
+              <label class="search-field catalog-search" for="title-search">
+                <span class="visually-hidden">搜索标题</span>
+                <input id="title-search" type="search" placeholder="搜索标题" autocomplete="off">
+              </label>
+
+              <label class="select-field" for="sort-key">
+                <span>排序</span>
+                <select id="sort-key">
+                  <option value="voteCount">评分人数</option>
+                  <option value="median">中位评分</option>
+                  <option value="title">标题</option>
+                  <option value="brandName">会社</option>
+                  <option value="releaseDate">发行日期</option>
+                </select>
+              </label>
+
+              <label class="select-field" for="sort-direction">
+                <span>方向</span>
+                <select id="sort-direction">
+                  <option value="desc">降序</option>
+                  <option value="asc">升序</option>
+                </select>
+              </label>
+
+              <label class="checkbox-control" for="selected-only">
+                <input id="selected-only" type="checkbox">
+                <span>仅已选</span>
+              </label>
+
+              <label class="checkbox-control" for="select-current-results">
+                <input id="select-current-results" type="checkbox">
+                <span>选择当前结果</span>
+              </label>
+
+              <div class="view-switch" role="group" aria-label="目录卡片密度">
+                <button id="card-view-full" type="button" aria-pressed="true">完整</button>
+                <button id="card-view-compact" type="button" aria-pressed="false">紧凑</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="catalog-grid" class="catalog-grid" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
+        <div class="ranking-toolbar" aria-label="排榜操作">
+          <div class="edit-actions">
+            <button id="undo-edit" type="button">撤销</button>
+            <button id="redo-edit" type="button">重做</button>
+            <button id="clear-board" type="button">清空分级</button>
+            <button id="clear-candidates" type="button">清空候选</button>
+          </div>
+              <div class="ranking-jump-nav" role="group" aria-label="排榜跳转">
+                <button id="jump-tier-board" type="button" aria-controls="tier-board">分级</button>
+                <button id="jump-candidate-pool" type="button" aria-controls="ranking-candidate-grid">候选</button>
+                <div id="ranking-tier-jumps" class="ranking-tier-jumps" aria-label="等级跳转"></div>
+              </div>
+          <div class="state-actions">
+            <button
+              id="manage-tiers"
+              class="icon-button"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="tier-manager"
+              aria-label="管理等级"
+              title="管理等级"
+            >⚙</button>
+            <button id="import-state" type="button">导入 JSON</button>
+            <button id="export-state" type="button">导出 JSON</button>
+            <button id="export-png" type="button">导出 PNG</button>
+          </div>
+        </div>
+
+        <section id="tier-board" class="tier-board" aria-label="分级板" tabindex="-1"></section>
+
+        <section class="ranking-candidates" aria-labelledby="ranking-candidates-title">
+          <div class="candidate-toolbar">
+            <h2 id="ranking-candidates-title">候选作品</h2>
+            <label class="search-field" for="ranking-candidate-search">
+              <span class="visually-hidden">搜索候选作品标题</span>
+              <input id="ranking-candidate-search" type="search" placeholder="搜索候选标题" autocomplete="off">
+            </label>
+          </div>
+          <div id="ranking-candidate-grid" class="ranking-candidate-grid" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+
+    <input id="state-file" type="file" accept="application/json,.json" hidden>
+    <div id="status-message" role="status" aria-live="polite"></div>
+
+    <dialog id="tier-manager" aria-labelledby="tier-manager-title">
+      <div class="tier-manager-shell">
+        <div class="dialog-heading">
+          <h2 id="tier-manager-title">管理等级</h2>
+        </div>
+        <div class="tier-manager-body">
+          <p id="tier-duplicate-warning" role="status" aria-live="polite" hidden></p>
+          <div id="tier-manager-rows"></div>
+          <button id="add-tier" type="button">添加等级</button>
+        </div>
+        <div class="tier-manager-footer">
+          <button id="cancel-tier-manager" type="button">取消</button>
+          <button id="save-tier-manager" type="button">保存</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="card-actions" aria-labelledby="card-actions-title">
+      <div class="dialog-heading">
+        <h2 id="card-actions-title">作品操作</h2>
+        <form method="dialog">
+          <button class="icon-button" type="submit" aria-label="关闭作品操作" title="关闭作品操作">×</button>
+        </form>
+      </div>
+      <div class="dialog-actions">
+        <button type="button">查看详情</button>
+        <button type="button">取消选择</button>
+      </div>
+    </dialog>
+
+    <dialog id="work-details" aria-labelledby="details-title">
+      <div class="dialog-heading">
+        <h2 id="details-title">作品详情</h2>
+        <form method="dialog">
+          <button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button>
+        </form>
+      </div>
+      <dl class="details-metadata">
+        <div>
+          <dt>会社</dt>
+          <dd id="details-brand"></dd>
+        </div>
+        <div>
+          <dt>发售日</dt>
+          <dd id="details-release"></dd>
+        </div>
+        <div>
+          <dt>评分</dt>
+          <dd id="details-score"></dd>
+        </div>
+      </dl>
+      <section aria-labelledby="details-tags-title">
+        <h3 id="details-tags-title">标签</h3>
+        <ul id="details-tags" class="details-tags"></ul>
+      </section>
+    </dialog>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

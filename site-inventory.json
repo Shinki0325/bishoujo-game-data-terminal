@@ -1,0 +1,201 @@
+{
+  "assetBase": "https://shinki0325.github.io/bishoujo-game-cover-assets/",
+  "files": [
+    {
+      "bytes": 0,
+      "path": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1221982,
+      "path": "data/assets-manifest.json",
+      "sha256": "f8d0a395b1536622fb85057879807d60d48e095318b14b87bb668ee3c8e5ad5f"
+    },
+    {
+      "bytes": 2004013,
+      "path": "data/catalog.json",
+      "sha256": "5aca853f74a94dfd2e251e0860df8bd72e871e7bf2f5cdce101ad4c35dfed3b6"
+    },
+    {
+      "bytes": 7588,
+      "path": "data/filter-authority.json",
+      "sha256": "5fec758b9997eb36501c2b361b3b37f3769ba738e31dc87e5234f77387adf5f0"
+    },
+    {
+      "bytes": 256735,
+      "path": "data/indexes.json",
+      "sha256": "14645166381fa8dce2d46372176ad44cba4793e9c41ea057a8096286ee406986"
+    },
+    {
+      "bytes": 22952,
+      "path": "data/work-group-review-queue.json",
+      "sha256": "6bfee10028c5552cb2ec415113bba0afc4027c213c74d519f22e6c90e137957d"
+    },
+    {
+      "bytes": 21000,
+      "path": "data/work-groups.json",
+      "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
+    },
+    {
+      "bytes": 14287,
+      "path": "index.html",
+      "sha256": "1eace9f0ef2fb9625671a952f615d317221cdf0c9e00de898492c79232d65978"
+    },
+    {
+      "bytes": 17342,
+      "path": "lib/app-controller.js",
+      "sha256": "179a80dde89a94db4c7a84c722dab224b2568db9d1e93e4876202d1d9d3fab4a"
+    },
+    {
+      "bytes": 3702,
+      "path": "lib/asset-url.js",
+      "sha256": "a3bd09542cdc1fde70026eb0147b78ebe9f206a49fc51addc11d777bec43c5c7"
+    },
+    {
+      "bytes": 17310,
+      "path": "lib/backend-beta-fixture.js",
+      "sha256": "7fac84e3b23a24bffe0d7ff700393b55cf97c4098fc7a7fef847f79b6d1f60e9"
+    },
+    {
+      "bytes": 11890,
+      "path": "lib/board.js",
+      "sha256": "341d579e7f0e3c76b3c3b3bb2ce9a30b1028a1e6c5131d97d0c41d60c4363ba6"
+    },
+    {
+      "bytes": 5398,
+      "path": "lib/browser-io.js",
+      "sha256": "ba161d08a030ed997d152c3504c6ecbe868e6f14ec9374a85a1f1d5fa096aff3"
+    },
+    {
+      "bytes": 27646,
+      "path": "lib/catalog.js",
+      "sha256": "e14f71acd7e92479704b6b56a84938a6568997d1e60596fe189b1b41fa16a97f"
+    },
+    {
+      "bytes": 5084,
+      "path": "lib/display-formula.js",
+      "sha256": "fa38439c5eed25101dedcafbc1384004c31e63ffb086807547c7cfe05d0f1525"
+    },
+    {
+      "bytes": 4364,
+      "path": "lib/drag.js",
+      "sha256": "d5dccb7bab5adbd6ab5392fe0bcc9575c6d180c933b1a6b8bbc281c24c7d733f"
+    },
+    {
+      "bytes": 3602,
+      "path": "lib/filter-drawer.js",
+      "sha256": "584a76d8da76b1c833d328953f0838ffaf87bfa2c192f6e69cbd6e540cbae6e9"
+    },
+    {
+      "bytes": 21448,
+      "path": "lib/filter-engine.js",
+      "sha256": "007d02110ee8fc18d43c836872a0291964ebf7f49a376dec3d488ff6b752d241"
+    },
+    {
+      "bytes": 6885,
+      "path": "lib/filter-worker-client.js",
+      "sha256": "54dd20a03162467592745b03f524239c6106952550043e877cde8f365b60876a"
+    },
+    {
+      "bytes": 1989,
+      "path": "lib/filter-worker-runtime.js",
+      "sha256": "743132b7ce100398eb233564fdb3b4956caabd2917fcb9019cd8ff0636c89157"
+    },
+    {
+      "bytes": 3675,
+      "path": "lib/formula-autocomplete.js",
+      "sha256": "8b738a2d19878e2c21e8251819027d4437f7d26228857b762e43d2c1097f3ea7"
+    },
+    {
+      "bytes": 16753,
+      "path": "lib/formula.js",
+      "sha256": "1331e04967cc3f43b7da684aee88042241e8d556e24557feea2aefa4e77ec38f"
+    },
+    {
+      "bytes": 15351,
+      "path": "lib/history.js",
+      "sha256": "1c84eee904ac5c1fa0bdb0cd94bfd7ddb5418565111e6ebad7702eb5461aee07"
+    },
+    {
+      "bytes": 11914,
+      "path": "lib/ordered-board.js",
+      "sha256": "966831f7f41ad4fb86f38106907796eda3e95885bece29c88361c429c0e33617"
+    },
+    {
+      "bytes": 37141,
+      "path": "lib/png-export.js",
+      "sha256": "e671213de76db9f1c09c5cdf43e3afffa4f733ad9855383c17a2cc872e2e2cf4"
+    },
+    {
+      "bytes": 11299,
+      "path": "lib/query-index.js",
+      "sha256": "1d8bc98336abb7d2aab9b3cd94096c08aa7fb078f557e56eee98a111e3a5427a"
+    },
+    {
+      "bytes": 958,
+      "path": "lib/runtime-config.js",
+      "sha256": "5ad384cec61c9a97f2572a4e221c886093cb76992e5dd86e66b50a576840b16c"
+    },
+    {
+      "bytes": 16245,
+      "path": "lib/selection.js",
+      "sha256": "663d2501f892d6f46599bffeaaa484f9f8248fc18210996ce10ab48b0a6e60f7"
+    },
+    {
+      "bytes": 47661,
+      "path": "lib/state.js",
+      "sha256": "3a2ea9341d9f528617ca27db641c5388c4cc599fc631db844d6995d0f0ac2ffe"
+    },
+    {
+      "bytes": 13188,
+      "path": "lib/tier-config.js",
+      "sha256": "12d1440cb34a225663a8ec0cc68266e3bfb46eb23b116958a0da820e18bb5913"
+    },
+    {
+      "bytes": 1529,
+      "path": "lib/tier-palette.js",
+      "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
+    },
+    {
+      "bytes": 28919,
+      "path": "main.js",
+      "sha256": "ae212974322326cd4889471de20e7d9cf4b5eb6e9d033de21f717ab70faa5b62"
+    },
+    {
+      "bytes": 31458,
+      "path": "styles.css",
+      "sha256": "a82d9b91deaaac3a2451b07ab1af8dd5048187fab46ffdadade72fafc87baf12"
+    },
+    {
+      "bytes": 36935,
+      "path": "views/filter-view.js",
+      "sha256": "493a15969d929a0f05cc3ac997b860a74e7a422c7b67789d17d57452bedd178c"
+    },
+    {
+      "bytes": 25532,
+      "path": "views/ranking-view.js",
+      "sha256": "61f789ac9dd750bc859849709acbda29bcf3e9033077b8742f0ec25ac2ef1d91"
+    },
+    {
+      "bytes": 12414,
+      "path": "views/selection-view.js",
+      "sha256": "ed66ef37d71611056f0a9aeade4ec14c0b2679f8330ce0b2e7b80a584add14f0"
+    },
+    {
+      "bytes": 10535,
+      "path": "views/tier-manager-view.js",
+      "sha256": "b1db0ebf6532520e73f46505a72aa6dd7f1697d46409196d6ca1036689dbba72"
+    },
+    {
+      "bytes": 220,
+      "path": "workers/filter-worker.js",
+      "sha256": "3a5b60acb7b18d6ad263811742011bfc42eb80eab2f5dba6123d4231ae7c4b9a"
+    }
+  ],
+  "publicationStatus": "release-candidate",
+  "schemaVersion": "egs-tier-standalone-site-inventory-v2",
+  "totals": {
+    "bytes": 3996944,
+    "files": 38
+  }
+}
