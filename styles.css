@@ -1674,6 +1674,7 @@ dialog::backdrop {
 
 .details-tags {
   display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 6px;
   padding: 0;
@@ -1682,13 +1683,26 @@ dialog::backdrop {
 }
 
 .details-tags li {
+  height: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   padding: 4px 7px;
   border-radius: var(--radius);
+  white-space: nowrap;
 }
 
 .details-tags li:not([class*="details-tag-"]) {
   background: var(--surface-muted);
   border: 1px solid var(--border);
+}
+
+.details-tags .details-sensitive-control {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .details-tag-attribute {
