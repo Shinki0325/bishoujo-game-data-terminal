@@ -1,7 +1,6 @@
 import {
   FormulaSyntaxError,
   basicToFormula,
-  formulaToBasic,
   formatFormula
 } from '../lib/formula.js';
 import {
@@ -14,10 +13,24 @@ import {
   applyFormulaCompletion,
   formulaCompletions
 } from '../lib/formula-autocomplete.js';
+import {
+  ATTRIBUTE_GROUP_IDS,
+  attributeSelectionsToFormula,
+  DEFAULT_ATTRIBUTE_SELECTIONS,
+  FILTER_GROUP_ORDER,
+  formulaToBasicWithAttributes
+} from '../lib/attribute-filters.js';
 import { DEFAULT_FILTER_STATE } from '../lib/state.js';
 
 const DEBOUNCE_MS = 150;
 const COMPANY_OPTION_LIMIT = 6;
+const FILTER_GROUP_RANK = new Map(FILTER_GROUP_ORDER.map((groupId, index) => [groupId, index]));
+const ATTRIBUTE_GROUP_ID_SET = new Set(ATTRIBUTE_GROUP_IDS);
+const ATTRIBUTE_SUMMARY_TITLES = Object.freeze({
+  'game-type': '类型',
+  platform: '平台',
+  length: '篇幅'
+});
 
 function normalizeCompanySearchText(value) {
   return String(value ?? '')
@@ -46,6 +59,10 @@ function cloneFilterState(state) {
   return {
     ...state,
     brandIds: [...state.brandIds],
+    attributeSelections: Object.fromEntries(ATTRIBUTE_GROUP_IDS.map(groupId => [
+      groupId,
+      [...(state.attributeSelections?.[groupId] ?? DEFAULT_ATTRIBUTE_SELECTIONS[groupId])]
+    ])),
     positiveFilterIds: [...state.positiveFilterIds],
     excludedFilterIds: [...state.excludedFilterIds]
   };
@@ -97,6 +114,13 @@ function createDebouncedCommit(callback) {
 }
 
 function activeFilterCount(state) {
+  const attributeCount = ATTRIBUTE_GROUP_IDS.reduce((count, groupId) => {
+    const selected = state.attributeSelections?.[groupId] ?? DEFAULT_ATTRIBUTE_SELECTIONS[groupId];
+    const defaults = DEFAULT_ATTRIBUTE_SELECTIONS[groupId];
+    const isDefault = selected.length === defaults.length
+      && selected.every((filterId, index) => filterId === defaults[index]);
+    return count + Number(!isDefault);
+  }, 0);
   const tagCount = state.mode === 'advanced'
     ? Number(state.advancedExpression.trim().length > 0)
     : state.positiveFilterIds.length + state.excludedFilterIds.length;
@@ -108,13 +132,14 @@ function activeFilterCount(state) {
       || state.releaseYearEnd !== DEFAULT_FILTER_STATE.releaseYearEnd
     )
     + state.brandIds.length
+    + attributeCount
     + tagCount
     + Number(state.selectedOnly);
 }
 
 function orderedGroups(filters) {
   const groups = new Map();
-  for (const filter of [...filters].sort((a, b) => a.displayOrder - b.displayOrder)) {
+  for (const filter of filters) {
     if (!groups.has(filter.groupId)) {
       groups.set(filter.groupId, {
         groupId: filter.groupId,
@@ -124,7 +149,14 @@ function orderedGroups(filters) {
     }
     groups.get(filter.groupId).filters.push(filter);
   }
-  return [...groups.values()];
+  for (const group of groups.values()) {
+    group.filters.sort((left, right) => left.displayOrder - right.displayOrder);
+  }
+  return [...groups.values()].sort((left, right) => {
+    const leftRank = FILTER_GROUP_RANK.get(left.groupId) ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = FILTER_GROUP_RANK.get(right.groupId) ?? Number.MAX_SAFE_INTEGER;
+    return leftRank - rightRank;
+  });
 }
 
 function tagState(filterState, filterId) {
@@ -158,13 +190,17 @@ export function createFilterView({
   brands,
   releaseYearCounts = {},
   onFilterChange,
-  onRequestCounts
+  onRequestCounts,
+  onAttributeSelectionChange = () => {}
 }) {
   if (!Array.isArray(filters) || !Array.isArray(brands)) {
     throw new TypeError('filters and brands must be arrays');
   }
   if (typeof onFilterChange !== 'function' || typeof onRequestCounts !== 'function') {
     throw new TypeError('filter callbacks must be functions');
+  }
+  if (typeof onAttributeSelectionChange !== 'function') {
+    throw new TypeError('onAttributeSelectionChange must be a function');
   }
 
   const elements = {
@@ -176,12 +212,16 @@ export function createFilterView({
     releaseYearEndNumber: optionalElement(root, 'release-year-end-number'),
     releaseYearStartLabel: optionalElement(root, 'release-year-start-label'),
     releaseYearEndLabel: optionalElement(root, 'release-year-end-label'),
+    releaseYearSlider: optionalElement(root, 'release-year-slider'),
     releaseYearRangeSelection: optionalElement(root, 'release-year-range-selection'),
     releaseYearPreview: optionalElement(root, 'release-year-result-preview'),
     companySearch: requiredElement(root, 'company-search'),
     companySelected: requiredElement(root, 'company-selected'),
     companyOptions: requiredElement(root, 'company-options'),
+    attributeGroups: requiredElement(root, 'attribute-filter-groups'),
+    attributeSelected: requiredElement(root, 'attribute-selected'),
     groups: requiredElement(root, 'filter-groups'),
+    attributeSection: requiredElement(root, 'attribute-filter-region'),
     tagSection: requiredElement(root, 'tag-filter-title').parentElement,
     tagActionAnd: requiredElement(root, 'tag-action-and'),
     tagActionOr: requiredElement(root, 'tag-action-or'),
@@ -209,6 +249,8 @@ export function createFilterView({
   ]);
   if (!companyRegion) throw new Error('Company controls must share a container');
   const groups = orderedGroups(filters);
+  const attributeGroups = groups.filter(group => ATTRIBUTE_GROUP_ID_SET.has(group.groupId));
+  const contentGroups = groups.filter(group => !ATTRIBUTE_GROUP_ID_SET.has(group.groupId));
   let currentState = cloneFilterState(DEFAULT_FILTER_STATE);
   let currentCounts = { current: 0, filters: {}, brands: {} };
   let advancedDraft = '';
@@ -267,6 +309,8 @@ export function createFilterView({
     let target = null;
     if (request.type === 'tag') {
       target = findByData(elements.groups, 'filterId', request.id);
+    } else if (request.type === 'attribute') {
+      target = findByData(elements.attributeGroups, 'filterId', request.id);
     } else if (request.type === 'company-option') {
       target = findByData(elements.companyOptions, 'brandId', request.id);
       if (!target && request.fallbackId) {
@@ -366,7 +410,7 @@ export function createFilterView({
   function canRepresentDraftAsBasic() {
     try {
       const ast = parseDraft();
-      return ast === null || formulaToBasic(ast) !== null;
+      return ast === null || formulaToBasicWithAttributes(ast, filters) !== null;
     } catch {
       return false;
     }
@@ -472,6 +516,113 @@ export function createFilterView({
     elements.tagActionNot.setAttribute('aria-pressed', String(tagAction === 'not'));
   }
 
+  function selectedAttributeIds(groupId) {
+    return currentState.attributeSelections?.[groupId]
+      ?? DEFAULT_ATTRIBUTE_SELECTIONS[groupId]
+      ?? [];
+  }
+
+  function submitAttributeSelection(group, filterId) {
+    flushPendingEdits();
+    const selected = new Set(selectedAttributeIds(group.groupId));
+    if (selected.has(filterId)) selected.delete(filterId); else selected.add(filterId);
+    const nextIds = group.filters
+      .filter(filter => selected.has(filter.filterId))
+      .map(filter => filter.filterId);
+    pendingFocus = { type: 'attribute', id: filterId };
+    onAttributeSelectionChange(group.groupId, nextIds);
+  }
+
+  function renderSelectedAttributes() {
+    if (currentState.mode !== 'basic') {
+      elements.attributeSelected.replaceChildren();
+      return;
+    }
+    const chips = [];
+    for (const group of attributeGroups) {
+      const selected = new Set(selectedAttributeIds(group.groupId));
+      for (const filter of group.filters) {
+        if (!selected.has(filter.filterId)) continue;
+        const button = documentRef.createElement('button');
+        button.type = 'button';
+        button.className = 'filter-chip attribute-filter-chip';
+        button.dataset.filterId = filter.filterId;
+        button.dataset.groupId = group.groupId;
+        const label = `${ATTRIBUTE_SUMMARY_TITLES[group.groupId] ?? group.title}：${filter.displayTitle}`;
+        button.setAttribute('aria-label', `移除属性条件 ${label}`);
+        button.textContent = `${label} ×`;
+        button.addEventListener('click', () => submitAttributeSelection(group, filter.filterId));
+        chips.push(button);
+      }
+    }
+    elements.attributeSelected.replaceChildren(...chips);
+  }
+
+  function closeSiblingGroups(current) {
+    for (const container of [elements.attributeGroups, elements.groups]) {
+      for (const sibling of Array.from(container.children)) {
+        if (sibling !== current) sibling.open = false;
+      }
+    }
+  }
+
+  function renderAttributeGroups() {
+    const sections = attributeGroups.map(group => {
+      const details = documentRef.createElement('details');
+      details.className = 'filter-group attribute-filter-group';
+      details.dataset.groupId = group.groupId;
+      details.setAttribute('name', 'filter-tag-group');
+      details.open = openGroupId === group.groupId;
+      details.addEventListener('toggle', () => {
+        if (details.open) {
+          openGroupId = group.groupId;
+          closeSiblingGroups(details);
+        } else if (openGroupId === group.groupId) {
+          openGroupId = null;
+        }
+      });
+      const summary = documentRef.createElement('summary');
+      const title = documentRef.createElement('span');
+      title.textContent = group.title;
+      const selected = new Set(selectedAttributeIds(group.groupId));
+      const count = documentRef.createElement('small');
+      count.className = 'count-badge';
+      count.textContent = `${selected.size} / ${group.filters.length}`;
+      summary.append(title, count);
+      const list = documentRef.createElement('div');
+      list.className = 'tag-list attribute-list';
+      for (const filter of group.filters) {
+        const isSelected = selected.has(filter.filterId);
+        const facetCount = isSelected
+          ? currentCounts.current
+          : currentCounts.filters?.[filter.filterId] ?? 0;
+        const button = documentRef.createElement('button');
+        button.type = 'button';
+        button.className = 'facet-control attribute-state-button';
+        button.dataset.filterId = filter.filterId;
+        button.dataset.groupId = group.groupId;
+        button.dataset.state = isSelected ? 'selected' : 'neutral';
+        button.classList.toggle('is-active', isSelected);
+        button.classList.toggle('is-zero', facetCount === 0);
+        button.setAttribute('aria-pressed', String(isSelected));
+        button.setAttribute(
+          'aria-label',
+          `${filter.displayTitle}，${isSelected ? '移除属性条件' : '添加属性条件'}`
+        );
+        const label = documentRef.createElement('span');
+        label.textContent = filter.displayTitle;
+        const output = documentRef.createElement('small');
+        output.textContent = String(facetCount);
+        button.append(label, output);
+        button.addEventListener('click', () => submitAttributeSelection(group, filter.filterId));
+        list.append(button);
+      }
+      details.append(summary, list);
+      return details;
+    });
+    elements.attributeGroups.replaceChildren(...sections);
+  }
+
   function renderSelectedTags() {
     if (currentState.mode !== 'basic') {
       elements.tagSelected.replaceChildren();
@@ -510,7 +661,7 @@ export function createFilterView({
   }
 
   function renderGroups() {
-    const sections = groups.map(group => {
+    const sections = contentGroups.map(group => {
       const details = documentRef.createElement('details');
       details.className = 'filter-group';
       details.dataset.groupId = group.groupId;
@@ -519,9 +670,7 @@ export function createFilterView({
       details.addEventListener('toggle', () => {
         if (details.open) {
           openGroupId = group.groupId;
-          for (const sibling of Array.from(elements.groups.children)) {
-            if (sibling !== details) sibling.open = false;
-          }
+          closeSiblingGroups(details);
         } else if (openGroupId === group.groupId) {
           openGroupId = null;
         }
@@ -718,6 +867,19 @@ export function createFilterView({
     if (elements.releaseYearEndLabel) {
       elements.releaseYearEndLabel.textContent = endText;
     }
+    if (elements.releaseYearSlider) {
+      const minimum = DEFAULT_FILTER_STATE.releaseYearStart;
+      const maximum = DEFAULT_FILTER_STATE.releaseYearEnd;
+      const coincident = values.releaseYearStart === values.releaseYearEnd;
+      elements.releaseYearSlider.dataset.yearHandles = coincident ? 'coincident' : 'separate';
+      elements.releaseYearSlider.dataset.yearBoundary = !coincident
+        ? 'none'
+        : values.releaseYearStart === minimum
+          ? 'minimum'
+          : values.releaseYearEnd === maximum
+            ? 'maximum'
+            : 'middle';
+    }
     if (elements.releaseYearRangeSelection) {
       const minimum = DEFAULT_FILTER_STATE.releaseYearStart;
       const span = DEFAULT_FILTER_STATE.releaseYearEnd - minimum;
@@ -888,11 +1050,23 @@ export function createFilterView({
       return;
     }
     emitAdvanced.cancel();
-    const canonicalDraft = basicToFormula(
+    let contentDraft = basicToFormula(
       currentState.positiveFilterIds,
       currentState.excludedFilterIds,
       currentState.basicOperator
     );
+    if (
+      currentState.basicOperator === 'OR'
+      && currentState.positiveFilterIds.length > 1
+      && currentState.excludedFilterIds.length === 0
+    ) {
+      contentDraft = `(${contentDraft})`;
+    }
+    const attributeDraft = attributeSelectionsToFormula(
+      currentState.attributeSelections,
+      filters
+    );
+    const canonicalDraft = [attributeDraft, contentDraft].filter(Boolean).join(' AND ');
     advancedDraft = canonicalToDisplayFormula(canonicalDraft, filters);
     advancedDraftInvalid = false;
     clearFormulaError();
@@ -908,16 +1082,24 @@ export function createFilterView({
     try {
       const ast = parseDraft();
       const basic = ast === null
-        ? { positiveIds: [], excludedIds: [], operator: 'AND' }
-        : formulaToBasic(ast);
+        ? {
+            attributeSelections: Object.fromEntries(
+              ATTRIBUTE_GROUP_IDS.map(groupId => [groupId, []])
+            ),
+            positiveFilterIds: [],
+            excludedFilterIds: [],
+            basicOperator: 'AND'
+          }
+        : formulaToBasicWithAttributes(ast, filters);
       if (basic === null) return;
-      tagAction = basic.operator === 'OR' ? 'or' : 'and';
+      tagAction = basic.basicOperator === 'OR' ? 'or' : 'and';
       emit({
         ...currentState,
         mode: 'basic',
-        positiveFilterIds: basic.positiveIds,
-        excludedFilterIds: basic.excludedIds,
-        basicOperator: basic.operator
+        attributeSelections: basic.attributeSelections,
+        positiveFilterIds: basic.positiveFilterIds,
+        excludedFilterIds: basic.excludedFilterIds,
+        basicOperator: basic.basicOperator
       });
     } catch (error) {
       advancedDraftInvalid = true;
@@ -983,6 +1165,7 @@ export function createFilterView({
       renderYearPreview(currentState, true);
       elements.modeBasic.setAttribute('aria-pressed', String(currentState.mode === 'basic'));
       elements.modeAdvanced.setAttribute('aria-pressed', String(currentState.mode === 'advanced'));
+      elements.attributeSection.hidden = currentState.mode !== 'basic';
       elements.tagSection.hidden = currentState.mode !== 'basic';
       elements.advancedPanel.hidden = currentState.mode !== 'advanced';
       if (tagAction !== 'not') {
@@ -996,6 +1179,8 @@ export function createFilterView({
       updateClearAvailability();
       renderTagActions();
       renderCompanies();
+      renderAttributeGroups();
+      renderSelectedAttributes();
       renderGroups();
       renderSelectedTags();
       renderActiveChips();

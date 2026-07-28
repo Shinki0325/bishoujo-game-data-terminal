@@ -101,7 +101,13 @@
                   <input id="release-year-end-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
                 </label>
               </div>
-              <div class="year-range-slider" aria-label="发行年份范围">
+              <div
+                id="release-year-slider"
+                class="year-range-slider"
+                data-year-handles="separate"
+                data-year-boundary="none"
+                aria-label="发行年份范围"
+              >
                 <input id="release-year-start" class="year-range-input year-range-start" type="range" min="1989" max="2026" step="1" aria-label="最早发行年份">
                 <input id="release-year-end" class="year-range-input year-range-end" type="range" min="1989" max="2026" step="1" aria-label="最晚发行年份">
                 <span class="year-range-track" aria-hidden="true">
@@ -143,9 +149,25 @@
               <div id="company-options" class="checkbox-list" role="group" aria-label="会社多选"></div>
             </section>
 
-            <section class="filter-section" aria-labelledby="tag-filter-title">
-              <h3 id="tag-filter-title">标签</h3>
-              <div class="tag-actions" role="group" aria-label="标签筛选逻辑">
+            <section
+              id="attribute-filter-region"
+              class="filter-section filter-region filter-region-attributes"
+              data-filter-region="attributes"
+              aria-labelledby="attribute-filter-title"
+            >
+              <h3 id="attribute-filter-title">基础属性</h3>
+              <div id="attribute-selected" class="attribute-selected" aria-live="polite"></div>
+              <div id="attribute-filter-groups" class="filter-groups"></div>
+            </section>
+
+            <section
+              id="content-filter-region"
+              class="filter-section filter-region filter-region-content"
+              data-filter-region="content"
+              aria-labelledby="tag-filter-title"
+            >
+              <h3 id="tag-filter-title">内容标签</h3>
+              <div class="tag-actions" role="group" aria-label="添加方式">
                 <button id="tag-action-and" type="button" aria-pressed="true">全部满足</button>
                 <button id="tag-action-or" type="button" aria-pressed="false">任一满足</button>
                 <button id="tag-action-not" type="button" aria-pressed="false">排除</button>

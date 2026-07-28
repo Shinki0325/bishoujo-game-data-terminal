@@ -20,6 +20,10 @@ import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { configuredAssetBase, DATA_URLS } from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError } from './lib/state.js';
+import {
+  ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
+  FILTER_GROUP_ORDER
+} from './lib/attribute-filters.js';
 import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView } from './views/selection-view.js';
@@ -28,6 +32,14 @@ import { createTierManagerView } from './views/tier-manager-view.js';
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
 const EXPECTED_GENRE_FILTER_COUNT = 4;
+const EXPECTED_PLATFORM_FILTER_COUNT = 13;
+
+export { FILTER_GROUP_ORDER };
+const FILTER_GROUP_POSITION = new Map(
+  FILTER_GROUP_ORDER.map((groupId, index) => [groupId, index])
+);
+const ATTRIBUTE_GROUP_IDS = new Set(ATTRIBUTE_GROUP_ORDER);
+const COLLAPSED_DETAIL_GROUP_IDS = new Set(['character', 'adult']);
 
 function requiredElement(id) {
   const element = document.getElementById(id);
@@ -189,13 +201,37 @@ function assertStringArray(
 }
 
 export function publicFilterIds(work) {
-  return [...new Set([...work.filterIds, ...work.genreFilterIds])];
+  return [...new Set([
+    ...work.filterIds,
+    ...work.genreFilterIds,
+    work.platformFilterId
+  ])];
+}
+
+export function workDetailFilters(work, filterById) {
+  return publicFilterIds(work)
+    .map(filterId => filterById.get(filterId))
+    .filter(Boolean)
+    .sort((left, right) => (
+      (FILTER_GROUP_POSITION.get(left.groupId) ?? FILTER_GROUP_ORDER.length)
+        - (FILTER_GROUP_POSITION.get(right.groupId) ?? FILTER_GROUP_ORDER.length)
+      || left.displayOrder - right.displayOrder
+      || left.displayTitle.localeCompare(right.displayTitle, 'zh-CN')
+      || left.filterId.localeCompare(right.filterId)
+    ));
 }
 
 export function workDetailFilterTitles(work, filterById) {
-  return publicFilterIds(work).map(filterId => (
-    filterById.get(filterId)?.displayTitle ?? filterId
-  ));
+  return workDetailFilters(work, filterById).map(filter => filter.displayTitle);
+}
+
+export function partitionWorkDetailFilters(work, filterById) {
+  const visible = [];
+  const collapsed = [];
+  for (const filter of workDetailFilters(work, filterById)) {
+    (COLLAPSED_DETAIL_GROUP_IDS.has(filter.groupId) ? collapsed : visible).push(filter);
+  }
+  return { visible, collapsed };
 }
 
 export function assertSample(candidate, options = {}) {
@@ -209,7 +245,7 @@ export function assertSample(candidate, options = {}) {
   if (typeof candidate.sampleId !== 'string' || candidate.sampleId.length === 0) {
     throw new TypeError('样本缺少 sampleId');
   }
-  for (const field of ['works', 'filters', 'genreFilters', 'brands']) {
+  for (const field of ['works', 'filters', 'genreFilters', 'platformFilters', 'brands']) {
     if (!Array.isArray(candidate[field])) throw new TypeError(`样本缺少 ${field} 数组`);
   }
   if (enforceAuthorityCounts && candidate.filters.length !== EXPECTED_CONTENT_FILTER_COUNT) {
@@ -218,12 +254,17 @@ export function assertSample(candidate, options = {}) {
   if (enforceAuthorityCounts && candidate.genreFilters.length !== EXPECTED_GENRE_FILTER_COUNT) {
     throw new TypeError(`样本 genreFilters 必须包含 ${EXPECTED_GENRE_FILTER_COUNT} 项`);
   }
+  if (enforceAuthorityCounts && candidate.platformFilters.length !== EXPECTED_PLATFORM_FILTER_COUNT) {
+    throw new TypeError(`样本 platformFilters 必须包含 ${EXPECTED_PLATFORM_FILTER_COUNT} 项`);
+  }
   const knownFilterIds = new Set();
   const contentFilterIds = new Set();
   const genreFilterIds = new Set();
-  for (const [field, definitions, target, expectsGameType] of [
-    ['filters', candidate.filters, contentFilterIds, false],
-    ['genreFilters', candidate.genreFilters, genreFilterIds, true]
+  const platformFilterIds = new Set();
+  for (const [field, definitions, target, expectedGroup] of [
+    ['filters', candidate.filters, contentFilterIds, 'content'],
+    ['genreFilters', candidate.genreFilters, genreFilterIds, 'game-type'],
+    ['platformFilters', candidate.platformFilters, platformFilterIds, 'platform']
   ]) {
     for (const [index, filter] of definitions.entries()) {
       if (
@@ -236,7 +277,9 @@ export function assertSample(candidate, options = {}) {
         || filter.displayTitle.length === 0
         || typeof filter.groupId !== 'string'
         || filter.groupId.length === 0
-        || (filter.groupId === 'game-type') !== expectsGameType
+        || (expectedGroup === 'content'
+          ? filter.groupId === 'game-type' || filter.groupId === 'platform'
+          : filter.groupId !== expectedGroup)
         || typeof filter.groupTitleZh !== 'string'
         || filter.groupTitleZh.length === 0
         || !Number.isInteger(filter.displayOrder)
@@ -277,6 +320,12 @@ export function assertSample(candidate, options = {}) {
       genreFilterIds,
       true
     );
+    if (
+      typeof work.platformFilterId !== 'string'
+      || !platformFilterIds.has(work.platformFilterId)
+    ) {
+      throw new TypeError(`works[${index}].platformFilterId 包含无效或未知筛选 ID`);
+    }
     workIds.add(work.workId);
   }
   return candidate;
@@ -290,13 +339,13 @@ export function prepareRuntimeSample(candidate, authorities = {}) {
     );
     return {
       ...source,
-      filters: [...source.filters, ...source.genreFilters]
+      filters: [...source.filters, ...source.genreFilters, ...source.platformFilters]
     };
   }
   const source = assertSample(candidate);
   return {
     ...source,
-    filters: [...source.filters, ...source.genreFilters]
+    filters: [...source.filters, ...source.genreFilters, ...source.platformFilters]
   };
 }
 
@@ -359,12 +408,51 @@ function showDetails(work, filterById) {
   elements.detailsBrand.textContent = work.brandName;
   elements.detailsRelease.textContent = work.releaseDate || '未记录';
   elements.detailsScore.textContent = `${work.median} / ${work.voteCount} 票`;
-  const tags = workDetailFilterTitles(work, filterById).map(displayTitle => {
+  const createTag = (filter, hidden = false) => {
     const item = document.createElement('li');
-    item.textContent = displayTitle;
+    item.className = filter.groupId === 'character'
+      ? 'details-tag-character'
+      : filter.groupId === 'adult'
+        ? 'details-tag-adult'
+        : ATTRIBUTE_GROUP_IDS.has(filter.groupId)
+          ? 'details-tag-attribute'
+          : 'details-tag-content';
+    item.textContent = filter.displayTitle;
+    item.hidden = hidden;
     return item;
-  });
-  elements.detailsTags.replaceChildren(...tags);
+  };
+  const { visible, collapsed } = partitionWorkDetailFilters(work, filterById);
+  const visibleTags = visible.map(filter => createTag(filter));
+  if (collapsed.length === 0) {
+    elements.detailsTags.replaceChildren(...visibleTags);
+  } else {
+    const collapsedTags = collapsed.map(filter => createTag(filter, true));
+    const controlItem = document.createElement('li');
+    controlItem.className = 'details-sensitive-control';
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'details-sensitive-toggle';
+    toggle.textContent = '+';
+    toggle.title = '显示角色属性与成人内容标签';
+    toggle.setAttribute('aria-label', toggle.title);
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.textContent = expanded ? '\u2212' : '+';
+      toggle.title = expanded
+        ? '收起角色属性与成人内容标签'
+        : '显示角色属性与成人内容标签';
+      toggle.setAttribute('aria-label', toggle.title);
+      for (const item of collapsedTags) item.hidden = !expanded;
+    });
+    controlItem.append(toggle);
+    elements.detailsTags.replaceChildren(
+      ...visibleTags,
+      controlItem,
+      ...collapsedTags
+    );
+  }
   if (typeof elements.detailsDialog.showModal === 'function') elements.detailsDialog.showModal();
 }
 
@@ -626,6 +714,17 @@ async function initialize() {
     }, Object.create(null)),
     onFilterChange(nextFilterState) {
       return runStateChange(() => controller.setFilterState(nextFilterState));
+    },
+    onAttributeSelectionChange(groupId, selectedIds) {
+      return runStateChange(() => {
+        const current = controller.inspectState().filterState.attributeSelections;
+        return controller.setFilterState({
+          attributeSelections: {
+            ...current,
+            [groupId]: [...selectedIds]
+          }
+        });
+      });
     },
     onRequestCounts(_filterState, visibleBrands) {
       void render(visibleBrands);

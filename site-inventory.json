@@ -12,19 +12,19 @@
       "sha256": "f8d0a395b1536622fb85057879807d60d48e095318b14b87bb668ee3c8e5ad5f"
     },
     {
-      "bytes": 2019398,
+      "bytes": 2095864,
       "path": "data/catalog.json",
-      "sha256": "8d2524086a610cc9c7de12c7b5875bea9da9b52d3c0d530b52d4991db7b3dd04"
+      "sha256": "1e0c174663803f9c65391d0e211cdfbeba17e205ef3c776a3542dc08db66b209"
     },
     {
-      "bytes": 7588,
+      "bytes": 9881,
       "path": "data/filter-authority.json",
-      "sha256": "5fec758b9997eb36501c2b361b3b37f3769ba738e31dc87e5234f77387adf5f0"
+      "sha256": "da3fd64985126a7816741ded13b4ff4fe90d1cc6f0c03458ff3c7653049321ec"
     },
     {
-      "bytes": 256735,
+      "bytes": 269756,
       "path": "data/indexes.json",
-      "sha256": "14645166381fa8dce2d46372176ad44cba4793e9c41ea057a8096286ee406986"
+      "sha256": "21431a234f62ca8a02375284e9ceb9be0ad9a4a680ef68411aaa34b5a007f559"
     },
     {
       "bytes": 22952,
@@ -37,14 +37,14 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 14183,
+      "bytes": 15035,
       "path": "index.html",
-      "sha256": "298879600fa8044e151939f6ff01ec19f63bc20d9f1948bffea979c80941af72"
+      "sha256": "fad70ec58817c8a46cc49db1497c9be51676b674a931fcea4f8a50ace1186134"
     },
     {
-      "bytes": 17342,
+      "bytes": 18056,
       "path": "lib/app-controller.js",
-      "sha256": "179a80dde89a94db4c7a84c722dab224b2568db9d1e93e4876202d1d9d3fab4a"
+      "sha256": "f4a269938a5c0ae72a66fb504df7873ff98bed067c421c880218e03033399b3d"
     },
     {
       "bytes": 3702,
@@ -52,9 +52,14 @@
       "sha256": "a3bd09542cdc1fde70026eb0147b78ebe9f206a49fc51addc11d777bec43c5c7"
     },
     {
-      "bytes": 17310,
+      "bytes": 7689,
+      "path": "lib/attribute-filters.js",
+      "sha256": "7f87ff5e7d45104f6dcab2a7b2884c4ea5836366e0cfc616f836b4fa1f39ef6e"
+    },
+    {
+      "bytes": 17769,
       "path": "lib/backend-beta-fixture.js",
-      "sha256": "7fac84e3b23a24bffe0d7ff700393b55cf97c4098fc7a7fef847f79b6d1f60e9"
+      "sha256": "298fcb73f51b033fb0d3284e76a013b6eb6ec86d61fa2f7ed630084bb4396768"
     },
     {
       "bytes": 11890,
@@ -67,14 +72,14 @@
       "sha256": "ba161d08a030ed997d152c3504c6ecbe868e6f14ec9374a85a1f1d5fa096aff3"
     },
     {
-      "bytes": 27646,
+      "bytes": 28394,
       "path": "lib/catalog.js",
-      "sha256": "e14f71acd7e92479704b6b56a84938a6568997d1e60596fe189b1b41fa16a97f"
+      "sha256": "babdfc1b94604d3a8c4047ef6f86d4e1e1b129b94d4fbb061b70e8270caf18d1"
     },
     {
-      "bytes": 5084,
+      "bytes": 6762,
       "path": "lib/display-formula.js",
-      "sha256": "fa38439c5eed25101dedcafbc1384004c31e63ffb086807547c7cfe05d0f1525"
+      "sha256": "042a9482fccdcabd59a84bc3a8bf6f09589e22db4fe3d2bacf11d592bb4a23d4"
     },
     {
       "bytes": 4364,
@@ -87,9 +92,9 @@
       "sha256": "584a76d8da76b1c833d328953f0838ffaf87bfa2c192f6e69cbd6e540cbae6e9"
     },
     {
-      "bytes": 21448,
+      "bytes": 23021,
       "path": "lib/filter-engine.js",
-      "sha256": "007d02110ee8fc18d43c836872a0291964ebf7f49a376dec3d488ff6b752d241"
+      "sha256": "57c7cd1b88eba12236b6ae4384e6b7e757c7f1d3200f90f0dfc374f64109f463"
     },
     {
       "bytes": 6885,
@@ -102,9 +107,9 @@
       "sha256": "743132b7ce100398eb233564fdb3b4956caabd2917fcb9019cd8ff0636c89157"
     },
     {
-      "bytes": 3675,
+      "bytes": 3878,
       "path": "lib/formula-autocomplete.js",
-      "sha256": "8b738a2d19878e2c21e8251819027d4437f7d26228857b762e43d2c1097f3ea7"
+      "sha256": "901cdb4d1113cbb1ffc15959a6345d908dda24c74c3e65aab0a1cfd0c962d4bb"
     },
     {
       "bytes": 16753,
@@ -127,9 +132,9 @@
       "sha256": "e671213de76db9f1c09c5cdf43e3afffa4f733ad9855383c17a2cc872e2e2cf4"
     },
     {
-      "bytes": 11299,
+      "bytes": 11826,
       "path": "lib/query-index.js",
-      "sha256": "1d8bc98336abb7d2aab9b3cd94096c08aa7fb078f557e56eee98a111e3a5427a"
+      "sha256": "850b05cbdefd37f0cbb0d3ea253b58d122676438ee7ee92eeb594ad82ae0c489"
     },
     {
       "bytes": 958,
@@ -142,9 +147,9 @@
       "sha256": "663d2501f892d6f46599bffeaaa484f9f8248fc18210996ce10ab48b0a6e60f7"
     },
     {
-      "bytes": 47661,
+      "bytes": 55950,
       "path": "lib/state.js",
-      "sha256": "3a2ea9341d9f528617ca27db641c5388c4cc599fc631db844d6995d0f0ac2ffe"
+      "sha256": "38717ffb2ab3e97777eb9050a3ab108cab4a5a175530ebe37c6d9a43bf1ba83f"
     },
     {
       "bytes": 13188,
@@ -157,19 +162,19 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 28919,
+      "bytes": 32890,
       "path": "main.js",
-      "sha256": "ae212974322326cd4889471de20e7d9cf4b5eb6e9d033de21f717ab70faa5b62"
+      "sha256": "4c14335f0d11df823b41c88603feec44f85f4fcc9a5179e5acce14c4fef77959"
     },
     {
-      "bytes": 32783,
+      "bytes": 35674,
       "path": "styles.css",
-      "sha256": "a52311cce759193833c0de4ff8cb1d0bb8a1be3e97040d650a40196efac73362"
+      "sha256": "91520eee8a51bb58ef246ef29d605c41d8c41dd1b2adbcff470c931b27302be1"
     },
     {
-      "bytes": 37562,
+      "bytes": 45611,
       "path": "views/filter-view.js",
-      "sha256": "625332be523cd69ec587dd5e68d411de4f10921545d509a8909594c86cc8b97d"
+      "sha256": "e5e1796ee3d386d8f5f631580d350cae7a6e9417ccd163c916817e4e7074b47b"
     },
     {
       "bytes": 25531,
@@ -195,7 +200,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4014176,
-    "files": 38
+    "bytes": 4143599,
+    "files": 39
   }
 }
