@@ -1683,8 +1683,8 @@ dialog::backdrop {
 }
 
 .details-tags li {
-  height: 44px;
-  min-height: 44px;
+  height: 34px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   padding: 4px 7px;
@@ -1698,8 +1698,8 @@ dialog::backdrop {
 }
 
 .details-tags .details-sensitive-control {
-  width: 44px;
-  min-width: 44px;
+  width: 34px;
+  min-width: 34px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -1734,10 +1734,10 @@ dialog::backdrop {
 }
 
 .details-sensitive-toggle {
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  min-height: 44px;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
   display: inline-grid;
   place-items: center;
   padding: 0;
