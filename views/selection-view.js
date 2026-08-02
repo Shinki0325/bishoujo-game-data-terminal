@@ -97,7 +97,9 @@ export function createSelectionCard(documentRef, work, {
   selected,
   onToggle,
   onOpenDetails,
-  assetBase
+  onOpenMedia = onOpenDetails,
+  assetBase,
+  coverUrl = null
 }) {
   if (documentRef === null || typeof documentRef?.createElement !== 'function') {
     throw new TypeError('documentRef must provide createElement');
@@ -108,6 +110,7 @@ export function createSelectionCard(documentRef, work, {
   if (!CARD_VIEWS.has(view)) throw new RangeError('view must be full or compact');
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
+  assertFunction(onOpenMedia, 'onOpenMedia');
 
   const card = documentRef.createElement('article');
   card.className = `selection-card selection-card-${view}`;
@@ -116,18 +119,35 @@ export function createSelectionCard(documentRef, work, {
   card.setAttribute('aria-label', `查看 ${work.title} 详情`);
 
   const image = documentRef.createElement('img');
-  try {
-    applyImageAsset(image, work, assetBase);
-  } catch (error) {
-    if (error instanceof AssetUrlError) {
-      throw new TypeError('work.coverPath must use the approved public asset path');
+  if (typeof coverUrl === 'string' && coverUrl.length > 0) {
+    if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
+    image.src = coverUrl;
+  } else {
+    try {
+      applyImageAsset(image, work, assetBase);
+    } catch (error) {
+      if (error instanceof AssetUrlError) {
+        throw new TypeError('work.coverPath must use the approved public asset path');
+      }
+      throw error;
     }
-    throw error;
   }
   image.alt = '';
   image.loading = 'lazy';
   image.decoding = 'async';
   installMissingImageFallback(documentRef, card, image);
+
+  const cover = documentRef.createElement('button');
+  cover.type = 'button';
+  cover.className = 'selection-card-cover';
+  cover.dataset.controlType = 'media';
+  cover.setAttribute('aria-label', `放大 ${work.title}`);
+  cover.title = `放大 ${work.title}`;
+  cover.addEventListener('click', event => {
+    event.stopPropagation();
+    onOpenMedia(work);
+  });
+  cover.append(image);
 
   const checkbox = documentRef.createElement('input');
   checkbox.className = 'selection-card-checkbox';
@@ -158,12 +178,17 @@ export function createSelectionCard(documentRef, work, {
 
   const details = documentRef.createElement('button');
   details.type = 'button';
-  details.className = 'selection-card-details';
+  details.className = 'selection-card-info selection-card-details icon-button';
   details.dataset.controlType = 'details';
   details.setAttribute('aria-label', card.getAttribute('aria-label'));
-  details.addEventListener('click', () => onOpenDetails(work));
+  details.title = card.getAttribute('aria-label');
+  details.textContent = 'i';
+  details.addEventListener('click', event => {
+    event.stopPropagation();
+    onOpenDetails(work);
+  });
 
-  card.append(image, checkbox, overlay, details);
+  card.append(cover, checkbox, overlay, details);
   return card;
 }
 
@@ -184,6 +209,7 @@ export function createSelectionView({
   onToggleWork,
   onToggleCurrentResults,
   onOpenDetails,
+  onOpenMedia = onOpenDetails,
   onCardViewChange,
   onFilterChange,
   assetBase
@@ -208,6 +234,7 @@ export function createSelectionView({
   assertFunction(onToggleWork, 'onToggleWork');
   assertFunction(onToggleCurrentResults, 'onToggleCurrentResults');
   assertFunction(onOpenDetails, 'onOpenDetails');
+  assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onCardViewChange, 'onCardViewChange');
   assertFunction(onFilterChange, 'onFilterChange');
   let renderedWorkKey = '';
@@ -250,7 +277,7 @@ export function createSelectionView({
   });
 
   return Object.freeze({
-    render(model) {
+    render(model, coverUrls = null) {
       if (
         !Array.isArray(model?.works)
         || !Array.isArray(model?.selectedWorkIds)
@@ -282,6 +309,8 @@ export function createSelectionView({
         selected: selected.has(work.workId),
         onToggle: onToggleWork,
         onOpenDetails,
+        onOpenMedia,
+        coverUrl: coverUrls?.get?.(work.workId) ?? null,
         assetBase
       }));
       if (pageIndex > 0) {

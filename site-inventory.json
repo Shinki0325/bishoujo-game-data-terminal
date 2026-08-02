@@ -37,14 +37,14 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 15667,
+      "bytes": 17404,
       "path": "index.html",
-      "sha256": "f4b2a5ebfee845e1893d563974a3946a593a8cc5201a7a1057592d18d5966256"
+      "sha256": "2636b66c5aa9e1b2d5c61f18472390db9238fe48e7e48204c80da83de769e230"
     },
     {
-      "bytes": 18056,
+      "bytes": 21291,
       "path": "lib/app-controller.js",
-      "sha256": "f4a269938a5c0ae72a66fb504df7873ff98bed067c421c880218e03033399b3d"
+      "sha256": "a0d69633dc3fcd5a5c2a884bb14abb380c92b0298382457e8c102bd649ba20e1"
     },
     {
       "bytes": 3702,
@@ -75,6 +75,11 @@
       "bytes": 28394,
       "path": "lib/catalog.js",
       "sha256": "babdfc1b94604d3a8c4047ef6f86d4e1e1b129b94d4fbb061b70e8270caf18d1"
+    },
+    {
+      "bytes": 935,
+      "path": "lib/custom-work.js",
+      "sha256": "4cfaf905d82ade7c96cfa7613b3b0098fb01efb65085a998ccf49cd67894bb0b"
     },
     {
       "bytes": 6762,
@@ -122,14 +127,24 @@
       "sha256": "1c84eee904ac5c1fa0bdb0cd94bfd7ddb5418565111e6ebad7702eb5461aee07"
     },
     {
+      "bytes": 3131,
+      "path": "lib/image-crop.js",
+      "sha256": "d371975073c77ad32b784ee6a0ce9fafe1506d240d8743bc2522bc549c7307dc"
+    },
+    {
+      "bytes": 4603,
+      "path": "lib/local-media-store.js",
+      "sha256": "043c768166ccdde5b998c8067238b179a630c8c518c6487176c5ce958cd7a4d3"
+    },
+    {
       "bytes": 11914,
       "path": "lib/ordered-board.js",
       "sha256": "966831f7f41ad4fb86f38106907796eda3e95885bece29c88361c429c0e33617"
     },
     {
-      "bytes": 37141,
+      "bytes": 37671,
       "path": "lib/png-export.js",
-      "sha256": "e671213de76db9f1c09c5cdf43e3afffa4f733ad9855383c17a2cc872e2e2cf4"
+      "sha256": "682ed2efa2b58de9f354c7af4c901dee9b7d75d55da953d1bc3b7380430e90ff"
     },
     {
       "bytes": 11826,
@@ -167,14 +182,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 33947,
+      "bytes": 42079,
       "path": "main.js",
-      "sha256": "3fdd59137eb05a5213e915176687b642512b10817d73b1bf40079c5b702a706b"
+      "sha256": "a03f778a20e72175632f47c126c56007e75186daf6fe9c07a98c109255960ae7"
     },
     {
-      "bytes": 37119,
+      "bytes": 38384,
       "path": "styles.css",
-      "sha256": "017f92a9b85d96f5f063e0397878c10f027d66cefbd7a3d23cb81162a84b1ce6"
+      "sha256": "ffa7e1de40b8851f846c51dc07b9a7794f5656671f39dee2b0c7dab645bfe581"
     },
     {
       "bytes": 45611,
@@ -182,14 +197,19 @@
       "sha256": "e5e1796ee3d386d8f5f631580d350cae7a6e9417ccd163c916817e4e7074b47b"
     },
     {
-      "bytes": 25921,
-      "path": "views/ranking-view.js",
-      "sha256": "77f52bfc1670418f32a721afd59c8f0d385ed557b73ced71dfab834599488b59"
+      "bytes": 5558,
+      "path": "views/media-dialog-view.js",
+      "sha256": "286d8c4c5246a1449a61f87706b37d9ad6e6ac31d3b75dd59f8519c95a3d4375"
     },
     {
-      "bytes": 12414,
+      "bytes": 27145,
+      "path": "views/ranking-view.js",
+      "sha256": "df97a0d7fdbd26dfe429a1a189c93fb3874e574294a2a4cc0c535acadc4c028d"
+    },
+    {
+      "bytes": 13416,
       "path": "views/selection-view.js",
-      "sha256": "ed66ef37d71611056f0a9aeade4ec14c0b2679f8330ce0b2e7b80a584add14f0"
+      "sha256": "9fea7ff0b2d5193fd15e7dd391a8b4cebbb07a5368196f749b01a79a57f0b6c7"
     },
     {
       "bytes": 10535,
@@ -205,7 +225,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4146162,
-    "files": 40
+    "bytes": 4177514,
+    "files": 44
   }
 }

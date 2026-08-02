@@ -114,27 +114,32 @@ export function createRankingCard(documentRef, work, callbacks) {
   if (callbacks === null || typeof callbacks !== 'object' || Array.isArray(callbacks)) {
     throw new TypeError('callbacks must be an object');
   }
-  const { onOpenActions, onDragStart, onDragEnd, assetBase } = callbacks;
+  const { onOpenActions, onOpenMedia = () => {}, onDragStart, onDragEnd, assetBase, coverUrl = null } = callbacks;
   assertFunction(onOpenActions, 'onOpenActions');
+  assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onDragStart, 'onDragStart');
   assertFunction(onDragEnd, 'onDragEnd');
 
-  const card = documentRef.createElement('button');
-  card.type = 'button';
+  const card = documentRef.createElement('article');
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
   card.draggable = true;
-  card.setAttribute('aria-label', `${work.title} 操作菜单`);
-  card.setAttribute('aria-haspopup', 'dialog');
+  card.tabIndex = 0;
+  card.setAttribute('aria-label', work.title);
 
   const image = documentRef.createElement('img');
-  try {
-    applyImageAsset(image, work, assetBase);
-  } catch (error) {
-    if (error instanceof AssetUrlError) {
-      throw new TypeError('work.coverPath must use the approved public asset path');
+  if (typeof coverUrl === 'string' && coverUrl.length > 0) {
+    if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
+    image.src = coverUrl;
+  } else {
+    try {
+      applyImageAsset(image, work, assetBase);
+    } catch (error) {
+      if (error instanceof AssetUrlError) {
+        throw new TypeError('work.coverPath must use the approved public asset path');
+      }
+      throw error;
     }
-    throw error;
   }
   image.alt = '';
   image.loading = 'lazy';
@@ -142,12 +147,33 @@ export function createRankingCard(documentRef, work, callbacks) {
   image.draggable = false;
   installMissingImageFallback(documentRef, card, image);
 
+  const cover = documentRef.createElement('button');
+  cover.type = 'button';
+  cover.className = 'ranking-card-cover';
+  cover.setAttribute('aria-label', `放大 ${work.title}`);
+  cover.title = `放大 ${work.title}`;
+  cover.addEventListener('click', event => {
+    event.stopPropagation();
+    onOpenMedia(work);
+  });
+  cover.append(image);
+
+  const actions = documentRef.createElement('button');
+  actions.type = 'button';
+  actions.className = 'ranking-card-actions icon-button';
+  actions.setAttribute('aria-label', `${work.title} 操作`);
+  actions.title = `${work.title} 操作`;
+  actions.textContent = '...';
+  actions.addEventListener('click', event => {
+    event.stopPropagation();
+    onOpenActions(work, card);
+  });
+
   const title = documentRef.createElement('span');
   title.className = 'ranking-card-title';
   title.dataset.field = 'title';
   title.textContent = work.title;
-  card.append(image, title);
-
+  card.append(cover, title, actions);
   card.addEventListener('click', () => onOpenActions(work, card));
   card.addEventListener('keydown', event => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -216,6 +242,7 @@ export function createRankingView({
   onMoveToTier,
   onMoveToUnranked,
   onOpenDetails,
+  onOpenMedia = () => {},
   onCandidateSearch,
   assetBase
 }) {
@@ -229,6 +256,7 @@ export function createRankingView({
   assertFunction(onMoveToTier, 'onMoveToTier');
   assertFunction(onMoveToUnranked, 'onMoveToUnranked');
   assertFunction(onOpenDetails, 'onOpenDetails');
+  assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onCandidateSearch, 'onCandidateSearch');
 
   const tierBoard = requireOwnedElement(root, '#tier-board', '#tier-board');
@@ -501,6 +529,7 @@ export function createRankingView({
   function cardCallbacks() {
     return {
       onOpenActions: openActionMenu,
+      onOpenMedia,
       onDragStart(work, card) {
         clearDropState();
         draggedWorkId = work.workId;
@@ -573,7 +602,7 @@ export function createRankingView({
   actionDialog.addEventListener('close', restoreActionFocus);
 
   return Object.freeze({
-    render(nextModel) {
+    render(nextModel, coverUrls = null) {
       if (nextModel === null || typeof nextModel !== 'object' || Array.isArray(nextModel)) {
         throw new TypeError('model must be an object');
       }
@@ -618,7 +647,10 @@ export function createRankingView({
           throw new TypeError(`model.tiers contains duplicate tier ID ${tier.id}`);
         }
         const { row, track } = createTierRow(tier);
-        const cards = tier.works.map(item => createRankingCard(documentRef, item, callbacks));
+        const cards = tier.works.map(item => createRankingCard(documentRef, item, {
+          ...callbacks,
+          coverUrl: coverUrls?.get?.(item.workId) ?? null
+        }));
         track.replaceChildren(...cards);
         nextTierRows.set(tier.id, row);
         nextTierTracks.set(tier.id, track);
@@ -635,7 +667,10 @@ export function createRankingView({
         });
         renderedJumps.push(jump);
       }
-      const candidates = model.candidateWorks.map(item => createRankingCard(documentRef, item, callbacks));
+      const candidates = model.candidateWorks.map(item => createRankingCard(documentRef, item, {
+        ...callbacks,
+        coverUrl: coverUrls?.get?.(item.workId) ?? null
+      }));
       tierBoard.replaceChildren(...renderedRows);
       tierJumps.replaceChildren(...renderedJumps);
       tierBoard.dataset.tierCount = String(renderedRows.length);

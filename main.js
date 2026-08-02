@@ -8,6 +8,9 @@ import {
 } from './lib/backend-beta-fixture.js';
 import { createHistory } from './lib/history.js';
 import { createAppController } from './lib/app-controller.js';
+import { createCustomWork } from './lib/custom-work.js';
+import { encodeSquareCrop } from './lib/image-crop.js';
+import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import {
   createImportCoordinator,
   downloadBlob,
@@ -29,6 +32,7 @@ import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView } from './views/selection-view.js';
 import { createTierManagerView } from './views/tier-manager-view.js';
+import { createMediaDialogView } from './views/media-dialog-view.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
@@ -77,9 +81,17 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   importState: requiredElement('import-state'),
   exportState: requiredElement('export-state'),
   exportPng: requiredElement('export-png'),
+  addImagesSelection: requiredElement('add-images-selection'),
+  addImagesRanking: requiredElement('add-images-ranking'),
   rankingShowCounts: requiredElement('ranking-show-counts'),
   rankingImmersive: requiredElement('ranking-immersive'),
   stateFile: requiredElement('state-file'),
+  mediaFiles: requiredElement('media-files'),
+  mediaPreview: requiredElement('media-preview'),
+  mediaPreviewImage: requiredElement('media-preview-image'),
+  mediaPreviewTitle: requiredElement('media-preview-title'),
+  mediaPreviewActions: requiredElement('media-preview-actions'),
+  mediaCropCanvas: requiredElement('media-crop-canvas'),
   detailsDialog: requiredElement('work-details'),
   detailsTitle: requiredElement('details-title'),
   detailsBrand: requiredElement('details-brand'),
@@ -150,6 +162,31 @@ function loadLocalCover(coverPath, assetBase) {
       reject(new Error(`PNG cover failed to load: ${coverPath}`));
     }, { once: true });
     image.src = resolveAssetUrl(coverPath, assetBase);
+  });
+}
+
+function loadImageUrl(url, { crossOrigin = 'anonymous' } = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof url !== 'string' || url.length === 0) {
+      reject(new TypeError('PNG cover URL is unavailable'));
+      return;
+    }
+    const image = new Image();
+    if (crossOrigin !== null) image.crossOrigin = crossOrigin;
+    image.referrerPolicy = 'no-referrer';
+    image.addEventListener('load', async () => {
+      try {
+        if (typeof image.decode === 'function') await image.decode();
+        if (!Number.isFinite(image.naturalWidth) || !Number.isFinite(image.naturalHeight) || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
+          throw new TypeError('PNG cover decoded with invalid dimensions');
+        }
+        resolve(image);
+      } catch (error) {
+        reject(error);
+      }
+    }, { once: true });
+    image.addEventListener('error', () => reject(new Error(`PNG cover failed to load: ${url}`)), { once: true });
+    image.src = url;
   });
 }
 
@@ -498,8 +535,19 @@ async function initialize() {
   });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   const worksById = new Map(sample.works.map(work => [work.workId, work]));
+  let mediaStore = null;
+  let customWorks = [];
+  try {
+    const mediaDatabase = await openLocalMediaDatabase(window.indexedDB);
+    mediaStore = createLocalMediaStore({ database: mediaDatabase, urlApi: URL });
+    customWorks = (await mediaStore.listCustom()).map(createCustomWork);
+    for (const work of customWorks) worksById.set(work.workId, work);
+  } catch (error) {
+    console.error(error);
+  }
   const controller = createAppController({
     sample,
+    localWorks: customWorks,
     storage: browserStorage(),
     confirm: message => window.confirm(message),
     announce,
@@ -534,6 +582,97 @@ async function initialize() {
   let renderedWorkspaceMode = null;
   let renderedFilterKey = null;
   let lastRenderedModel = null;
+  let replacementWork = null;
+
+  async function coverUrlForWork(work) {
+    if (mediaStore !== null && work.localMediaKind === 'custom') {
+      return mediaStore.urlForCustom(work.workId);
+    }
+    if (mediaStore !== null) {
+      const replacement = await mediaStore.urlForReplacement(work.workId);
+      if (replacement !== null) return replacement;
+    }
+    return resolveAssetUrl(work.coverPath, assetBase);
+  }
+
+  async function resolveCoverUrls(works) {
+    const entries = await Promise.all(works.map(async work => [work.workId, await coverUrlForWork(work)]));
+    return new Map(entries);
+  }
+
+  async function openMediaPreview(work) {
+    const url = await coverUrlForWork(work);
+    elements.mediaPreviewTitle.textContent = work.title;
+    elements.mediaPreviewImage.src = url ?? '';
+    elements.mediaPreviewImage.alt = work.title;
+    elements.mediaPreviewActions.replaceChildren();
+    if (work.localMediaKind !== 'custom' && mediaStore !== null) {
+      const replace = document.createElement('button');
+      replace.type = 'button';
+      replace.textContent = '替换图片';
+      replace.addEventListener('click', () => {
+        replacementWork = work;
+        elements.mediaFiles.click();
+      });
+      elements.mediaPreviewActions.append(replace);
+      if (await mediaStore.replacementFor(work.workId)) {
+        const restore = document.createElement('button');
+        restore.type = 'button';
+        restore.textContent = '恢复原图';
+        restore.addEventListener('click', () => {
+          void mediaStore.deleteReplacement(work.workId).then(render).then(() => {
+            if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
+            else elements.mediaPreview.open = false;
+          }).catch(error => {
+            announce('恢复原图失败。', 'error');
+            console.error(error);
+          });
+        });
+        elements.mediaPreviewActions.append(restore);
+      }
+    }
+    if (typeof elements.mediaPreview.showModal === 'function') elements.mediaPreview.showModal();
+    else elements.mediaPreview.open = true;
+  }
+
+  function renderCropActive(active) {
+    const canvas = elements.mediaCropCanvas;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    canvas.width = active.crop.viewport;
+    canvas.height = active.crop.viewport;
+    const { x, y, size } = active.crop;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(active.decoded.image, x, y, size, size, 0, 0, canvas.width, canvas.height);
+  }
+
+  async function decodeMediaFile(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      return { image, width: image.naturalWidth, height: image.naturalHeight };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function createCustomCandidate({ title, blob, width, height }) {
+    if (mediaStore === null) throw new Error('本地图片存储不可用');
+    const id = `custom-local-${crypto.randomUUID()}`;
+    await mediaStore.putCustom({ id, title, blob, width, height });
+    try {
+      const work = createCustomWork({ id, title, width, height });
+      controller.registerLocalWorks([work]);
+      worksById.set(id, work);
+      customWorks = [...customWorks, work];
+    } catch (error) {
+      await mediaStore.deleteCustom(id).catch(cleanupError => console.error(cleanupError));
+      throw error;
+    }
+    await render();
+  }
   const selectionView = createSelectionView({
     root: elements.catalogResults,
     onToggleWork(work, selected) {
@@ -547,6 +686,12 @@ async function initialize() {
     },
     onOpenDetails(work) {
       showDetails(work, filterById);
+    },
+    onOpenMedia(work) {
+      void openMediaPreview(work).catch(error => {
+        announce('图片预览加载失败。', 'error');
+        console.error(error);
+      });
     },
     onCardViewChange(cardView) {
       return runStateChange(() => controller.setSelectionCardView(cardView));
@@ -567,13 +712,18 @@ async function initialize() {
     onOpenDetails(work) {
       showDetails(work, filterById);
     },
+    onOpenMedia(work) {
+      void openMediaPreview(work).catch(error => {
+        announce('图片预览加载失败。', 'error');
+        console.error(error);
+      });
+    },
     onCandidateSearch(query) {
       if (importBusy) return;
       candidateTitleQuery = query;
       if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
       rankingScrollPosition = rankingView.captureScroll();
-      rankingView.render(buildRankingModel(lastRenderedModel.state, worksById, candidateTitleQuery));
-      rankingView.restoreScroll(rankingScrollPosition);
+      void render();
     },
     assetBase
   });
@@ -582,6 +732,27 @@ async function initialize() {
     write: (key, value) => window.localStorage.setItem(key, value)
   });
   const immersive = createImmersiveController({ root: document.body, documentRef: document });
+  const mediaDialog = createMediaDialogView({
+    documentRef: document,
+    decodeFile: decodeMediaFile,
+    encodeCrop: ({ image, crop }) => encodeSquareCrop({
+      image,
+      crop,
+      createCanvas(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        return canvas;
+      }
+    }),
+    renderActive: renderCropActive,
+    onCreateCustom: createCustomCandidate,
+    async onReplace(work, record) {
+      if (mediaStore === null) throw new Error('本地图片存储不可用');
+      await mediaStore.putReplacement({ workId: work.workId, ...record });
+      await render();
+    }
+  });
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
   rankingView.setShowCounts(presentation.inspect().showCounts);
   const tierManagerView = createTierManagerView({
@@ -626,6 +797,8 @@ async function initialize() {
     elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
     elements.rankingShowCounts.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
+    elements.addImagesSelection.disabled = importBusy || mediaStore === null;
+    elements.addImagesRanking.disabled = importBusy || mediaStore === null;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || model.rankedCount === 0 || pngExportInProgress;
   }
@@ -647,6 +820,8 @@ async function initialize() {
         elements.rankingCandidateSearch,
         elements.rankingShowCounts,
         elements.rankingImmersive,
+        elements.addImagesSelection,
+        elements.addImagesRanking,
         elements.exportState,
         elements.exportPng
       ]
@@ -686,7 +861,11 @@ async function initialize() {
     elements.unrankedCount.textContent = String(model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
     if (ranking) {
-      rankingView.render(buildRankingModel(model.state, worksById, candidateTitleQuery));
+      const rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
+      rankingView.render(rankingModel, await resolveCoverUrls([
+        ...rankingModel.candidateWorks,
+        ...rankingModel.tiers.flatMap(tier => tier.works)
+      ]));
     } else {
       selectionView.render({
         works: model.visibleWorks,
@@ -694,7 +873,7 @@ async function initialize() {
         selectedWorkIds: model.state.selectedWorkIds,
         selectAllState: model.selectAllState,
         filterState: model.state.filterState
-      });
+      }, await resolveCoverUrls(model.visibleWorks));
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (nextFilterKey !== renderedFilterKey) {
@@ -772,6 +951,27 @@ async function initialize() {
     rankingView.setShowCounts(presentation.setShowCounts(elements.rankingShowCounts.checked));
   });
   elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
+  for (const button of [elements.addImagesSelection, elements.addImagesRanking]) {
+    button.addEventListener('click', () => elements.mediaFiles.click());
+  }
+  elements.mediaFiles.addEventListener('change', () => {
+    const files = Array.from(elements.mediaFiles.files ?? []);
+    elements.mediaFiles.value = '';
+    const target = replacementWork;
+    replacementWork = null;
+    if (target !== null) {
+      void mediaDialog.openReplacement(target, files[0]).catch(error => {
+        announce(error instanceof Error ? error.message : '替换图片失败。', 'error');
+        console.error(error);
+      });
+      return;
+    }
+    const availableSlots = Math.max(0, 100 - controller.inspectState().selectedWorkIds.length);
+    void mediaDialog.openUpload(files, { availableSlots }).catch(error => {
+      announce(error instanceof Error ? error.message : '图片导入失败。', 'error');
+      console.error(error);
+    });
+  });
   for (const tab of [elements.modeSelection, elements.modeRanking]) {
     tab.addEventListener('keydown', event => {
       if (importBusy) return;
@@ -881,7 +1081,11 @@ async function initialize() {
           return canvas;
         },
         fontsReady: document.fonts?.ready ?? Promise.resolve(),
-        loadCover: coverPath => loadLocalCover(coverPath, assetBase)
+        loadCover: async (_coverPath, record) => {
+          const work = record.work;
+          const url = await coverUrlForWork(work);
+          return loadImageUrl(url, { crossOrigin: work.localMediaKind === 'custom' ? null : 'anonymous' });
+        }
       });
       downloadBlob({
         blob: result.blob,
