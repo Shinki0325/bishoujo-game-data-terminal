@@ -259,6 +259,7 @@ export function createRankingView({
 
   let model = null;
   let draggedWorkId = null;
+  let showCounts = false;
   let activeMenuCard = null;
   let dropPlan = null;
   let autoScrollFrame = null;
@@ -534,6 +535,7 @@ export function createRankingView({
     name.textContent = tier.name;
     const count = documentRef.createElement('output');
     count.textContent = String(tier.works.length);
+    count.hidden = !showCounts;
     label.append(name, count);
 
     const track = documentRef.createElement('div');
@@ -674,6 +676,15 @@ export function createRankingView({
         track.scrollLeft = Number.isFinite(value) ? value : 0;
       }
       candidatePool.scrollLeft = Number.isFinite(position.poolLeft) ? position.poolLeft : 0;
+    },
+
+    setShowCounts(nextShowCounts) {
+      if (typeof nextShowCounts !== 'boolean') throw new TypeError('showCounts must be a boolean');
+      showCounts = nextShowCounts;
+      for (const row of tierRows.values()) {
+        const count = row.querySelector?.('output');
+        if (count) count.hidden = !showCounts;
+      }
     },
 
     closeActionMenu

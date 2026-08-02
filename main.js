@@ -17,6 +17,7 @@ import {
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
+import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { configuredAssetBase, DATA_URLS } from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError } from './lib/state.js';
@@ -76,6 +77,8 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   importState: requiredElement('import-state'),
   exportState: requiredElement('export-state'),
   exportPng: requiredElement('export-png'),
+  rankingShowCounts: requiredElement('ranking-show-counts'),
+  rankingImmersive: requiredElement('ranking-immersive'),
   stateFile: requiredElement('state-file'),
   detailsDialog: requiredElement('work-details'),
   detailsTitle: requiredElement('details-title'),
@@ -574,6 +577,13 @@ async function initialize() {
     },
     assetBase
   });
+  const presentation = createRankingPresentation({
+    read: key => window.localStorage.getItem(key),
+    write: (key, value) => window.localStorage.setItem(key, value)
+  });
+  const immersive = createImmersiveController({ root: document.body, documentRef: document });
+  elements.rankingShowCounts.checked = presentation.inspect().showCounts;
+  rankingView.setShowCounts(presentation.inspect().showCounts);
   const tierManagerView = createTierManagerView({
     root: elements.tierManager,
     onSave(nextTiers) {
@@ -614,6 +624,8 @@ async function initialize() {
     elements.jumpCandidatePool.disabled = importBusy;
     elements.manageTiers.disabled = importBusy;
     elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
+    elements.rankingShowCounts.disabled = importBusy;
+    elements.rankingImmersive.disabled = importBusy;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || model.rankedCount === 0 || pngExportInProgress;
   }
@@ -633,6 +645,8 @@ async function initialize() {
         elements.jumpCandidatePool,
         elements.manageTiers,
         elements.rankingCandidateSearch,
+        elements.rankingShowCounts,
+        elements.rankingImmersive,
         elements.exportState,
         elements.exportPng
       ]
@@ -754,6 +768,10 @@ async function initialize() {
   elements.modeRanking.addEventListener('click', () => {
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
+  elements.rankingShowCounts.addEventListener('change', () => {
+    rankingView.setShowCounts(presentation.setShowCounts(elements.rankingShowCounts.checked));
+  });
+  elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
   for (const tab of [elements.modeSelection, elements.modeRanking]) {
     tab.addEventListener('keydown', event => {
       if (importBusy) return;

@@ -1320,6 +1320,45 @@ input[type="range"] {
   display: none;
 }
 
+.ranking-show-counts {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.ranking-show-counts input {
+  margin: 0;
+}
+
+body.is-ranking-immersive header,
+body.is-ranking-immersive .ranking-toolbar,
+body.is-ranking-immersive .candidate-toolbar {
+  display: none;
+}
+
+body.is-ranking-immersive .ranking-view {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  height: 100dvh;
+  background: #111821;
+}
+
+.ranking-immersive-exit {
+  position: fixed;
+  top: calc(10px + var(--safe-top));
+  right: calc(10px + var(--safe-right));
+  z-index: 90;
+  width: 44px;
+  height: 44px;
+}
+
 .tier-board {
   min-width: 0;
   border-bottom: 1px solid var(--border);
@@ -1376,11 +1415,23 @@ input[type="range"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #ffffff;
+  -webkit-text-stroke: 2px #000000;
+  paint-order: stroke fill;
+  text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
 }
 
 .tier-label output {
   font-size: 11px;
   font-weight: 650;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+  text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
+}
+
+.tier-label output[hidden] {
+  display: none;
 }
 
 .tier-track {
@@ -1392,7 +1443,7 @@ input[type="range"] {
   padding: 11px;
   overflow-x: auto;
   overflow-y: hidden;
-  background: var(--surface-muted);
+  background: #111821;
   overscroll-behavior-x: contain;
 }
 
@@ -1444,6 +1495,7 @@ input[type="range"] {
   padding: 12px;
   overflow-x: auto;
   overflow-y: hidden;
+  background: #111821;
 }
 
 .ranking-candidate-grid.is-drop-target {
@@ -1791,6 +1843,7 @@ dialog::backdrop {
   #import-state,
   #export-state,
   #export-png,
+  #ranking-immersive,
   .ranking-tier-jump {
     min-width: var(--touch-target);
     min-height: var(--touch-target);

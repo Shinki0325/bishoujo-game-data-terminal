@@ -37,9 +37,9 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 15035,
+      "bytes": 15667,
       "path": "index.html",
-      "sha256": "fad70ec58817c8a46cc49db1497c9be51676b674a931fcea4f8a50ace1186134"
+      "sha256": "f4b2a5ebfee845e1893d563974a3946a593a8cc5201a7a1057592d18d5966256"
     },
     {
       "bytes": 18056,
@@ -137,6 +137,11 @@
       "sha256": "850b05cbdefd37f0cbb0d3ea253b58d122676438ee7ee92eeb594ad82ae0c489"
     },
     {
+      "bytes": 2807,
+      "path": "lib/ranking-presentation.js",
+      "sha256": "8158cd372d0abb1ffeac1e3cfcb5da0868f44f25d3882bee8345d01723e2baa8"
+    },
+    {
       "bytes": 958,
       "path": "lib/runtime-config.js",
       "sha256": "5ad384cec61c9a97f2572a4e221c886093cb76992e5dd86e66b50a576840b16c"
@@ -162,14 +167,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 32890,
+      "bytes": 33947,
       "path": "main.js",
-      "sha256": "4c14335f0d11df823b41c88603feec44f85f4fcc9a5179e5acce14c4fef77959"
+      "sha256": "3fdd59137eb05a5213e915176687b642512b10817d73b1bf40079c5b702a706b"
     },
     {
-      "bytes": 35941,
+      "bytes": 37119,
       "path": "styles.css",
-      "sha256": "c69cbdc6a83a53d3939d0d0bd17a35701617510d70fecc53575a5dcc89a03787"
+      "sha256": "017f92a9b85d96f5f063e0397878c10f027d66cefbd7a3d23cb81162a84b1ce6"
     },
     {
       "bytes": 45611,
@@ -177,9 +182,9 @@
       "sha256": "e5e1796ee3d386d8f5f631580d350cae7a6e9417ccd163c916817e4e7074b47b"
     },
     {
-      "bytes": 25531,
+      "bytes": 25921,
       "path": "views/ranking-view.js",
-      "sha256": "541b75aeccb56066727a70a867fca3cd4b5c7ba84a8e50322c416ff22ead50eb"
+      "sha256": "77f52bfc1670418f32a721afd59c8f0d385ed557b73ced71dfab834599488b59"
     },
     {
       "bytes": 12414,
@@ -200,7 +205,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4140098,
-    "files": 39
+    "bytes": 4146162,
+    "files": 40
   }
 }

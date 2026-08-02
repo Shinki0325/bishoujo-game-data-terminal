@@ -255,6 +255,17 @@
                 <div id="ranking-tier-jumps" class="ranking-tier-jumps" aria-label="等级跳转"></div>
               </div>
           <div class="state-actions">
+            <label class="ranking-show-counts" for="ranking-show-counts">
+              <input id="ranking-show-counts" type="checkbox">
+              显示数量
+            </label>
+            <button
+              id="ranking-immersive"
+              class="icon-button"
+              type="button"
+              aria-label="进入直播模式"
+              title="进入直播模式"
+            >[]</button>
             <button
               id="manage-tiers"
               class="icon-button"
@@ -284,6 +295,15 @@
         </section>
       </section>
     </main>
+
+    <button
+      id="ranking-immersive-exit"
+      class="icon-button ranking-immersive-exit"
+      type="button"
+      aria-label="退出直播模式"
+      title="退出直播模式"
+      hidden
+    >X</button>
 
     <input id="state-file" type="file" accept="application/json,.json" hidden>
     <div id="status-message" role="status" aria-live="polite"></div>
