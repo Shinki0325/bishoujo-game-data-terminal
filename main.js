@@ -20,6 +20,7 @@ import {
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
+import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import {
@@ -29,6 +30,7 @@ import {
 } from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError } from './lib/state.js';
+import { appendTier } from './lib/tier-config.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
   FILTER_GROUP_ORDER
@@ -36,7 +38,6 @@ import {
 import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView } from './views/selection-view.js';
-import { createTierManagerView } from './views/tier-manager-view.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
@@ -79,10 +80,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   redoEdit: requiredElement('redo-edit'),
   clearBoard: requiredElement('clear-board'),
   clearCandidates: requiredElement('clear-candidates'),
-  jumpTierBoard: requiredElement('jump-tier-board'),
-  jumpCandidatePool: requiredElement('jump-candidate-pool'),
-  manageTiers: requiredElement('manage-tiers'),
-  tierManager: requiredElement('tier-manager'),
   importState: requiredElement('import-state'),
   exportState: requiredElement('export-state'),
   exportPng: requiredElement('export-png'),
@@ -124,7 +121,6 @@ function assertRuntimeContracts() {
     createFilterWorkerClient,
     selectionStateForResults,
     createHistory,
-    createTierManagerView,
     exportTierPng,
     createImportCoordinator,
     downloadBlob,
@@ -623,24 +619,30 @@ async function initialize() {
     return previewMedia.urlFor(work.workId, work.coverPath);
   }
 
-  async function openMediaPreview(work) {
-    const url = await previewUrlForWork(work);
-    const isImmersive = document.body.classList.contains('is-ranking-immersive');
-    elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
-    elements.mediaPreviewTitle.textContent = work.title;
-    elements.mediaPreviewImage.src = url ?? '';
-    elements.mediaPreviewImage.alt = work.title;
-    elements.mediaPreviewActions.replaceChildren();
-    if (!isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null) {
-      const replace = document.createElement('button');
-      replace.type = 'button';
-      replace.textContent = '替换图片';
-      replace.addEventListener('click', () => {
-        replacementWork = work;
-        elements.mediaFiles.click();
-      });
-      elements.mediaPreviewActions.append(replace);
-      if (await mediaStore.replacementFor(work.workId)) {
+  const previewLoader = createMediaPreviewLoader({
+    image: elements.mediaPreviewImage,
+    resolveUrl: previewUrlForWork,
+    async reveal(work, isCurrent) {
+      const isImmersive = document.body.classList.contains('is-ranking-immersive');
+      const hasReplacement = !isImmersive
+        && work.localMediaKind !== 'custom'
+        && mediaStore !== null
+        && await mediaStore.replacementFor(work.workId) !== null;
+      if (!isCurrent()) return;
+      elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
+      elements.mediaPreviewTitle.textContent = work.title;
+      elements.mediaPreviewActions.replaceChildren();
+      if (!isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null) {
+        const replace = document.createElement('button');
+        replace.type = 'button';
+        replace.textContent = '替换图片';
+        replace.addEventListener('click', () => {
+          replacementWork = work;
+          elements.mediaFiles.click();
+        });
+        elements.mediaPreviewActions.append(replace);
+      }
+      if (hasReplacement) {
         const restore = document.createElement('button');
         restore.type = 'button';
         restore.textContent = '恢复原图';
@@ -655,11 +657,16 @@ async function initialize() {
         });
         elements.mediaPreviewActions.append(restore);
       }
+      if (typeof elements.mediaPreview.showModal === 'function') elements.mediaPreview.showModal();
+      else elements.mediaPreview.open = true;
     }
-    if (typeof elements.mediaPreview.showModal === 'function') elements.mediaPreview.showModal();
-    else elements.mediaPreview.open = true;
+  });
+
+  function openMediaPreview(work) {
+    return previewLoader.open(work);
   }
 
+  elements.mediaPreview.addEventListener('close', () => previewLoader.cancel());
   elements.mediaPreview.addEventListener('click', event => {
     if (!elements.mediaPreview.classList.contains('is-immersive-preview')) return;
     const rect = elements.mediaPreviewImage.getBoundingClientRect();
@@ -669,7 +676,10 @@ async function initialize() {
       || event.clientY > rect.bottom;
     if (!outsideImage) return;
     if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
-    else elements.mediaPreview.open = false;
+    else {
+      elements.mediaPreview.open = false;
+      previewLoader.cancel();
+    }
   });
 
   function renderCropActive(active) {
@@ -766,6 +776,11 @@ async function initialize() {
       const nextTiers = state.tiers.filter(item => item.id !== tierId);
       return runStateChange(() => controller.saveTierConfig(nextTiers));
     },
+    onAddTier() {
+      const appended = appendTier(controller.inspectState().tiers, () => crypto.randomUUID());
+      rankingView.focusTier(appended.at(-1).id);
+      return runStateChange(() => controller.saveTierConfig(appended));
+    },
     onRequestMediaImport(files) {
       if (files === null) elements.mediaFiles.click();
       else openMediaUpload(files);
@@ -792,7 +807,11 @@ async function initialize() {
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
   });
-  const immersive = createImmersiveController({ root: document.body, documentRef: document });
+  const immersive = createImmersiveController({
+    root: document.body,
+    documentRef: document,
+    onChange: value => rankingView.setImmersive(value)
+  });
   const mediaDialog = createMediaDialogView({
     documentRef: document,
     decodeFile: decodeMediaFile,
@@ -827,16 +846,6 @@ async function initialize() {
   }
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
   rankingView.setShowCounts(presentation.inspect().showCounts);
-  const tierManagerView = createTierManagerView({
-    root: elements.tierManager,
-    onSave(nextTiers) {
-      return runStateChange(() => controller.saveTierConfig(nextTiers));
-    },
-    confirmDelete({ tier, count }) {
-      return window.confirm(`等级“${tier.name}”中有 ${count} 部作品，删除后这些作品将移回候选区。是否继续？`);
-    },
-    randomUUID: () => crypto.randomUUID()
-  });
 
   function captureWorkspaceScroll() {
     if (renderedWorkspaceMode === 'selection') {
@@ -863,9 +872,6 @@ async function initialize() {
     elements.redoEdit.disabled = importBusy || !model.canRedo;
     elements.clearBoard.disabled = importBusy || model.rankedCount === 0;
     elements.clearCandidates.disabled = importBusy || model.selectedCount === 0;
-    elements.jumpTierBoard.disabled = importBusy;
-    elements.jumpCandidatePool.disabled = importBusy;
-    elements.manageTiers.disabled = importBusy;
     elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
     elements.rankingShowCounts.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
@@ -886,9 +892,6 @@ async function initialize() {
         elements.redoEdit,
         elements.clearBoard,
         elements.clearCandidates,
-        elements.jumpTierBoard,
-        elements.jumpCandidatePool,
-        elements.manageTiers,
         elements.rankingCandidateSearch,
         elements.rankingShowCounts,
         elements.rankingImmersive,
@@ -1012,7 +1015,6 @@ async function initialize() {
 
   elements.modeSelection.addEventListener('click', () => {
     return runStateChange(() => {
-      rankingView.closeActionMenu();
       return controller.setWorkspaceMode('selection');
     });
   });
@@ -1066,23 +1068,6 @@ async function initialize() {
   elements.redoEdit.addEventListener('click', () => {
     return runStateChange(() => controller.redo());
   });
-  elements.jumpTierBoard.addEventListener('click', () => {
-    elements.tierBoard?.scrollIntoView?.({ block: 'start', inline: 'nearest' });
-    elements.tierBoard?.focus?.({ preventScroll: true });
-  });
-  elements.jumpCandidatePool.addEventListener('click', () => {
-    elements.rankingCandidateGrid.scrollIntoView?.({ block: 'start', inline: 'nearest' });
-    elements.rankingCandidateGrid.focus?.({ preventScroll: true });
-  });
-  elements.manageTiers.addEventListener('click', () => {
-    if (importBusy) return;
-    const state = controller.inspectState();
-    tierManagerView.open({ tiers: state.tiers, tierOrder: state.tierOrder });
-  });
-  elements.tierManager.addEventListener('close', () => {
-    elements.manageTiers.focus();
-  });
-
   elements.importState.addEventListener('click', () => {
     elements.stateFile.click();
   });
@@ -1101,7 +1086,6 @@ async function initialize() {
       return;
     }
 
-    rankingView.closeActionMenu();
     candidateTitleQuery = '';
     selectionScrollPosition = { top: 0, left: 0 };
     rankingScrollPosition = {

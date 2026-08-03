@@ -1133,7 +1133,6 @@ input[type="range"] {
 
 .selection-card-info:focus-visible,
 .selection-card-cover:focus-visible,
-.ranking-card-actions:focus-visible,
 .ranking-card-cover:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -3px;
@@ -1233,19 +1232,6 @@ input[type="range"] {
   -webkit-line-clamp: 2;
 }
 
-.ranking-card-actions {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  z-index: 5;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  color: #ffffff;
-  background: rgba(8, 12, 18, 0.76);
-  border: 0;
-}
-
 .ranking-card:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -3px;
@@ -1334,19 +1320,10 @@ input[type="range"] {
 }
 
 .edit-actions,
-.ranking-jump-nav,
 .state-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-}
-
-.ranking-jump-nav {
-  justify-content: center;
-}
-
-.ranking-tier-jumps {
-  display: none;
 }
 
 .ranking-show-counts {
@@ -1371,11 +1348,8 @@ body.is-ranking-immersive .candidate-toolbar {
   display: none;
 }
 
-body.is-ranking-immersive .ranking-card-actions {
-  display: none;
-}
-
 body.is-ranking-immersive .tier-editing-state,
+body.is-ranking-immersive .tier-add-button,
 body.is-ranking-immersive .ranking-upload-tile {
   display: none !important;
 }
@@ -1404,6 +1378,19 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 .tier-board {
   min-width: 0;
   border-bottom: 1px solid var(--border);
+}
+
+.tier-add-button {
+  width: 100%;
+  min-height: 34px;
+  padding: 0;
+  color: var(--text-muted);
+  background: #111821;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  font-size: 22px;
+  line-height: 1;
 }
 
 .tier-board:is(
@@ -1477,6 +1464,9 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   width: calc(100% - 12px);
   min-width: 0;
   padding: 2px 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #ffffff;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -1721,10 +1711,6 @@ dialog {
   border: 1px solid var(--border-strong);
 }
 
-#card-actions {
-  width: min(340px, calc(100% - 28px));
-}
-
 #media-preview {
   width: min(760px, calc(100% - 28px));
 }
@@ -1844,120 +1830,6 @@ dialog {
   justify-content: flex-end;
   gap: 8px;
   padding: 10px 12px calc(10px + var(--safe-bottom));
-  border-top: 1px solid var(--border);
-}
-
-#tier-manager {
-  width: min(760px, calc(100% - 28px));
-  max-height: calc(100dvh - 28px - var(--safe-top) - var(--safe-bottom));
-  overflow: hidden;
-}
-
-.tier-manager-shell {
-  max-height: calc(100dvh - 30px - var(--safe-top) - var(--safe-bottom));
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-}
-
-.tier-manager-body {
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: 10px 12px;
-  overflow: hidden;
-}
-
-#tier-duplicate-warning {
-  margin: 0;
-  padding: 7px 9px;
-  color: #6d4910;
-  background: #fff3d7;
-  border: 1px solid #d99a22;
-}
-
-#tier-manager-rows {
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border-block: 1px solid var(--border);
-  overscroll-behavior: contain;
-}
-
-.tier-manager-row {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 136px minmax(140px, 1fr) auto auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 2px;
-  border-bottom: 1px solid var(--border);
-}
-
-.tier-manager-row:last-child {
-  border-bottom: 0;
-}
-
-.tier-color-palette {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 24px);
-  gap: 4px;
-}
-
-.tier-color-swatch {
-  width: 24px;
-  min-width: 24px;
-  height: 24px;
-  min-height: 24px;
-  padding: 0;
-  border: 2px solid transparent;
-}
-
-.tier-color-swatch[aria-pressed="true"] {
-  border-color: var(--text);
-  box-shadow: 0 0 0 1px var(--surface);
-}
-
-.tier-name-input {
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tier-work-count {
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.tier-manager-actions {
-  display: flex;
-  gap: 4px;
-}
-
-#manage-tiers,
-.tier-manager-actions button {
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
-  padding: 0;
-  font-size: 20px;
-  line-height: 1;
-}
-
-#add-tier {
-  justify-self: start;
-}
-
-.tier-manager-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--surface-muted);
   border-top: 1px solid var(--border);
 }
 
@@ -2126,10 +1998,6 @@ dialog::backdrop {
   .formula-suggestion,
   .dialog-actions button,
   .icon-button,
-  #manage-tiers,
-  .tier-manager-actions button,
-  .tier-manager-footer button,
-  #add-tier,
   #import-state,
   #export-state,
   #export-png,
@@ -2137,17 +2005,14 @@ dialog::backdrop {
   #add-images-selection,
   #add-images-ranking,
   .selection-card-info,
-  .ranking-card-actions,
   .media-crop-actions button,
-  .ranking-tier-jump {
+  .tier-add-button {
     min-width: var(--touch-target);
     min-height: var(--touch-target);
   }
 
   #filter-close,
-  .icon-button,
-  #manage-tiers,
-  .tier-manager-actions button {
+  .icon-button {
     width: var(--touch-target);
     height: var(--touch-target);
   }
@@ -2258,7 +2123,6 @@ dialog::backdrop {
   }
 
   .edit-actions,
-  .ranking-jump-nav,
   .state-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2266,19 +2130,6 @@ dialog::backdrop {
 
   .state-actions {
     padding-bottom: var(--safe-bottom);
-  }
-
-  .ranking-tier-jumps {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 7px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-  }
-
-  .ranking-tier-jump {
-    flex: 0 0 auto;
-    min-height: 44px;
   }
 
   .tier-row {
@@ -2355,33 +2206,6 @@ dialog::backdrop {
     min-height: 104px;
     gap: 7px;
     padding: 10px 8px;
-  }
-
-  #tier-manager {
-    width: calc(100% - 16px);
-    max-height: calc(100dvh - 16px - var(--safe-top) - var(--safe-bottom));
-  }
-
-  .tier-manager-shell {
-    max-height: calc(100dvh - 18px - var(--safe-top) - var(--safe-bottom));
-  }
-
-  .tier-manager-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 7px;
-  }
-
-  .tier-color-palette {
-    grid-column: 1 / -1;
-  }
-
-  .tier-work-count {
-    justify-self: end;
-  }
-
-  .tier-manager-actions {
-    grid-column: 1 / -1;
-    justify-self: end;
   }
 
   .details-metadata {

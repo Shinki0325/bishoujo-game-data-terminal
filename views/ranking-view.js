@@ -115,8 +115,8 @@ export function createRankingCard(documentRef, work, callbacks) {
   if (callbacks === null || typeof callbacks !== 'object' || Array.isArray(callbacks)) {
     throw new TypeError('callbacks must be an object');
   }
-  const { onOpenActions, onOpenMedia = () => {}, onDragStart, onDragEnd, assetBase, coverUrl = null } = callbacks;
-  assertFunction(onOpenActions, 'onOpenActions');
+  const { onOpenDetails, onOpenMedia = () => {}, onDragStart, onDragEnd, assetBase, coverUrl = null } = callbacks;
+  assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onDragStart, 'onDragStart');
   assertFunction(onDragEnd, 'onDragEnd');
@@ -159,28 +159,16 @@ export function createRankingCard(documentRef, work, callbacks) {
   });
   cover.append(image);
 
-  const actions = documentRef.createElement('button');
-  actions.type = 'button';
-  actions.className = 'ranking-card-actions icon-button';
-  actions.setAttribute('aria-label', `${work.title} 操作`);
-  actions.title = `${work.title} 操作`;
-  actions.textContent = '...';
-  actions.addEventListener('click', event => {
-    event.stopPropagation();
-    onOpenActions(work, card);
-  });
-
   const title = documentRef.createElement('span');
   title.className = 'ranking-card-title';
   title.dataset.field = 'title';
   title.textContent = work.title;
-  card.append(cover, title, actions);
-  card.addEventListener('click', () => onOpenActions(work, card));
-  card.addEventListener('keydown', event => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
+  card.append(cover, title);
+  const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
+  card.addEventListener('contextmenu', event => {
+    if (!desktopDetails) return;
     event.preventDefault();
-    event.stopPropagation();
-    onOpenActions(work, card);
+    onOpenDetails(work);
   });
   card.addEventListener('dragstart', event => {
     if (event.dataTransfer) {
@@ -247,6 +235,7 @@ export function createRankingView({
   onCandidateSearch,
   onTierConfigChange = () => {},
   onTierDelete = () => {},
+  onAddTier = () => {},
   onRequestMediaImport = () => {},
   assetBase
 }) {
@@ -264,20 +253,12 @@ export function createRankingView({
   assertFunction(onCandidateSearch, 'onCandidateSearch');
   assertFunction(onTierConfigChange, 'onTierConfigChange');
   assertFunction(onTierDelete, 'onTierDelete');
+  assertFunction(onAddTier, 'onAddTier');
   assertFunction(onRequestMediaImport, 'onRequestMediaImport');
 
   const tierBoard = requireOwnedElement(root, '#tier-board', '#tier-board');
-  const tierJumps = requireOwnedElement(root, '#ranking-tier-jumps', '#ranking-tier-jumps');
   const candidateSearch = requireOwnedElement(root, '#ranking-candidate-search', '#ranking-candidate-search');
   const candidatePool = requireOwnedElement(root, '#ranking-candidate-grid', '#ranking-candidate-grid');
-  const actionDialog = documentRef.getElementById?.('card-actions');
-  if (!actionDialog) throw new Error('Ranking view document is missing #card-actions');
-  const actionDialogTitle = actionDialog.querySelector?.('#card-actions-title');
-  const actionContainer = actionDialog.querySelector?.('.dialog-actions');
-  if (!actionDialogTitle || !actionContainer) {
-    throw new Error('Ranking action dialog is incomplete');
-  }
-
   const tierRows = new Map();
   const tierTracks = new Map();
 
@@ -295,13 +276,13 @@ export function createRankingView({
   let model = null;
   let draggedWorkId = null;
   let showCounts = false;
-  let activeMenuCard = null;
   let dropPlan = null;
   let autoScrollFrame = null;
   let autoScrollTrack = null;
   let autoScrollPointerX = 0;
   let editingTierId = null;
   let focusTierId = null;
+  let immersive = false;
 
   function removeIndicator() {
     const parent = indicator.parentElement;
@@ -445,99 +426,11 @@ export function createRankingView({
     onMoveToUnranked(workId);
   }
 
-  function restoreActionFocus() {
-    const sourceCard = activeMenuCard;
-    activeMenuCard = null;
-    sourceCard?.focus?.();
-  }
-
-  function closeActionMenu() {
-    if (actionDialog.open && typeof actionDialog.close === 'function') {
-      actionDialog.close();
-      if (activeMenuCard !== null && !actionDialog.open) restoreActionFocus();
-      return;
-    }
-    actionDialog.open = false;
-    restoreActionFocus();
-  }
-
-  function createActionButton(action, label, callback, accessibleLabel = null, disabled = false) {
-    const button = documentRef.createElement('button');
-    button.type = 'button';
-    button.dataset.action = action;
-    button.textContent = label;
-    button.disabled = Boolean(disabled);
-    if (accessibleLabel !== null) {
-      button.setAttribute('aria-label', accessibleLabel);
-      button.setAttribute('title', accessibleLabel);
-    }
-    button.addEventListener('click', () => {
-      if (button.disabled) return;
-      closeActionMenu();
-      callback();
-    });
-    return button;
-  }
-
-  function placementFor(workId) {
-    for (const tier of model.tiers) {
-      const index = tier.works.findIndex(item => item.workId === workId);
-      if (index >= 0) return { tier, index };
-    }
-    return null;
-  }
-
-  function appendPositionActions(buttons, work) {
-    const placement = placementFor(work.workId);
-    const isRanked = placement !== null;
-    const rowLength = placement?.tier.works.length ?? 0;
-    const previousIndex = isRanked ? Math.max(0, placement.index - 1) : 0;
-    const nextIndex = isRanked ? Math.min(rowLength - 1, placement.index + 1) : 0;
-    buttons.push(
-      createActionButton('first', '移到第一位', () => {
-        onMoveToTier(work.workId, placement.tier.id, 0);
-      }, '移到当前等级第一位', !isRanked || placement.index === 0),
-      createActionButton('last', '移到最后一位', () => {
-        onMoveToTier(work.workId, placement.tier.id, rowLength - 1);
-      }, '移到当前等级最后一位', !isRanked || placement.index === rowLength - 1),
-      createActionButton('before', '移到前一张之前', () => {
-        onMoveToTier(work.workId, placement.tier.id, previousIndex);
-      }, '移到前一张卡片之前', !isRanked || placement.index === 0),
-      createActionButton('after', '移到后一张之后', () => {
-        onMoveToTier(work.workId, placement.tier.id, nextIndex);
-      }, '移到后一张卡片之后', !isRanked || placement.index === rowLength - 1)
-    );
-  }
-
-  function openActionMenu(work, sourceCard) {
-    closeActionMenu();
-    activeMenuCard = sourceCard;
-    actionDialogTitle.textContent = work.title;
-    actionContainer.setAttribute('aria-label', `${work.title} 移动目标`);
-    const buttons = model.tiers.map(tier => createActionButton(
-      tier.id,
-      `移至 ${tier.name} 级`,
-      () => {
-        const destinationLength = tier.works
-          .filter(item => item.workId !== work.workId).length;
-        onMoveToTier(work.workId, tier.id, destinationLength);
-      },
-      `移至 ${tier.name} 级`
-    ));
-    appendPositionActions(buttons, work);
-    buttons.push(
-      createActionButton('unranked', '移至未分级', () => onMoveToUnranked(work.workId)),
-      createActionButton('details', '查看详情', () => onOpenDetails(work))
-    );
-    actionContainer.replaceChildren(...buttons);
-    if (typeof actionDialog.showModal === 'function') actionDialog.showModal();
-    else actionDialog.open = true;
-    buttons[0]?.focus?.();
-  }
-
   function cardCallbacks() {
     return {
-      onOpenActions: openActionMenu,
+      onOpenDetails(work) {
+        if (!immersive) onOpenDetails(work);
+      },
       onOpenMedia,
       onDragStart(work, card) {
         clearDropState();
@@ -569,9 +462,11 @@ export function createRankingView({
       const name = label.querySelector('.tier-label-name');
       const input = label.querySelector('.tier-name-input');
       const palette = label.querySelector('.tier-color-palette');
+      const editingState = label.querySelector('.tier-editing-state');
       if (name) name.hidden = false;
       if (input) input.hidden = true;
       if (palette) palette.hidden = true;
+      if (editingState) editingState.hidden = true;
     }
     editingTierId = null;
   }
@@ -684,6 +579,7 @@ export function createRankingView({
     label.append(name, input, count, editingState);
 
     function beginEdit() {
+      if (immersive) return;
       if (editingTierId !== null && editingTierId !== tier.id) closeTierEditing();
       editingTierId = tier.id;
       label.classList.add('is-tier-editing');
@@ -729,7 +625,8 @@ export function createRankingView({
         commitName();
       }
     });
-    input.addEventListener('blur', () => {
+    input.addEventListener('blur', event => {
+      if (isDescendant(editingState, event.relatedTarget)) return;
       if (editingTierId === tier.id) commitName();
     });
 
@@ -765,7 +662,7 @@ export function createRankingView({
   uploadTile.setAttribute('title', '导入图片');
   uploadTile.addEventListener('click', event => {
     event.stopPropagation();
-    onRequestMediaImport(null);
+    if (!immersive) onRequestMediaImport(null);
   });
   uploadTile.addEventListener('dragover', event => {
     event.preventDefault();
@@ -780,17 +677,9 @@ export function createRankingView({
     event.preventDefault();
     event.stopPropagation();
     uploadTile.classList.remove('is-drop-target');
-    onRequestMediaImport(arrayFrom(event.dataTransfer?.files));
+    if (!immersive) onRequestMediaImport(arrayFrom(event.dataTransfer?.files));
   });
   candidateSearch.addEventListener('input', () => onCandidateSearch(candidateSearch.value));
-  actionDialog.addEventListener('click', event => {
-    if (event.target === event.currentTarget) closeActionMenu();
-  });
-  actionDialog.addEventListener('cancel', event => {
-    event.preventDefault();
-    closeActionMenu();
-  });
-  actionDialog.addEventListener('close', restoreActionFocus);
   documentRef.addEventListener('click', event => {
     if (editingTierId === null) return;
     const row = tierRows.get(editingTierId);
@@ -814,13 +703,9 @@ export function createRankingView({
       const retainedTierScroll = Object.fromEntries(
         [...tierTracks].map(([tierId, track]) => [tierId, track.scrollLeft])
       );
-      const menuWasOpen = activeMenuCard !== null;
-      const focusedWorkId = activeMenuCard?.dataset?.workId ?? (
-        isRankingCard(documentRef.activeElement)
-          ? documentRef.activeElement.dataset.workId
-          : null
-      );
-      closeActionMenu();
+      const focusedWorkId = isRankingCard(documentRef.activeElement)
+        ? documentRef.activeElement.dataset.workId
+        : null;
       finishDrag();
       model = nextModel;
       closeTierEditing();
@@ -828,7 +713,6 @@ export function createRankingView({
       const nextTierRows = new Map();
       const nextTierTracks = new Map();
       const renderedRows = [];
-      const renderedJumps = [];
       for (let index = 0; index < model.tiers.length; index += 1) {
         const tier = model.tiers[index];
         if (
@@ -855,24 +739,22 @@ export function createRankingView({
         nextTierRows.set(tier.id, row);
         nextTierTracks.set(tier.id, track);
         renderedRows.push(row);
-        const jump = documentRef.createElement('button');
-        jump.type = 'button';
-        jump.className = 'ranking-tier-jump';
-        jump.dataset.tierId = tier.id;
-        jump.setAttribute('aria-controls', row.id);
-        jump.textContent = tier.name;
-        jump.addEventListener('click', () => {
-          row.scrollIntoView?.({ block: 'start', inline: 'nearest' });
-          track.focus?.({ preventScroll: true });
-        });
-        renderedJumps.push(jump);
       }
+      const addTier = documentRef.createElement('button');
+      addTier.type = 'button';
+      addTier.className = 'tier-add-button';
+      addTier.textContent = '+';
+      addTier.disabled = model.tiers.length >= 8;
+      addTier.setAttribute('aria-label', '添加等级');
+      addTier.setAttribute('title', '添加等级');
+      addTier.addEventListener('click', () => {
+        if (!immersive && !addTier.disabled) onAddTier();
+      });
       const candidates = model.candidateWorks.map(item => createRankingCard(documentRef, item, {
         ...callbacks,
         coverUrl: coverUrls?.get?.(item.workId) ?? null
       }));
-      tierBoard.replaceChildren(...renderedRows);
-      tierJumps.replaceChildren(...renderedJumps);
+      tierBoard.replaceChildren(...renderedRows, addTier);
       tierBoard.dataset.tierCount = String(renderedRows.length);
       tierRows.clear();
       tierTracks.clear();
@@ -887,13 +769,12 @@ export function createRankingView({
       if (focusedWorkId !== null) {
         const nextCard = cardForWorkId(focusedWorkId);
         if (nextCard) nextCard.focus?.();
-        else if (menuWasOpen) candidateSearch.focus?.();
       }
-      if (focusTierId !== null) {
+      if (!immersive && focusTierId !== null) {
         const nextRow = tierRows.get(focusTierId);
-        nextRow?.querySelector?.('.tier-label')?.focus?.();
-        focusTierId = null;
+        nextRow?.querySelector?.('.tier-label')?.click?.();
       }
+      focusTierId = null;
     },
 
     captureScroll() {
@@ -927,7 +808,21 @@ export function createRankingView({
       }
     },
 
-    closeActionMenu
+    setImmersive(nextImmersive) {
+      if (typeof nextImmersive !== 'boolean') throw new TypeError('immersive must be a boolean');
+      immersive = nextImmersive;
+      if (immersive) {
+        focusTierId = null;
+        closeTierEditing();
+      }
+    },
+
+    focusTier(tierId) {
+      if (typeof tierId !== 'string' || tierId.length === 0) {
+        throw new TypeError('tierId must be a non-empty string');
+      }
+      focusTierId = tierId;
+    }
   });
 
   function cardForWorkId(workId) {

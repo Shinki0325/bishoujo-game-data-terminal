@@ -37,9 +37,9 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 17394,
+      "bytes": 15464,
       "path": "index.html",
-      "sha256": "ba2bce9c92f75d648bb55cd3f251746db38c5404d3680198c92f2d744d941b9e"
+      "sha256": "910f0f44e753d309e68525dfe0a342c86c96b38ec4660778bdf0d621863f0bee"
     },
     {
       "bytes": 21291,
@@ -137,6 +137,11 @@
       "sha256": "043c768166ccdde5b998c8067238b179a630c8c518c6487176c5ce958cd7a4d3"
     },
     {
+      "bytes": 1638,
+      "path": "lib/media-preview-loader.js",
+      "sha256": "510b3de6df05edfe3ea12c5e223940fd917ea1c88aa6acccd2729b6806b8fefb"
+    },
+    {
       "bytes": 11914,
       "path": "lib/ordered-board.js",
       "sha256": "966831f7f41ad4fb86f38106907796eda3e95885bece29c88361c429c0e33617"
@@ -157,9 +162,9 @@
       "sha256": "850b05cbdefd37f0cbb0d3ea253b58d122676438ee7ee92eeb594ad82ae0c489"
     },
     {
-      "bytes": 2942,
+      "bytes": 3094,
       "path": "lib/ranking-presentation.js",
-      "sha256": "df7c00edfac04a9bbc26bea368d107f113fcbbdd5919a4256b7f4d8e4d1cf5c0"
+      "sha256": "d62cc14361c8461c247f27808e3f6ab4ff49ae4c36ab0562b2139af7d507d02d"
     },
     {
       "bytes": 1033,
@@ -187,14 +192,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 44945,
+      "bytes": 43987,
       "path": "main.js",
-      "sha256": "e2077960bc1f96078972c2ab7443b3c94f0af2954a44874ee3adf45a08b2f739"
+      "sha256": "b703352b7647a00fe09183afb1fb65c13c27df168998372f4460315c36ae2beb"
     },
     {
-      "bytes": 42916,
+      "bytes": 39826,
       "path": "styles.css",
-      "sha256": "64edbb45f0ef0d0ae3990d8e2b3e38815ab2b820f8d4ab00eb974749aaef734f"
+      "sha256": "e801372e2c944b843094b580bd50cf929bca8de3c7cd99f66d6a8123408eff38"
     },
     {
       "bytes": 45611,
@@ -207,19 +212,14 @@
       "sha256": "b08beb008a0bb6b8ebfa23de3d01bed9eff89cce3930777f64cd6528995c24a9"
     },
     {
-      "bytes": 34783,
+      "bytes": 30584,
       "path": "views/ranking-view.js",
-      "sha256": "91f00d202062cb819101ae4efc4287ed52d989d4e6a647fe4dda4c2e2028ac26"
+      "sha256": "54369e7ac9487b2fc7a0bf7004bea288abd8db1deb4db207bd0878b5ea3eff7a"
     },
     {
       "bytes": 13416,
       "path": "views/selection-view.js",
       "sha256": "9fea7ff0b2d5193fd15e7dd391a8b4cebbb07a5368196f749b01a79a57f0b6c7"
-    },
-    {
-      "bytes": 10535,
-      "path": "views/tier-manager-view.js",
-      "sha256": "b1db0ebf6532520e73f46505a72aa6dd7f1697d46409196d6ca1036689dbba72"
     },
     {
       "bytes": 220,
@@ -230,7 +230,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4198766,
+    "bytes": 4179844,
     "files": 45
   }
 }

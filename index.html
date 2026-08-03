@@ -250,11 +250,6 @@
             <button id="clear-board" type="button">清空分级</button>
             <button id="clear-candidates" type="button">清空候选</button>
           </div>
-              <div class="ranking-jump-nav" role="group" aria-label="排榜跳转">
-                <button id="jump-tier-board" type="button" aria-controls="tier-board">分级</button>
-                <button id="jump-candidate-pool" type="button" aria-controls="ranking-candidate-grid">候选</button>
-                <div id="ranking-tier-jumps" class="ranking-tier-jumps" aria-label="等级跳转"></div>
-              </div>
           <div class="state-actions">
             <label class="ranking-show-counts" for="ranking-show-counts">
               <input id="ranking-show-counts" type="checkbox">
@@ -267,15 +262,6 @@
               aria-label="进入直播模式"
               title="进入直播模式"
             >[]</button>
-            <button
-              id="manage-tiers"
-              class="icon-button"
-              type="button"
-              aria-haspopup="dialog"
-              aria-controls="tier-manager"
-              aria-label="管理等级"
-              title="管理等级"
-            >⚙</button>
             <button id="import-state" type="button">导入 JSON</button>
             <button id="export-state" type="button">导出 JSON</button>
             <button id="export-png" type="button">导出 PNG</button>
@@ -310,36 +296,6 @@
     <input id="state-file" type="file" accept="application/json,.json" hidden>
     <input id="media-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div id="status-message" role="status" aria-live="polite"></div>
-
-    <dialog id="tier-manager" aria-labelledby="tier-manager-title">
-      <div class="tier-manager-shell">
-        <div class="dialog-heading">
-          <h2 id="tier-manager-title">管理等级</h2>
-        </div>
-        <div class="tier-manager-body">
-          <p id="tier-duplicate-warning" role="status" aria-live="polite" hidden></p>
-          <div id="tier-manager-rows"></div>
-          <button id="add-tier" type="button">添加等级</button>
-        </div>
-        <div class="tier-manager-footer">
-          <button id="cancel-tier-manager" type="button">取消</button>
-          <button id="save-tier-manager" type="button">保存</button>
-        </div>
-      </div>
-    </dialog>
-
-    <dialog id="card-actions" aria-labelledby="card-actions-title">
-      <div class="dialog-heading">
-        <h2 id="card-actions-title">作品操作</h2>
-        <form method="dialog">
-          <button class="icon-button" type="submit" aria-label="关闭作品操作" title="关闭作品操作">×</button>
-        </form>
-      </div>
-      <div class="dialog-actions">
-        <button type="button">查看详情</button>
-        <button type="button">取消选择</button>
-      </div>
-    </dialog>
 
     <dialog id="media-preview" aria-labelledby="media-preview-title">
       <div class="dialog-heading">
