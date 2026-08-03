@@ -18,17 +18,17 @@
           id="mode-selection"
           type="button"
           role="tab"
-          tabindex="0"
+          tabindex="-1"
           aria-controls="selection-view"
-          aria-selected="true"
+          aria-selected="false"
         >选片</button>
         <button
           id="mode-ranking"
           type="button"
           role="tab"
-          tabindex="-1"
+          tabindex="0"
           aria-controls="ranking-view"
-          aria-selected="false"
+          aria-selected="true"
         >排榜</button>
       </div>
 
@@ -49,7 +49,7 @@
     </header>
 
     <main class="workspace">
-      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection">
+      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection" hidden>
         <button
           id="filter-backdrop"
           class="filter-backdrop"
@@ -242,7 +242,7 @@
         </section>
       </section>
 
-      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
+      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking">
         <div class="ranking-toolbar" aria-label="排榜操作">
           <div class="edit-actions">
             <button id="undo-edit" class="icon-button" type="button" aria-label="撤销" title="撤销">↶</button>
@@ -287,11 +287,11 @@
             >?</button>
             <button
               id="ranking-immersive"
-              class="icon-button"
+              class="ranking-live-mode"
               type="button"
-                  aria-label="进入沉浸模式"
-                  title="进入沉浸模式"
-                >⛶</button>
+              aria-label="进入直播模式"
+              title="进入直播模式"
+            ><span aria-hidden="true">⛶</span><span>直播模式</span></button>
             <button id="export-png" type="button">导出 PNG</button>
             <div class="toolbar-menu-shell">
               <button id="file-menu-button" type="button" aria-expanded="false" aria-controls="file-menu">文件 ▾</button>
@@ -322,22 +322,22 @@
       id="ranking-immersive-edge"
       class="ranking-immersive-edge"
       tabindex="-1"
-      aria-label="显示沉浸模式边缘控件"
+      aria-label="显示直播模式边缘控件"
     >
       <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
         <button
           id="ranking-immersive-exit"
           class="icon-button ranking-immersive-exit"
           type="button"
-          aria-label="退出沉浸模式"
-          title="退出沉浸模式"
+          aria-label="退出直播模式"
+          title="退出直播模式"
         >×</button>
         <button
           id="ranking-immersive-help"
           class="icon-button ranking-immersive-help"
           type="button"
-          aria-label="打开沉浸模式说明"
-          title="打开沉浸模式说明"
+          aria-label="打开直播模式说明"
+          title="打开直播模式说明"
         >?</button>
       </div>
     </div>
@@ -380,8 +380,8 @@
                 <li>点击图片可以打开大图预览。</li>
                 <li>桌面端右键普通排榜卡片可以查看作品详情。</li>
                 <li>在“显示”菜单中可以调整标题、数量、卡片、行高、图片标注和分级名称大小。</li>
-                <li>点击 <code>⛶</code> 进入沉浸模式。</li>
-                <li>沉浸模式下，桌面端右键图片可以编辑最多两行的图片标注。</li>
+                <li>点击“直播模式”进入直播模式。</li>
+                <li>直播模式下，桌面端右键图片可以编辑最多两行的图片标注。</li>
                 <li>使用撤销和重做可以恢复最近的排榜编辑。</li>
               </ul>
             </section>
@@ -410,8 +410,8 @@
               <ul>
                 <li>将鼠标移动到页面右上边缘，会显示退出 <code>×</code> 和帮助 <code>?</code>。</li>
                 <li>移动端轻触右侧边缘可以显示这两个按钮。</li>
-                <li>点击 <code>×</code> 或按 <code>Escape</code> 退出沉浸模式。</li>
-                <li>关闭本说明后仍会保持沉浸模式。</li>
+                <li>点击 <code>×</code> 或按 <code>Escape</code> 退出直播模式。</li>
+                <li>关闭本说明后仍会保持直播模式。</li>
               </ul>
             </section>
           </div>

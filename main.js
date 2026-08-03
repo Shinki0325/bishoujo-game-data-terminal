@@ -880,7 +880,7 @@ async function initialize() {
     write: (key, value) => window.localStorage.setItem(key, value),
     open(context) {
       const immersiveContext = context === 'immersive';
-      elements.rankingHelpTitle.textContent = immersiveContext ? '沉浸模式' : '排榜使用说明';
+      elements.rankingHelpTitle.textContent = immersiveContext ? '直播模式' : '排榜使用说明';
       elements.rankingHelpFull.hidden = immersiveContext;
       elements.rankingHelpImmersive.hidden = !immersiveContext;
       elements.rankingHelpDismiss.textContent = immersiveContext ? '返回排榜' : '知道了';
@@ -1036,7 +1036,7 @@ async function initialize() {
 
   function renderControlStates(model) {
     elements.modeSelection.disabled = importBusy;
-    elements.modeRanking.disabled = importBusy || model.selectedCount === 0;
+    elements.modeRanking.disabled = importBusy;
     elements.undoEdit.disabled = importBusy || !model.canUndo;
     elements.redoEdit.disabled = importBusy || !model.canRedo;
     elements.clearBoard.disabled = importBusy || model.rankedCount === 0;
