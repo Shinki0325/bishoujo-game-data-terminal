@@ -301,6 +301,7 @@ export function createRankingView({
   let autoScrollTrack = null;
   let autoScrollPointerX = 0;
   let editingTierId = null;
+  let focusTierId = null;
 
   function removeIndicator() {
     const parent = indicator.parentElement;
@@ -589,6 +590,7 @@ export function createRankingView({
 
     const label = documentRef.createElement('div');
     label.className = 'tier-label';
+    label.tabIndex = 0;
     label.setAttribute('aria-label', tier.name);
     label.setAttribute('title', tier.name);
     label.style.setProperty('background', 'var(--tier-background)');
@@ -612,12 +614,15 @@ export function createRankingView({
 
     const controls = [
       ['move-up', '↑', '上移', tierIndex === 0, () => {
+        focusTierId = tier.id;
         onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, -1)));
       }],
       ['move-down', '↓', '下移', tierIndex === model.tiers.length - 1, () => {
+        focusTierId = tier.id;
         onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, 1)));
       }],
       ['delete', '−', '删除', model.tiers.length <= 3, () => {
+        focusTierId = null;
         onTierDelete(tier.id);
       }]
     ];
@@ -786,6 +791,14 @@ export function createRankingView({
     closeActionMenu();
   });
   actionDialog.addEventListener('close', restoreActionFocus);
+  documentRef.addEventListener('click', event => {
+    if (editingTierId === null) return;
+    const row = tierRows.get(editingTierId);
+    if (!row || !isDescendant(row, event.target)) closeTierEditing();
+  });
+  documentRef.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && editingTierId !== null) closeTierEditing();
+  });
 
   return Object.freeze({
     render(nextModel, coverUrls = null) {
@@ -875,6 +888,11 @@ export function createRankingView({
         const nextCard = cardForWorkId(focusedWorkId);
         if (nextCard) nextCard.focus?.();
         else if (menuWasOpen) candidateSearch.focus?.();
+      }
+      if (focusTierId !== null) {
+        const nextRow = tierRows.get(focusTierId);
+        nextRow?.querySelector?.('.tier-label')?.focus?.();
+        focusTierId = null;
       }
     },
 

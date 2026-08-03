@@ -1438,6 +1438,11 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   border-bottom: 0;
 }
 
+.tier-row:has(.is-tier-editing) {
+  overflow: visible;
+  z-index: 5;
+}
+
 .tier-label {
   position: relative;
   min-width: 0;
