@@ -3,6 +3,11 @@
   --selection-card-size: 176px;
   --ranking-card-size: 88px;
   --ranking-row-height: 112px;
+  --ranking-ui-scale-overall: 1;
+  --ranking-ui-scale-card: 1;
+  --ranking-ui-scale-rail: 1;
+  --ranking-ui-scale-annotation: 1;
+  --ranking-ui-scale-controls: 1;
   --filter-drawer-width: 360px;
   --header-height: 68px;
   --touch-target: 44px;
@@ -1069,14 +1074,14 @@ input[type="range"] {
 
 .tier-track .work-card,
 .ranking-card {
-  width: var(--ranking-card-size);
-  height: var(--ranking-card-size);
+  width: var(--ranking-card-size-scaled);
+  height: var(--ranking-card-size-scaled);
   aspect-ratio: 1;
 }
 
 .ranking-card {
-  min-width: var(--ranking-card-size);
-  min-height: var(--ranking-card-size);
+  min-width: var(--ranking-card-size-scaled);
+  min-height: var(--ranking-card-size-scaled);
   container-type: inline-size;
   padding: 0;
   color: #ffffff;
@@ -1085,12 +1090,20 @@ input[type="range"] {
 }
 
 .work-card > img,
-.selection-card-cover > img,
-.ranking-card-cover > img {
+.selection-card-cover > img {
   position: absolute;
   inset: -1px;
   width: calc(100% + 2px);
   height: calc(100% + 2px);
+  display: block;
+  object-fit: cover;
+}
+
+.ranking-card-cover > img {
+  position: absolute;
+  inset: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
   display: block;
   object-fit: cover;
 }
@@ -1244,7 +1257,7 @@ input[type="range"] {
   display: grid;
   place-items: center;
   color: #ffffff;
-  font-size: min(18px, 12cqw);
+  font-size: calc(min(18px, 12cqw) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-annotation));
   font-weight: 800;
   line-height: 1.15;
   text-align: center;
@@ -1339,6 +1352,8 @@ input[type="range"] {
 }
 
 .ranking-view {
+  --ranking-card-size-scaled: calc(var(--ranking-card-size) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-card));
+  --ranking-row-height-scaled: calc(var(--ranking-row-height) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-rail));
   min-width: 0;
   height: calc(100dvh - var(--header-height));
   min-height: 0;
@@ -1353,8 +1368,8 @@ input[type="range"] {
   top: 0;
   z-index: 30;
   width: 100%;
-  height: 44px;
-  min-height: 44px;
+  height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  min-height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1395,7 +1410,7 @@ input[type="range"] {
   display: grid;
   gap: 2px;
   padding: 4px;
-  color: var(--text);
+  color: var(--text-on-strong);
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
   border-radius: 4px;
@@ -1427,6 +1442,47 @@ input[type="range"] {
   margin: 0;
 }
 
+.ranking-scale-controls {
+  min-width: 236px;
+  margin: 4px 0 0;
+  padding: 6px 8px 8px;
+  color: var(--text-on-strong);
+  border: 1px solid var(--border-strong);
+}
+
+.ranking-scale-controls legend {
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ranking-scale-controls label {
+  min-height: 24px;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.ranking-scale-controls input[type="range"] {
+  width: 100%;
+  min-height: 22px;
+  accent-color: var(--accent);
+}
+
+.ranking-scale-controls output {
+  min-width: 42px;
+  color: var(--text-on-strong);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-scale-controls button {
+  min-height: 30px;
+  margin-top: 4px;
+  color: var(--text-on-strong);
+  background: transparent;
+  border-color: var(--border-strong);
+}
+
 body.is-ranking-immersive header,
 body.is-ranking-immersive .ranking-toolbar,
 body.is-ranking-immersive .candidate-toolbar {
@@ -1447,13 +1503,19 @@ body.is-ranking-immersive .ranking-view {
   background: #111821;
 }
 
+body.is-ranking-immersive .ranking-card-annotation {
+  font-size: calc(min(36px, 24cqw) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-annotation));
+}
+
 .ranking-immersive-exit {
   position: fixed;
-  top: calc(10px + var(--safe-top));
-  right: calc(10px + var(--safe-right));
+  top: calc(4px + var(--safe-top));
+  right: calc(-12px + var(--safe-right));
   z-index: 90;
-  width: 44px;
-  height: 44px;
+  width: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  min-width: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  min-height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
 }
 
 body:not(.is-ranking-immersive) .ranking-immersive-exit {
@@ -1498,12 +1560,26 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 
 .tier-row {
   min-width: 0;
-  height: var(--ranking-row-height);
-  block-size: var(--ranking-row-height);
+  height: var(--ranking-row-height-scaled);
+  block-size: var(--ranking-row-height-scaled);
   display: grid;
   grid-template-columns: 104px minmax(0, 1fr);
   overflow: hidden;
   border-bottom: 1px solid var(--border);
+}
+
+.tier-row[data-track-rows="2"] {
+  height: calc(var(--ranking-row-height-scaled) * 2);
+  block-size: calc(var(--ranking-row-height-scaled) * 2);
+}
+
+.tier-row[data-track-rows="2"] .tier-track {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--ranking-card-size-scaled);
+  align-content: stretch;
+  justify-content: start;
 }
 
 .tier-row:last-child {
@@ -1668,7 +1744,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   align-self: stretch;
   flex: 0 0 3px;
   width: 3px;
-  min-height: var(--ranking-card-size);
+  min-height: var(--ranking-card-size-scaled);
   background: var(--focus);
   border-radius: 2px;
   pointer-events: none;
@@ -1705,7 +1781,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 
 .ranking-candidate-grid {
   min-width: 0;
-  min-height: 124px;
+  min-height: calc(124px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-rail));
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -1721,11 +1797,94 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   outline-offset: -3px;
 }
 
+.ranking-candidate-grid .ranking-card {
+  position: relative;
+}
+
+.ranking-candidate-select {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 6;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.ranking-candidate-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 6;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.58);
+  border-color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.ranking-candidate-remove:hover,
+.ranking-candidate-remove:focus-visible {
+  background: var(--danger);
+}
+
+.ranking-card.is-candidate-selected {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.ranking-card.is-dragging-group::after {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 7;
+  padding: 1px 5px;
+  color: #ffffff;
+  content: attr(data-selection-count);
+  background: var(--accent);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.candidate-batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+.candidate-batch-actions[hidden] {
+  display: none;
+}
+
+.candidate-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.candidate-remove-selected {
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
 .ranking-upload-tile {
-  flex: 0 0 var(--ranking-card-size);
-  width: var(--ranking-card-size);
-  min-width: var(--ranking-card-size);
-  height: var(--ranking-card-size);
+  flex: 0 0 var(--ranking-card-size-scaled);
+  width: var(--ranking-card-size-scaled);
+  min-width: var(--ranking-card-size-scaled);
+  height: var(--ranking-card-size-scaled);
   aspect-ratio: 1;
   display: grid;
   place-items: center;

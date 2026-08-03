@@ -262,15 +262,29 @@
               <div id="display-menu" class="toolbar-menu" hidden>
                 <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
                 <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
+                <fieldset class="ranking-scale-controls">
+                  <legend>排榜界面大小</legend>
+                  <label for="ranking-scale-overall"><span>总体</span><output id="ranking-scale-overall-output">100%</output></label>
+                  <input id="ranking-scale-overall" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-card"><span>卡片</span><output id="ranking-scale-card-output">100%</output></label>
+                  <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-rail"><span>行高/候选区</span><output id="ranking-scale-rail-output">100%</output></label>
+                  <input id="ranking-scale-rail" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-annotation"><span>沉浸标注</span><output id="ranking-scale-annotation-output">100%</output></label>
+                  <input id="ranking-scale-annotation" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-controls"><span>沉浸控件</span><output id="ranking-scale-controls-output">100%</output></label>
+                  <input id="ranking-scale-controls" type="range" min="80" max="160" step="5" value="100">
+                  <button id="ranking-scale-reset" type="button">恢复默认</button>
+                </fieldset>
               </div>
             </div>
             <button
               id="ranking-immersive"
               class="icon-button"
               type="button"
-              aria-label="进入直播模式"
-              title="进入直播模式"
-            >[]</button>
+                  aria-label="进入沉浸模式"
+                  title="进入沉浸模式"
+                >⛶</button>
             <button id="export-png" type="button">导出 PNG</button>
             <div class="toolbar-menu-shell">
               <button id="file-menu-button" type="button" aria-expanded="false" aria-controls="file-menu">文件 ▾</button>
@@ -301,10 +315,10 @@
       id="ranking-immersive-exit"
       class="icon-button ranking-immersive-exit"
       type="button"
-      aria-label="退出直播模式"
-      title="退出直播模式"
-      hidden
-    >X</button>
+          aria-label="退出沉浸模式"
+          title="退出沉浸模式"
+          hidden
+        >×</button>
 
     <input id="state-file" type="file" accept="application/json,.json" hidden>
     <input id="media-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>

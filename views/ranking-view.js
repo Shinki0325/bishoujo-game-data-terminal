@@ -269,6 +269,10 @@ export function createRankingView({
   onAddTier = () => {},
   onRequestMediaImport = () => {},
   onAnnotationChange = () => {},
+  onRemoveCandidate = () => {},
+  onRemoveCandidates = workIds => onRemoveCandidate(workIds[0]),
+  onMoveCandidatesToTier = () => {},
+  candidateHoldDelayMs = 300,
   assetBase
 }) {
   if (root === null || typeof root?.querySelector !== 'function') {
@@ -288,6 +292,12 @@ export function createRankingView({
   assertFunction(onAddTier, 'onAddTier');
   assertFunction(onRequestMediaImport, 'onRequestMediaImport');
   assertFunction(onAnnotationChange, 'onAnnotationChange');
+  assertFunction(onRemoveCandidate, 'onRemoveCandidate');
+  assertFunction(onRemoveCandidates, 'onRemoveCandidates');
+  assertFunction(onMoveCandidatesToTier, 'onMoveCandidatesToTier');
+  if (!Number.isFinite(candidateHoldDelayMs) || candidateHoldDelayMs < 0) {
+    throw new TypeError('candidateHoldDelayMs must be a non-negative number');
+  }
 
   const tierBoard = requireOwnedElement(root, '#tier-board', '#tier-board');
   const candidateSearch = requireOwnedElement(root, '#ranking-candidate-search', '#ranking-candidate-search');
@@ -308,6 +318,12 @@ export function createRankingView({
 
   let model = null;
   let draggedWorkId = null;
+  let draggedWorkIds = [];
+  let dragOrigin = null;
+  const candidateSelection = new Set();
+  let candidateHoldTimer = null;
+  let candidateSelectionActive = false;
+  let candidatePointerId = null;
   let showCounts = false;
   let showTitles = true;
   let annotations = {};
@@ -321,6 +337,121 @@ export function createRankingView({
   let colorPalette = null;
   let colorPaletteTrigger = null;
   let annotationEditor = null;
+
+  const scheduleHold = typeof viewWindow.setTimeout === 'function'
+    ? (callback, delay) => viewWindow.setTimeout(callback, delay)
+    : (callback, delay) => globalThis.setTimeout(callback, delay);
+  const cancelHold = typeof viewWindow.clearTimeout === 'function'
+    ? timerId => viewWindow.clearTimeout(timerId)
+    : timerId => globalThis.clearTimeout(timerId);
+  let candidateToolbar = candidateSearch.parentElement;
+  while (candidateToolbar && !candidateToolbar.classList?.contains('candidate-toolbar')) {
+    candidateToolbar = candidateToolbar.parentElement;
+  }
+  candidateToolbar ??= candidateSearch.parentElement;
+  const candidateBatchActions = documentRef.createElement('div');
+  candidateBatchActions.className = 'candidate-batch-actions';
+  candidateBatchActions.setAttribute('aria-label', '候选批量操作');
+  const candidateSelectAllLabel = documentRef.createElement('label');
+  candidateSelectAllLabel.className = 'candidate-select-all';
+  const candidateSelectAll = documentRef.createElement('input');
+  candidateSelectAll.type = 'checkbox';
+  candidateSelectAll.setAttribute('aria-label', '全选当前候选');
+  const candidateSelectAllText = documentRef.createElement('span');
+  candidateSelectAllText.textContent = '全选';
+  candidateSelectAllLabel.append(candidateSelectAll, candidateSelectAllText);
+  const candidateSelectedCount = documentRef.createElement('output');
+  candidateSelectedCount.className = 'candidate-selected-count';
+  candidateSelectedCount.textContent = '0';
+  const candidateRemoveSelected = documentRef.createElement('button');
+  candidateRemoveSelected.type = 'button';
+  candidateRemoveSelected.className = 'candidate-remove-selected';
+  candidateRemoveSelected.textContent = '移除所选';
+  candidateRemoveSelected.disabled = true;
+  candidateBatchActions.append(candidateSelectAllLabel, candidateSelectedCount, candidateRemoveSelected);
+  candidateToolbar?.append(candidateBatchActions);
+
+  function candidateSelectionIds() {
+    return (model?.candidateWorks ?? [])
+      .map(work => work.workId)
+      .filter(workId => candidateSelection.has(workId));
+  }
+
+  function updateCandidateSelection() {
+    const visibleIds = new Set((model?.candidateWorks ?? []).map(work => work.workId));
+    for (const workId of [...candidateSelection]) {
+      if (!visibleIds.has(workId)) candidateSelection.delete(workId);
+    }
+    for (const card of arrayFrom(candidatePool.querySelectorAll?.('.ranking-card'))) {
+      const selected = candidateSelection.has(card.dataset.workId);
+      card.classList.toggle('is-candidate-selected', selected);
+      const checkbox = card.querySelector?.('.ranking-candidate-select');
+      if (checkbox) checkbox.checked = selected;
+    }
+    const selectedIds = candidateSelectionIds();
+    const total = visibleIds.size;
+    candidateSelectedCount.textContent = String(selectedIds.length);
+    candidateRemoveSelected.disabled = selectedIds.length === 0;
+    candidateSelectAll.checked = total > 0 && selectedIds.length === total;
+    candidateSelectAll.indeterminate = selectedIds.length > 0 && selectedIds.length < total;
+  }
+
+  function setCandidateSelected(workId, selected) {
+    if (selected) candidateSelection.add(workId);
+    else candidateSelection.delete(workId);
+    updateCandidateSelection();
+  }
+
+  function clearCandidateHold() {
+    if (candidateHoldTimer !== null) {
+      cancelHold(candidateHoldTimer);
+      candidateHoldTimer = null;
+    }
+  }
+
+  function finishCandidateSelectionGesture() {
+    clearCandidateHold();
+    candidateSelectionActive = false;
+    candidatePointerId = null;
+    for (const card of arrayFrom(candidatePool.querySelectorAll?.('.ranking-card'))) {
+      card.draggable = true;
+    }
+  }
+
+  function candidateCardFromNode(node) {
+    let current = node;
+    while (current && current !== candidatePool) {
+      if (isRankingCard(current) && candidatePool.contains(current)) return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  function beginCandidateHold(workId, card, event) {
+    if (immersive || event.target?.classList?.contains('ranking-candidate-select')
+      || event.target?.classList?.contains('ranking-candidate-remove')) return;
+    clearCandidateHold();
+    candidatePointerId = event.pointerId ?? 0;
+    candidateHoldTimer = scheduleHold(() => {
+      candidateHoldTimer = null;
+      candidateSelectionActive = true;
+      card.draggable = false;
+      setCandidateSelected(workId, true);
+    }, candidateHoldDelayMs);
+  }
+
+  function updateTierTrackRows() {
+    for (const [tierId, track] of tierTracks) {
+      const row = tierRows.get(tierId);
+      const cards = arrayFrom(track.children).filter(isRankingCard);
+      const cardWidth = Number(cards[0]?.getBoundingClientRect?.().width) || 88;
+      const trackWidth = Number(track.clientWidth)
+        || Number(track.getBoundingClientRect?.().width)
+        || Math.max(1, (Number(viewWindow.innerWidth) || 390) - 128);
+      const capacity = Math.max(1, Math.floor((trackWidth - 22 + 9) / (cardWidth + 9)));
+      row.dataset.trackRows = cards.length > capacity ? '2' : '1';
+    }
+  }
 
   function closeColorPalette() {
     if (colorPaletteTrigger) colorPaletteTrigger.setAttribute('aria-expanded', 'false');
@@ -497,12 +628,14 @@ export function createRankingView({
     closeAnnotationEditor(false);
     clearDropState();
     draggedWorkId = null;
+    draggedWorkIds = [];
+    dragOrigin = null;
   }
 
   function placeIndicator(track, pointerX) {
     removeIndicator();
     const allCards = arrayFrom(track.children).filter(isRankingCard);
-    const destinationCards = allCards.filter(card => card.dataset.workId !== draggedWorkId);
+    const destinationCards = allCards.filter(card => !draggedWorkIds.includes(card.dataset.workId));
     const rects = destinationCards.map(card => {
       const rect = card.getBoundingClientRect();
       return { left: rect.left, right: rect.right };
@@ -541,13 +674,20 @@ export function createRankingView({
 
   function handleTierDrop(tierId, event) {
     const workId = draggedWorkId;
+    const workIds = [...draggedWorkIds];
     const plan = dropPlan;
     clearDropState();
     draggedWorkId = null;
+    draggedWorkIds = [];
+    dragOrigin = null;
     if (workId === null || plan?.type !== 'tier' || plan.tierId !== tierId) return;
     event.preventDefault();
     event.stopPropagation?.();
-    onMoveToTier(workId, tierId, plan.insertionIndex);
+    if (workIds.length > 1 && workIds.every(id => model?.candidateWorks?.some(item => item.workId === id))) {
+      onMoveCandidatesToTier(workIds, tierId, plan.insertionIndex);
+    } else {
+      onMoveToTier(workId, tierId, plan.insertionIndex);
+    }
   }
 
   function handlePoolDragOver(event) {
@@ -568,6 +708,8 @@ export function createRankingView({
     const plan = dropPlan;
     clearDropState();
     draggedWorkId = null;
+    draggedWorkIds = [];
+    dragOrigin = null;
     if (workId === null || plan?.type !== 'pool') return;
     event.preventDefault();
     event.stopPropagation?.();
@@ -587,10 +729,26 @@ export function createRankingView({
       onDragStart(work, card) {
         clearDropState();
         draggedWorkId = work.workId;
+        dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
+        draggedWorkIds = dragOrigin === 'pool' && candidateSelection.has(work.workId)
+          ? candidateSelectionIds()
+          : [work.workId];
         card.classList.add('is-dragging');
+        if (draggedWorkIds.length > 1) {
+          card.dataset.selectionCount = String(draggedWorkIds.length);
+          card.classList.add('is-dragging-group');
+        }
       },
       onDragEnd(work, card) {
+        const shouldReturnToPool = draggedWorkId === work.workId && dragOrigin === 'tier';
+        if (shouldReturnToPool) {
+          draggedWorkId = null;
+          dragOrigin = null;
+          onMoveToUnranked(work.workId);
+        }
         card.classList.remove('is-dragging');
+        card.classList.remove('is-dragging-group');
+        delete card.dataset.selectionCount;
         finishDrag();
       },
       assetBase
@@ -780,6 +938,46 @@ export function createRankingView({
     if (!isDescendant(candidatePool, event.relatedTarget)) clearDropState();
   });
   candidatePool.addEventListener('drop', handlePoolDrop);
+  candidatePool.addEventListener('wheel', event => {
+    const maximum = Math.max(0, Number(candidatePool.scrollWidth) - Number(candidatePool.clientWidth));
+    if (maximum <= 0 || !Number.isFinite(event.deltaY) || event.deltaY === 0) return;
+    const multiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2
+      ? Number(viewWindow.innerHeight) || 390
+      : 1;
+    const before = Number(candidatePool.scrollLeft) || 0;
+    candidatePool.scrollLeft = before + event.deltaY * multiplier;
+    if (candidatePool.scrollLeft !== before) event.preventDefault?.();
+  }, { passive: false });
+  candidateSelectAll.addEventListener('change', () => {
+    const checked = candidateSelectAll.checked;
+    for (const work of model?.candidateWorks ?? []) candidateSelection[checked ? 'add' : 'delete'](work.workId);
+    updateCandidateSelection();
+  });
+  candidateRemoveSelected.addEventListener('click', event => {
+    event.preventDefault();
+    const selectedIds = candidateSelectionIds();
+    if (immersive || selectedIds.length === 0) return;
+    candidateSelection.clear();
+    updateCandidateSelection();
+    onRemoveCandidates(selectedIds);
+  });
+  candidatePool.addEventListener('pointerdown', event => {
+    const card = candidateCardFromNode(event.target);
+    if (!card) return;
+    if (event.target?.classList?.contains('ranking-candidate-select')
+      || event.target?.classList?.contains('ranking-candidate-remove')) return;
+    beginCandidateHold(card.dataset.workId, card, event);
+  });
+  candidatePool.addEventListener('pointermove', event => {
+    if (!candidateSelectionActive || (event.pointerId ?? 0) !== candidatePointerId) return;
+    const card = candidateCardFromNode(event.target);
+    if (!card) return;
+    setCandidateSelected(card.dataset.workId, true);
+    event.preventDefault?.();
+  });
+  for (const type of ['pointerup', 'pointercancel', 'pointerleave']) {
+    candidatePool.addEventListener(type, finishCandidateSelectionGesture);
+  }
   const uploadTile = documentRef.createElement('button');
   uploadTile.type = 'button';
   uploadTile.className = 'ranking-upload-tile';
@@ -884,10 +1082,36 @@ export function createRankingView({
       addTier.addEventListener('click', () => {
         if (!immersive && !addTier.disabled) onAddTier();
       });
-      const candidates = model.candidateWorks.map(item => createRankingCard(documentRef, item, {
-        ...callbacks,
-        coverUrl: coverUrls?.get?.(item.workId) ?? null
-      }));
+      const candidates = model.candidateWorks.map(item => {
+        const card = createRankingCard(documentRef, item, {
+          ...callbacks,
+          coverUrl: coverUrls?.get?.(item.workId) ?? null
+        });
+        const remove = documentRef.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ranking-candidate-remove';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', `移除候选作品：${item.title}`);
+        remove.setAttribute('title', `移除候选作品：${item.title}`);
+        remove.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!immersive) onRemoveCandidate(item.workId);
+        });
+        card.append(remove);
+        const select = documentRef.createElement('input');
+        select.type = 'checkbox';
+        select.className = 'ranking-candidate-select';
+        select.checked = candidateSelection.has(item.workId);
+        select.setAttribute('aria-label', `选择候选作品：${item.title}`);
+        select.addEventListener('click', event => event.stopPropagation());
+        select.addEventListener('change', event => {
+          event.stopPropagation();
+          setCandidateSelected(item.workId, select.checked);
+        });
+        card.append(select);
+        return card;
+      });
       for (const card of candidates) applyCardPresentation(card);
       tierBoard.replaceChildren(...renderedRows, addTier);
       tierBoard.dataset.tierCount = String(renderedRows.length);
@@ -900,6 +1124,8 @@ export function createRankingView({
         track.scrollLeft = Number.isFinite(retained) ? retained : 0;
       }
       candidatePool.replaceChildren(...candidates, uploadTile);
+      updateCandidateSelection();
+      updateTierTrackRows();
       candidateSearch.value = model.candidateTitleQuery;
       if (focusedWorkId !== null) {
         const nextCard = cardForWorkId(focusedWorkId);

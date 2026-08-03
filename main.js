@@ -88,6 +88,17 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   addImagesSelection: requiredElement('add-images-selection'),
   rankingShowCounts: requiredElement('ranking-show-counts'),
   rankingShowTitles: requiredElement('ranking-show-titles'),
+  rankingScaleOverall: requiredElement('ranking-scale-overall'),
+  rankingScaleOverallOutput: requiredElement('ranking-scale-overall-output'),
+  rankingScaleCard: requiredElement('ranking-scale-card'),
+  rankingScaleCardOutput: requiredElement('ranking-scale-card-output'),
+  rankingScaleRail: requiredElement('ranking-scale-rail'),
+  rankingScaleRailOutput: requiredElement('ranking-scale-rail-output'),
+  rankingScaleAnnotation: requiredElement('ranking-scale-annotation'),
+  rankingScaleAnnotationOutput: requiredElement('ranking-scale-annotation-output'),
+  rankingScaleControls: requiredElement('ranking-scale-controls'),
+  rankingScaleControlsOutput: requiredElement('ranking-scale-controls-output'),
+  rankingScaleReset: requiredElement('ranking-scale-reset'),
   rankingImmersive: requiredElement('ranking-immersive'),
   cleanupMenuButton: requiredElement('cleanup-menu-button'),
   cleanupMenu: requiredElement('cleanup-menu'),
@@ -841,11 +852,49 @@ async function initialize() {
       rankingView.setAnnotations(presentation.inspect().annotations);
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
     },
+    onRemoveCandidate(workId) {
+      return runStateChange(() => controller.deselectWorks([workId]));
+    },
+    onRemoveCandidates(workIds) {
+      return runStateChange(() => controller.deselectWorks(workIds));
+    },
+    onMoveCandidatesToTier(workIds, tierId, insertionIndex) {
+      return runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
+    },
     assetBase
   });
   const presentation = createRankingPresentation({
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
+  });
+
+  const scaleControls = [
+    ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
+    ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
+    ['rail', elements.rankingScaleRail, elements.rankingScaleRailOutput],
+    ['annotation', elements.rankingScaleAnnotation, elements.rankingScaleAnnotationOutput],
+    ['controls', elements.rankingScaleControls, elements.rankingScaleControlsOutput]
+  ];
+
+  function applyUiScale(uiScale) {
+    for (const [key, input, output] of scaleControls) {
+      const value = Number(uiScale[key]) || 100;
+      input.value = String(value);
+      output.value = `${value}%`;
+      output.textContent = `${value}%`;
+      document.documentElement.style.setProperty(`--ranking-ui-scale-${key}`, String(value / 100));
+    }
+  }
+
+  applyUiScale(presentation.inspect().uiScale);
+  for (const [key, input] of scaleControls) {
+    input.addEventListener('input', () => {
+      applyUiScale({ ...presentation.inspect().uiScale, [key]: presentation.setUiScale(key, input.value) });
+    });
+  }
+  elements.rankingScaleReset.addEventListener('click', () => {
+    presentation.resetUiScale();
+    applyUiScale(presentation.inspect().uiScale);
   });
 
   const toolbarMenus = [
@@ -967,6 +1016,8 @@ async function initialize() {
     elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
     elements.rankingShowCounts.disabled = importBusy;
     elements.rankingShowTitles.disabled = importBusy;
+    for (const [, input] of scaleControls) input.disabled = importBusy;
+    elements.rankingScaleReset.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
     elements.addImagesSelection.disabled = importBusy || mediaStore === null;
     elements.cleanupMenuButton.disabled = importBusy;
