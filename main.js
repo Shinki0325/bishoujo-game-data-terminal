@@ -21,6 +21,7 @@ import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
+import { createRankingHelp } from './lib/ranking-help.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
@@ -96,10 +97,17 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   rankingScaleRailOutput: requiredElement('ranking-scale-rail-output'),
   rankingScaleAnnotation: requiredElement('ranking-scale-annotation'),
   rankingScaleAnnotationOutput: requiredElement('ranking-scale-annotation-output'),
-  rankingScaleControls: requiredElement('ranking-scale-controls'),
-  rankingScaleControlsOutput: requiredElement('ranking-scale-controls-output'),
+  rankingScaleTierName: requiredElement('ranking-scale-tier-name'),
+  rankingScaleTierNameOutput: requiredElement('ranking-scale-tier-name-output'),
   rankingScaleReset: requiredElement('ranking-scale-reset'),
+  rankingHelpButton: requiredElement('ranking-help-button'),
   rankingImmersive: requiredElement('ranking-immersive'),
+  rankingImmersiveHelp: requiredElement('ranking-immersive-help'),
+  rankingHelp: requiredElement('ranking-help'),
+  rankingHelpTitle: requiredElement('ranking-help-title'),
+  rankingHelpFull: requiredElement('ranking-help-full'),
+  rankingHelpImmersive: requiredElement('ranking-help-immersive'),
+  rankingHelpDismiss: requiredElement('ranking-help-dismiss'),
   cleanupMenuButton: requiredElement('cleanup-menu-button'),
   cleanupMenu: requiredElement('cleanup-menu'),
   displayMenuButton: requiredElement('display-menu-button'),
@@ -867,23 +875,37 @@ async function initialize() {
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
   });
+  const help = createRankingHelp({
+    read: key => window.localStorage.getItem(key),
+    write: (key, value) => window.localStorage.setItem(key, value),
+    open(context) {
+      const immersiveContext = context === 'immersive';
+      elements.rankingHelpTitle.textContent = immersiveContext ? '沉浸模式' : '排榜使用说明';
+      elements.rankingHelpFull.hidden = immersiveContext;
+      elements.rankingHelpImmersive.hidden = !immersiveContext;
+      elements.rankingHelpDismiss.textContent = immersiveContext ? '返回排榜' : '知道了';
+      if (!elements.rankingHelp.open) elements.rankingHelp.showModal();
+    }
+  });
 
   const scaleControls = [
     ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
     ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
     ['rail', elements.rankingScaleRail, elements.rankingScaleRailOutput],
     ['annotation', elements.rankingScaleAnnotation, elements.rankingScaleAnnotationOutput],
-    ['controls', elements.rankingScaleControls, elements.rankingScaleControlsOutput]
+    ['tierName', elements.rankingScaleTierName, elements.rankingScaleTierNameOutput]
   ];
 
   function applyUiScale(uiScale) {
     for (const [key, input, output] of scaleControls) {
       const value = Number(uiScale[key]) || 100;
+      const cssKey = key === 'tierName' ? 'tier-name' : key;
       input.value = String(value);
       output.value = `${value}%`;
       output.textContent = `${value}%`;
-      document.documentElement.style.setProperty(`--ranking-ui-scale-${key}`, String(value / 100));
+      document.documentElement.style.setProperty(`--ranking-ui-scale-${cssKey}`, String(value / 100));
     }
+    rankingView.refreshLayout();
   }
 
   applyUiScale(presentation.inspect().uiScale);
@@ -895,6 +917,14 @@ async function initialize() {
   elements.rankingScaleReset.addEventListener('click', () => {
     presentation.resetUiScale();
     applyUiScale(presentation.inspect().uiScale);
+  });
+  let rankingLayoutFrame = null;
+  window.addEventListener('resize', () => {
+    window.cancelAnimationFrame(rankingLayoutFrame);
+    rankingLayoutFrame = window.requestAnimationFrame(() => {
+      rankingLayoutFrame = null;
+      rankingView.refreshLayout();
+    });
   });
 
   const toolbarMenus = [
@@ -1018,6 +1048,7 @@ async function initialize() {
     elements.rankingShowTitles.disabled = importBusy;
     for (const [, input] of scaleControls) input.disabled = importBusy;
     elements.rankingScaleReset.disabled = importBusy;
+    elements.rankingHelpButton.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
     elements.addImagesSelection.disabled = importBusy || mediaStore === null;
     elements.cleanupMenuButton.disabled = importBusy;
@@ -1042,6 +1073,7 @@ async function initialize() {
         elements.rankingCandidateSearch,
         elements.rankingShowCounts,
         elements.rankingShowTitles,
+        elements.rankingHelpButton,
         elements.rankingImmersive,
         elements.addImagesSelection,
         elements.cleanupMenuButton,
@@ -1086,6 +1118,7 @@ async function initialize() {
     elements.rankedCount.textContent = String(model.rankedCount);
     elements.unrankedCount.textContent = String(model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
+    renderWorkspace(model);
     if (ranking) {
       rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
       rankingView.render(rankingModel, await resolveCoverUrls([
@@ -1110,13 +1143,13 @@ async function initialize() {
       });
       renderedFilterKey = nextFilterKey;
     }
-    renderWorkspace(model);
     renderControlStates(model);
     if (model.state.workspaceMode === 'ranking') {
       rankingView.restoreScroll(rankingScrollPosition);
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
+    if (ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
     if (rankingModel !== null) void refreshRankingPreload(rankingModel);
@@ -1174,6 +1207,9 @@ async function initialize() {
   elements.modeRanking.addEventListener('click', () => {
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
+  elements.rankingHelpButton.addEventListener('click', () => help.openFull());
+  elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());
+  elements.rankingHelpDismiss.addEventListener('click', () => elements.rankingHelp.close());
   elements.rankingShowCounts.addEventListener('change', () => {
     rankingView.setShowCounts(presentation.setShowCounts(elements.rankingShowCounts.checked));
   });

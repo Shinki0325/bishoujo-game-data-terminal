@@ -450,6 +450,22 @@ export function createRankingView({
         || Math.max(1, (Number(viewWindow.innerWidth) || 390) - 128);
       const capacity = Math.max(1, Math.floor((trackWidth - 22 + 9) / (cardWidth + 9)));
       row.dataset.trackRows = cards.length > capacity ? '2' : '1';
+      track.style.setProperty('--tier-track-columns', String(capacity));
+      for (const [index, card] of cards.entries()) {
+        if (row.dataset.trackRows === '1') {
+          card.style.removeProperty('grid-row');
+          card.style.removeProperty('grid-column');
+          continue;
+        }
+        const batchSize = capacity * 2;
+        const batch = Math.floor(index / batchSize);
+        const local = index % batchSize;
+        card.style.setProperty('grid-row', String(local < capacity ? 1 : 2));
+        card.style.setProperty(
+          'grid-column',
+          String(batch * capacity + (local % capacity) + 1)
+        );
+      }
     }
   }
 
@@ -632,15 +648,82 @@ export function createRankingView({
     dragOrigin = null;
   }
 
-  function placeIndicator(track, pointerX) {
+  function placeIndicator(track, pointerX, pointerY) {
     removeIndicator();
     const allCards = arrayFrom(track.children).filter(isRankingCard);
     const destinationCards = allCards.filter(card => !draggedWorkIds.includes(card.dataset.workId));
-    const rects = destinationCards.map(card => {
-      const rect = card.getBoundingClientRect();
-      return { left: rect.left, right: rect.right };
-    });
-    const insertionIndex = insertionIndexFromPoint(rects, pointerX);
+    const usesTwoRows = track.parentElement?.dataset?.trackRows === '2';
+    let insertionIndex;
+    if (usesTwoRows) {
+      const entries = allCards.map(card => {
+        const rect = card.getBoundingClientRect();
+        const row = Number(card.style.getPropertyValue('grid-row'));
+        if ((row !== 1 && row !== 2)
+          || !Number.isFinite(rect.left) || !Number.isFinite(rect.right)
+          || !Number.isFinite(rect.top) || !Number.isFinite(rect.bottom)
+          || rect.right < rect.left || rect.bottom < rect.top) {
+          throw new TypeError('two-row cards must expose finite row-aware rectangles');
+        }
+        return { card, row, rect };
+      });
+      const rowBounds = new Map();
+      for (const { row, rect } of entries) {
+        const current = rowBounds.get(row);
+        rowBounds.set(row, current
+          ? { top: Math.min(current.top, rect.top), bottom: Math.max(current.bottom, rect.bottom) }
+          : { top: rect.top, bottom: rect.bottom });
+      }
+      const targetRow = [...rowBounds].reduce((best, [row, bounds]) => {
+        const distance = pointerY < bounds.top
+          ? bounds.top - pointerY
+          : pointerY > bounds.bottom ? pointerY - bounds.bottom : 0;
+        const centerDistance = Math.abs(pointerY - ((bounds.top + bounds.bottom) / 2));
+        if (best === null || distance < best.distance
+          || (distance === best.distance && centerDistance < best.centerDistance)) {
+          return { row, distance, centerDistance };
+        }
+        return best;
+      }, null)?.row;
+      const rowEntries = entries.filter(({ card, row }) => (
+        row === targetRow && !draggedWorkIds.includes(card.dataset.workId)
+      ));
+      if (rowEntries.length === 0) {
+        insertionIndex = destinationCards.length;
+      } else {
+        const rowIndex = insertionIndexFromPoint(
+          rowEntries.map(({ rect }) => ({ left: rect.left, right: rect.right })),
+          pointerX
+        );
+        insertionIndex = rowIndex < rowEntries.length
+          ? destinationCards.indexOf(rowEntries[rowIndex].card)
+          : destinationCards.indexOf(rowEntries.at(-1).card) + 1;
+      }
+      const capacity = Number.parseInt(
+        track.style.getPropertyValue('--tier-track-columns'),
+        10
+      );
+      if (!Number.isSafeInteger(capacity) || capacity < 1) {
+        throw new TypeError('two-row track capacity must be a positive integer');
+      }
+      const batchSize = capacity * 2;
+      const batch = Math.floor(insertionIndex / batchSize);
+      const local = insertionIndex % batchSize;
+      indicator.style.setProperty('grid-row', String(local < capacity ? 1 : 2));
+      indicator.style.setProperty(
+        'grid-column',
+        String(batch * capacity + (local % capacity) + 1)
+      );
+      indicator.style.setProperty('justify-self', 'start');
+    } else {
+      const rects = destinationCards.map(card => {
+        const rect = card.getBoundingClientRect();
+        return { left: rect.left, right: rect.right };
+      });
+      insertionIndex = insertionIndexFromPoint(rects, pointerX);
+      indicator.style.removeProperty('grid-row');
+      indicator.style.removeProperty('grid-column');
+      indicator.style.removeProperty('justify-self');
+    }
     const target = destinationCards[insertionIndex] ?? null;
     const domIndex = target === null ? allCards.length : allCards.indexOf(target);
     track.replaceChildren(
@@ -652,7 +735,9 @@ export function createRankingView({
   }
 
   function handleTierDragOver(tierId, event) {
-    if (draggedWorkId === null || typeof event.clientX !== 'number' || !Number.isFinite(event.clientX)) {
+    if (draggedWorkId === null
+      || typeof event.clientX !== 'number' || !Number.isFinite(event.clientX)
+      || typeof event.clientY !== 'number' || !Number.isFinite(event.clientY)) {
       clearDropState();
       return;
     }
@@ -660,7 +745,7 @@ export function createRankingView({
     const track = tierTracks.get(tierId);
     let insertionIndex;
     try {
-      insertionIndex = placeIndicator(track, event.clientX);
+      insertionIndex = placeIndicator(track, event.clientX, event.clientY);
     } catch {
       clearDropState();
       return;
@@ -1158,6 +1243,10 @@ export function createRankingView({
         track.scrollLeft = Number.isFinite(value) ? value : 0;
       }
       candidatePool.scrollLeft = Number.isFinite(position.poolLeft) ? position.poolLeft : 0;
+    },
+
+    refreshLayout() {
+      updateTierTrackRows();
     },
 
     setShowCounts(nextShowCounts) {

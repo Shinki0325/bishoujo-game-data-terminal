@@ -7,7 +7,7 @@
   --ranking-ui-scale-card: 1;
   --ranking-ui-scale-rail: 1;
   --ranking-ui-scale-annotation: 1;
-  --ranking-ui-scale-controls: 1;
+  --ranking-ui-scale-tier-name: 1;
   --filter-drawer-width: 360px;
   --header-height: 68px;
   --touch-target: 44px;
@@ -1368,8 +1368,8 @@ input[type="range"] {
   top: 0;
   z-index: 30;
   width: 100%;
-  height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
-  min-height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  height: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1491,7 +1491,10 @@ body.is-ranking-immersive .candidate-toolbar {
 
 body.is-ranking-immersive .tier-editing-state,
 body.is-ranking-immersive .tier-add-button,
-body.is-ranking-immersive .ranking-upload-tile {
+body.is-ranking-immersive .ranking-upload-tile,
+body.is-ranking-immersive .ranking-candidate-select,
+body.is-ranking-immersive .ranking-candidate-remove,
+body.is-ranking-immersive .candidate-batch-actions {
   display: none !important;
 }
 
@@ -1507,19 +1510,46 @@ body.is-ranking-immersive .ranking-card-annotation {
   font-size: calc(min(36px, 24cqw) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-annotation));
 }
 
-.ranking-immersive-exit {
+.ranking-immersive-edge {
   position: fixed;
-  top: calc(4px + var(--safe-top));
-  right: calc(-12px + var(--safe-right));
+  top: var(--safe-top);
+  right: var(--safe-right);
   z-index: 90;
-  width: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
-  height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
-  min-width: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
-  min-height: calc(44px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-controls));
+  width: 18px;
+  height: 112px;
+  opacity: 0;
+  pointer-events: none;
 }
 
-body:not(.is-ranking-immersive) .ranking-immersive-exit {
+body.is-ranking-immersive .ranking-immersive-edge {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ranking-immersive-controls {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  display: grid;
+  gap: 6px;
+  transform: translateX(100%);
+  transition: transform 140ms ease;
+}
+
+.ranking-immersive-controls:not([hidden]) {
+  transform: translateX(0);
+}
+
+.ranking-immersive-controls[hidden] {
   display: none;
+}
+
+.ranking-immersive-exit,
+.ranking-immersive-help {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .tier-board {
@@ -1575,8 +1605,9 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 
 .tier-row[data-track-rows="2"] .tier-track {
   display: grid;
+  grid-template-columns: repeat(var(--tier-track-columns), var(--ranking-card-size-scaled));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  grid-auto-flow: column;
+  grid-auto-flow: row;
   grid-auto-columns: var(--ranking-card-size-scaled);
   align-content: stretch;
   justify-content: start;
@@ -1601,7 +1632,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   gap: 4px;
   color: var(--tier-foreground);
   background: var(--tier-background);
-  font-size: 22px;
+  font-size: calc(22px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-tier-name));
   font-weight: 800;
 }
 
@@ -1952,6 +1983,57 @@ dialog {
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border-strong);
+}
+
+#ranking-help {
+  width: min(720px, calc(100% - 28px));
+  overflow: hidden;
+}
+
+.ranking-help-shell {
+  max-height: calc(100dvh - 28px - var(--safe-top) - var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-help-body {
+  min-height: 0;
+  padding: 14px 18px;
+  overflow-y: auto;
+}
+
+.ranking-help-context {
+  display: grid;
+  gap: 18px;
+}
+
+.ranking-help-context section {
+  min-width: 0;
+}
+
+.ranking-help-context h3 {
+  margin-bottom: 7px;
+  font-size: 15px;
+}
+
+.ranking-help-context ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 22px;
+  margin: 0;
+}
+
+.ranking-help-context li {
+  padding-left: 2px;
+}
+
+.ranking-help-context code {
+  font: inherit;
+  font-weight: 750;
+}
+
+.ranking-help-actions {
+  border-top: 1px solid var(--border);
 }
 
 #media-preview {
@@ -2398,7 +2480,7 @@ dialog::backdrop {
   }
 
   .tier-label {
-    font-size: 18px;
+    font-size: calc(18px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-tier-name));
   }
 
   .tier-edit-control {

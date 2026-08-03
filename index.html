@@ -270,14 +270,21 @@
                   <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
                   <label for="ranking-scale-rail"><span>行高/候选区</span><output id="ranking-scale-rail-output">100%</output></label>
                   <input id="ranking-scale-rail" type="range" min="80" max="160" step="5" value="100">
-                  <label for="ranking-scale-annotation"><span>沉浸标注</span><output id="ranking-scale-annotation-output">100%</output></label>
+                  <label for="ranking-scale-annotation"><span>图片标注</span><output id="ranking-scale-annotation-output">100%</output></label>
                   <input id="ranking-scale-annotation" type="range" min="80" max="160" step="5" value="100">
-                  <label for="ranking-scale-controls"><span>沉浸控件</span><output id="ranking-scale-controls-output">100%</output></label>
-                  <input id="ranking-scale-controls" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-tier-name"><span>分级名称</span><output id="ranking-scale-tier-name-output">100%</output></label>
+                  <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
                   <button id="ranking-scale-reset" type="button">恢复默认</button>
                 </fieldset>
               </div>
             </div>
+            <button
+              id="ranking-help-button"
+              class="icon-button"
+              type="button"
+              aria-label="打开排榜使用说明"
+              title="打开排榜使用说明"
+            >?</button>
             <button
               id="ranking-immersive"
               class="icon-button"
@@ -311,18 +318,109 @@
       </section>
     </main>
 
-    <button
-      id="ranking-immersive-exit"
-      class="icon-button ranking-immersive-exit"
-      type="button"
+    <div
+      id="ranking-immersive-edge"
+      class="ranking-immersive-edge"
+      tabindex="-1"
+      aria-label="显示沉浸模式边缘控件"
+    >
+      <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
+        <button
+          id="ranking-immersive-exit"
+          class="icon-button ranking-immersive-exit"
+          type="button"
           aria-label="退出沉浸模式"
           title="退出沉浸模式"
-          hidden
         >×</button>
+        <button
+          id="ranking-immersive-help"
+          class="icon-button ranking-immersive-help"
+          type="button"
+          aria-label="打开沉浸模式说明"
+          title="打开沉浸模式说明"
+        >?</button>
+      </div>
+    </div>
 
     <input id="state-file" type="file" accept="application/json,.json" hidden>
     <input id="media-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div id="status-message" role="status" aria-live="polite"></div>
+
+    <dialog id="ranking-help" aria-labelledby="ranking-help-title">
+      <div class="ranking-help-shell">
+        <div class="dialog-heading">
+          <h2 id="ranking-help-title">排榜使用说明</h2>
+        </div>
+        <div class="ranking-help-body">
+          <div id="ranking-help-full" class="ranking-help-context">
+            <section>
+              <h3>候选作品</h3>
+              <ul>
+                <li>在作品目录中勾选作品，然后进入排榜页面。</li>
+                <li>点击候选区末尾的 <code>+</code>，可以导入并裁切本地图片。</li>
+                <li>勾选多张候选卡片后，可以整组拖入同一个等级。</li>
+                <li>按住候选卡片约 0.3 秒并滑过其他卡片，可以连续选择多张。</li>
+                <li>点击卡片右上角的 <code>×</code> 可移除单张候选；也可以批量移除所选作品。</li>
+                <li>移除只会取消本次选择，可以通过撤销恢复。</li>
+              </ul>
+            </section>
+            <section>
+              <h3>分级与排序</h3>
+              <ul>
+                <li>将候选卡片拖入等级；拖动等级中的卡片可以调整顺序或移动到其他等级。</li>
+                <li>将已分级卡片拖出排榜区域并松开，它会回到候选区。</li>
+                <li>点击左侧分级名称，可以修改名称、颜色、顺序或删除该等级。</li>
+                <li>点击分级板底部的 <code>+</code> 可以添加新等级。</li>
+                <li>作品超过一行时会自动分成两行，仍可横向滚动查看。</li>
+              </ul>
+            </section>
+            <section>
+              <h3>查看与展示</h3>
+              <ul>
+                <li>点击图片可以打开大图预览。</li>
+                <li>桌面端右键普通排榜卡片可以查看作品详情。</li>
+                <li>在“显示”菜单中可以调整标题、数量、卡片、行高、图片标注和分级名称大小。</li>
+                <li>点击 <code>⛶</code> 进入沉浸模式。</li>
+                <li>沉浸模式下，桌面端右键图片可以编辑最多两行的图片标注。</li>
+                <li>使用撤销和重做可以恢复最近的排榜编辑。</li>
+              </ul>
+            </section>
+            <section>
+              <h3>保存与导出</h3>
+              <ul>
+                <li>排榜状态和界面偏好会保存在当前浏览器中。</li>
+                <li>可以导入或导出 JSON，用于备份和恢复排榜。</li>
+                <li>可以导出 PNG；当前分级、标题显示和图片标注都会进入图片。</li>
+              </ul>
+            </section>
+          </div>
+          <div id="ranking-help-immersive" class="ranking-help-context" hidden>
+            <section>
+              <h3>操作</h3>
+              <ul>
+                <li>将候选图片拖入等级，或拖动已分级图片调整位置。</li>
+                <li>将已分级图片拖出排榜区域，可以放回候选区。</li>
+                <li>点击图片可以打开大图预览。</li>
+                <li>桌面端右键图片可以添加或修改两行图片标注。</li>
+                <li>移动端暂不提供图片标注编辑入口。</li>
+              </ul>
+            </section>
+            <section>
+              <h3>边缘控件</h3>
+              <ul>
+                <li>将鼠标移动到页面右上边缘，会显示退出 <code>×</code> 和帮助 <code>?</code>。</li>
+                <li>移动端轻触右侧边缘可以显示这两个按钮。</li>
+                <li>点击 <code>×</code> 或按 <code>Escape</code> 退出沉浸模式。</li>
+                <li>关闭本说明后仍会保持沉浸模式。</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+        <div class="dialog-actions ranking-help-actions">
+          <button id="ranking-help-dismiss" type="button">知道了</button>
+        </div>
+      </div>
+    </dialog>
 
     <dialog id="media-preview" aria-labelledby="media-preview-title">
       <div class="dialog-heading">
