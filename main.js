@@ -602,6 +602,7 @@ async function initialize() {
 
   async function openMediaPreview(work) {
     const url = await coverUrlForWork(work);
+    elements.mediaPreview.classList.toggle('is-immersive-preview', document.body.classList.contains('is-ranking-immersive'));
     elements.mediaPreviewTitle.textContent = work.title;
     elements.mediaPreviewImage.src = url ?? '';
     elements.mediaPreviewImage.alt = work.title;
@@ -652,9 +653,15 @@ async function initialize() {
       const image = new Image();
       image.src = url;
       await image.decode();
-      return { image, width: image.naturalWidth, height: image.naturalHeight };
-    } finally {
+      return {
+        image,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        release() { URL.revokeObjectURL(url); }
+      };
+    } catch (error) {
       URL.revokeObjectURL(url);
+      throw error;
     }
   }
 

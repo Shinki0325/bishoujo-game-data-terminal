@@ -50,12 +50,19 @@ export function createMediaDialogView({
   let active = null;
   let pointer = null;
 
+  function releaseActive() {
+    const release = active?.decoded?.release;
+    active = null;
+    if (typeof release === 'function') release();
+  }
+
   function draw() {
     if (!active) return;
     renderActive(active);
   }
 
   async function advance() {
+    releaseActive();
     active = queue.shift() ?? null;
     if (!active) {
       closeDialog(cropDialog);
@@ -126,7 +133,7 @@ export function createMediaDialogView({
   skipButton.addEventListener?.('click', () => { void advance(); });
   cancelButton.addEventListener?.('click', () => {
     queue = [];
-    active = null;
+    releaseActive();
     closeDialog(cropDialog);
   });
   confirmButton.addEventListener?.('click', () => { void confirmCurrent(); });
@@ -151,7 +158,7 @@ export function createMediaDialogView({
     skipCurrent: advance,
     cancelAll() {
       queue = [];
-      active = null;
+      releaseActive();
       closeDialog(cropDialog);
     }
   });

@@ -1371,6 +1371,10 @@ body.is-ranking-immersive .candidate-toolbar {
   display: none;
 }
 
+body.is-ranking-immersive .ranking-card-actions {
+  display: none;
+}
+
 body.is-ranking-immersive .ranking-view {
   position: fixed;
   inset: 0;
@@ -1588,6 +1592,43 @@ dialog {
 
 #media-preview {
   width: min(760px, calc(100% - 28px));
+}
+
+#media-preview.is-immersive-preview {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  background: #000000;
+  border: 0;
+}
+
+#media-preview.is-immersive-preview .dialog-heading,
+#media-preview.is-immersive-preview .media-preview-actions {
+  display: none;
+}
+
+#media-preview.is-immersive-preview .media-preview-body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  place-items: center;
+}
+
+#media-preview.is-immersive-preview #media-preview-image {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  background: #000000;
+}
+
+#media-preview.is-immersive-preview::backdrop {
+  background: #000000;
 }
 
 .media-preview-body,
