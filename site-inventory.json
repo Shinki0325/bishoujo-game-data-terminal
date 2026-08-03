@@ -192,9 +192,9 @@
       "sha256": "e2077960bc1f96078972c2ab7443b3c94f0af2954a44874ee3adf45a08b2f739"
     },
     {
-      "bytes": 42885,
+      "bytes": 42916,
       "path": "styles.css",
-      "sha256": "325878b7fba83bac7f0df3ea2829e754840712de2e535587e02786e59f839ecf"
+      "sha256": "64edbb45f0ef0d0ae3990d8e2b3e38815ab2b820f8d4ab00eb974749aaef734f"
     },
     {
       "bytes": 45611,
@@ -207,9 +207,9 @@
       "sha256": "b08beb008a0bb6b8ebfa23de3d01bed9eff89cce3930777f64cd6528995c24a9"
     },
     {
-      "bytes": 34743,
+      "bytes": 34783,
       "path": "views/ranking-view.js",
-      "sha256": "6d823fa0dc3d91af9117ceb5ef354616652b0a338e0c688b467955ebf90e84c5"
+      "sha256": "91f00d202062cb819101ae4efc4287ed52d989d4e6a647fe4dda4c2e2028ac26"
     },
     {
       "bytes": 13416,
@@ -230,7 +230,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4198695,
+    "bytes": 4198766,
     "files": 45
   }
 }

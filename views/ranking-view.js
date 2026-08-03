@@ -615,11 +615,11 @@ export function createRankingView({
     const controls = [
       ['move-up', '↑', '上移', tierIndex === 0, () => {
         focusTierId = tier.id;
-        onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, -1)));
+        onTierConfigChange(snapshotTierConfig(moveTier(snapshotTierConfig(model.tiers), tier.id, -1)));
       }],
       ['move-down', '↓', '下移', tierIndex === model.tiers.length - 1, () => {
         focusTierId = tier.id;
-        onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, 1)));
+        onTierConfigChange(snapshotTierConfig(moveTier(snapshotTierConfig(model.tiers), tier.id, 1)));
       }],
       ['delete', '−', '删除', model.tiers.length <= 3, () => {
         focusTierId = null;

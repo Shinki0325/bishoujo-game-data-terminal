@@ -1429,7 +1429,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   height: var(--ranking-row-height);
   block-size: var(--ranking-row-height);
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 104px minmax(0, 1fr);
   overflow: hidden;
   border-bottom: 1px solid var(--border);
 }
@@ -1521,12 +1521,12 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   opacity: 0.38;
 }
 
-.tier-edit-up {
+.tier-edit-move-up {
   top: 2px;
   left: 2px;
 }
 
-.tier-edit-down {
+.tier-edit-move-down {
   bottom: 2px;
   left: 2px;
 }
@@ -2282,7 +2282,7 @@ dialog::backdrop {
   }
 
   .tier-row {
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
   }
 
   .tier-board:is(
@@ -2316,18 +2316,18 @@ dialog::backdrop {
     border: 0;
   }
 
-  .tier-edit-up,
+  .tier-edit-move-up,
   .tier-edit-delete {
     top: 0;
   }
 
-  .tier-edit-down,
+  .tier-edit-move-down,
   .tier-color-trigger {
     bottom: 0;
   }
 
-  .tier-edit-up,
-  .tier-edit-down {
+  .tier-edit-move-up,
+  .tier-edit-move-down {
     left: 0;
   }
 
