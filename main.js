@@ -602,12 +602,13 @@ async function initialize() {
 
   async function openMediaPreview(work) {
     const url = await coverUrlForWork(work);
-    elements.mediaPreview.classList.toggle('is-immersive-preview', document.body.classList.contains('is-ranking-immersive'));
+    const isImmersive = document.body.classList.contains('is-ranking-immersive');
+    elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
     elements.mediaPreviewTitle.textContent = work.title;
     elements.mediaPreviewImage.src = url ?? '';
     elements.mediaPreviewImage.alt = work.title;
     elements.mediaPreviewActions.replaceChildren();
-    if (work.localMediaKind !== 'custom' && mediaStore !== null) {
+    if (!isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null) {
       const replace = document.createElement('button');
       replace.type = 'button';
       replace.textContent = '替换图片';
@@ -635,6 +636,18 @@ async function initialize() {
     if (typeof elements.mediaPreview.showModal === 'function') elements.mediaPreview.showModal();
     else elements.mediaPreview.open = true;
   }
+
+  elements.mediaPreview.addEventListener('click', event => {
+    if (!elements.mediaPreview.classList.contains('is-immersive-preview')) return;
+    const rect = elements.mediaPreviewImage.getBoundingClientRect();
+    const outsideImage = event.clientX < rect.left
+      || event.clientX > rect.right
+      || event.clientY < rect.top
+      || event.clientY > rect.bottom;
+    if (!outsideImage) return;
+    if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
+    else elements.mediaPreview.open = false;
+  });
 
   function renderCropActive(active) {
     const canvas = elements.mediaCropCanvas;

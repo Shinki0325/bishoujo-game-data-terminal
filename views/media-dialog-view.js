@@ -21,6 +21,14 @@ function closeDialog(dialog) {
   else dialog.open = false;
 }
 
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function distance(left, right) {
+  return Math.hypot(right.x - left.x, right.y - left.y);
+}
+
 export function createMediaDialogView({
   documentRef,
   decodeFile,
@@ -43,19 +51,51 @@ export function createMediaDialogView({
   const cropDialog = requiredElement(documentRef, 'media-crop');
   const cropCanvas = requiredElement(documentRef, 'media-crop-canvas');
   const titleInput = requiredElement(documentRef, 'media-crop-title');
-  const zoomInput = requiredElement(documentRef, 'media-crop-zoom');
   const resetButton = requiredElement(documentRef, 'media-crop-reset');
   const skipButton = requiredElement(documentRef, 'media-crop-skip');
   const cancelButton = requiredElement(documentRef, 'media-crop-cancel');
   const confirmButton = requiredElement(documentRef, 'media-crop-confirm');
   let queue = [];
   let active = null;
-  let pointer = null;
+  const pointers = new Map();
+  let pinch = null;
   let confirming = false;
+
+  function canvasPoint(event) {
+    const rect = cropCanvas.getBoundingClientRect?.() ?? {
+      left: 0,
+      top: 0,
+      width: active?.crop.viewport ?? 1,
+      height: active?.crop.viewport ?? 1
+    };
+    const viewport = active?.crop.viewport ?? 1;
+    return {
+      x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * viewport,
+      y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * viewport
+    };
+  }
+
+  function currentScale(crop) {
+    return Math.min(crop.width, crop.height) / crop.size;
+  }
+
+  function beginPinch() {
+    if (!active || pointers.size !== 2) {
+      pinch = null;
+      return;
+    }
+    const [left, right] = [...pointers.values()];
+    pinch = {
+      crop: active.crop,
+      distance: Math.max(1, distance(left, right))
+    };
+  }
 
   function releaseActive() {
     const release = active?.decoded?.release;
     active = null;
+    pointers.clear();
+    pinch = null;
     if (typeof release === 'function') release();
   }
 
@@ -78,7 +118,6 @@ export function createMediaDialogView({
       }
       active.crop = createCrop({ width: active.decoded.width, height: active.decoded.height, viewport: 512 });
       titleInput.value = titleFromFilename(active.file.name);
-      zoomInput.value = '1';
       openDialog(cropDialog);
       draw();
       return true;
@@ -123,31 +162,54 @@ export function createMediaDialogView({
 
   cropCanvas.addEventListener?.('pointerdown', event => {
     if (!active) return;
-    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    pointers.set(event.pointerId, canvasPoint(event));
     cropCanvas.setPointerCapture?.(event.pointerId);
+    beginPinch();
   });
   cropCanvas.addEventListener?.('pointermove', event => {
-    if (!active || !pointer || pointer.id !== event.pointerId) return;
-    active.crop = moveCrop(active.crop, { dx: event.clientX - pointer.x, dy: event.clientY - pointer.y });
-    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    if (!active || !pointers.has(event.pointerId)) return;
+    const previous = pointers.get(event.pointerId);
+    const next = canvasPoint(event);
+    pointers.set(event.pointerId, next);
+    if (pointers.size === 1) {
+      active.crop = moveCrop(active.crop, { dx: next.x - previous.x, dy: next.y - previous.y });
+    } else if (pointers.size === 2 && pinch) {
+      const [left, right] = [...pointers.values()];
+      active.crop = zoomCrop(pinch.crop, {
+        scale: clamp(
+          currentScale(pinch.crop) * (distance(left, right) / pinch.distance),
+          1,
+          4
+        ),
+        focalX: (left.x + right.x) / 2,
+        focalY: (left.y + right.y) / 2
+      });
+    }
     draw();
   });
-  cropCanvas.addEventListener?.('pointerup', event => {
-    if (pointer?.id === event.pointerId) pointer = null;
-  });
-  zoomInput.addEventListener?.('input', () => {
+
+  function releasePointer(event) {
+    pointers.delete(event.pointerId);
+    beginPinch();
+  }
+
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    cropCanvas.addEventListener?.(type, releasePointer);
+  }
+  cropCanvas.addEventListener?.('wheel', event => {
     if (!active) return;
+    const focal = canvasPoint(event);
     active.crop = zoomCrop(active.crop, {
-      scale: Number(zoomInput.value),
-      focalX: active.crop.viewport / 2,
-      focalY: active.crop.viewport / 2
+      scale: clamp(currentScale(active.crop) * Math.exp(-event.deltaY * 0.0015), 1, 4),
+      focalX: focal.x,
+      focalY: focal.y
     });
+    event.preventDefault?.();
     draw();
   });
   resetButton.addEventListener?.('click', () => {
     if (!active) return;
     active.crop = createCrop({ width: active.decoded.width, height: active.decoded.height, viewport: 512 });
-    zoomInput.value = '1';
     draw();
   });
   skipButton.addEventListener?.('click', () => { void advance(); });

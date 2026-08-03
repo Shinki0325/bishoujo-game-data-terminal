@@ -348,7 +348,7 @@
       </div>
       <div class="media-preview-body">
         <img id="media-preview-image" alt="">
-        <div id="media-preview-actions" class="dialog-actions"></div>
+        <div id="media-preview-actions" class="dialog-actions media-preview-actions"></div>
       </div>
     </dialog>
 
@@ -357,9 +357,11 @@
         <h2 id="media-crop-title-label">裁切图片</h2>
       </div>
       <div class="media-crop-body">
-        <canvas id="media-crop-canvas" width="512" height="512" aria-label="方形裁切区域"></canvas>
+        <div class="media-crop-stage">
+          <canvas id="media-crop-canvas" width="512" height="512" aria-label="方形裁切区域"></canvas>
+          <span class="media-crop-guide" aria-hidden="true"></span>
+        </div>
         <label class="media-crop-field" for="media-crop-title">标题<input id="media-crop-title" type="text" maxlength="120"></label>
-        <label class="media-crop-field" for="media-crop-zoom">缩放<input id="media-crop-zoom" type="range" min="1" max="4" step="0.01" value="1"></label>
       </div>
       <div class="media-crop-actions">
         <button id="media-crop-reset" type="button">重置</button>
