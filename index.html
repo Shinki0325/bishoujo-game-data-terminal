@@ -245,16 +245,25 @@
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
         <div class="ranking-toolbar" aria-label="排榜操作">
           <div class="edit-actions">
-            <button id="undo-edit" type="button">撤销</button>
-            <button id="redo-edit" type="button">重做</button>
-            <button id="clear-board" type="button">清空分级</button>
-            <button id="clear-candidates" type="button">清空候选</button>
+            <button id="undo-edit" class="icon-button" type="button" aria-label="撤销" title="撤销">↶</button>
+            <button id="redo-edit" class="icon-button" type="button" aria-label="重做" title="重做">↷</button>
+            <div class="toolbar-menu-shell">
+              <button id="cleanup-menu-button" type="button" aria-expanded="false" aria-controls="cleanup-menu">清理 ▾</button>
+              <div id="cleanup-menu" class="toolbar-menu" hidden>
+                <button id="clear-board" type="button">清空分级</button>
+                <button id="clear-candidates" type="button">清空候选</button>
+                <button id="clear-annotations" type="button">清空标记</button>
+              </div>
+            </div>
           </div>
           <div class="state-actions">
-            <label class="ranking-show-counts" for="ranking-show-counts">
-              <input id="ranking-show-counts" type="checkbox">
-              显示数量
-            </label>
+            <div class="toolbar-menu-shell">
+              <button id="display-menu-button" type="button" aria-expanded="false" aria-controls="display-menu">显示 ▾</button>
+              <div id="display-menu" class="toolbar-menu" hidden>
+                <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
+                <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
+              </div>
+            </div>
             <button
               id="ranking-immersive"
               class="icon-button"
@@ -262,10 +271,14 @@
               aria-label="进入直播模式"
               title="进入直播模式"
             >[]</button>
-            <button id="import-state" type="button">导入 JSON</button>
-            <button id="export-state" type="button">导出 JSON</button>
             <button id="export-png" type="button">导出 PNG</button>
-            <button id="add-images-ranking" type="button">添加图片</button>
+            <div class="toolbar-menu-shell">
+              <button id="file-menu-button" type="button" aria-expanded="false" aria-controls="file-menu">文件 ▾</button>
+              <div id="file-menu" class="toolbar-menu" hidden>
+                <button id="import-state" type="button">导入 JSON</button>
+                <button id="export-state" type="button">导出 JSON</button>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1077,6 +1077,7 @@ input[type="range"] {
 .ranking-card {
   min-width: var(--ranking-card-size);
   min-height: var(--ranking-card-size);
+  container-type: inline-size;
   padding: 0;
   color: #ffffff;
   text-align: left;
@@ -1232,6 +1233,48 @@ input[type="range"] {
   -webkit-line-clamp: 2;
 }
 
+.ranking-card-title[hidden] {
+  display: none;
+}
+
+.ranking-card-annotation {
+  position: absolute;
+  inset: 8px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: min(18px, 12cqw);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  white-space: pre-line;
+  pointer-events: none;
+  -webkit-text-stroke: 2px #000000;
+  paint-order: stroke fill;
+}
+
+.ranking-card-annotation[hidden] {
+  display: none;
+}
+
+.ranking-annotation-input {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  width: calc(100% - 10px);
+  min-width: 0;
+  padding: 4px;
+  color: #ffffff;
+  background: rgba(7, 12, 15, 0.9);
+  border: 1px solid #ffffff;
+  border-radius: 3px;
+  font-size: 12px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
 .ranking-card:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -3px;
@@ -1309,36 +1352,78 @@ input[type="range"] {
   position: sticky;
   top: 0;
   z-index: 30;
-  min-height: 54px;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 9px 12px;
+  gap: 8px;
+  padding: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--surface-muted);
   border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+
+.ranking-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 .edit-actions,
 .state-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.ranking-show-counts {
-  min-height: 34px;
-  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  gap: 4px;
+  white-space: nowrap;
 }
 
-.ranking-show-counts input {
+.ranking-toolbar button {
+  min-height: 34px;
+}
+
+.toolbar-menu-shell {
+  flex: 0 0 auto;
+}
+
+.toolbar-menu {
+  position: fixed;
+  z-index: 95;
+  min-width: 132px;
+  display: grid;
+  gap: 2px;
+  padding: 4px;
+  color: var(--text);
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
+}
+
+.toolbar-menu[hidden] {
+  display: none;
+}
+
+.toolbar-menu button,
+.toolbar-menu label {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.toolbar-menu label {
+  cursor: pointer;
+}
+
+.toolbar-menu input {
   margin: 0;
 }
 
@@ -1532,10 +1617,8 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 }
 
 .tier-color-palette {
-  position: absolute;
-  right: 2px;
-  bottom: 26px;
-  z-index: 4;
+  position: fixed;
+  z-index: 96;
   display: grid;
   grid-template-columns: repeat(5, 20px);
   gap: 3px;
@@ -1544,6 +1627,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   border: 1px solid var(--border-strong);
   border-radius: 4px;
   pointer-events: auto;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
 }
 
 .tier-color-option {
@@ -2003,7 +2087,9 @@ dialog::backdrop {
   #export-png,
   #ranking-immersive,
   #add-images-selection,
-  #add-images-ranking,
+  #cleanup-menu-button,
+  #display-menu-button,
+  #file-menu-button,
   .selection-card-info,
   .media-crop-actions button,
   .tier-add-button {
@@ -2113,23 +2199,21 @@ dialog::backdrop {
   .ranking-toolbar {
     position: sticky;
     top: var(--safe-top);
-    align-items: stretch;
-    flex-direction: column;
-    max-height: 44dvh;
+    height: 44px;
+    min-height: 44px;
+    align-items: center;
+    flex-direction: row;
     margin-bottom: var(--safe-top);
-    padding-right: calc(12px + var(--safe-right));
-    padding-left: calc(12px + var(--safe-left));
-    overflow-y: auto;
+    padding-right: calc(4px + var(--safe-right));
+    padding-left: calc(4px + var(--safe-left));
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .edit-actions,
   .state-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .state-actions {
-    padding-bottom: var(--safe-bottom);
+    display: flex;
+    flex-wrap: nowrap;
   }
 
   .tier-row {

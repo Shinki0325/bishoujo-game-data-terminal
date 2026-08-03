@@ -21,6 +21,7 @@ import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
+import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import {
@@ -80,13 +81,20 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   redoEdit: requiredElement('redo-edit'),
   clearBoard: requiredElement('clear-board'),
   clearCandidates: requiredElement('clear-candidates'),
+  clearAnnotations: requiredElement('clear-annotations'),
   importState: requiredElement('import-state'),
   exportState: requiredElement('export-state'),
   exportPng: requiredElement('export-png'),
   addImagesSelection: requiredElement('add-images-selection'),
-  addImagesRanking: requiredElement('add-images-ranking'),
   rankingShowCounts: requiredElement('ranking-show-counts'),
+  rankingShowTitles: requiredElement('ranking-show-titles'),
   rankingImmersive: requiredElement('ranking-immersive'),
+  cleanupMenuButton: requiredElement('cleanup-menu-button'),
+  cleanupMenu: requiredElement('cleanup-menu'),
+  displayMenuButton: requiredElement('display-menu-button'),
+  displayMenu: requiredElement('display-menu'),
+  fileMenuButton: requiredElement('file-menu-button'),
+  fileMenu: requiredElement('file-menu'),
   stateFile: requiredElement('state-file'),
   mediaFiles: requiredElement('media-files'),
   mediaPreview: requiredElement('media-preview'),
@@ -619,6 +627,33 @@ async function initialize() {
     return previewMedia.urlFor(work.workId, work.coverPath);
   }
 
+  const rankingPreloader = createRankingPreloader({ load: preloadImage, concurrency: 4 });
+  let rankingPreloadGeneration = 0;
+
+  function cancelRankingPreload() {
+    rankingPreloadGeneration += 1;
+    rankingPreloader.cancel();
+  }
+
+  async function refreshRankingPreload(rankingModel) {
+    const generation = ++rankingPreloadGeneration;
+    const visibleWorkIds = new Set(rankingView.visibleWorkIds());
+    const selectedWorks = [
+      ...rankingModel.tiers.flatMap(tier => tier.works),
+      ...rankingModel.candidateWorks
+    ];
+    const entries = await Promise.all(selectedWorks.map(async work => ({
+      url: await previewUrlForWork(work),
+      visible: visibleWorkIds.has(work.workId)
+    })));
+    if (
+      generation !== rankingPreloadGeneration
+      || lastRenderedModel?.state.workspaceMode !== 'ranking'
+    ) return false;
+    rankingPreloader.replace(entries);
+    return true;
+  }
+
   const previewLoader = createMediaPreviewLoader({
     image: elements.mediaPreviewImage,
     resolveUrl: previewUrlForWork,
@@ -801,16 +836,68 @@ async function initialize() {
       rankingScrollPosition = rankingView.captureScroll();
       void render();
     },
+    onAnnotationChange(workId, value) {
+      presentation.setAnnotation(workId, value);
+      rankingView.setAnnotations(presentation.inspect().annotations);
+      renderControlStates(lastRenderedModel ?? controller.inspect([]));
+    },
     assetBase
   });
   const presentation = createRankingPresentation({
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
   });
+
+  const toolbarMenus = [
+    { button: elements.cleanupMenuButton, menu: elements.cleanupMenu },
+    { button: elements.displayMenuButton, menu: elements.displayMenu },
+    { button: elements.fileMenuButton, menu: elements.fileMenu }
+  ];
+
+  function closeToolbarMenus(except = null) {
+    for (const item of toolbarMenus) {
+      if (item === except) continue;
+      item.menu.hidden = true;
+      item.button.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function toggleToolbarMenu(item) {
+    const opening = item.menu.hidden;
+    closeToolbarMenus(item);
+    item.menu.hidden = !opening;
+    item.button.setAttribute('aria-expanded', String(opening));
+    if (!opening) return;
+    const anchor = item.button.getBoundingClientRect();
+    const width = item.menu.getBoundingClientRect().width || 132;
+    const left = Math.min(
+      Math.max(8, anchor.left),
+      Math.max(8, window.innerWidth - width - 8)
+    );
+    item.menu.style.left = `${left}px`;
+    item.menu.style.top = `${Math.min(anchor.bottom + 4, window.innerHeight - item.menu.offsetHeight - 8)}px`;
+  }
+
+  for (const item of toolbarMenus) {
+    item.button.addEventListener('click', event => {
+      event.stopPropagation();
+      toggleToolbarMenu(item);
+    });
+  }
+  document.addEventListener('click', event => {
+    if (toolbarMenus.some(item => item.menu.contains(event.target) || item.button.contains(event.target))) return;
+    closeToolbarMenus();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeToolbarMenus();
+  });
   const immersive = createImmersiveController({
     root: document.body,
     documentRef: document,
-    onChange: value => rankingView.setImmersive(value)
+    onChange(value) {
+      closeToolbarMenus();
+      rankingView.setImmersive(value);
+    }
   });
   const mediaDialog = createMediaDialogView({
     documentRef: document,
@@ -845,7 +932,10 @@ async function initialize() {
     });
   }
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
+  elements.rankingShowTitles.checked = presentation.inspect().showTitles;
   rankingView.setShowCounts(presentation.inspect().showCounts);
+  rankingView.setShowTitles(presentation.inspect().showTitles);
+  rankingView.setAnnotations(presentation.inspect().annotations);
 
   function captureWorkspaceScroll() {
     if (renderedWorkspaceMode === 'selection') {
@@ -872,11 +962,16 @@ async function initialize() {
     elements.redoEdit.disabled = importBusy || !model.canRedo;
     elements.clearBoard.disabled = importBusy || model.rankedCount === 0;
     elements.clearCandidates.disabled = importBusy || model.selectedCount === 0;
+    elements.clearAnnotations.disabled = importBusy
+      || Object.keys(presentation.inspect().annotations).length === 0;
     elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
     elements.rankingShowCounts.disabled = importBusy;
+    elements.rankingShowTitles.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
     elements.addImagesSelection.disabled = importBusy || mediaStore === null;
-    elements.addImagesRanking.disabled = importBusy || mediaStore === null;
+    elements.cleanupMenuButton.disabled = importBusy;
+    elements.displayMenuButton.disabled = importBusy;
+    elements.fileMenuButton.disabled = importBusy;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || model.rankedCount === 0 || pngExportInProgress;
   }
@@ -892,11 +987,15 @@ async function initialize() {
         elements.redoEdit,
         elements.clearBoard,
         elements.clearCandidates,
+        elements.clearAnnotations,
         elements.rankingCandidateSearch,
         elements.rankingShowCounts,
+        elements.rankingShowTitles,
         elements.rankingImmersive,
         elements.addImagesSelection,
-        elements.addImagesRanking,
+        elements.cleanupMenuButton,
+        elements.displayMenuButton,
+        elements.fileMenuButton,
         elements.exportState,
         elements.exportPng
       ]
@@ -931,12 +1030,13 @@ async function initialize() {
     if (outcome.status === 'stale') return false;
     const model = controller.inspect(outcome.workIds);
     const ranking = model.state.workspaceMode === 'ranking';
+    let rankingModel = null;
     elements.selectedCount.textContent = String(model.selectedCount);
     elements.rankedCount.textContent = String(model.rankedCount);
     elements.unrankedCount.textContent = String(model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
     if (ranking) {
-      const rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
+      rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
       rankingView.render(rankingModel, await resolveCoverUrls([
         ...rankingModel.candidateWorks,
         ...rankingModel.tiers.flatMap(tier => tier.works)
@@ -968,6 +1068,8 @@ async function initialize() {
     }
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
+    if (rankingModel !== null) void refreshRankingPreload(rankingModel);
+    else cancelRankingPreload();
     return true;
   }
 
@@ -1024,10 +1126,11 @@ async function initialize() {
   elements.rankingShowCounts.addEventListener('change', () => {
     rankingView.setShowCounts(presentation.setShowCounts(elements.rankingShowCounts.checked));
   });
+  elements.rankingShowTitles.addEventListener('change', () => {
+    rankingView.setShowTitles(presentation.setShowTitles(elements.rankingShowTitles.checked));
+  });
   elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
-  for (const button of [elements.addImagesSelection, elements.addImagesRanking]) {
-    button.addEventListener('click', () => elements.mediaFiles.click());
-  }
+  elements.addImagesSelection.addEventListener('click', () => elements.mediaFiles.click());
   elements.mediaFiles.addEventListener('change', () => {
     const files = Array.from(elements.mediaFiles.files ?? []);
     elements.mediaFiles.value = '';
@@ -1057,10 +1160,20 @@ async function initialize() {
     });
   }
   elements.clearCandidates.addEventListener('click', () => {
+    closeToolbarMenus();
     return runStateChange(() => controller.clearCandidates());
   });
   elements.clearBoard.addEventListener('click', () => {
+    closeToolbarMenus();
     return runStateChange(() => controller.clearBoard());
+  });
+  elements.clearAnnotations.addEventListener('click', () => {
+    if (elements.clearAnnotations.disabled) return;
+    if (!window.confirm('清空全部本地标记？')) return;
+    presentation.clearAnnotations();
+    rankingView.setAnnotations(presentation.inspect().annotations);
+    closeToolbarMenus();
+    renderControlStates(lastRenderedModel ?? controller.inspect([]));
   });
   elements.undoEdit.addEventListener('click', () => {
     return runStateChange(() => controller.undo());
@@ -1069,6 +1182,7 @@ async function initialize() {
     return runStateChange(() => controller.redo());
   });
   elements.importState.addEventListener('click', () => {
+    closeToolbarMenus();
     elements.stateFile.click();
   });
   elements.stateFile.addEventListener('change', async () => {
@@ -1087,6 +1201,7 @@ async function initialize() {
     }
 
     candidateTitleQuery = '';
+    cancelRankingPreload();
     selectionScrollPosition = { top: 0, left: 0 };
     rankingScrollPosition = {
       top: 0,
@@ -1102,6 +1217,7 @@ async function initialize() {
   });
   elements.exportState.addEventListener('click', () => {
     if (importBusy) return;
+    closeToolbarMenus();
     try {
       const result = controller.exportJson();
       announce(`JSON 已导出：${result.filename}`, 'success');
@@ -1130,6 +1246,7 @@ async function initialize() {
         tiers: snapshot.state.tiers,
         tierOrder: snapshot.state.tierOrder,
         worksById: exportWorksById,
+        presentation: presentation.inspect(),
         createCanvas({ width, height }) {
           const canvas = document.createElement('canvas');
           canvas.width = width;

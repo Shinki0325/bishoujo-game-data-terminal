@@ -37,9 +37,9 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 15464,
+      "bytes": 16478,
       "path": "index.html",
-      "sha256": "910f0f44e753d309e68525dfe0a342c86c96b38ec4660778bdf0d621863f0bee"
+      "sha256": "5cde8d9cad0694b41e5556b82cf0ac5f945e1cdfc67b9fbd630a460b6d5e56d5"
     },
     {
       "bytes": 21291,
@@ -147,9 +147,9 @@
       "sha256": "966831f7f41ad4fb86f38106907796eda3e95885bece29c88361c429c0e33617"
     },
     {
-      "bytes": 37671,
+      "bytes": 42659,
       "path": "lib/png-export.js",
-      "sha256": "682ed2efa2b58de9f354c7af4c901dee9b7d75d55da953d1bc3b7380430e90ff"
+      "sha256": "ae933b13ccc9687f5e586917cd459ce61ef61c6b39439955e5ec2b40b32921b8"
     },
     {
       "bytes": 3345,
@@ -162,9 +162,14 @@
       "sha256": "850b05cbdefd37f0cbb0d3ea253b58d122676438ee7ee92eeb594ad82ae0c489"
     },
     {
-      "bytes": 3094,
+      "bytes": 2753,
+      "path": "lib/ranking-preloader.js",
+      "sha256": "5cca647d02fba1a8774d625bf2e09f9f8ea98c11db9f3e0b20265b4a907689c4"
+    },
+    {
+      "bytes": 5651,
       "path": "lib/ranking-presentation.js",
-      "sha256": "d62cc14361c8461c247f27808e3f6ab4ff49ae4c36ab0562b2139af7d507d02d"
+      "sha256": "810109c5e31801ec967fe68d3cd714dc27a55c07e84077606632eb2edc2fa526"
     },
     {
       "bytes": 1033,
@@ -192,14 +197,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 43987,
+      "bytes": 48567,
       "path": "main.js",
-      "sha256": "b703352b7647a00fe09183afb1fb65c13c27df168998372f4460315c36ae2beb"
+      "sha256": "8eb3177a21606344784e6b1ceb030705aecc0269c338b1babda08f91b3108415"
     },
     {
-      "bytes": 39826,
+      "bytes": 41264,
       "path": "styles.css",
-      "sha256": "e801372e2c944b843094b580bd50cf929bca8de3c7cd99f66d6a8123408eff38"
+      "sha256": "de23909df219b71e7ca7ece91419679e0ff8efd803d3b4762355075ad4713082"
     },
     {
       "bytes": 45611,
@@ -212,9 +217,9 @@
       "sha256": "b08beb008a0bb6b8ebfa23de3d01bed9eff89cce3930777f64cd6528995c24a9"
     },
     {
-      "bytes": 30584,
+      "bytes": 36951,
       "path": "views/ranking-view.js",
-      "sha256": "54369e7ac9487b2fc7a0bf7004bea288abd8db1deb4db207bd0878b5ea3eff7a"
+      "sha256": "9c7632787fe9221ca78dc6672571f5d461a52039e008fa51e6b49188fb56e159"
     },
     {
       "bytes": 13416,
@@ -230,7 +235,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4179844,
-    "files": 45
+    "bytes": 4203541,
+    "files": 46
   }
 }

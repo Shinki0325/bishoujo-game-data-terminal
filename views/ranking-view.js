@@ -2,6 +2,7 @@ import { edgeScrollVelocity, insertionIndexFromPoint } from '../lib/drag.js';
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
+import { annotationLines } from '../lib/ranking-presentation.js';
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -32,6 +33,27 @@ function isDescendant(root, candidate) {
     current = current.parentElement;
   }
   return false;
+}
+
+function detach(node) {
+  const parent = node?.parentElement;
+  if (!parent) return;
+  parent.replaceChildren(...arrayFrom(parent.children).filter(child => child !== node));
+}
+
+export function placeFloatingPanel({ anchor, panel, viewport, margin = 8, gap = 4 }) {
+  for (const [label, rect] of [['anchor', anchor], ['panel', panel], ['viewport', viewport]]) {
+    if (rect === null || typeof rect !== 'object') throw new TypeError(`${label} must be an object`);
+  }
+  const left = Math.min(
+    Math.max(margin, anchor.right - panel.width),
+    Math.max(margin, viewport.width - panel.width - margin)
+  );
+  const above = anchor.top - panel.height - gap;
+  const top = above >= margin
+    ? above
+    : Math.min(anchor.bottom + gap, Math.max(margin, viewport.height - panel.height - margin));
+  return { left, top };
 }
 
 function snapshotIdArray(value, label) {
@@ -115,9 +137,18 @@ export function createRankingCard(documentRef, work, callbacks) {
   if (callbacks === null || typeof callbacks !== 'object' || Array.isArray(callbacks)) {
     throw new TypeError('callbacks must be an object');
   }
-  const { onOpenDetails, onOpenMedia = () => {}, onDragStart, onDragEnd, assetBase, coverUrl = null } = callbacks;
+  const {
+    onOpenDetails,
+    onOpenMedia = () => {},
+    onContextMenu = (item => onOpenDetails(item)),
+    onDragStart,
+    onDragEnd,
+    assetBase,
+    coverUrl = null
+  } = callbacks;
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
+  assertFunction(onContextMenu, 'onContextMenu');
   assertFunction(onDragStart, 'onDragStart');
   assertFunction(onDragEnd, 'onDragEnd');
 
@@ -168,7 +199,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   card.addEventListener('contextmenu', event => {
     if (!desktopDetails) return;
     event.preventDefault();
-    onOpenDetails(work);
+    onContextMenu(work, card, event);
   });
   card.addEventListener('dragstart', event => {
     if (event.dataTransfer) {
@@ -237,6 +268,7 @@ export function createRankingView({
   onTierDelete = () => {},
   onAddTier = () => {},
   onRequestMediaImport = () => {},
+  onAnnotationChange = () => {},
   assetBase
 }) {
   if (root === null || typeof root?.querySelector !== 'function') {
@@ -255,6 +287,7 @@ export function createRankingView({
   assertFunction(onTierDelete, 'onTierDelete');
   assertFunction(onAddTier, 'onAddTier');
   assertFunction(onRequestMediaImport, 'onRequestMediaImport');
+  assertFunction(onAnnotationChange, 'onAnnotationChange');
 
   const tierBoard = requireOwnedElement(root, '#tier-board', '#tier-board');
   const candidateSearch = requireOwnedElement(root, '#ranking-candidate-search', '#ranking-candidate-search');
@@ -276,6 +309,8 @@ export function createRankingView({
   let model = null;
   let draggedWorkId = null;
   let showCounts = false;
+  let showTitles = true;
+  let annotations = {};
   let dropPlan = null;
   let autoScrollFrame = null;
   let autoScrollTrack = null;
@@ -283,6 +318,118 @@ export function createRankingView({
   let editingTierId = null;
   let focusTierId = null;
   let immersive = false;
+  let colorPalette = null;
+  let colorPaletteTrigger = null;
+  let annotationEditor = null;
+
+  function closeColorPalette() {
+    if (colorPaletteTrigger) colorPaletteTrigger.setAttribute('aria-expanded', 'false');
+    detach(colorPalette);
+    colorPalette = null;
+    colorPaletteTrigger = null;
+  }
+
+  function closeAnnotationEditor(commit) {
+    if (annotationEditor === null) return;
+    const current = annotationEditor;
+    annotationEditor = null;
+    detach(current.input);
+    if (commit) onAnnotationChange(current.work.workId, current.input.value);
+  }
+
+  function applyCardPresentation(card) {
+    const title = card.querySelector?.('.ranking-card-title');
+    if (title) title.hidden = !showTitles;
+    const workId = card.dataset.workId;
+    const value = annotations[workId] ?? '';
+    let overlay = card.querySelector?.('.ranking-card-annotation');
+    if (value.length === 0) {
+      detach(overlay);
+      return;
+    }
+    if (!overlay) {
+      overlay = documentRef.createElement('span');
+      overlay.className = 'ranking-card-annotation';
+      overlay.setAttribute('aria-hidden', 'true');
+      card.querySelector('.ranking-card-cover').append(overlay);
+    }
+    overlay.textContent = annotationLines(value).join('\n');
+    overlay.hidden = !immersive;
+  }
+
+  function beginAnnotationEdit(work, card) {
+    closeAnnotationEditor(true);
+    const input = documentRef.createElement('input');
+    input.type = 'text';
+    input.className = 'ranking-annotation-input';
+    input.maxLength = 16;
+    input.value = annotations[work.workId] ?? '';
+    input.setAttribute('aria-label', `编辑${work.title}的标注`);
+    input.addEventListener('click', event => event.stopPropagation());
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeAnnotationEditor(false);
+      } else if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        closeAnnotationEditor(true);
+      }
+    });
+    card.querySelector('.ranking-card-cover').append(input);
+    annotationEditor = { work, card, input };
+    input.focus?.();
+    input.select?.();
+  }
+
+  function openColorPalette(tier, trigger) {
+    closeColorPalette();
+    const palette = documentRef.createElement('div');
+    palette.className = 'tier-color-palette';
+    palette.setAttribute('role', 'group');
+    palette.setAttribute('aria-label', '等级颜色');
+    for (const colorId of TIER_COLOR_IDS) {
+      const option = documentRef.createElement('button');
+      const optionColor = tierColor(colorId);
+      option.type = 'button';
+      option.className = 'tier-color-option';
+      option.dataset.colorId = colorId;
+      option.style.setProperty('background', optionColor.background);
+      option.setAttribute('aria-label', `选择${colorId}颜色`);
+      option.setAttribute('title', `选择${colorId}颜色`);
+      option.addEventListener('click', event => {
+        event.stopPropagation();
+        const nextTiers = model.tiers.map(item => ({
+          ...item,
+          colorId: item.id === tier.id ? colorId : item.colorId
+        }));
+        closeColorPalette();
+        onTierConfigChange(snapshotTierConfig(nextTiers));
+      });
+      palette.append(option);
+    }
+    documentRef.body.append(palette);
+    colorPalette = palette;
+    colorPaletteTrigger = trigger;
+    trigger.setAttribute('aria-expanded', 'true');
+    const anchor = trigger.getBoundingClientRect?.() ?? {
+      left: 8, right: 30, top: 8, bottom: 30, width: 22, height: 22
+    };
+    const measured = palette.getBoundingClientRect?.() ?? { width: 119, height: 54 };
+    const panel = {
+      width: Number.isFinite(measured.width) && measured.width > 0 ? measured.width : 119,
+      height: Number.isFinite(measured.height) && measured.height > 0 ? measured.height : 54
+    };
+    const position = placeFloatingPanel({
+      anchor,
+      panel,
+      viewport: {
+        width: Number(viewWindow.innerWidth) || 390,
+        height: Number(viewWindow.innerHeight) || 844
+      }
+    });
+    palette.style.setProperty('left', `${position.left}px`);
+    palette.style.setProperty('top', `${position.top}px`);
+  }
 
   function removeIndicator() {
     const parent = indicator.parentElement;
@@ -347,6 +494,7 @@ export function createRankingView({
   }
 
   function finishDrag() {
+    closeAnnotationEditor(false);
     clearDropState();
     draggedWorkId = null;
   }
@@ -431,6 +579,10 @@ export function createRankingView({
       onOpenDetails(work) {
         if (!immersive) onOpenDetails(work);
       },
+      onContextMenu(work, card) {
+        if (immersive) beginAnnotationEdit(work, card);
+        else onOpenDetails(work);
+      },
       onOpenMedia,
       onDragStart(work, card) {
         clearDropState();
@@ -461,13 +613,12 @@ export function createRankingView({
       label.classList.remove('is-tier-editing');
       const name = label.querySelector('.tier-label-name');
       const input = label.querySelector('.tier-name-input');
-      const palette = label.querySelector('.tier-color-palette');
       const editingState = label.querySelector('.tier-editing-state');
       if (name) name.hidden = false;
       if (input) input.hidden = true;
-      if (palette) palette.hidden = true;
       if (editingState) editingState.hidden = true;
     }
+    closeColorPalette();
     editingTierId = null;
   }
 
@@ -544,38 +695,13 @@ export function createRankingView({
     paletteTrigger.textContent = '●';
     paletteTrigger.setAttribute('aria-label', '选择颜色');
     paletteTrigger.setAttribute('title', '选择颜色');
+    paletteTrigger.setAttribute('aria-expanded', 'false');
     paletteTrigger.addEventListener('click', event => {
       event.stopPropagation();
-      palette.hidden = !palette.hidden;
+      if (colorPaletteTrigger === paletteTrigger) closeColorPalette();
+      else openColorPalette(tier, paletteTrigger);
     });
     editingState.append(paletteTrigger);
-
-    const palette = documentRef.createElement('div');
-    palette.className = 'tier-color-palette';
-    palette.hidden = true;
-    palette.setAttribute('role', 'group');
-    palette.setAttribute('aria-label', '等级颜色');
-    for (const colorId of TIER_COLOR_IDS) {
-      const option = documentRef.createElement('button');
-      const optionColor = tierColor(colorId);
-      option.type = 'button';
-      option.className = 'tier-color-option';
-      option.dataset.colorId = colorId;
-      option.style.setProperty('background', optionColor.background);
-      option.setAttribute('aria-label', `选择${colorId}颜色`);
-      option.setAttribute('title', `选择${colorId}颜色`);
-      option.addEventListener('click', event => {
-        event.stopPropagation();
-        const nextTiers = model.tiers.map(item => ({
-          ...item,
-          colorId: item.id === tier.id ? colorId : item.colorId
-        }));
-        onTierConfigChange(snapshotTierConfig(nextTiers));
-        palette.hidden = true;
-      });
-      palette.append(option);
-    }
-    editingState.append(palette);
     label.append(name, input, count, editingState);
 
     function beginEdit() {
@@ -681,12 +807,18 @@ export function createRankingView({
   });
   candidateSearch.addEventListener('input', () => onCandidateSearch(candidateSearch.value));
   documentRef.addEventListener('click', event => {
+    if (annotationEditor !== null && !isDescendant(annotationEditor.input, event.target)) {
+      closeAnnotationEditor(true);
+    }
     if (editingTierId === null) return;
     const row = tierRows.get(editingTierId);
     if (!row || !isDescendant(row, event.target)) closeTierEditing();
   });
   documentRef.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && editingTierId !== null) closeTierEditing();
+    if (event.key !== 'Escape') return;
+    if (annotationEditor !== null) closeAnnotationEditor(false);
+    if (editingTierId !== null) closeTierEditing();
+    else closeColorPalette();
   });
 
   return Object.freeze({
@@ -707,6 +839,7 @@ export function createRankingView({
         ? documentRef.activeElement.dataset.workId
         : null;
       finishDrag();
+      closeColorPalette();
       model = nextModel;
       closeTierEditing();
       const callbacks = cardCallbacks();
@@ -735,6 +868,7 @@ export function createRankingView({
           ...callbacks,
           coverUrl: coverUrls?.get?.(item.workId) ?? null
         }));
+        for (const card of cards) applyCardPresentation(card);
         track.replaceChildren(...cards);
         nextTierRows.set(tier.id, row);
         nextTierTracks.set(tier.id, track);
@@ -754,6 +888,7 @@ export function createRankingView({
         ...callbacks,
         coverUrl: coverUrls?.get?.(item.workId) ?? null
       }));
+      for (const card of candidates) applyCardPresentation(card);
       tierBoard.replaceChildren(...renderedRows, addTier);
       tierBoard.dataset.tierCount = String(renderedRows.length);
       tierRows.clear();
@@ -808,13 +943,53 @@ export function createRankingView({
       }
     },
 
+    setShowTitles(nextShowTitles) {
+      if (typeof nextShowTitles !== 'boolean') throw new TypeError('showTitles must be a boolean');
+      showTitles = nextShowTitles;
+      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
+        applyCardPresentation(card);
+      }
+    },
+
+    setAnnotations(nextAnnotations) {
+      if (nextAnnotations === null || typeof nextAnnotations !== 'object' || Array.isArray(nextAnnotations)) {
+        throw new TypeError('annotations must be an object');
+      }
+      annotations = Object.fromEntries(
+        Object.entries(nextAnnotations).filter(([, value]) => typeof value === 'string' && value.length > 0)
+      );
+      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
+        applyCardPresentation(card);
+      }
+    },
+
     setImmersive(nextImmersive) {
       if (typeof nextImmersive !== 'boolean') throw new TypeError('immersive must be a boolean');
       immersive = nextImmersive;
       if (immersive) {
         focusTierId = null;
         closeTierEditing();
+      } else {
+        closeAnnotationEditor(false);
       }
+      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
+        applyCardPresentation(card);
+      }
+    },
+
+    visibleWorkIds() {
+      const width = Number(viewWindow.innerWidth) || 0;
+      const height = Number(viewWindow.innerHeight) || 0;
+      return arrayFrom(root.querySelectorAll?.('.ranking-card'))
+        .filter(card => {
+          const rect = card.getBoundingClientRect?.();
+          return rect
+            && rect.right > 0
+            && rect.bottom > 0
+            && rect.left < width
+            && rect.top < height;
+        })
+        .map(card => card.dataset.workId);
     },
 
     focusTier(tierId) {
