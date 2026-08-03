@@ -27,7 +27,8 @@ export function createMediaDialogView({
   encodeCrop,
   renderActive,
   onCreateCustom,
-  onReplace = async () => {}
+  onReplace = async () => {},
+  onError = () => {}
 }) {
   if (!documentRef || typeof documentRef.getElementById !== 'function') {
     throw new TypeError('documentRef must provide getElementById');
@@ -37,6 +38,7 @@ export function createMediaDialogView({
   assertFunction(renderActive, 'renderActive');
   assertFunction(onCreateCustom, 'onCreateCustom');
   assertFunction(onReplace, 'onReplace');
+  assertFunction(onError, 'onError');
 
   const cropDialog = requiredElement(documentRef, 'media-crop');
   const cropCanvas = requiredElement(documentRef, 'media-crop-canvas');
@@ -49,6 +51,7 @@ export function createMediaDialogView({
   let queue = [];
   let active = null;
   let pointer = null;
+  let confirming = false;
 
   function releaseActive() {
     const release = active?.decoded?.release;
@@ -101,6 +104,23 @@ export function createMediaDialogView({
     return advance();
   }
 
+  async function submitCurrent() {
+    if (confirming) return false;
+    confirming = true;
+    confirmButton.disabled = true;
+    confirmButton.setAttribute('aria-busy', 'true');
+    try {
+      return await confirmCurrent();
+    } catch (error) {
+      onError(error);
+      return false;
+    } finally {
+      confirming = false;
+      confirmButton.disabled = false;
+      confirmButton.removeAttribute('aria-busy');
+    }
+  }
+
   cropCanvas.addEventListener?.('pointerdown', event => {
     if (!active) return;
     pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
@@ -136,7 +156,7 @@ export function createMediaDialogView({
     releaseActive();
     closeDialog(cropDialog);
   });
-  confirmButton.addEventListener?.('click', () => { void confirmCurrent(); });
+  confirmButton.addEventListener?.('click', () => { void submitCurrent(); });
 
   return Object.freeze({
     async openUpload(files, { availableSlots } = {}) {

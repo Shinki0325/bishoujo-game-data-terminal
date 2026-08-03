@@ -1392,6 +1392,10 @@ body.is-ranking-immersive .ranking-view {
   height: 44px;
 }
 
+body:not(.is-ranking-immersive) .ranking-immersive-exit {
+  display: none;
+}
+
 .tier-board {
   min-width: 0;
   border-bottom: 1px solid var(--border);
@@ -1597,12 +1601,13 @@ dialog {
 #media-preview.is-immersive-preview {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
-  margin: 0;
+  width: min(760px, 70vw);
+  max-width: calc(100vw - 40px);
+  height: auto;
+  max-height: 70dvh;
+  margin: auto;
   padding: 0;
+  overflow: hidden;
   background: #000000;
   border: 0;
 }
@@ -1614,16 +1619,17 @@ dialog {
 
 #media-preview.is-immersive-preview .media-preview-body {
   width: 100%;
-  height: 100%;
+  height: auto;
   padding: 0;
   place-items: center;
 }
 
 #media-preview.is-immersive-preview #media-preview-image {
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  max-height: none;
+  width: auto;
+  max-width: min(760px, 70vw);
+  height: auto;
+  max-height: 70dvh;
+  aspect-ratio: auto;
   background: #000000;
 }
 

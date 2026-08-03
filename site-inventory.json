@@ -127,9 +127,9 @@
       "sha256": "1c84eee904ac5c1fa0bdb0cd94bfd7ddb5418565111e6ebad7702eb5461aee07"
     },
     {
-      "bytes": 3131,
+      "bytes": 3545,
       "path": "lib/image-crop.js",
-      "sha256": "d371975073c77ad32b784ee6a0ce9fafe1506d240d8743bc2522bc549c7307dc"
+      "sha256": "de2a274a73f10161bde59b0a32097032bc52bb2637d17b003dd72d2297860c80"
     },
     {
       "bytes": 4603,
@@ -152,9 +152,9 @@
       "sha256": "850b05cbdefd37f0cbb0d3ea253b58d122676438ee7ee92eeb594ad82ae0c489"
     },
     {
-      "bytes": 2807,
+      "bytes": 2942,
       "path": "lib/ranking-presentation.js",
-      "sha256": "8158cd372d0abb1ffeac1e3cfcb5da0868f44f25d3882bee8345d01723e2baa8"
+      "sha256": "df7c00edfac04a9bbc26bea368d107f113fcbbdd5919a4256b7f4d8e4d1cf5c0"
     },
     {
       "bytes": 958,
@@ -182,14 +182,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 42079,
+      "bytes": 42456,
       "path": "main.js",
-      "sha256": "a03f778a20e72175632f47c126c56007e75186daf6fe9c07a98c109255960ae7"
+      "sha256": "159641f9f49d9e78299be2a4e548a9bada72c2a87872e0ed0707229b40ca459e"
     },
     {
-      "bytes": 38384,
+      "bytes": 39314,
       "path": "styles.css",
-      "sha256": "ffa7e1de40b8851f846c51dc07b9a7794f5656671f39dee2b0c7dab645bfe581"
+      "sha256": "9670e434bbf65ae8cf5d0c938aa1b54d87431a0d57a3c3dd789cdad7b6446587"
     },
     {
       "bytes": 45611,
@@ -197,9 +197,9 @@
       "sha256": "e5e1796ee3d386d8f5f631580d350cae7a6e9417ccd163c916817e4e7074b47b"
     },
     {
-      "bytes": 5558,
+      "bytes": 6249,
       "path": "views/media-dialog-view.js",
-      "sha256": "286d8c4c5246a1449a61f87706b37d9ad6e6ac31d3b75dd59f8519c95a3d4375"
+      "sha256": "c8cc8a35e627a7477618a6da878ed7f0e4b4a876a9288b4d9e74f809ea332af0"
     },
     {
       "bytes": 27145,
@@ -225,7 +225,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4177514,
+    "bytes": 4180061,
     "files": 44
   }
 }

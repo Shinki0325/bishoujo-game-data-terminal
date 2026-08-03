@@ -758,6 +758,10 @@ async function initialize() {
       if (mediaStore === null) throw new Error('本地图片存储不可用');
       await mediaStore.putReplacement({ workId: work.workId, ...record });
       await render();
+    },
+    onError(error) {
+      announce(error instanceof Error ? error.message : '图片处理失败。', 'error');
+      console.error(error);
     }
   });
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
