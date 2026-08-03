@@ -1375,6 +1375,11 @@ body.is-ranking-immersive .ranking-card-actions {
   display: none;
 }
 
+body.is-ranking-immersive .tier-editing-state,
+body.is-ranking-immersive .ranking-upload-tile {
+  display: none !important;
+}
+
 body.is-ranking-immersive .ranking-view {
   position: fixed;
   inset: 0;
@@ -1434,6 +1439,7 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
 }
 
 .tier-label {
+  position: relative;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1456,6 +1462,101 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   -webkit-text-stroke: 2px #000000;
   paint-order: stroke fill;
   text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
+}
+
+.tier-label-name {
+  display: block;
+}
+
+.tier-name-input {
+  width: calc(100% - 12px);
+  min-width: 0;
+  padding: 2px 3px;
+  color: #ffffff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  font: inherit;
+  text-align: center;
+  outline: none;
+}
+
+.tier-name-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.tier-editing-state {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.tier-edit-control {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.tier-edit-control:disabled {
+  opacity: 0.38;
+}
+
+.tier-edit-up {
+  top: 2px;
+  left: 2px;
+}
+
+.tier-edit-down {
+  bottom: 2px;
+  left: 2px;
+}
+
+.tier-edit-delete {
+  top: 2px;
+  right: 2px;
+}
+
+.tier-color-trigger {
+  right: 2px;
+  bottom: 2px;
+}
+
+.tier-color-palette {
+  position: absolute;
+  right: 2px;
+  bottom: 26px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(5, 20px);
+  gap: 3px;
+  padding: 4px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  pointer-events: auto;
+}
+
+.tier-color-option {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
 }
 
 .tier-label output {
@@ -1539,6 +1640,31 @@ body:not(.is-ranking-immersive) .ranking-immersive-exit {
   background: var(--accent-soft);
   outline: 2px solid var(--focus);
   outline-offset: -3px;
+}
+
+.ranking-upload-tile {
+  flex: 0 0 var(--ranking-card-size);
+  width: var(--ranking-card-size);
+  min-width: var(--ranking-card-size);
+  height: var(--ranking-card-size);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.ranking-upload-tile:hover,
+.ranking-upload-tile:focus-visible,
+.ranking-upload-tile.is-drop-target {
+  color: var(--focus);
+  border-color: var(--focus);
+  background: var(--accent-soft);
 }
 
 .ranking-shell-message {
@@ -2174,6 +2300,35 @@ dialog::backdrop {
 
   .tier-label {
     font-size: 18px;
+  }
+
+  .tier-edit-control {
+    width: 24px;
+    height: 24px;
+    min-width: 44px;
+    min-height: 44px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 0;
+  }
+
+  .tier-edit-up,
+  .tier-edit-delete {
+    top: 0;
+  }
+
+  .tier-edit-down,
+  .tier-color-trigger {
+    bottom: 0;
+  }
+
+  .tier-edit-up,
+  .tier-edit-down {
+    left: 0;
+  }
+
+  .tier-edit-delete,
+  .tier-color-trigger {
+    right: 0;
   }
 
   .tier-track {

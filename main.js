@@ -21,7 +21,12 @@ import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
-import { configuredAssetBase, DATA_URLS } from './lib/runtime-config.js';
+import { createPreviewMediaResolver } from './lib/preview-media.js';
+import {
+  configuredAssetBase,
+  DATA_URLS,
+  PREVIEW_MANIFEST_PATH
+} from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError } from './lib/state.js';
 import {
@@ -498,6 +503,13 @@ function showDetails(work, filterById) {
 
 async function initialize() {
   const assetBase = configuredAssetBase();
+  const previewMedia = createPreviewMediaResolver({
+    assetBase,
+    fetchJson: () => fetchJson(
+      resolveAssetUrl(PREVIEW_MANIFEST_PATH, assetBase),
+      '高清预览 manifest'
+    )
+  });
   assertRuntimeContracts();
   const [
     sampleSource,
@@ -600,8 +612,19 @@ async function initialize() {
     return new Map(entries);
   }
 
+  async function previewUrlForWork(work) {
+    if (mediaStore !== null && work.localMediaKind === 'custom') {
+      return mediaStore.urlForCustom(work.workId);
+    }
+    if (mediaStore !== null) {
+      const replacement = await mediaStore.urlForReplacement(work.workId);
+      if (replacement !== null) return replacement;
+    }
+    return previewMedia.urlFor(work.workId, work.coverPath);
+  }
+
   async function openMediaPreview(work) {
-    const url = await coverUrlForWork(work);
+    const url = await previewUrlForWork(work);
     const isImmersive = document.body.classList.contains('is-ranking-immersive');
     elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
     elements.mediaPreviewTitle.textContent = work.title;
@@ -729,6 +752,24 @@ async function initialize() {
     onMoveToUnranked(workId) {
       return runStateChange(() => controller.moveToUnranked(workId));
     },
+    onTierConfigChange(nextTiers) {
+      return runStateChange(() => controller.saveTierConfig(nextTiers));
+    },
+    onTierDelete(tierId) {
+      const state = controller.inspectState();
+      const tier = state.tiers.find(item => item.id === tierId);
+      if (!tier || state.tiers.length <= 3) return false;
+      const count = state.tierOrder[tierId]?.length ?? 0;
+      if (count > 0 && !window.confirm(`等级“${tier.name}”中有 ${count} 部作品，删除后这些作品将移回候选区。是否继续？`)) {
+        return false;
+      }
+      const nextTiers = state.tiers.filter(item => item.id !== tierId);
+      return runStateChange(() => controller.saveTierConfig(nextTiers));
+    },
+    onRequestMediaImport(files) {
+      if (files === null) elements.mediaFiles.click();
+      else openMediaUpload(files);
+    },
     onOpenDetails(work) {
       showDetails(work, filterById);
     },
@@ -777,6 +818,13 @@ async function initialize() {
       console.error(error);
     }
   });
+  function openMediaUpload(files) {
+    const availableSlots = Math.max(0, 100 - controller.inspectState().selectedWorkIds.length);
+    void mediaDialog.openUpload(files, { availableSlots }).catch(error => {
+      announce(error instanceof Error ? error.message : '图片导入失败，请稍后重试。', 'error');
+      console.error(error);
+    });
+  }
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
   rankingView.setShowCounts(presentation.inspect().showCounts);
   const tierManagerView = createTierManagerView({

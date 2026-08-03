@@ -1,6 +1,7 @@
 import { edgeScrollVelocity, insertionIndexFromPoint } from '../lib/drag.js';
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
-import { tierColor } from '../lib/tier-palette.js';
+import { moveTier } from '../lib/tier-config.js';
+import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -244,6 +245,9 @@ export function createRankingView({
   onOpenDetails,
   onOpenMedia = () => {},
   onCandidateSearch,
+  onTierConfigChange = () => {},
+  onTierDelete = () => {},
+  onRequestMediaImport = () => {},
   assetBase
 }) {
   if (root === null || typeof root?.querySelector !== 'function') {
@@ -258,6 +262,9 @@ export function createRankingView({
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onCandidateSearch, 'onCandidateSearch');
+  assertFunction(onTierConfigChange, 'onTierConfigChange');
+  assertFunction(onTierDelete, 'onTierDelete');
+  assertFunction(onRequestMediaImport, 'onRequestMediaImport');
 
   const tierBoard = requireOwnedElement(root, '#tier-board', '#tier-board');
   const tierJumps = requireOwnedElement(root, '#ranking-tier-jumps', '#ranking-tier-jumps');
@@ -293,6 +300,7 @@ export function createRankingView({
   let autoScrollFrame = null;
   let autoScrollTrack = null;
   let autoScrollPointerX = 0;
+  let editingTierId = null;
 
   function removeIndicator() {
     const parent = indicator.parentElement;
@@ -543,7 +551,32 @@ export function createRankingView({
     };
   }
 
+  function snapshotTierConfig(nextTiers) {
+    return nextTiers.map(item => ({
+      id: item.id,
+      name: item.name,
+      colorId: item.colorId
+    }));
+  }
+
+  function closeTierEditing() {
+    if (editingTierId === null) return;
+    const row = tierRows.get(editingTierId);
+    const label = row?.querySelector?.('.tier-label');
+    if (label) {
+      label.classList.remove('is-tier-editing');
+      const name = label.querySelector('.tier-label-name');
+      const input = label.querySelector('.tier-name-input');
+      const palette = label.querySelector('.tier-color-palette');
+      if (name) name.hidden = false;
+      if (input) input.hidden = true;
+      if (palette) palette.hidden = true;
+    }
+    editingTierId = null;
+  }
+
   function createTierRow(tier) {
+    const tierIndex = model.tiers.findIndex(item => item.id === tier.id);
     const color = tierColor(tier.colorId);
     const row = documentRef.createElement('section');
     row.className = 'tier-row';
@@ -561,11 +594,139 @@ export function createRankingView({
     label.style.setProperty('background', 'var(--tier-background)');
     label.style.setProperty('color', 'var(--tier-foreground)');
     const name = documentRef.createElement('span');
+    name.className = 'tier-label-name';
     name.textContent = tier.name;
+    const input = documentRef.createElement('input');
+    input.className = 'tier-name-input';
+    input.type = 'text';
+    input.value = tier.name;
+    input.maxLength = 24;
+    input.hidden = true;
+    input.setAttribute('aria-label', `${tier.name} 绾у悕`);
     const count = documentRef.createElement('output');
     count.textContent = String(tier.works.length);
     count.hidden = !showCounts;
-    label.append(name, count);
+    const editingState = documentRef.createElement('div');
+    editingState.className = 'tier-editing-state';
+    editingState.hidden = true;
+
+    const controls = [
+      ['move-up', '↑', '上移', tierIndex === 0, () => {
+        onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, -1)));
+      }],
+      ['move-down', '↓', '下移', tierIndex === model.tiers.length - 1, () => {
+        onTierConfigChange(snapshotTierConfig(moveTier(model.tiers, tier.id, 1)));
+      }],
+      ['delete', '−', '删除', model.tiers.length <= 3, () => {
+        onTierDelete(tier.id);
+      }]
+    ];
+    for (const [action, glyph, accessibleLabel, disabled, callback] of controls) {
+      const button = documentRef.createElement('button');
+      button.type = 'button';
+      button.className = `tier-edit-control tier-edit-${action}`;
+      button.dataset.action = action;
+      button.textContent = glyph;
+      button.disabled = disabled;
+      button.setAttribute('aria-label', accessibleLabel);
+      button.setAttribute('title', accessibleLabel);
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        if (!button.disabled) callback();
+      });
+      editingState.append(button);
+    }
+
+    const paletteTrigger = documentRef.createElement('button');
+    paletteTrigger.type = 'button';
+    paletteTrigger.className = 'tier-edit-control tier-color-trigger';
+    paletteTrigger.dataset.action = 'color';
+    paletteTrigger.textContent = '●';
+    paletteTrigger.setAttribute('aria-label', '选择颜色');
+    paletteTrigger.setAttribute('title', '选择颜色');
+    paletteTrigger.addEventListener('click', event => {
+      event.stopPropagation();
+      palette.hidden = !palette.hidden;
+    });
+    editingState.append(paletteTrigger);
+
+    const palette = documentRef.createElement('div');
+    palette.className = 'tier-color-palette';
+    palette.hidden = true;
+    palette.setAttribute('role', 'group');
+    palette.setAttribute('aria-label', '等级颜色');
+    for (const colorId of TIER_COLOR_IDS) {
+      const option = documentRef.createElement('button');
+      const optionColor = tierColor(colorId);
+      option.type = 'button';
+      option.className = 'tier-color-option';
+      option.dataset.colorId = colorId;
+      option.style.setProperty('background', optionColor.background);
+      option.setAttribute('aria-label', `选择${colorId}颜色`);
+      option.setAttribute('title', `选择${colorId}颜色`);
+      option.addEventListener('click', event => {
+        event.stopPropagation();
+        const nextTiers = model.tiers.map(item => ({
+          ...item,
+          colorId: item.id === tier.id ? colorId : item.colorId
+        }));
+        onTierConfigChange(snapshotTierConfig(nextTiers));
+        palette.hidden = true;
+      });
+      palette.append(option);
+    }
+    editingState.append(palette);
+    label.append(name, input, count, editingState);
+
+    function beginEdit() {
+      if (editingTierId !== null && editingTierId !== tier.id) closeTierEditing();
+      editingTierId = tier.id;
+      label.classList.add('is-tier-editing');
+      editingState.hidden = false;
+      name.hidden = true;
+      input.hidden = false;
+      input.value = tier.name;
+      input.focus?.();
+      input.select?.();
+    }
+
+    function cancelEdit() {
+      input.value = tier.name;
+      closeTierEditing();
+    }
+
+    function commitName() {
+      const nextName = input.value.trim();
+      if (nextName.length === 0) {
+        input.focus?.();
+        return;
+      }
+      const nextTiers = model.tiers.map(item => ({
+        ...item,
+        name: item.id === tier.id ? nextName : item.name
+      }));
+      onTierConfigChange(snapshotTierConfig(nextTiers));
+      closeTierEditing();
+    }
+
+    label.addEventListener('click', event => {
+      if (event.target === input || event.target === editingState || editingState.contains(event.target)) return;
+      if (editingTierId === tier.id) closeTierEditing();
+      else beginEdit();
+    });
+    input.addEventListener('click', event => event.stopPropagation());
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelEdit();
+      } else if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        commitName();
+      }
+    });
+    input.addEventListener('blur', () => {
+      if (editingTierId === tier.id) commitName();
+    });
 
     const track = documentRef.createElement('div');
     track.className = 'tier-track';
@@ -591,6 +752,31 @@ export function createRankingView({
     if (!isDescendant(candidatePool, event.relatedTarget)) clearDropState();
   });
   candidatePool.addEventListener('drop', handlePoolDrop);
+  const uploadTile = documentRef.createElement('button');
+  uploadTile.type = 'button';
+  uploadTile.className = 'ranking-upload-tile';
+  uploadTile.textContent = '+';
+  uploadTile.setAttribute('aria-label', '导入图片');
+  uploadTile.setAttribute('title', '导入图片');
+  uploadTile.addEventListener('click', event => {
+    event.stopPropagation();
+    onRequestMediaImport(null);
+  });
+  uploadTile.addEventListener('dragover', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    uploadTile.classList.add('is-drop-target');
+  });
+  uploadTile.addEventListener('dragleave', event => {
+    event.stopPropagation();
+    if (!uploadTile.contains(event.relatedTarget)) uploadTile.classList.remove('is-drop-target');
+  });
+  uploadTile.addEventListener('drop', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    uploadTile.classList.remove('is-drop-target');
+    onRequestMediaImport(arrayFrom(event.dataTransfer?.files));
+  });
   candidateSearch.addEventListener('input', () => onCandidateSearch(candidateSearch.value));
   actionDialog.addEventListener('click', event => {
     if (event.target === event.currentTarget) closeActionMenu();
@@ -624,6 +810,7 @@ export function createRankingView({
       closeActionMenu();
       finishDrag();
       model = nextModel;
+      closeTierEditing();
       const callbacks = cardCallbacks();
       const nextTierRows = new Map();
       const nextTierTracks = new Map();
@@ -682,7 +869,7 @@ export function createRankingView({
         const retained = retainedTierScroll[tierId];
         track.scrollLeft = Number.isFinite(retained) ? retained : 0;
       }
-      candidatePool.replaceChildren(...candidates);
+      candidatePool.replaceChildren(...candidates, uploadTile);
       candidateSearch.value = model.candidateTitleQuery;
       if (focusedWorkId !== null) {
         const nextCard = cardForWorkId(focusedWorkId);
