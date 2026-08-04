@@ -23,6 +23,8 @@ import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
+import { createActionIcon } from './lib/action-icons.js';
+import { createMediaPreviewActions } from './lib/media-preview-actions.js';
 import { createRankingHelp } from './lib/ranking-help.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
@@ -124,6 +126,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   stateFile: requiredElement('state-file'),
   mediaFiles: requiredElement('media-files'),
   mediaPreview: requiredElement('media-preview'),
+  mediaPreviewClose: requiredElement('media-preview-close'),
   mediaPreviewImage: requiredElement('media-preview-image'),
   mediaPreviewTitle: requiredElement('media-preview-title'),
   mediaPreviewActions: requiredElement('media-preview-actions'),
@@ -680,6 +683,36 @@ async function initialize() {
     return true;
   }
 
+  elements.mediaPreviewClose.replaceChildren(createActionIcon(document, 'x'));
+  const previewActions = createMediaPreviewActions({
+    documentRef: document,
+    actions: elements.mediaPreviewActions,
+    viewport: {
+      get width() { return window.innerWidth; },
+      get height() { return window.innerHeight; }
+    },
+    confirm: message => window.confirm(message),
+    onEdit: work => {
+      void editStickersForWork(work).catch(error => {
+        announce(error instanceof Error ? error.message : '图片贴纸编辑失败。', 'error');
+        console.error(error);
+      });
+    },
+    onReplace: work => {
+      replacementWork = work;
+      elements.mediaFiles.click();
+    },
+    onRestore: work => {
+      void mediaStore.deleteReplacement(work.workId).then(render).then(() => {
+        previewActions.closeMenu();
+        if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
+        else elements.mediaPreview.open = false;
+      }).catch(error => {
+        announce('恢复原图失败。', 'error');
+        console.error(error);
+      });
+    }
+  });
   const previewLoader = createMediaPreviewLoader({
     image: elements.mediaPreviewImage,
     resolveUrl: previewUrlForWork,
@@ -692,44 +725,13 @@ async function initialize() {
       if (!isCurrent()) return;
       elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
       elements.mediaPreviewTitle.textContent = work.title;
-      elements.mediaPreviewActions.replaceChildren();
-      if (!isImmersive && mediaStore !== null) {
-        const editStickers = document.createElement('button');
-        editStickers.type = 'button';
-        editStickers.textContent = '编辑贴纸';
-        editStickers.addEventListener('click', () => {
-          void editStickersForWork(work).catch(error => {
-            announce(error instanceof Error ? error.message : '图片贴纸编辑失败。', 'error');
-            console.error(error);
-          });
-        });
-        elements.mediaPreviewActions.append(editStickers);
-      }
-      if (!isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null) {
-        const replace = document.createElement('button');
-        replace.type = 'button';
-        replace.textContent = '替换图片';
-        replace.addEventListener('click', () => {
-          replacementWork = work;
-          elements.mediaFiles.click();
-        });
-        elements.mediaPreviewActions.append(replace);
-      }
-      if (hasReplacement) {
-        const restore = document.createElement('button');
-        restore.type = 'button';
-        restore.textContent = '恢复原图';
-        restore.addEventListener('click', () => {
-          void mediaStore.deleteReplacement(work.workId).then(render).then(() => {
-            if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
-            else elements.mediaPreview.open = false;
-          }).catch(error => {
-            announce('恢复原图失败。', 'error');
-            console.error(error);
-          });
-        });
-        elements.mediaPreviewActions.append(restore);
-      }
+      previewActions.render({
+        work,
+        immersive: isImmersive,
+        editable: !isImmersive && mediaStore !== null,
+        replaceable: !isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null,
+        restorable: hasReplacement
+      });
       if (typeof elements.mediaPreview.showModal === 'function') elements.mediaPreview.showModal();
       else elements.mediaPreview.open = true;
     }
@@ -739,7 +741,10 @@ async function initialize() {
     return previewLoader.open(work);
   }
 
-  elements.mediaPreview.addEventListener('close', () => previewLoader.cancel());
+  elements.mediaPreview.addEventListener('close', () => {
+    previewLoader.cancel();
+    previewActions.closeMenu();
+  });
   elements.mediaPreview.addEventListener('click', event => {
     if (!elements.mediaPreview.classList.contains('is-immersive-preview')) return;
     const rect = elements.mediaPreviewImage.getBoundingClientRect();
@@ -1197,6 +1202,13 @@ async function initialize() {
     documentRef: document,
     onChange(value) {
       closeToolbarMenus();
+      previewLoader.cancel();
+      previewActions.clear();
+      if (value) {
+        stickerEditor.cancel();
+        if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
+        else elements.mediaPreview.open = false;
+      }
       rankingView.setImmersive(value);
     }
   });

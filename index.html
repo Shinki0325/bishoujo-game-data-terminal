@@ -428,7 +428,7 @@
     <dialog id="media-preview" aria-labelledby="media-preview-title">
       <div class="dialog-heading">
         <h2 id="media-preview-title">图片预览</h2>
-        <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭图片预览" title="关闭图片预览">×</button></form>
+            <form method="dialog"><button id="media-preview-close" class="icon-button action-neutral" type="submit" aria-label="关闭图片预览" title="关闭图片预览"></button></form>
       </div>
       <div class="media-preview-body">
         <img id="media-preview-image" alt="">
@@ -457,22 +457,25 @@
     </dialog>
 
     <dialog id="sticker-editor" aria-labelledby="sticker-editor-title">
-      <div class="dialog-heading sticker-editor-heading">
-        <h2 id="sticker-editor-title">图片贴纸</h2>
-        <div class="sticker-editor-history" role="toolbar" aria-label="贴纸编辑历史">
-          <button id="sticker-undo" class="icon-button" type="button" aria-label="撤销贴纸操作" title="撤销">↶</button>
-          <button id="sticker-redo" class="icon-button" type="button" aria-label="重做贴纸操作" title="重做">↷</button>
-          <button id="sticker-clear" class="icon-button" type="button" aria-label="清空贴纸" title="清空贴纸">⌫</button>
-        </div>
+          <div class="dialog-heading sticker-editor-heading">
+            <h2 id="sticker-editor-title">图片贴纸</h2>
+            <div class="sticker-editor-history" role="toolbar" aria-label="贴纸编辑历史与菜单">
+              <button id="sticker-undo" class="icon-button action-neutral" type="button" aria-label="撤销贴纸操作" title="撤销"></button>
+              <button id="sticker-redo" class="icon-button action-neutral" type="button" aria-label="重做贴纸操作" title="重做"></button>
+              <button id="sticker-more" class="icon-button action-neutral" type="button" aria-label="更多贴纸操作" title="更多贴纸操作" aria-controls="sticker-more-menu" aria-expanded="false"></button>
+            </div>
+            <div id="sticker-more-menu" class="action-menu sticker-more-menu" hidden>
+              <button id="sticker-clear" class="action-danger" type="button"><span class="action-label">清空贴纸</span></button>
+            </div>
       </div>
       <div class="sticker-editor-body">
         <div class="sticker-editor-stage">
           <canvas id="sticker-editor-canvas" width="512" height="512" aria-label="图片贴纸编辑区域"></canvas>
         </div>
-        <div id="sticker-selection-controls" class="sticker-selection-controls" role="toolbar" aria-label="所选贴纸操作">
-          <button id="sticker-layer-backward" class="icon-button" type="button" aria-label="贴纸下移一层" title="下移一层">↓</button>
-          <button id="sticker-layer-forward" class="icon-button" type="button" aria-label="贴纸上移一层" title="上移一层">↑</button>
-          <button id="sticker-delete" class="icon-button" type="button" aria-label="删除所选贴纸" title="删除贴纸">×</button>
+            <div id="sticker-selection-controls" class="sticker-selection-controls" role="toolbar" aria-label="所选贴纸操作" hidden>
+              <button id="sticker-layer-backward" class="icon-button action-neutral" type="button" aria-label="贴纸下移一层" title="下移一层"></button>
+              <button id="sticker-layer-forward" class="icon-button action-neutral" type="button" aria-label="贴纸上移一层" title="上移一层"></button>
+              <button id="sticker-delete" class="icon-button action-danger" type="button" aria-label="删除所选贴纸" title="删除贴纸"></button>
         </div>
         <div id="sticker-palette" class="sticker-palette" role="list" aria-label="添加贴纸">
           <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
@@ -482,9 +485,9 @@
           <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./assets/stickers/paper-bag-character.png" alt=""></button>
         </div>
       </div>
-      <div class="dialog-actions sticker-editor-actions">
-        <button id="sticker-cancel" type="button">取消</button>
-        <button id="sticker-save" type="button">保存</button>
+          <div class="dialog-actions sticker-editor-actions">
+            <button id="sticker-cancel" class="action-neutral" type="button">取消</button>
+            <button id="sticker-save" class="action-primary" type="button"><span class="action-label">保存贴纸</span></button>
       </div>
     </dialog>
 

@@ -9,6 +9,7 @@ import {
   transformSticker,
   validateStickerDocument
 } from '../lib/sticker-document.js';
+import { createActionIcon } from '../lib/action-icons.js';
 
 const PALETTE = Object.freeze({
   'sticker-option-black-bar': 'black-bar',
@@ -76,10 +77,13 @@ export function createStickerEditorView({
   const canvas = requiredElement(documentRef, 'sticker-editor-canvas');
   const undoButton = requiredElement(documentRef, 'sticker-undo');
   const redoButton = requiredElement(documentRef, 'sticker-redo');
+  const moreButton = requiredElement(documentRef, 'sticker-more');
+  const moreMenu = requiredElement(documentRef, 'sticker-more-menu');
   const clearButton = requiredElement(documentRef, 'sticker-clear');
   const deleteButton = requiredElement(documentRef, 'sticker-delete');
   const backwardButton = requiredElement(documentRef, 'sticker-layer-backward');
   const forwardButton = requiredElement(documentRef, 'sticker-layer-forward');
+  const selectionControls = requiredElement(documentRef, 'sticker-selection-controls');
   const cancelButton = requiredElement(documentRef, 'sticker-cancel');
   const saveButton = requiredElement(documentRef, 'sticker-save');
   const paletteButtons = new Map(Object.entries(PALETTE).map(([id, kind]) => [
@@ -96,6 +100,37 @@ export function createStickerEditorView({
     ...paletteButtons.values()
   ];
 
+  function installIcon(button, iconName) {
+    button.replaceChildren(createActionIcon(documentRef, iconName));
+  }
+
+  function installLayerIcon(button, direction) {
+    const layers = createActionIcon(documentRef, 'layers-2');
+    layers.setAttribute('class', 'layer-icon');
+    const arrow = createActionIcon(documentRef, direction);
+    arrow.setAttribute('class', 'layer-arrow-icon');
+    button.replaceChildren(layers, arrow);
+  }
+
+  function installLabelledIcon(button, iconName, labelText) {
+    const label = button.querySelector?.('.action-label') ?? documentRef.createElement('span');
+    label.className = 'action-label';
+    if (!label.textContent) label.textContent = labelText;
+    button.replaceChildren(createActionIcon(documentRef, iconName), label);
+  }
+
+  installIcon(undoButton, 'undo-2');
+  installIcon(redoButton, 'redo-2');
+  installIcon(moreButton, 'ellipsis');
+  installLayerIcon(backwardButton, 'arrow-down');
+  installLayerIcon(forwardButton, 'arrow-up');
+  installIcon(deleteButton, 'trash-2');
+  installLabelledIcon(clearButton, 'trash-2', '清空贴纸');
+  installLabelledIcon(saveButton, 'save', '保存贴纸');
+  moreButton.setAttribute('aria-controls', 'sticker-more-menu');
+  moreButton.setAttribute('aria-expanded', 'false');
+  moreMenu.hidden = true;
+
   let session = null;
   let frameId = null;
   let busy = false;
@@ -109,6 +144,19 @@ export function createStickerEditorView({
 
   function currentLayer() {
     return currentDocument()?.layers.find(layer => layer.id === session?.selectedId) ?? null;
+  }
+
+  function closeMenu() {
+    moreMenu.hidden = true;
+    moreButton.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMenu() {
+    const opening = moreMenu.hidden;
+    closeMenu();
+    if (!opening) return;
+    moreMenu.hidden = false;
+    moreButton.setAttribute('aria-expanded', 'true');
   }
 
   function inspect() {
@@ -129,6 +177,7 @@ export function createStickerEditorView({
     const document = currentDocument();
     const history = session.history.inspect();
     const selectedIndex = document.layers.findIndex(layer => layer.id === session.selectedId);
+    selectionControls.hidden = selectedIndex < 0;
     undoButton.disabled = busy || history.past.length === 0;
     redoButton.disabled = busy || history.future.length === 0;
     clearButton.disabled = busy || document.layers.length === 0;
@@ -140,6 +189,7 @@ export function createStickerEditorView({
     }
     saveButton.disabled = busy;
     cancelButton.disabled = busy;
+    moreButton.disabled = busy;
   }
 
   function scheduleRender() {
@@ -162,6 +212,7 @@ export function createStickerEditorView({
     for (const button of mutatingButtons) button.disabled = next;
     saveButton.disabled = next;
     cancelButton.disabled = next;
+    moreButton.disabled = next;
     syncControls();
   }
 
@@ -370,7 +421,12 @@ export function createStickerEditorView({
 
   undoButton.addEventListener?.('click', () => useHistory('undo'));
   redoButton.addEventListener?.('click', () => useHistory('redo'));
+  moreButton.addEventListener?.('click', event => {
+    event.stopPropagation?.();
+    if (!busy) toggleMenu();
+  });
   clearButton.addEventListener?.('click', () => {
+    closeMenu();
     if (!session || busy || currentDocument().layers.length === 0 || !confirm('清空贴纸？')) return;
     commit(clearStickers(currentDocument()), { selectedId: null, coalesceKey: 'clear' });
   });
@@ -393,6 +449,7 @@ export function createStickerEditorView({
 
   function cancel() {
     if (!session || busy) return false;
+    closeMenu();
     const resolve = session.resolve;
     session.history.reset(session.initialDocument);
     session = null;
@@ -408,6 +465,7 @@ export function createStickerEditorView({
 
   async function save() {
     if (!session || busy) return false;
+    closeMenu();
     setBusy(true);
     const activeSession = session;
     const document = currentDocument();
@@ -436,6 +494,7 @@ export function createStickerEditorView({
     } catch (error) {
       if (session === activeSession) {
         setBusy(false);
+        closeMenu();
         onError(error);
         scheduleRender();
       }
@@ -445,6 +504,10 @@ export function createStickerEditorView({
 
   cancelButton.addEventListener?.('click', cancel);
   saveButton.addEventListener?.('click', () => { void save(); });
+  documentRef.addEventListener?.('click', event => {
+    if (moreMenu.contains(event.target) || moreButton.contains(event.target)) return;
+    closeMenu();
+  });
   dialog.addEventListener?.('cancel', event => {
     event.preventDefault?.();
     cancel();
@@ -466,6 +529,10 @@ export function createStickerEditorView({
     }
     if (key === 'Escape') {
       event.preventDefault?.();
+      if (!moreMenu.hidden) {
+        closeMenu();
+        return;
+      }
       cancel();
       return;
     }
@@ -507,6 +574,7 @@ export function createStickerEditorView({
       gesture = null;
       blankPointerId = null;
       openDialog(dialog);
+      closeMenu();
       syncControls();
       scheduleRender();
       return result;

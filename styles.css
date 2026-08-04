@@ -325,6 +325,66 @@ h3 {
   line-height: 1;
 }
 
+.action-primary,
+.action-secondary,
+.action-neutral,
+.action-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.action-primary {
+  color: var(--text-on-strong);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.action-primary:hover,
+.action-primary:focus-visible {
+  color: var(--text-on-strong);
+  background: #076b63;
+}
+
+.action-secondary {
+  color: var(--text);
+  background: #e4edf2;
+  border-color: #9eb1bd;
+}
+
+.action-neutral {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.action-danger {
+  color: var(--danger);
+  background: #f8e5e3;
+  border-color: #dca9a5;
+}
+
+.action-primary svg,
+.action-secondary svg,
+.action-neutral svg,
+.action-danger svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.layer-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.layer-arrow-icon {
+  width: 14px !important;
+  height: 14px !important;
+  margin-left: -10px;
+}
+
 .filter-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -2061,6 +2121,12 @@ dialog {
 
 #media-preview {
   width: min(760px, calc(100% - 28px));
+  overflow: hidden;
+}
+
+#media-preview[open]:not(.is-immersive-preview) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 #media-crop {
@@ -2118,6 +2184,12 @@ dialog {
   padding: 14px;
 }
 
+.media-preview-body {
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
 .media-crop-body {
   gap: 10px;
   padding: 12px;
@@ -2155,7 +2227,8 @@ dialog {
 }
 
 #media-preview-image {
-  width: min(512px, calc(100vw - 56px));
+  width: min(512px, calc(100vw - 56px), calc(100dvh - 190px));
+  max-height: 100%;
 }
 
 #media-crop-canvas {
@@ -2187,6 +2260,11 @@ dialog {
   overflow: hidden;
 }
 
+#sticker-editor[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
 .sticker-editor-heading,
 .sticker-editor-history,
 .sticker-selection-controls,
@@ -2197,6 +2275,7 @@ dialog {
 }
 
 .sticker-editor-heading {
+  position: relative;
   justify-content: space-between;
 }
 
@@ -2228,6 +2307,10 @@ dialog {
   justify-content: center;
 }
 
+.sticker-selection-controls[hidden] {
+  display: none;
+}
+
 .sticker-palette {
   display: flex;
   gap: 8px;
@@ -2247,8 +2330,8 @@ dialog {
 }
 
 .sticker-palette button {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   padding: 5px;
@@ -2284,8 +2367,63 @@ dialog {
 
 .sticker-editor-actions {
   justify-content: flex-end;
-  padding-bottom: calc(14px + var(--safe-bottom));
+  min-height: 62px;
+  padding: 10px 14px calc(10px + var(--safe-bottom));
   border-top: 1px solid var(--border);
+}
+
+.media-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 14px calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+}
+
+.media-preview-action,
+.media-preview-more-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.media-preview-more-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+.action-menu {
+  position: fixed;
+  z-index: 110;
+  min-width: 164px;
+  max-width: calc(100vw - 16px);
+  display: grid;
+  gap: 4px;
+  padding: 5px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 24%);
+}
+
+.action-menu[hidden] {
+  display: none;
+}
+
+.action-menu button {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.sticker-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 14px;
 }
 
 body.is-ranking-immersive #sticker-editor {
@@ -2316,8 +2454,15 @@ dialog::backdrop {
   padding: 14px;
 }
 
-.dialog-actions.sticker-editor-actions {
+.dialog-actions.sticker-editor-actions,
+.dialog-actions.media-preview-actions {
   display: flex;
+}
+
+@media (max-height: 820px) and (min-width: 641px) {
+  .sticker-editor-stage {
+    width: min(480px, calc(100vw - 56px), calc(100dvh - 230px));
+  }
 }
 
 .details-metadata {
