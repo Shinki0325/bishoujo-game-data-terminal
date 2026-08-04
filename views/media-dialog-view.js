@@ -36,6 +36,7 @@ export function createMediaDialogView({
   renderActive,
   onCreateCustom,
   onReplace = async () => {},
+  onEditStickers = async () => null,
   onError = () => {}
 }) {
   if (!documentRef || typeof documentRef.getElementById !== 'function') {
@@ -46,6 +47,7 @@ export function createMediaDialogView({
   assertFunction(renderActive, 'renderActive');
   assertFunction(onCreateCustom, 'onCreateCustom');
   assertFunction(onReplace, 'onReplace');
+  assertFunction(onEditStickers, 'onEditStickers');
   assertFunction(onError, 'onError');
 
   const cropDialog = requiredElement(documentRef, 'media-crop');
@@ -54,12 +56,15 @@ export function createMediaDialogView({
   const resetButton = requiredElement(documentRef, 'media-crop-reset');
   const skipButton = requiredElement(documentRef, 'media-crop-skip');
   const cancelButton = requiredElement(documentRef, 'media-crop-cancel');
+  const stickersButton = requiredElement(documentRef, 'media-crop-stickers');
   const confirmButton = requiredElement(documentRef, 'media-crop-confirm');
   let queue = [];
   let active = null;
   const pointers = new Map();
   let pinch = null;
   let confirming = false;
+  let editingStickers = false;
+  const cropControls = [titleInput, resetButton, skipButton, cancelButton, stickersButton, confirmButton];
 
   function canvasPoint(event) {
     const rect = cropCanvas.getBoundingClientRect?.() ?? {
@@ -127,20 +132,62 @@ export function createMediaDialogView({
     }
   }
 
-  async function confirmCurrent({ title = titleInput.value, crop = active?.crop } = {}) {
-    if (!active || !crop) return false;
-    const current = active;
-    const blob = await encodeCrop({ file: current.file, image: current.decoded.image, crop });
-    if (!blob) throw new TypeError('crop encoding returned no blob');
-    const record = {
+  function recordFor({ title, crop, baseBlob, edited }) {
+    const outputSize = Math.min(1024, Math.floor(crop.size));
+    return {
       title: titleFromFilename(title),
-      blob,
-      width: Math.min(1024, Math.floor(crop.size)),
-      height: Math.min(1024, Math.floor(crop.size))
+      blob: edited?.compositeBlob ?? baseBlob,
+      width: outputSize,
+      height: outputSize,
+      ...(edited === null || edited === undefined ? {} : {
+        baseBlob: edited.baseBlob,
+        stickerDocument: edited.stickerDocument
+      })
     };
+  }
+
+  async function commitCurrent(current, record) {
     if (current.replacementWork) await onReplace(current.replacementWork, record);
     else await onCreateCustom(record);
     return advance();
+  }
+
+  async function confirmCurrent({ title = titleInput.value, crop = active?.crop } = {}) {
+    if (!active || !crop) return false;
+    const current = active;
+    const baseBlob = await encodeCrop({ file: current.file, image: current.decoded.image, crop });
+    if (!baseBlob) throw new TypeError('crop encoding returned no blob');
+    return commitCurrent(current, recordFor({ title, crop, baseBlob }));
+  }
+
+  async function editCurrentStickers() {
+    if (!active || confirming || editingStickers) return false;
+    editingStickers = true;
+    for (const control of cropControls) control.disabled = true;
+    stickersButton.setAttribute('aria-busy', 'true');
+    const current = active;
+    const crop = active.crop;
+    const title = titleInput.value;
+    try {
+      const baseBlob = await encodeCrop({ file: current.file, image: current.decoded.image, crop });
+      if (!baseBlob) throw new TypeError('crop encoding returned no blob');
+      const outputSize = Math.min(1024, Math.floor(crop.size));
+      const edited = await onEditStickers({
+        baseBlob,
+        title: titleFromFilename(title),
+        width: outputSize,
+        height: outputSize
+      });
+      if (edited === null || edited === undefined) return false;
+      return await commitCurrent(current, recordFor({ title, crop, baseBlob, edited }));
+    } catch (error) {
+      onError(error);
+      return false;
+    } finally {
+      editingStickers = false;
+      for (const control of cropControls) control.disabled = false;
+      stickersButton.removeAttribute('aria-busy');
+    }
   }
 
   async function submitCurrent() {
@@ -218,6 +265,7 @@ export function createMediaDialogView({
     releaseActive();
     closeDialog(cropDialog);
   });
+  stickersButton.addEventListener?.('click', () => { void editCurrentStickers(); });
   confirmButton.addEventListener?.('click', () => { void submitCurrent(); });
 
   return Object.freeze({

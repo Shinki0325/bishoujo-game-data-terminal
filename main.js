@@ -11,6 +11,8 @@ import { createAppController } from './lib/app-controller.js';
 import { createCustomWork } from './lib/custom-work.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
+import { createStickerDocument, STICKER_TYPES } from './lib/sticker-document.js';
+import { composeStickerImage, encodeStickerComposite } from './lib/sticker-compositor.js';
 import {
   createImportCoordinator,
   downloadBlob,
@@ -41,11 +43,16 @@ import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView } from './views/selection-view.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
+import { createStickerEditorView } from './views/sticker-editor-view.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
 const EXPECTED_GENRE_FILTER_COUNT = 4;
 const EXPECTED_PLATFORM_FILTER_COUNT = 13;
+const STICKER_IMAGE_ASSETS = Object.freeze({
+  'please-wait-character': './assets/stickers/please-wait-character.webp',
+  'paper-bag-character': './assets/stickers/paper-bag-character.png'
+});
 
 export { FILTER_GROUP_ORDER };
 const FILTER_GROUP_POSITION = new Map(
@@ -686,6 +693,18 @@ async function initialize() {
       elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
       elements.mediaPreviewTitle.textContent = work.title;
       elements.mediaPreviewActions.replaceChildren();
+      if (!isImmersive && mediaStore !== null) {
+        const editStickers = document.createElement('button');
+        editStickers.type = 'button';
+        editStickers.textContent = '编辑贴纸';
+        editStickers.addEventListener('click', () => {
+          void editStickersForWork(work).catch(error => {
+            announce(error instanceof Error ? error.message : '图片贴纸编辑失败。', 'error');
+            console.error(error);
+          });
+        });
+        elements.mediaPreviewActions.append(editStickers);
+      }
       if (!isImmersive && work.localMediaKind !== 'custom' && mediaStore !== null) {
         const replace = document.createElement('button');
         replace.type = 'button';
@@ -765,10 +784,213 @@ async function initialize() {
     }
   }
 
-  async function createCustomCandidate({ title, blob, width, height }) {
+  async function blobForUrl(url) {
+    const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+    if (!response.ok) throw new Error(`图片底图加载失败（HTTP ${response.status}）。`);
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) throw new TypeError('图片底图响应类型无效。');
+    return blob;
+  }
+
+  async function decodeBlob(blob) {
+    return decodeMediaFile(new File([blob], 'sticker-base', { type: blob.type || 'image/webp' }));
+  }
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+  }
+
+  let stickerImageReleases = [];
+
+  function releaseStickerImages() {
+    for (const release of stickerImageReleases.splice(0)) release();
+  }
+
+  async function loadStickerImages() {
+    releaseStickerImages();
+    const images = new Map();
+    try {
+      for (const [kind, relativeUrl] of Object.entries(STICKER_IMAGE_ASSETS)) {
+        const blob = await blobForUrl(new URL(relativeUrl, import.meta.url).href);
+        const decoded = await decodeBlob(blob);
+        images.set(kind, decoded.image);
+        if (typeof decoded.release === 'function') stickerImageReleases.push(decoded.release);
+      }
+      return images;
+    } catch (error) {
+      releaseStickerImages();
+      throw error;
+    }
+  }
+
+  function renderStickerPreview(state) {
+    const canvas = requiredElement('sticker-editor-canvas');
+    const context = canvas.getContext('2d');
+    if (!context || !state.document) return;
+    canvas.width = 512;
+    canvas.height = 512;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#111821';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    try {
+      const preview = composeStickerImage({
+        baseImage: state.baseImage,
+        document: state.document,
+        createCanvas,
+        stickerImages: state.stickerImages,
+        maximumSize: 512
+      });
+      const ratio = Math.min(canvas.width / preview.width, canvas.height / preview.height);
+      const width = preview.width * ratio;
+      const height = preview.height * ratio;
+      const left = (canvas.width - width) / 2;
+      const top = (canvas.height - height) / 2;
+      context.drawImage(preview.canvas, left, top, width, height);
+      const selected = state.document.layers.find(layer => layer.id === state.selectedId);
+      if (!selected) return;
+      const layerWidth = selected.scale * Math.min(width, height);
+      const layerHeight = layerWidth / STICKER_TYPES[selected.kind].aspectRatio;
+      context.save();
+      context.translate(left + (selected.centerX * width), top + (selected.centerY * height));
+      context.rotate(selected.rotation * Math.PI / 180);
+      context.strokeStyle = '#7ce8ff';
+      context.lineWidth = 2;
+      context.strokeRect(-layerWidth / 2, -layerHeight / 2, layerWidth, layerHeight);
+      context.fillStyle = '#111821';
+      context.strokeStyle = '#ffffff';
+      for (const [x, y] of [
+        [-layerWidth / 2, -layerHeight / 2],
+        [layerWidth / 2, -layerHeight / 2],
+        [layerWidth / 2, layerHeight / 2],
+        [-layerWidth / 2, layerHeight / 2]
+      ]) {
+        context.beginPath();
+        context.arc(x, y, 7, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+      context.beginPath();
+      context.moveTo(0, -layerHeight / 2);
+      context.lineTo(0, (-layerHeight / 2) - 28);
+      context.stroke();
+      context.beginPath();
+      context.arc(0, (-layerHeight / 2) - 28, 7, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+      context.restore();
+    } catch (error) {
+      announce(error instanceof Error ? error.message : '图片贴纸预览失败。', 'error');
+      console.error(error);
+    }
+  }
+
+  const stickerEditor = createStickerEditorView({
+    documentRef: document,
+    requestFrame: callback => window.requestAnimationFrame(callback),
+    cancelFrame: frame => window.cancelAnimationFrame(frame),
+    renderPreview: renderStickerPreview,
+    compose: async state => ({
+      compositeBlob: await encodeStickerComposite({
+        baseImage: state.baseImage,
+        document: state.document,
+        createCanvas,
+        stickerImages: state.stickerImages
+      }),
+      document: state.document
+    }),
+    confirm: message => window.confirm(message),
+    onError(error) {
+      announce(error instanceof Error ? error.message : '图片贴纸编辑失败。', 'error');
+      console.error(error);
+    }
+  });
+
+  async function editStickersForCrop({ baseBlob, width, height }) {
+    const decoded = await decodeBlob(baseBlob);
+    try {
+      const edited = await stickerEditor.open({
+        baseImage: decoded.image,
+        baseBlob,
+        document: createStickerDocument({ baseWidth: width, baseHeight: height }),
+        stickerImages: await loadStickerImages()
+      });
+      return edited === null ? null : {
+        baseBlob: edited.baseBlob,
+        compositeBlob: edited.compositeBlob,
+        stickerDocument: edited.document
+      };
+    } finally {
+      decoded.release?.();
+      releaseStickerImages();
+    }
+  }
+
+  async function editStickersForWork(work) {
+    if (mediaStore === null) throw new Error('本地图片存储不可用');
+    const custom = work.localMediaKind === 'custom';
+    const identity = custom
+      ? { kind: 'custom', id: work.workId, width: work.coverWidth, height: work.coverHeight }
+      : { kind: 'replacement', workId: work.workId, width: work.coverWidth, height: work.coverHeight };
+    const editable = await mediaStore.editableFor(identity);
+    const publicOriginal = !custom && (
+      editable === null || editable.metadata?.stickerSource === 'public'
+    );
+    const baseBlob = editable?.baseBlob ?? await blobForUrl(await previewUrlForWork(work));
+    const decoded = await decodeBlob(baseBlob);
+    const width = editable?.stickerDocument.baseWidth ?? decoded.width;
+    const height = editable?.stickerDocument.baseHeight ?? decoded.height;
+    const document = editable?.stickerDocument ?? createStickerDocument({ baseWidth: width, baseHeight: height });
+    try {
+      const edited = await stickerEditor.open({
+        baseImage: decoded.image,
+        baseBlob,
+        document,
+        stickerImages: await loadStickerImages()
+      });
+      if (edited === null) return false;
+      if (edited.document.layers.length === 0) {
+        if (publicOriginal) {
+          await mediaStore.clearStickerEdit({ kind: 'replacement', workId: work.workId, restorePublic: true });
+        } else if (editable?.metadata?.stickerDocument) {
+          await mediaStore.clearStickerEdit({ ...identity, restorePublic: false });
+        }
+      } else {
+        await mediaStore.putStickerEdit({
+          ...identity,
+          title: editable?.metadata?.title ?? work.title,
+          width,
+          height,
+          baseBlob,
+          compositeBlob: edited.compositeBlob,
+          stickerDocument: edited.document,
+          ...(publicOriginal ? { stickerSource: 'public' } : {})
+        });
+      }
+      previewLoader.cancel();
+      if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
+      else elements.mediaPreview.open = false;
+      await render();
+      return true;
+    } finally {
+      decoded.release?.();
+      releaseStickerImages();
+    }
+  }
+
+  async function createCustomCandidate({ title, blob, width, height, baseBlob, stickerDocument }) {
     if (mediaStore === null) throw new Error('本地图片存储不可用');
     const id = `custom-local-${crypto.randomUUID()}`;
-    await mediaStore.putCustom({ id, title, blob, width, height });
+    if (stickerDocument) {
+      await mediaStore.putStickerEdit({
+        kind: 'custom', id, title, width, height,
+        baseBlob, compositeBlob: blob, stickerDocument
+      });
+    } else {
+      await mediaStore.putCustom({ id, title, blob, width, height });
+    }
     try {
       const work = createCustomWork({ id, title, width, height });
       controller.registerLocalWorks([work]);
@@ -992,10 +1214,24 @@ async function initialize() {
       }
     }),
     renderActive: renderCropActive,
+    onEditStickers: editStickersForCrop,
     onCreateCustom: createCustomCandidate,
     async onReplace(work, record) {
       if (mediaStore === null) throw new Error('本地图片存储不可用');
-      await mediaStore.putReplacement({ workId: work.workId, ...record });
+      if (record.stickerDocument) {
+        await mediaStore.putStickerEdit({
+          kind: 'replacement',
+          workId: work.workId,
+          title: record.title,
+          width: record.width,
+          height: record.height,
+          baseBlob: record.baseBlob,
+          compositeBlob: record.blob,
+          stickerDocument: record.stickerDocument
+        });
+      } else {
+        await mediaStore.putReplacement({ workId: work.workId, ...record });
+      }
       await render();
     },
     onError(error) {

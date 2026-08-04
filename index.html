@@ -378,6 +378,9 @@
               <h3>查看与展示</h3>
               <ul>
                 <li>点击图片可以打开大图预览。</li>
+                <li>在普通模式打开图片后选择“编辑贴纸”，可以为公共封面、本地替换图和自定义图片添加贴纸。</li>
+                <li>每张图片最多添加 12 个贴纸；可以拖动、等比缩放、旋转、调整图层、撤销、重做或清空贴纸。</li>
+                <li>保存会更新当前浏览器中的图片；取消会保留进入编辑器前的版本。</li>
                 <li>桌面端右键普通排榜卡片可以查看作品详情。</li>
                 <li>在“显示”菜单中可以调整标题、数量、卡片、行高、图片标注和分级名称大小。</li>
                 <li>点击“直播模式”进入直播模式。</li>
@@ -448,7 +451,40 @@
         <button id="media-crop-reset" type="button">重置</button>
         <button id="media-crop-skip" type="button">跳过</button>
         <button id="media-crop-cancel" type="button">取消全部</button>
+        <button id="media-crop-stickers" type="button">添加贴纸</button>
         <button id="media-crop-confirm" type="button">确认</button>
+      </div>
+    </dialog>
+
+    <dialog id="sticker-editor" aria-labelledby="sticker-editor-title">
+      <div class="dialog-heading sticker-editor-heading">
+        <h2 id="sticker-editor-title">图片贴纸</h2>
+        <div class="sticker-editor-history" role="toolbar" aria-label="贴纸编辑历史">
+          <button id="sticker-undo" class="icon-button" type="button" aria-label="撤销贴纸操作" title="撤销">↶</button>
+          <button id="sticker-redo" class="icon-button" type="button" aria-label="重做贴纸操作" title="重做">↷</button>
+          <button id="sticker-clear" class="icon-button" type="button" aria-label="清空贴纸" title="清空贴纸">⌫</button>
+        </div>
+      </div>
+      <div class="sticker-editor-body">
+        <div class="sticker-editor-stage">
+          <canvas id="sticker-editor-canvas" width="512" height="512" aria-label="图片贴纸编辑区域"></canvas>
+        </div>
+        <div id="sticker-selection-controls" class="sticker-selection-controls" role="toolbar" aria-label="所选贴纸操作">
+          <button id="sticker-layer-backward" class="icon-button" type="button" aria-label="贴纸下移一层" title="下移一层">↓</button>
+          <button id="sticker-layer-forward" class="icon-button" type="button" aria-label="贴纸上移一层" title="上移一层">↑</button>
+          <button id="sticker-delete" class="icon-button" type="button" aria-label="删除所选贴纸" title="删除贴纸">×</button>
+        </div>
+        <div id="sticker-palette" class="sticker-palette" role="list" aria-label="添加贴纸">
+          <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
+          <button id="sticker-option-pixelate" type="button" data-sticker-kind="pixelate" aria-label="添加马赛克"><span class="sticker-swatch sticker-swatch-pixelate" aria-hidden="true"></span></button>
+          <button id="sticker-option-blur" type="button" data-sticker-kind="blur" aria-label="添加模糊"><span class="sticker-swatch sticker-swatch-blur" aria-hidden="true"></span></button>
+          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./assets/stickers/please-wait-character.webp" alt=""></button>
+          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./assets/stickers/paper-bag-character.png" alt=""></button>
+        </div>
+      </div>
+      <div class="dialog-actions sticker-editor-actions">
+        <button id="sticker-cancel" type="button">取消</button>
+        <button id="sticker-save" type="button">保存</button>
       </div>
     </dialog>
 

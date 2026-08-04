@@ -7,6 +7,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "bytes": 49039,
+      "path": "assets/stickers/paper-bag-character.png",
+      "sha256": "3993618d9bfb35e77e24e8713503c80c2c3de1cfe33d80c63209c03c84bfd311"
+    },
+    {
+      "bytes": 35586,
+      "path": "assets/stickers/please-wait-character.webp",
+      "sha256": "9983bd564db86a5be3fa93940c3d2627a3765476e89dd56bcd5a913ed28020f9"
+    },
+    {
       "bytes": 1220887,
       "path": "data/assets-manifest.json",
       "sha256": "13ebed53c3f9467b7c17f0ebcc06657d3fce30cf41fa7c57b56fb4bff178db98"
@@ -37,9 +47,9 @@
       "sha256": "3e472816a68354c3dc7a866695764d69dcb52344618642b41e52b4c73f65d380"
     },
     {
-      "bytes": 22859,
+      "bytes": 26243,
       "path": "index.html",
-      "sha256": "f92bb579a0154abb7fab649acdba3c671cc6792ed2ee718bcf2461e998e3a731"
+      "sha256": "f65df9f367c3ec199052b3ddce984835bdd6d1908b584eeb59806278b914bdbf"
     },
     {
       "bytes": 21873,
@@ -132,9 +142,9 @@
       "sha256": "de2a274a73f10161bde59b0a32097032bc52bb2637d17b003dd72d2297860c80"
     },
     {
-      "bytes": 4603,
+      "bytes": 10779,
       "path": "lib/local-media-store.js",
-      "sha256": "043c768166ccdde5b998c8067238b179a630c8c518c6487176c5ce958cd7a4d3"
+      "sha256": "90013632c7d2edb60ff0fa96c041f1d838a63b2da40fe45dc5dcb9f97879354d"
     },
     {
       "bytes": 1638,
@@ -192,6 +202,16 @@
       "sha256": "a8e1b293c90003225cafe4f8c02a725b6651859a9fd38c788825e7d0e58207c1"
     },
     {
+      "bytes": 5395,
+      "path": "lib/sticker-compositor.js",
+      "sha256": "9f20991e0cbf4451d3d2cd320c7509e6ab48d57f3f052e11c01a682c09bca569"
+    },
+    {
+      "bytes": 8814,
+      "path": "lib/sticker-document.js",
+      "sha256": "2189dc9e5bb0a9d5cf8bff0c8f5c2898e0fdfe8de87c81b8accf1f62d101dd93"
+    },
+    {
       "bytes": 13188,
       "path": "lib/tier-config.js",
       "sha256": "12d1440cb34a225663a8ec0cc68266e3bfb46eb23b116958a0da820e18bb5913"
@@ -202,14 +222,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 52952,
+      "bytes": 62007,
       "path": "main.js",
-      "sha256": "7559b0ad5fe98103a65e20211f6c28c233d18b1e78e86cf473133e94b5fb7c56"
+      "sha256": "b5057edd8e2c88abb8fc089ed3b9bf5f7bf63a69df7a1b30f5fa5c2ff7481205"
     },
     {
-      "bytes": 46908,
+      "bytes": 49386,
       "path": "styles.css",
-      "sha256": "0b5c806e28c381486496662a31f26e79b98471fcff1379da9618fc34e59ea76f"
+      "sha256": "c16f957f8f46ac1de78328413518ffa56fd99208e6d39950642ec39c3e7d77cd"
     },
     {
       "bytes": 45611,
@@ -217,9 +237,9 @@
       "sha256": "e5e1796ee3d386d8f5f631580d350cae7a6e9417ccd163c916817e4e7074b47b"
     },
     {
-      "bytes": 7815,
+      "bytes": 9750,
       "path": "views/media-dialog-view.js",
-      "sha256": "b08beb008a0bb6b8ebfa23de3d01bed9eff89cce3930777f64cd6528995c24a9"
+      "sha256": "c81657dbc172b4b13f19fb656c7eba994ed4b719f0907e4defff38e6bc842c0a"
     },
     {
       "bytes": 50968,
@@ -232,6 +252,11 @@
       "sha256": "9fea7ff0b2d5193fd15e7dd391a8b4cebbb07a5368196f749b01a79a57f0b6c7"
     },
     {
+      "bytes": 17728,
+      "path": "views/sticker-editor-view.js",
+      "sha256": "43c782b0500ed6778ba1ce07a75ceba7d7dbd219df915427740fbc7796ecb0cf"
+    },
+    {
       "bytes": 220,
       "path": "workers/filter-worker.js",
       "sha256": "3a5b60acb7b18d6ad263811742011bfc42eb80eab2f5dba6123d4231ae7c4b9a"
@@ -240,7 +265,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 4239183,
-    "files": 47
+    "bytes": 4378773,
+    "files": 52
   }
 }
