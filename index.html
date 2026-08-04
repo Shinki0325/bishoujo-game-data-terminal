@@ -48,7 +48,63 @@
       </div>
     </header>
 
-    <main class="workspace">
+    <main id="workspace" class="workspace">
+      <section id="mobile-selection-view" class="mobile-selection-view" aria-label="移动端选片" hidden>
+        <header class="mobile-selection-header">
+          <div class="mobile-selection-heading">
+            <h1>选片</h1>
+            <button id="mobile-help-button" class="icon-button" type="button" aria-label="移动端使用说明" title="移动端使用说明">?</button>
+          </div>
+          <div class="mobile-selection-tools">
+            <label class="search-field" for="mobile-title-search">
+              <span class="visually-hidden">搜索作品标题</span>
+              <input id="mobile-title-search" type="search" placeholder="搜索标题" autocomplete="off">
+            </label>
+            <button id="mobile-filter-toggle" type="button" aria-label="打开筛选">筛选</button>
+            <button id="mobile-select-mode" type="button" aria-pressed="false">选择</button>
+          </div>
+        </header>
+        <div id="mobile-selection-grid" class="mobile-selection-grid" aria-live="polite"></div>
+        <div id="mobile-selection-status" class="mobile-selection-status" hidden>
+          <span>已选 <output id="mobile-selected-count">0</output></span>
+          <button id="mobile-open-selection-drawer" type="button">查看已选</button>
+        </div>
+        <dialog id="mobile-selection-drawer" class="mobile-selection-drawer" aria-labelledby="mobile-selection-drawer-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-selection-drawer-title">已选作品</h2>
+            <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭已选作品">×</button></form>
+          </div>
+          <div id="mobile-selected-preview" class="mobile-selected-preview"></div>
+          <div class="dialog-actions">
+            <button id="mobile-clear-selection" class="action-danger" type="button">清空已选</button>
+            <button id="mobile-share-selection" class="action-primary" type="button">生成分享链接</button>
+          </div>
+        </dialog>
+        <dialog id="mobile-help-dialog" aria-labelledby="mobile-help-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-help-title">移动端使用说明</h2>
+          </div>
+          <div class="dialog-body">
+            <ul>
+              <li>移动端用于浏览、搜索、筛选和查看作品详情。</li>
+              <li>点击“选择”后可勾选多部作品，再打开“查看已选”。</li>
+              <li>生成分享链接后，请在电脑网页端打开并继续排榜。</li>
+            </ul>
+          </div>
+          <div class="dialog-actions">
+            <button id="mobile-help-dismiss" class="action-primary" type="button">知道了</button>
+          </div>
+        </dialog>
+        <dialog id="mobile-share-warning" aria-labelledby="mobile-share-warning-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-share-warning-title">请在电脑网页端打开此链接</h2>
+          </div>
+          <div class="dialog-body"><p>这个分享链接用于在电脑网页端继续排榜。</p></div>
+          <div class="dialog-actions">
+            <button id="mobile-share-warning-dismiss" class="action-primary" type="button">知道了</button>
+          </div>
+        </dialog>
+      </section>
       <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection" hidden>
         <button
           id="filter-backdrop"
@@ -317,6 +373,22 @@
         </section>
       </section>
     </main>
+
+    <dialog id="share-import-dialog" aria-labelledby="share-import-title">
+      <div class="dialog-heading">
+        <h2 id="share-import-title">导入分享选片</h2>
+      </div>
+      <div class="dialog-body">
+        <p id="share-import-message" role="alert" hidden></p>
+        <p>有效作品：<output id="share-import-count">0</output></p>
+        <p>当前目录中缺失：<output id="share-import-missing">0</output></p>
+      </div>
+      <div class="dialog-actions">
+        <button id="share-import-cancel" class="action-secondary" type="button">取消</button>
+        <button id="share-import-append" class="action-primary" type="button">追加到候选池</button>
+        <button id="share-import-replace" class="action-primary" type="button">替换候选池</button>
+      </div>
+    </dialog>
 
     <div
       id="ranking-immersive-edge"

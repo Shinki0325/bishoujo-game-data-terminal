@@ -253,6 +253,122 @@ h3 {
   background: var(--surface);
 }
 
+.mobile-selection-view {
+  min-width: 0;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.mobile-selection-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  gap: 8px;
+  padding: calc(8px + var(--safe-top)) calc(8px + var(--safe-right)) 8px calc(8px + var(--safe-left));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-selection-heading,
+.mobile-selection-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-selection-heading {
+  justify-content: space-between;
+}
+
+.mobile-selection-tools .search-field {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mobile-selection-tools input {
+  width: 100%;
+  min-height: 44px;
+}
+
+.mobile-selection-grid {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.mobile-selection-grid .selection-card {
+  min-width: 0;
+  aspect-ratio: 3 / 4;
+}
+
+.mobile-selection-grid .selection-card-checkbox {
+  position: absolute;
+  z-index: 7;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.mobile-selection-status {
+  position: sticky;
+  bottom: var(--safe-bottom);
+  z-index: 21;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border);
+}
+
+.mobile-selection-status button {
+  min-height: 44px;
+}
+
+.mobile-selection-drawer {
+  width: min(calc(100% - 16px), 420px);
+  max-height: min(70dvh, 560px);
+}
+
+.mobile-selected-preview {
+  min-height: 40px;
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  overflow-y: auto;
+}
+
+.mobile-selected-preview-item {
+  padding: 6px 8px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+body.is-mobile-companion .tool-header,
+body.is-mobile-companion #workspace-mode,
+body.is-mobile-companion .workspace-counts,
+body.is-mobile-companion #selection-view,
+body.is-mobile-companion #ranking-view {
+  display: none !important;
+}
+
+body.is-mobile-companion #mobile-selection-view {
+  display: block;
+  min-height: 100dvh;
+  padding-bottom: calc(58px + var(--safe-bottom));
+}
+
 .filter-backdrop {
   position: fixed;
   inset: 0;

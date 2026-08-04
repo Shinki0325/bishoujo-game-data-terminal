@@ -99,7 +99,8 @@ export function createSelectionCard(documentRef, work, {
   onOpenDetails,
   onOpenMedia = onOpenDetails,
   assetBase,
-  coverUrl = null
+  coverUrl = null,
+  selectionEnabled = true
 }) {
   if (documentRef === null || typeof documentRef?.createElement !== 'function') {
     throw new TypeError('documentRef must provide createElement');
@@ -149,20 +150,23 @@ export function createSelectionCard(documentRef, work, {
   });
   cover.append(image);
 
-  const checkbox = documentRef.createElement('input');
-  checkbox.className = 'selection-card-checkbox';
-  checkbox.type = 'checkbox';
-  checkbox.dataset.controlType = 'checkbox';
-  checkbox.checked = Boolean(selected);
-  checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${work.title}`);
-  checkbox.addEventListener('click', event => event.stopPropagation());
-  checkbox.addEventListener('change', event => {
-    event.stopPropagation();
-    onToggle(work, checkbox.checked);
-  });
-  checkbox.addEventListener('keydown', event => {
-    if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
-  });
+  let checkbox = null;
+  if (selectionEnabled) {
+    checkbox = documentRef.createElement('input');
+    checkbox.className = 'selection-card-checkbox';
+    checkbox.type = 'checkbox';
+    checkbox.dataset.controlType = 'checkbox';
+    checkbox.checked = Boolean(selected);
+    checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${work.title}`);
+    checkbox.addEventListener('click', event => event.stopPropagation());
+    checkbox.addEventListener('change', event => {
+      event.stopPropagation();
+      onToggle(work, checkbox.checked);
+    });
+    checkbox.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+    });
+  }
 
   const overlay = documentRef.createElement('div');
   overlay.className = 'selection-card-overlay';
@@ -188,7 +192,7 @@ export function createSelectionCard(documentRef, work, {
     onOpenDetails(work);
   });
 
-  card.append(cover, checkbox, overlay, details);
+  card.append(cover, ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
   return card;
 }
 

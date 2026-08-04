@@ -44,8 +44,15 @@ import {
 import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView } from './views/selection-view.js';
+import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
+import {
+  buildSelectionShareUrl,
+  decodeSelectionShare,
+  parseSelectionShare
+} from './lib/share-selection.js';
+import { planSharedSelectionImport } from './lib/share-import.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
@@ -70,6 +77,31 @@ function requiredElement(id) {
 }
 
 const elements = typeof document === 'undefined' ? null : Object.freeze({
+  workspace: requiredElement('workspace'),
+  mobileSelectionView: requiredElement('mobile-selection-view'),
+  mobileSelectionGrid: requiredElement('mobile-selection-grid'),
+  mobileSelectMode: requiredElement('mobile-select-mode'),
+  mobileSelectionStatus: requiredElement('mobile-selection-status'),
+  mobileSelectedCount: requiredElement('mobile-selected-count'),
+  mobileOpenSelectionDrawer: requiredElement('mobile-open-selection-drawer'),
+  mobileSelectionDrawer: requiredElement('mobile-selection-drawer'),
+  mobileSelectedPreview: requiredElement('mobile-selected-preview'),
+  mobileShareSelection: requiredElement('mobile-share-selection'),
+  mobileClearSelection: requiredElement('mobile-clear-selection'),
+  mobileHelpButton: requiredElement('mobile-help-button'),
+  mobileHelpDialog: requiredElement('mobile-help-dialog'),
+  mobileHelpDismiss: requiredElement('mobile-help-dismiss'),
+  mobileTitleSearch: requiredElement('mobile-title-search'),
+  mobileFilterToggle: requiredElement('mobile-filter-toggle'),
+  mobileShareWarning: requiredElement('mobile-share-warning'),
+  mobileShareWarningDismiss: requiredElement('mobile-share-warning-dismiss'),
+  shareImportDialog: requiredElement('share-import-dialog'),
+  shareImportMessage: requiredElement('share-import-message'),
+  shareImportCount: requiredElement('share-import-count'),
+  shareImportMissing: requiredElement('share-import-missing'),
+  shareImportAppend: requiredElement('share-import-append'),
+  shareImportReplace: requiredElement('share-import-replace'),
+  shareImportCancel: requiredElement('share-import-cancel'),
   modeSelection: requiredElement('mode-selection'),
   modeRanking: requiredElement('mode-ranking'),
   selectionView: requiredElement('selection-view'),
@@ -618,6 +650,9 @@ async function initialize() {
   let importBusy = false;
   let candidateTitleQuery = '';
   let selectionScrollPosition = { top: 0, left: 0 };
+  let mobileSelectionScrollPosition = { top: 0, left: 0 };
+  const mobileCompanionMedia = window.matchMedia('(max-width: 899px), (pointer: coarse)');
+  let mobileCompanion = mobileCompanionMedia.matches;
   let rankingScrollPosition = {
     top: 0,
     left: 0,
@@ -1035,6 +1070,101 @@ async function initialize() {
     },
     assetBase
   });
+  let mobileHelpShown = false;
+  const mobileHelpStorageKey = 'egs-tier-mobile-help-seen-v1';
+
+  function mobileHelpWasSeen() {
+    try {
+      return window.localStorage.getItem(mobileHelpStorageKey) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function showMobileHelpOnce() {
+    if (!mobileCompanion || mobileHelpShown || mobileHelpWasSeen()) return;
+    mobileHelpShown = true;
+    if (typeof elements.mobileHelpDialog.showModal === 'function') elements.mobileHelpDialog.showModal();
+    else elements.mobileHelpDialog.open = true;
+  }
+
+  async function copySelectionUrl(url) {
+    try {
+      if (typeof navigator.clipboard?.writeText === 'function') {
+        await navigator.clipboard.writeText(url);
+        return true;
+      }
+    } catch {
+      // Fall through to the legacy copy path.
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.append(textarea);
+    textarea.select();
+    let copied = false;
+    try {
+      copied = document.execCommand?.('copy') === true;
+    } catch {
+      copied = false;
+    }
+    textarea.remove();
+    return copied;
+  }
+
+  async function shareSelectedWorkIds(workIds) {
+    if (!Array.isArray(workIds) || workIds.length === 0) return false;
+    const url = buildSelectionShareUrl({
+      baseUrl: window.location.href,
+      datasetVersion: sample.sampleId,
+      workIds
+    });
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: '排榜选片', url });
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') console.error(error);
+    }
+    const copied = await copySelectionUrl(url);
+    if (copied) announce('链接已复制，可在电脑网页端打开', 'success');
+    else announce('分享链接已生成，请在电脑网页端打开', 'warning');
+    return copied;
+  }
+
+  const mobileSelectionView = createMobileSelectionView({
+    root: elements.mobileSelectionView,
+    onToggleWork(work, selected) {
+      return runStateChange(() => selected
+        ? controller.selectWorks([work.workId])
+        : controller.deselectWorks([work.workId]));
+    },
+    onOpenDetails(work) {
+      showDetails(work, filterById);
+    },
+    onOpenMedia(work) {
+      void openMediaPreview(work).catch(error => {
+        announce('图片预览加载失败。', 'error');
+        console.error(error);
+      });
+    },
+    onTitleQuery(titleQuery) {
+      return runStateChange(() => controller.setFilterState({ titleQuery }));
+    },
+    onFilterOpen() {
+      elements.filterToggle.click();
+    },
+    onShareSelection(workIds) {
+      void shareSelectedWorkIds(workIds);
+    },
+    onClearSelection(workIds) {
+      return runStateChange(() => controller.deselectWorks(workIds));
+    },
+    onHelpOpen() {},
+    assetBase
+  });
   const rankingView = createRankingView({
     root: elements.rankingView,
     onMoveToTier(workId, tierId, insertionIndex) {
@@ -1265,7 +1395,9 @@ async function initialize() {
   rankingView.setAnnotations(presentation.inspect().annotations);
 
   function captureWorkspaceScroll() {
-    if (renderedWorkspaceMode === 'selection') {
+    if (mobileCompanion) {
+      mobileSelectionScrollPosition = mobileSelectionView.captureScroll();
+    } else if (renderedWorkspaceMode === 'selection') {
       selectionScrollPosition = selectionView.captureScroll();
     } else if (renderedWorkspaceMode === 'ranking') {
       rankingScrollPosition = rankingView.captureScroll();
@@ -1273,6 +1405,17 @@ async function initialize() {
   }
 
   function renderWorkspace(model) {
+    document.body.classList.toggle('is-mobile-companion', mobileCompanion);
+    if (mobileCompanion) {
+      elements.modeSelection.setAttribute('aria-selected', 'false');
+      elements.modeRanking.setAttribute('aria-selected', 'false');
+      elements.modeSelection.tabIndex = -1;
+      elements.modeRanking.tabIndex = -1;
+      elements.selectionView.hidden = true;
+      elements.rankingView.hidden = true;
+      elements.mobileSelectionView.hidden = false;
+      return;
+    }
     const ranking = model.state.workspaceMode === 'ranking';
     elements.modeSelection.setAttribute('aria-selected', String(!ranking));
     elements.modeRanking.setAttribute('aria-selected', String(ranking));
@@ -1280,6 +1423,7 @@ async function initialize() {
     elements.modeRanking.tabIndex = ranking ? 0 : -1;
     elements.selectionView.hidden = ranking;
     elements.rankingView.hidden = !ranking;
+    elements.mobileSelectionView.hidden = true;
   }
 
   function renderControlStates(model) {
@@ -1309,7 +1453,7 @@ async function initialize() {
   function setImportBusy(nextBusy) {
     importBusy = nextBusy;
     setWorkspaceBusy({
-      roots: [elements.selectionView, elements.rankingView],
+      roots: [elements.selectionView, elements.rankingView, elements.mobileSelectionView],
       controls: [
         elements.modeSelection,
         elements.modeRanking,
@@ -1367,7 +1511,12 @@ async function initialize() {
     elements.unrankedCount.textContent = String(model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
     renderWorkspace(model);
-    if (ranking) {
+    if (mobileCompanion) {
+      mobileSelectionView.render({
+        works: model.visibleWorks,
+        selectedWorkIds: model.state.selectedWorkIds
+      });
+    } else if (ranking) {
       rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
       rankingView.render(rankingModel, await resolveCoverUrls([
         ...rankingModel.candidateWorks,
@@ -1392,16 +1541,19 @@ async function initialize() {
       renderedFilterKey = nextFilterKey;
     }
     renderControlStates(model);
-    if (model.state.workspaceMode === 'ranking') {
+    if (mobileCompanion) {
+      mobileSelectionView.restoreScroll(mobileSelectionScrollPosition);
+    } else if (model.state.workspaceMode === 'ranking') {
       rankingView.restoreScroll(rankingScrollPosition);
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
-    if (ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
+    if (!mobileCompanion && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
-    if (rankingModel !== null) void refreshRankingPreload(rankingModel);
+    if (rankingModel !== null && !mobileCompanion) void refreshRankingPreload(rankingModel);
     else cancelRankingPreload();
+    showMobileHelpOnce();
     return true;
   }
 
@@ -1432,6 +1584,10 @@ async function initialize() {
       void render(visibleBrands);
     }
   });
+  // Keep the shared filter drawer outside desktop mode roots so mobile can hide
+  // ranking/selection panels without hiding the filter surface itself.
+  elements.workspace.insertBefore(elements.filterDrawer, elements.workspace.firstChild);
+  elements.workspace.insertBefore(elements.filterBackdrop, elements.workspace.firstChild);
   createFilterDrawerController({
     drawer: elements.filterDrawer,
     toggle: elements.filterToggle,
@@ -1445,6 +1601,116 @@ async function initialize() {
     readText: file => file.text(),
     commit: jsonText => controller.importJson(jsonText),
     setBusy: setImportBusy
+  });
+
+  let pendingShareImport = null;
+
+  function closeDialog(dialog) {
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.open = false;
+  }
+
+  function showDialog(dialog) {
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.open = true;
+  }
+
+  function clearShareHash() {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.hash = '';
+    window.history.replaceState({}, '', cleanUrl.href);
+  }
+
+  function resetShareImportDialog() {
+    pendingShareImport = null;
+    elements.shareImportMessage.hidden = true;
+    elements.shareImportMessage.textContent = '';
+    elements.shareImportCount.textContent = '0';
+    elements.shareImportMissing.textContent = '0';
+    elements.shareImportAppend.disabled = true;
+    elements.shareImportReplace.disabled = true;
+  }
+
+  function openShareImportDialog() {
+    const token = parseSelectionShare(window.location);
+    if (token === null) return false;
+    resetShareImportDialog();
+    try {
+      const decoded = decodeSelectionShare(token);
+      if (decoded.datasetVersion !== sample.sampleId) {
+        throw new Error('分享链接版本与当前目录不匹配。');
+      }
+      const plan = planSharedSelectionImport({
+        sharedWorkIds: decoded.workIds,
+        authorityWorkIds: sample.works.map(work => work.workId),
+        currentSelectedWorkIds: controller.inspectState().selectedWorkIds,
+        mode: 'append'
+      });
+      pendingShareImport = {
+        validWorkIds: [...plan.validWorkIds]
+      };
+      elements.shareImportCount.textContent = String(plan.validWorkIds.length);
+      elements.shareImportMissing.textContent = String(plan.missingWorkIds.length);
+      elements.shareImportAppend.disabled = false;
+      elements.shareImportReplace.disabled = false;
+    } catch (error) {
+      elements.shareImportMessage.hidden = false;
+      elements.shareImportMessage.textContent = error?.message === '分享链接版本与当前目录不匹配。'
+        ? error.message
+        : '分享链接无效，未修改当前工作区。';
+    }
+    showDialog(elements.shareImportDialog);
+    return true;
+  }
+
+  function openMobileShareWarning() {
+    if (parseSelectionShare(window.location) === null) return false;
+    showDialog(elements.mobileShareWarning);
+    return true;
+  }
+
+  function commitShareImport(mode) {
+    if (pendingShareImport === null || pendingShareImport.validWorkIds.length === 0) return false;
+    try {
+      const imported = runStateChange(() => controller.importSharedWorks(
+        pendingShareImport.validWorkIds,
+        { mode }
+      ));
+      closeDialog(elements.shareImportDialog);
+      clearShareHash();
+      announce(
+        mode === 'replace' ? '候选池已替换。' : '作品已追加到候选池。',
+        'success'
+      );
+      pendingShareImport = null;
+      return imported;
+    } catch (error) {
+      announce(error instanceof Error ? error.message : '分享作品导入失败。', 'error');
+      return false;
+    }
+  }
+
+  elements.shareImportAppend.addEventListener('click', () => commitShareImport('append'));
+  elements.shareImportReplace.addEventListener('click', () => commitShareImport('replace'));
+  elements.shareImportCancel.addEventListener('click', () => {
+    closeDialog(elements.shareImportDialog);
+    clearShareHash();
+    resetShareImportDialog();
+  });
+  elements.mobileHelpDismiss.addEventListener('click', () => {
+    try {
+      window.localStorage.setItem(mobileHelpStorageKey, '1');
+    } catch {
+      // Session-only help is acceptable when storage is unavailable.
+    }
+  });
+  elements.mobileShareWarningDismiss.addEventListener('click', () => {
+    closeDialog(elements.mobileShareWarning);
+    clearShareHash();
+  });
+  mobileCompanionMedia.addEventListener?.('change', event => {
+    mobileCompanion = Boolean(event.matches);
+    void render();
   });
 
   elements.modeSelection.addEventListener('click', () => {
@@ -1613,6 +1879,8 @@ async function initialize() {
   });
 
   await render();
+  if (mobileCompanion) openMobileShareWarning();
+  else openShareImportDialog();
 }
 
 if (typeof document !== 'undefined') {
