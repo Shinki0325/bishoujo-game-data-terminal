@@ -595,7 +595,9 @@ async function initialize() {
   const assetsManifest = assetsManifestSource.value;
   const filterAuthority = filterAuthoritySource.value;
   const workGroupAuthority = workGroupAuthoritySource.value;
-  const reviewQueue = reviewQueueSource.value;
+  const reviewQueue = sampleSource.schemaVersion === 'egs-tier-full-v1'
+    ? null
+    : reviewQueueSource.value;
   const sample = prepareRuntimeSample(sampleSource, {
     backendIndexes,
     assetsManifest,
@@ -607,7 +609,9 @@ async function initialize() {
       assetsManifest: assetsManifestSource.sha256,
       filterAuthority: filterAuthoritySource.sha256,
       workGroupAuthority: workGroupAuthoritySource.sha256,
-      reviewQueue: reviewQueueSource.sha256
+      ...(sampleSource.schemaVersion === 'egs-tier-full-v1'
+        ? {}
+        : { reviewQueue: reviewQueueSource.sha256 })
     }
   });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
@@ -687,6 +691,9 @@ async function initialize() {
     if (mediaStore !== null) {
       const replacement = await mediaStore.urlForReplacement(work.workId);
       if (replacement !== null) return replacement;
+    }
+    if (typeof work.previewPath === 'string' && work.previewPath.length > 0) {
+      return resolveAssetUrl(work.previewPath, assetBase);
     }
     return previewMedia.urlFor(work.workId, work.coverPath);
   }
