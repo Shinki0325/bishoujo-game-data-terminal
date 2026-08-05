@@ -247,9 +247,12 @@ h3 {
 }
 
 .selection-view {
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: calc(100dvh - var(--header-height));
+  min-height: 0;
   min-width: 0;
+  overflow: hidden;
   background: var(--surface);
 }
 
@@ -1143,10 +1146,12 @@ input[type="range"] {
 
 .catalog-results {
   min-width: 0;
-  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--surface);
   overscroll-behavior: contain;
 }
@@ -1185,9 +1190,21 @@ input[type="range"] {
 .catalog-controls {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) 132px auto auto auto;
-  align-items: end;
+  align-items: center;
   gap: 8px;
   padding: 9px 12px;
+}
+
+.catalog-controls .toolbar-button {
+  min-height: 52px;
+}
+
+.catalog-controls .catalog-search input {
+  min-height: 52px;
+}
+
+.catalog-controls .select-field select {
+  min-height: 52px;
 }
 
 .toolbar-button {

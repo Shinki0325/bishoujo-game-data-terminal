@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="egs-tier-asset-base" content="https://shinki0325.github.io/bishoujo-game-data-terminal/">
+    <meta name="egs-tier-asset-base" content="/backend/exports/egs-tier-beta-v1/">
     <title>美少女游戏数据终端</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
@@ -249,7 +249,6 @@
               </div>
               <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">卡片显示：完整</button>
               <button id="selected-works-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">已选作品 0</button>
-              <button id="clear-filters" type="button">清除筛选</button>
             </div>
 
             <div class="catalog-controls">
@@ -263,7 +262,7 @@
               </label>
 
               <label class="select-field" for="sort-key">
-                <span>排序</span>
+                <span class="visually-hidden">排序</span>
                 <select id="sort-key">
                   <option value="voteCount">评分人数</option>
                   <option value="median">中位评分</option>
