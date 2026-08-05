@@ -229,7 +229,6 @@ export function createFilterView({
     tagSelected: requiredElement(root, 'tag-selected'),
     summary: requiredElement(root, 'active-filter-summary'),
     activeChips: requiredElement(root, 'active-filter-chips'),
-    clear: requiredElement(root, 'clear-filters'),
     modeBasic: requiredElement(root, 'mode-basic'),
     modeAdvanced: requiredElement(root, 'mode-advanced'),
     advancedPanel: requiredElement(root, 'advanced-panel'),
@@ -294,7 +293,6 @@ export function createFilterView({
     elements.expressionError.textContent = error instanceof FormulaSyntaxError
       ? `偏移 ${error.offset}: ${error.message}`
       : String(error?.message ?? error);
-    updateClearAvailability();
   }
 
   function clearFormulaError() {
@@ -319,8 +317,6 @@ export function createFilterView({
       target ??= elements.companySearch;
     } else if (request.type === 'company-search') {
       target = elements.companySearch;
-    } else if (request.type === 'clear') {
-      target = elements.clear.disabled ? elements.companySearch : elements.clear;
     }
     target?.focus();
   }
@@ -403,7 +399,6 @@ export function createFilterView({
     elements.expression.focus();
     advancedDraftInvalid = false;
     emitAdvanced(advancedDraft);
-    updateClearAvailability();
     return true;
   }
 
@@ -915,14 +910,6 @@ export function createFilterView({
     emitAdvanced.flush();
   }
 
-  function updateClearAvailability() {
-    elements.clear.disabled = activeFilterCount(currentState) === 0
-      && !emitNumeric.pending()
-      && !emitYear.pending()
-      && !emitAdvanced.pending()
-      && !advancedDraftInvalid;
-  }
-
   function closeCompanyPopupOnEscape(event) {
     if (event.key !== 'Escape' || !companyPopupActive) return;
     event.preventDefault();
@@ -940,11 +927,9 @@ export function createFilterView({
   closeFormulaSuggestions();
   elements.minimumScore.addEventListener('input', () => {
     emitNumeric(captureNumericValues());
-    updateClearAvailability();
   });
   elements.minimumVotes.addEventListener('input', () => {
     emitNumeric(captureNumericValues());
-    updateClearAvailability();
   });
   for (const [endpoint, element] of [
     ['start', elements.releaseYearStart],
@@ -956,18 +941,15 @@ export function createFilterView({
       const values = normalizeYearValues(endpoint, element);
       renderYearLabels(values);
       renderYearPreview(values);
-      updateClearAvailability();
     });
     element?.addEventListener('change', () => {
       emitYear(normalizeYearValues(endpoint, element));
       emitYear.flush();
-      updateClearAvailability();
     });
     element?.addEventListener('keyup', event => {
       if (['Enter', ' ', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
         emitYear(normalizeYearValues(endpoint, element));
         emitYear.flush();
-        updateClearAvailability();
       }
     });
   }
@@ -1010,7 +992,6 @@ export function createFilterView({
     emitAdvanced(advancedDraft);
     activeFormulaCompletionIndex = -1;
     renderFormulaSuggestions();
-    updateClearAvailability();
   });
   elements.expression.addEventListener('click', renderFormulaSuggestions);
   elements.expression.addEventListener('keyup', event => {
@@ -1127,21 +1108,6 @@ export function createFilterView({
       showFormulaError(error);
     }
   });
-  elements.clear.addEventListener('click', () => {
-    closeFormulaSuggestions();
-    emitNumeric.cancel();
-    emitYear.cancel();
-    emitAdvanced.cancel();
-    advancedDraft = '';
-    advancedDraftInvalid = false;
-    tagAction = 'and';
-    openGroupId = null;
-    companyPopupActive = false;
-    elements.companySearch.value = '';
-    clearFormulaError();
-    emit(cloneFilterState(DEFAULT_FILTER_STATE));
-  });
-
   return Object.freeze({
     render(filterState, prospectiveCounts = {}) {
       currentState = cloneFilterState(filterState);
@@ -1176,7 +1142,6 @@ export function createFilterView({
       elements.summary.textContent = activeFilterCount(currentState) === 0
         ? `全部作品 · ${currentCounts.current}`
         : `${activeFilterCount(currentState)} 项筛选 · ${currentCounts.current} 个结果`;
-      updateClearAvailability();
       renderTagActions();
       renderCompanies();
       renderAttributeGroups();
