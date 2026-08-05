@@ -127,7 +127,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   importState: requiredElement('import-state'),
   exportState: requiredElement('export-state'),
   exportPng: requiredElement('export-png'),
-  addImagesSelection: requiredElement('add-images-selection'),
   rankingShowCounts: requiredElement('ranking-show-counts'),
   rankingShowTitles: requiredElement('ranking-show-titles'),
   rankingScaleOverall: requiredElement('ranking-scale-overall'),
@@ -1056,18 +1055,17 @@ async function initialize() {
         ? controller.selectWorks([work.workId])
         : controller.deselectWorks([work.workId]));
     },
-    onToggleCurrentResults() {
-      const visibleWorkIds = lastRenderedModel?.visibleWorks.map(work => work.workId) ?? [];
-      return runStateChange(() => controller.toggleCurrentResults(visibleWorkIds));
+    onToggleCurrentPage(workIds) {
+      return runStateChange(() => controller.toggleCurrentResults(workIds));
+    },
+    onToggleCurrentResults(workIds) {
+      return runStateChange(() => controller.toggleCurrentResults(workIds));
+    },
+    onToggleSelectedOnly(selectedOnly) {
+      return runStateChange(() => controller.setFilterState({ selectedOnly }));
     },
     onOpenDetails(work) {
       showDetails(work, filterById);
-    },
-    onOpenMedia(work) {
-      void openMediaPreview(work).catch(error => {
-        announce('图片预览加载失败。', 'error');
-        console.error(error);
-      });
     },
     onCardViewChange(cardView) {
       return runStateChange(() => controller.setSelectionCardView(cardView));
@@ -1077,6 +1075,8 @@ async function initialize() {
     },
     assetBase
   });
+  const filterIconHost = elements.filterToggle.querySelector('.toolbar-button-icon');
+  filterIconHost?.replaceChildren(createActionIcon(document, 'filter'));
   let mobileHelpShown = false;
   const mobileHelpStorageKey = 'egs-tier-mobile-help-seen-v1';
 
@@ -1449,7 +1449,6 @@ async function initialize() {
     elements.rankingScaleReset.disabled = importBusy;
     elements.rankingHelpButton.disabled = importBusy;
     elements.rankingImmersive.disabled = importBusy;
-    elements.addImagesSelection.disabled = importBusy || mediaStore === null;
     elements.cleanupMenuButton.disabled = importBusy;
     elements.displayMenuButton.disabled = importBusy;
     elements.fileMenuButton.disabled = importBusy;
@@ -1474,7 +1473,6 @@ async function initialize() {
         elements.rankingShowTitles,
         elements.rankingHelpButton,
         elements.rankingImmersive,
-        elements.addImagesSelection,
         elements.cleanupMenuButton,
         elements.displayMenuButton,
         elements.fileMenuButton,
@@ -1738,7 +1736,6 @@ async function initialize() {
     rankingView.setShowTitles(presentation.setShowTitles(elements.rankingShowTitles.checked));
   });
   elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
-  elements.addImagesSelection.addEventListener('click', () => elements.mediaFiles.click());
   elements.mediaFiles.addEventListener('change', () => {
     const files = Array.from(elements.mediaFiles.files ?? []);
     elements.mediaFiles.value = '';

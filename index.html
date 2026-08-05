@@ -242,16 +242,21 @@
         <section id="catalog-results" class="catalog-results" aria-labelledby="catalog-title">
           <div class="results-toolbar">
             <div class="results-heading">
-              <button id="filter-toggle" type="button" aria-controls="filter-drawer" aria-expanded="false">筛选</button>
               <h2 id="catalog-title">作品目录</h2>
               <div class="active-filter-state">
                 <output id="active-filter-summary">全部作品</output>
                 <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
               </div>
+              <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">卡片显示：完整</button>
+              <button id="selected-works-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">已选作品 0</button>
               <button id="clear-filters" type="button">清除筛选</button>
             </div>
 
             <div class="catalog-controls">
+              <button id="filter-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-controls="filter-drawer" aria-expanded="false">
+                <span class="toolbar-button-icon" data-icon="filter" aria-hidden="true"></span>
+                <span>筛选</span>
+              </button>
               <label class="search-field catalog-search" for="title-search">
                 <span class="visually-hidden">搜索标题</span>
                 <input id="title-search" type="search" placeholder="搜索标题" autocomplete="off">
@@ -268,33 +273,26 @@
                 </select>
               </label>
 
-              <label class="select-field" for="sort-direction">
-                <span>方向</span>
-                <select id="sort-direction">
-                  <option value="desc">降序</option>
-                  <option value="asc">升序</option>
-                </select>
-              </label>
-
-              <label class="checkbox-control" for="selected-only">
-                <input id="selected-only" type="checkbox">
-                <span>仅已选</span>
-              </label>
-
-              <label class="checkbox-control" for="select-current-results">
-                <input id="select-current-results" type="checkbox">
-                <span>选择当前结果</span>
-              </label>
-
-              <div class="view-switch" role="group" aria-label="目录卡片密度">
-                <button id="card-view-full" type="button" aria-pressed="true">完整</button>
-                <button id="card-view-compact" type="button" aria-pressed="false">紧凑</button>
-              </div>
-              <button id="add-images-selection" type="button">添加图片</button>
+              <button id="sort-direction-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false" aria-label="排序：降序，点击切换">
+                <span id="sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-down-a-z" aria-hidden="true"></span>
+                <span id="sort-direction-label" class="sort-direction-label">降序</span>
+              </button>
+              <button id="select-current-page" class="toolbar-button toolbar-button-primary" type="button">选择当前页</button>
+              <button id="select-all-results" class="toolbar-button toolbar-button-strong" type="button">全选</button>
             </div>
           </div>
 
           <div id="catalog-grid" class="catalog-grid" aria-live="polite"></div>
+          <nav id="selection-pagination" class="selection-pagination" aria-label="选片分页">
+            <button id="selection-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+            <label class="selection-page-field" for="selection-page-input">
+              <span class="visually-hidden">当前页码</span>
+              <input id="selection-page-input" type="text" inputmode="numeric" autocomplete="off" aria-describedby="selection-page-error">
+              <span class="selection-page-total">/ <output id="selection-page-total">1</output></span>
+            </label>
+            <button id="selection-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+            <p id="selection-page-error" class="selection-page-error" role="alert" hidden>请输入有效的页码</p>
+          </nav>
         </section>
       </section>
 

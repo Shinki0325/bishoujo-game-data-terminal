@@ -1,4 +1,5 @@
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
+import { createActionIcon } from '../lib/action-icons.js';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
@@ -103,7 +104,6 @@ export function createSelectionCard(documentRef, work, {
   selected,
   onToggle,
   onOpenDetails,
-  onOpenMedia = onOpenDetails,
   assetBase,
   coverUrl = null,
   selectionEnabled = true
@@ -117,13 +117,13 @@ export function createSelectionCard(documentRef, work, {
   if (!CARD_VIEWS.has(view)) throw new RangeError('view must be full or compact');
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
-  assertFunction(onOpenMedia, 'onOpenMedia');
 
   const card = documentRef.createElement('article');
   card.className = `selection-card selection-card-${view}`;
   card.classList.toggle('is-selected', Boolean(selected));
   card.dataset.workId = work.workId;
   card.setAttribute('aria-label', `查看 ${work.title} 详情`);
+  card.addEventListener('click', () => onOpenDetails(work));
 
   const image = documentRef.createElement('img');
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
@@ -147,12 +147,12 @@ export function createSelectionCard(documentRef, work, {
   const cover = documentRef.createElement('button');
   cover.type = 'button';
   cover.className = 'selection-card-cover';
-  cover.dataset.controlType = 'media';
-  cover.setAttribute('aria-label', `放大 ${work.title}`);
-  cover.title = `放大 ${work.title}`;
+  cover.dataset.controlType = 'details';
+  cover.setAttribute('aria-label', `查看 ${work.title} 详情`);
+  cover.title = `查看 ${work.title} 详情`;
   cover.addEventListener('click', event => {
     event.stopPropagation();
-    onOpenMedia(work);
+    onOpenDetails(work);
   });
   cover.append(image);
 
@@ -217,9 +217,10 @@ export function syncSelectAllCheckbox(checkbox, selectAllState) {
 export function createSelectionView({
   root,
   onToggleWork,
+  onToggleCurrentPage,
   onToggleCurrentResults,
+  onToggleSelectedOnly,
   onOpenDetails,
-  onOpenMedia = onOpenDetails,
   onCardViewChange,
   onFilterChange,
   assetBase
@@ -233,42 +234,62 @@ export function createSelectionView({
   }
   const elements = {
     grid: requiredOwnedElement(root, 'catalog-grid'),
-    selectAll: requiredOwnedElement(root, 'select-current-results'),
-    cardFull: requiredOwnedElement(root, 'card-view-full'),
-    cardCompact: requiredOwnedElement(root, 'card-view-compact'),
+    selectCurrentPage: requiredOwnedElement(root, 'select-current-page'),
+    selectAllResults: requiredOwnedElement(root, 'select-all-results'),
+    selectedWorksToggle: requiredOwnedElement(root, 'selected-works-toggle'),
+    cardViewToggle: requiredOwnedElement(root, 'card-view-toggle'),
+    sortDirectionToggle: requiredOwnedElement(root, 'sort-direction-toggle'),
+    sortDirectionIcon: requiredOwnedElement(root, 'sort-direction-icon'),
+    sortDirectionLabel: requiredOwnedElement(root, 'sort-direction-label'),
+    pagination: requiredOwnedElement(root, 'selection-pagination'),
+    pagePrevious: requiredOwnedElement(root, 'selection-page-previous'),
+    pageInput: requiredOwnedElement(root, 'selection-page-input'),
+    pageTotal: requiredOwnedElement(root, 'selection-page-total'),
+    pageNext: requiredOwnedElement(root, 'selection-page-next'),
+    pageError: requiredOwnedElement(root, 'selection-page-error'),
     title: requiredOwnedElement(root, 'title-search'),
-    sortKey: requiredOwnedElement(root, 'sort-key'),
-    sortDirection: requiredOwnedElement(root, 'sort-direction'),
-    selectedOnly: requiredOwnedElement(root, 'selected-only')
+    sortKey: requiredOwnedElement(root, 'sort-key')
   };
   assertFunction(onToggleWork, 'onToggleWork');
+  assertFunction(onToggleCurrentPage, 'onToggleCurrentPage');
   assertFunction(onToggleCurrentResults, 'onToggleCurrentResults');
+  assertFunction(onToggleSelectedOnly, 'onToggleSelectedOnly');
   assertFunction(onOpenDetails, 'onOpenDetails');
-  assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onCardViewChange, 'onCardViewChange');
   assertFunction(onFilterChange, 'onFilterChange');
   let renderedWorkKey = '';
   let pageIndex = 0;
+  let latestModel = null;
+  let latestCoverUrls = null;
 
   const titleCommit = createDebouncedCommit(titleQuery => {
     onFilterChange({ titleQuery });
   });
 
-  elements.selectAll.addEventListener('change', () => {
-    onToggleCurrentResults(elements.selectAll.checked);
+  elements.selectCurrentPage.addEventListener('click', () => {
+    if (latestModel === null) return;
+    onToggleCurrentPage(latestModel.works
+      .slice(selectionPages(latestModel.works.length)[pageIndex].start, selectionPages(latestModel.works.length)[pageIndex].end)
+      .map(work => work.workId));
   });
-  elements.cardFull.addEventListener('click', () => {
-    titleCommit.flush();
-    onCardViewChange('full');
+  elements.selectAllResults.addEventListener('click', () => {
+    if (latestModel === null) return;
+    onToggleCurrentResults(latestModel.works.map(work => work.workId));
   });
-  elements.cardCompact.addEventListener('click', () => {
+  elements.selectedWorksToggle.addEventListener('click', () => {
+    if (latestModel === null) return;
     titleCommit.flush();
-    onCardViewChange('compact');
+    onToggleSelectedOnly(!Boolean(latestModel.filterState.selectedOnly));
   });
-  elements.selectedOnly.addEventListener('change', () => {
-    const selectedOnly = elements.selectedOnly.checked;
+  elements.cardViewToggle.addEventListener('click', () => {
+    if (latestModel === null) return;
     titleCommit.flush();
-    onFilterChange({ selectedOnly });
+    onCardViewChange(latestModel.view === 'full' ? 'compact' : 'full');
+  });
+  elements.sortDirectionToggle.addEventListener('click', () => {
+    if (latestModel === null) return;
+    titleCommit.flush();
+    onFilterChange({ sortDirection: latestModel.filterState.sortDirection === 'asc' ? 'desc' : 'asc' });
   });
   elements.sortKey.addEventListener('change', () => {
     const sortKey = elements.sortKey.value;
@@ -276,15 +297,111 @@ export function createSelectionView({
     titleCommit.flush();
     onFilterChange({ sortKey });
   });
-  elements.sortDirection.addEventListener('change', () => {
-    const sortDirection = elements.sortDirection.value;
-    if (!FILTER_SORT_DIRECTIONS.has(sortDirection)) return;
-    titleCommit.flush();
-    onFilterChange({ sortDirection });
-  });
   elements.title.addEventListener('input', () => {
     titleCommit(elements.title.value);
   });
+
+  function showPageError(message = '请输入有效的页码') {
+    elements.pageError.textContent = message;
+    elements.pageError.hidden = false;
+    elements.pageInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearPageError() {
+    elements.pageError.hidden = true;
+    elements.pageInput.removeAttribute('aria-invalid');
+  }
+
+  function pageCountFor(model) {
+    return selectionPages(model?.works?.length ?? 0).length;
+  }
+
+  function setPage(nextIndex) {
+    if (latestModel === null) return;
+    const pages = selectionPages(latestModel.works.length);
+    pageIndex = Math.max(0, Math.min(nextIndex, pages.length - 1));
+    clearPageError();
+    renderLatest();
+  }
+
+  elements.pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
+  elements.pageNext.addEventListener('click', () => setPage(pageIndex + 1));
+  elements.pageInput.addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    if (latestModel === null) return;
+    const raw = String(elements.pageInput.value ?? '').trim();
+    if (!/^\d+$/u.test(raw)) {
+      showPageError();
+      return;
+    }
+    const requested = Number(raw);
+    const total = pageCountFor(latestModel);
+    if (!Number.isSafeInteger(requested) || requested < 1 || requested > total) {
+      showPageError();
+      return;
+    }
+    setPage(requested - 1);
+  });
+
+  function renderLatest() {
+    const model = latestModel;
+    if (model === null) return;
+      const activeElement = documentRef.activeElement;
+      const activeCard = activeElement?.parentElement;
+      const focusTarget = activeCard?.dataset?.workId && activeElement?.dataset?.controlType
+        ? {
+            workId: activeCard.dataset.workId,
+            controlType: activeElement.dataset.controlType
+          }
+        : null;
+      const selected = new Set(model.selectedWorkIds);
+      const pages = selectionPages(model.works.length);
+      pageIndex = Math.min(pageIndex, pages.length - 1);
+      const page = pages[pageIndex];
+      const visibleWorks = model.works.slice(page.start, page.end);
+      const cards = visibleWorks.map(work => createSelectionCard(documentRef, work, {
+        view: model.view,
+        selected: selected.has(work.workId),
+        onToggle: onToggleWork,
+        onOpenDetails,
+        coverUrl: latestCoverUrls?.get?.(work.workId) ?? null,
+        assetBase
+      }));
+      releaseGridImages(elements.grid);
+      elements.grid.replaceChildren(...cards);
+      if (focusTarget !== null) {
+        const focusedCard = cards.find(card => card.dataset.workId === focusTarget.workId);
+        const focusedControl = Array.from(focusedCard?.children ?? []).find(
+          child => child.dataset.controlType === focusTarget.controlType
+        );
+        focusedControl?.focus?.();
+      }
+      const pageSelected = visibleWorks.filter(work => selected.has(work.workId)).length;
+      const pageState = pageSelected === 0 ? 'none' : pageSelected === visibleWorks.length ? 'all' : 'some';
+      const allState = model.selectAllState ?? (model.works.length === 0 ? 'none' : (
+        model.works.every(work => selected.has(work.workId)) ? 'all' : pageSelected > 0 ? 'some' : 'none'
+      ));
+      elements.selectCurrentPage.setAttribute('aria-pressed', String(pageState === 'all'));
+      elements.selectCurrentPage.textContent = pageState === 'all' ? '取消当前页' : '选择当前页';
+      elements.selectAllResults.setAttribute('aria-pressed', String(allState === 'all'));
+      elements.selectAllResults.textContent = allState === 'all' ? '取消全选' : '全选';
+      elements.selectedWorksToggle.setAttribute('aria-pressed', String(Boolean(model.filterState.selectedOnly)));
+      elements.selectedWorksToggle.textContent = `已选作品 ${model.selectedWorkIds.length}`;
+      elements.cardViewToggle.setAttribute('aria-pressed', String(model.view === 'compact'));
+      elements.cardViewToggle.textContent = `卡片显示：${model.view === 'full' ? '完整' : '简约'}`;
+      if (!titleCommit.pending()) elements.title.value = model.filterState.titleQuery;
+      elements.sortKey.value = model.filterState.sortKey;
+      const ascending = model.filterState.sortDirection === 'asc';
+      elements.sortDirectionToggle.setAttribute('aria-pressed', String(ascending));
+      elements.sortDirectionToggle.setAttribute('aria-label', `排序：${ascending ? '升序' : '降序'}，点击切换`);
+      elements.sortDirectionLabel.textContent = ascending ? '升序' : '降序';
+      elements.sortDirectionIcon.replaceChildren(createActionIcon(documentRef, ascending ? 'arrow-up-a-z' : 'arrow-down-a-z'));
+      elements.pagePrevious.disabled = pageIndex <= 0;
+      elements.pageNext.disabled = pageIndex >= pages.length - 1;
+      elements.pageInput.value = String(pageIndex + 1);
+      elements.pageTotal.textContent = String(pages.length);
+  }
 
   return Object.freeze({
     render(model, coverUrls = null) {
@@ -296,71 +413,14 @@ export function createSelectionView({
       ) {
         throw new TypeError('model must contain works, selectedWorkIds, and filterState');
       }
-      const activeElement = documentRef.activeElement;
-      const activeCard = activeElement?.parentElement;
-      const focusTarget = activeCard?.dataset?.workId && activeElement?.dataset?.controlType
-        ? {
-            workId: activeCard.dataset.workId,
-            controlType: activeElement.dataset.controlType
-          }
-        : null;
       const workKey = model.works.map(work => work.workId).join('\u001f');
       if (workKey !== renderedWorkKey) {
         renderedWorkKey = workKey;
         pageIndex = 0;
       }
-      const selected = new Set(model.selectedWorkIds);
-      const pages = selectionPages(model.works.length);
-      pageIndex = Math.min(pageIndex, pages.length - 1);
-      const page = pages[pageIndex];
-      const visibleWorks = model.works.slice(page.start, page.end);
-      const cards = visibleWorks.map(work => createSelectionCard(documentRef, work, {
-        view: model.view,
-        selected: selected.has(work.workId),
-        onToggle: onToggleWork,
-        onOpenDetails,
-        onOpenMedia,
-        coverUrl: coverUrls?.get?.(work.workId) ?? null,
-        assetBase
-      }));
-      if (pageIndex > 0) {
-        const previous = documentRef.createElement('button');
-        previous.type = 'button';
-        previous.className = 'selection-window-previous';
-        previous.textContent = `上一页 ${pageIndex} / ${pages.length}`;
-        previous.addEventListener('click', () => {
-          pageIndex -= 1;
-          this.render(model);
-        });
-        cards.push(previous);
-      }
-      if (pageIndex < pages.length - 1) {
-        const more = documentRef.createElement('button');
-        more.type = 'button';
-        more.className = 'selection-window-more';
-        more.textContent = `加载更多 ${pageIndex + 2} / ${pages.length}`;
-        more.addEventListener('click', () => {
-          pageIndex += 1;
-          this.render(model);
-        });
-        cards.push(more);
-      }
-      releaseGridImages(elements.grid);
-      elements.grid.replaceChildren(...cards);
-      if (focusTarget !== null) {
-        const focusedCard = cards.find(card => card.dataset.workId === focusTarget.workId);
-        const focusedControl = Array.from(focusedCard?.children ?? []).find(
-          child => child.dataset.controlType === focusTarget.controlType
-        );
-        focusedControl?.focus?.();
-      }
-      syncSelectAllCheckbox(elements.selectAll, model.selectAllState);
-      elements.cardFull.setAttribute('aria-pressed', String(model.view === 'full'));
-      elements.cardCompact.setAttribute('aria-pressed', String(model.view === 'compact'));
-      if (!titleCommit.pending()) elements.title.value = model.filterState.titleQuery;
-      elements.sortKey.value = model.filterState.sortKey;
-      elements.sortDirection.value = model.filterState.sortDirection;
-      elements.selectedOnly.checked = model.filterState.selectedOnly;
+      latestModel = model;
+      latestCoverUrls = coverUrls;
+      renderLatest();
     },
 
     captureScroll() {
