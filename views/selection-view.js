@@ -44,6 +44,12 @@ function selectionPages(total) {
   return pages;
 }
 
+export function selectionInitialWorks(works) {
+  if (!Array.isArray(works)) throw new TypeError('works must be an array');
+  const [firstPage] = selectionPages(works.length);
+  return works.slice(firstPage.start, firstPage.end);
+}
+
 function releaseGridImages(grid) {
   for (const image of Array.from(grid.querySelectorAll?.('img') ?? [])) {
     image.src = '';

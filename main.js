@@ -43,7 +43,7 @@ import {
 } from './lib/attribute-filters.js';
 import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
-import { createSelectionView } from './views/selection-view.js';
+import { createSelectionView, selectionInitialWorks } from './views/selection-view.js';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -1536,7 +1536,7 @@ async function initialize() {
         selectedWorkIds: model.state.selectedWorkIds,
         selectAllState: model.selectAllState,
         filterState: model.state.filterState
-      }, await resolveCoverUrls(model.visibleWorks));
+      }, await resolveCoverUrls(selectionInitialWorks(model.visibleWorks)));
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (nextFilterKey !== renderedFilterKey) {
