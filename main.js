@@ -35,7 +35,7 @@ import {
   PREVIEW_MANIFEST_PATH
 } from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
-import { StateValidationError } from './lib/state.js';
+import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { appendTier } from './lib/tier-config.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
@@ -1533,6 +1533,7 @@ async function initialize() {
         view: model.state.selectionCardView,
         selectedWorkIds: model.state.selectedWorkIds,
         selectAllState: model.selectAllState,
+        selectionCapacity: Math.max(0, USER_WORK_LIMIT - model.selectedCount),
         filterState: model.state.filterState
       }, await resolveCoverUrls(selectionInitialWorks(model.visibleWorks)));
     }

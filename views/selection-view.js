@@ -236,6 +236,7 @@ export function createSelectionView({
     grid: requiredOwnedElement(root, 'catalog-grid'),
     selectCurrentPage: requiredOwnedElement(root, 'select-current-page'),
     selectAllResults: requiredOwnedElement(root, 'select-all-results'),
+    capacityStatus: requiredOwnedElement(root, 'selection-capacity-status'),
     selectedWorksToggle: requiredOwnedElement(root, 'selected-works-toggle'),
     cardViewToggle: requiredOwnedElement(root, 'card-view-toggle'),
     sortDirectionToggle: requiredOwnedElement(root, 'sort-direction-toggle'),
@@ -268,8 +269,11 @@ export function createSelectionView({
 
   elements.selectCurrentPage.addEventListener('click', () => {
     if (latestModel === null) return;
+    if (elements.selectCurrentPage.disabled) return;
+    const page = selectionPages(latestModel.works.length)[pageIndex];
+    if (page === undefined) return;
     onToggleCurrentPage(latestModel.works
-      .slice(selectionPages(latestModel.works.length)[pageIndex].start, selectionPages(latestModel.works.length)[pageIndex].end)
+      .slice(page.start, page.end)
       .map(work => work.workId));
   });
   elements.selectAllResults.addEventListener('click', () => {
@@ -319,8 +323,10 @@ export function createSelectionView({
   function setPage(nextIndex) {
     if (latestModel === null) return;
     const pages = selectionPages(latestModel.works.length);
+    const previousIndex = pageIndex;
     pageIndex = Math.max(0, Math.min(nextIndex, pages.length - 1));
     clearPageError();
+    if (pageIndex !== previousIndex) root.scrollTop = 0;
     renderLatest();
   }
 
@@ -379,10 +385,30 @@ export function createSelectionView({
       }
       const pageSelected = visibleWorks.filter(work => selected.has(work.workId)).length;
       const pageState = pageSelected === 0 ? 'none' : pageSelected === visibleWorks.length ? 'all' : 'some';
+      const unselectedPageCount = visibleWorks.length - pageSelected;
+      const selectionCapacity = Number.isSafeInteger(model.selectionCapacity)
+        ? Math.max(0, model.selectionCapacity)
+        : Number.POSITIVE_INFINITY;
+      const capacityBlocked = pageState !== 'all' && unselectedPageCount > selectionCapacity;
+      const capacityMessage = capacityBlocked
+        ? `当前页还需 ${unselectedPageCount} 个名额，当前可选 ${selectionCapacity} 部。`
+        : '';
       const allState = model.selectAllState ?? (model.works.length === 0 ? 'none' : (
         model.works.every(work => selected.has(work.workId)) ? 'all' : pageSelected > 0 ? 'some' : 'none'
       ));
       elements.selectCurrentPage.setAttribute('aria-pressed', String(pageState === 'all'));
+      elements.selectCurrentPage.disabled = capacityBlocked || visibleWorks.length === 0;
+      if (capacityBlocked) {
+        elements.selectCurrentPage.setAttribute('title', capacityMessage);
+        elements.selectCurrentPage.setAttribute('aria-describedby', 'selection-capacity-status');
+        elements.capacityStatus.textContent = capacityMessage;
+        elements.capacityStatus.hidden = false;
+      } else {
+        elements.selectCurrentPage.removeAttribute('title');
+        elements.selectCurrentPage.removeAttribute('aria-describedby');
+        elements.capacityStatus.textContent = '';
+        elements.capacityStatus.hidden = true;
+      }
       elements.selectCurrentPage.textContent = pageState === 'all' ? '取消当前页' : '选择当前页';
       elements.selectAllResults.setAttribute('aria-pressed', String(allState === 'all'));
       elements.selectAllResults.textContent = allState === 'all' ? '取消全选' : '全选';

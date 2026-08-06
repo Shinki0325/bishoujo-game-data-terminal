@@ -63642,9 +63642,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 31961,
+      "bytes": 32021,
       "path": "index.html",
-      "sha256": "84cc1877206b3e7a611446c4853fea233bf826efc46219598f887c5a9db9e084"
+      "sha256": "5aa43a5f17d0583305148a57b4b7c4748ea15e9e42e19fb596dd89a915f2571c"
     },
     {
       "bytes": 4161,
@@ -63837,14 +63837,14 @@
       "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
     },
     {
-      "bytes": 72687,
+      "bytes": 72783,
       "path": "main.js",
-      "sha256": "7fae2919b5c77bd79ef0338094163a9397f183912efd916edf6fc54c495b28d6"
+      "sha256": "0e2a1da51b3d91248c602b2bf426409e85059570c1228352f6ba868fc762f32a"
     },
     {
-      "bytes": 56011,
+      "bytes": 56418,
       "path": "styles.css",
-      "sha256": "be493d673ea9e8b7e7d594b3f79999ce81dd7b970191bda6998db50fe28e6ede"
+      "sha256": "a8a4d770c516357b711fa264adb3e4fa713797c293de693c51dfa1d355e8d7b1"
     },
     {
       "bytes": 45611,
@@ -63867,9 +63867,9 @@
       "sha256": "e8b000c20268ebc239adde6f9715828d82bf4baf867c8f05bdd354f55547910a"
     },
     {
-      "bytes": 17238,
+      "bytes": 18619,
       "path": "views/selection-view.js",
-      "sha256": "5db53cdf98b10811fad6f6f0824d5f811bc751ac645b3fe0b449d0d4793ad0c7"
+      "sha256": "4c5848482c2ea155a749b08ebbebc9a86241324f588a03364f2118d3b67f28fc"
     },
     {
       "bytes": 20169,
@@ -63885,7 +63885,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 465637486,
+    "bytes": 465639430,
     "files": 12776
   }
 }

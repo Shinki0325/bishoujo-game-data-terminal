@@ -1192,19 +1192,26 @@ input[type="range"] {
   grid-template-columns: auto minmax(180px, 1fr) 132px auto auto auto;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
+  padding: 6px 12px;
 }
 
 .catalog-controls .toolbar-button {
-  min-height: 52px;
+  min-height: 46px;
 }
 
 .catalog-controls .catalog-search input {
-  min-height: 52px;
+  min-height: 46px;
 }
 
 .catalog-controls .select-field select {
-  min-height: 52px;
+  min-height: 46px;
+}
+
+.selection-capacity-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
 }
 
 .toolbar-button {
