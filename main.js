@@ -36,6 +36,7 @@ import {
 } from './lib/runtime-config.js';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
+import { createStartupMetrics } from './lib/startup-metrics.js';
 import { appendTier } from './lib/tier-config.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
@@ -566,6 +567,7 @@ function showDetails(work, filterById) {
 }
 
 async function initialize() {
+  const startupMetrics = createStartupMetrics();
   const assetBase = configuredAssetBase();
   const previewMedia = createPreviewMediaResolver({
     assetBase,
@@ -582,14 +584,14 @@ async function initialize() {
     filterAuthoritySource,
     workGroupAuthoritySource,
     reviewQueueSource
-  ] = await Promise.all([
+  ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJson(DATA_URLS.catalog, '样本'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
     fetchJsonWithSha256(DATA_URLS.assetsManifest, 'assets manifest'),
     fetchJsonWithSha256(DATA_URLS.filterAuthority, '筛选权威'),
     fetchJsonWithSha256(DATA_URLS.workGroups, '作品组权威'),
     fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue')
-  ]);
+  ]));
   const backendIndexes = backendIndexesSource.value;
   const assetsManifest = assetsManifestSource.value;
   const filterAuthority = filterAuthoritySource.value;
@@ -597,7 +599,7 @@ async function initialize() {
   const reviewQueue = sampleSource.schemaVersion === 'egs-tier-full-v1'
     ? null
     : reviewQueueSource.value;
-  const sample = prepareRuntimeSample(sampleSource, {
+  const sample = startupMetrics.measure('sample-preparation', () => prepareRuntimeSample(sampleSource, {
     backendIndexes,
     assetsManifest,
     filterAuthority,
@@ -612,19 +614,21 @@ async function initialize() {
         ? {}
         : { reviewQueue: reviewQueueSource.sha256 })
     }
-  });
+  }));
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   const worksById = new Map(sample.works.map(work => [work.workId, work]));
   let mediaStore = null;
   let customWorks = [];
-  try {
-    const mediaDatabase = await openLocalMediaDatabase(window.indexedDB);
-    mediaStore = createLocalMediaStore({ database: mediaDatabase, urlApi: URL });
-    customWorks = (await mediaStore.listCustom()).map(createCustomWork);
-    for (const work of customWorks) worksById.set(work.workId, work);
-  } catch (error) {
-    console.error(error);
-  }
+  await startupMetrics.measureAsync('local-media-hydration', async () => {
+    try {
+      const mediaDatabase = await openLocalMediaDatabase(window.indexedDB);
+      mediaStore = createLocalMediaStore({ database: mediaDatabase, urlApi: URL });
+      customWorks = (await mediaStore.listCustom()).map(createCustomWork);
+      for (const work of customWorks) worksById.set(work.workId, work);
+    } catch (error) {
+      console.error(error);
+    }
+  });
   const controller = createAppController({
     sample,
     localWorks: customWorks,
@@ -641,12 +645,12 @@ async function initialize() {
     ),
     timeoutMs: 10000
   });
-  await filterWorkerClient.init({
+  await startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init({
     works: sample.works,
     knownFilterIds: sample.filters.map(filter => filter.filterId),
     brands: sample.brands,
     backendIndexes: sample.backendIndexes
-  });
+  }));
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
   let filterView;
@@ -1389,7 +1393,7 @@ async function initialize() {
     }
   });
   function openMediaUpload(files) {
-    const availableSlots = Math.max(0, 100 - controller.inspectState().selectedWorkIds.length);
+    const availableSlots = Math.max(0, USER_WORK_LIMIT - controller.inspectState().selectedWorkIds.length);
     void mediaDialog.openUpload(files, { availableSlots }).catch(error => {
       announce(error instanceof Error ? error.message : '图片导入失败，请稍后重试。', 'error');
       console.error(error);
@@ -1749,7 +1753,7 @@ async function initialize() {
       });
       return;
     }
-    const availableSlots = Math.max(0, 100 - controller.inspectState().selectedWorkIds.length);
+    const availableSlots = Math.max(0, USER_WORK_LIMIT - controller.inspectState().selectedWorkIds.length);
     void mediaDialog.openUpload(files, { availableSlots }).catch(error => {
       announce(error instanceof Error ? error.message : '图片导入失败。', 'error');
       console.error(error);
@@ -1883,7 +1887,7 @@ async function initialize() {
     }
   });
 
-  await render();
+  await startupMetrics.measureAsync('first-render', () => render());
   if (mobileCompanion) openMobileShareWarning();
   else openShareImportDialog();
 }
