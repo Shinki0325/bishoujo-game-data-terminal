@@ -63622,6 +63622,11 @@
       "sha256": "162833e0457938073ce0315e7a35f0f9b61859a1a37d65af48321d80de3baf34"
     },
     {
+      "bytes": 8683,
+      "path": "data/egs-tier-full-enrichment-v1.json",
+      "sha256": "e4ec8645e0317d27fc7ff0d4497f8b834b1f493c57622b58d398fb92ab343195"
+    },
+    {
       "bytes": 9881,
       "path": "data/filter-authority.json",
       "sha256": "da3fd64985126a7816741ded13b4ff4fe90d1cc6f0c03458ff3c7653049321ec"
@@ -63642,9 +63647,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 32021,
+      "bytes": 32147,
       "path": "index.html",
-      "sha256": "5aa43a5f17d0583305148a57b4b7c4748ea15e9e42e19fb596dd89a915f2571c"
+      "sha256": "53481c22ed4529263130dd129eac31a87ff837ad1cc1e8560b5ba2150babc0d0"
     },
     {
       "bytes": 4161,
@@ -63700,6 +63705,11 @@
       "bytes": 4364,
       "path": "lib/drag.js",
       "sha256": "d5dccb7bab5adbd6ab5392fe0bcc9575c6d180c933b1a6b8bbc281c24c7d733f"
+    },
+    {
+      "bytes": 5029,
+      "path": "lib/enrichment-sidecar.js",
+      "sha256": "eecef3d2447f925bb950b9e66ee3328f6ad4296f3cdc610146e024b8b33df095"
     },
     {
       "bytes": 3602,
@@ -63772,9 +63782,9 @@
       "sha256": "7e0642742866c1cea615dc0e08af41aa51860b43677042bc11bd4781d0e491be"
     },
     {
-      "bytes": 11914,
+      "bytes": 12143,
       "path": "lib/query-index.js",
-      "sha256": "ace52170ab47fe4fee804bfa55c4aaf103ddbef812a6482b99cb2f8ae83901c3"
+      "sha256": "d59f235fa1f38ead3eb8307760f38ad961f8e69cd4e0530b1b8ff3433bb5bb2d"
     },
     {
       "bytes": 872,
@@ -63792,9 +63802,9 @@
       "sha256": "9bec7d2c295ae50cc251d656460022a6f4c11141883d3b030fca0e11000ae2c7"
     },
     {
-      "bytes": 1033,
+      "bytes": 1117,
       "path": "lib/runtime-config.js",
-      "sha256": "2f96a463bae0b551ecef1dacf0d4ec3d51b12400024d09237ce574acaffe9c6c"
+      "sha256": "0aff697f25d754fa8e30e989ebdae9343373a34f562d51015d880c8547a7d267"
     },
     {
       "bytes": 16245,
@@ -63847,9 +63857,9 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 73240,
+      "bytes": 75539,
       "path": "main.js",
-      "sha256": "51f487c3298adea43e5dad4c847f489b271dd1f8f49d2c598c0b62f1778d001e"
+      "sha256": "f47a2241fc40b94d3175ce5820f718cd8a986810ebae4930e2d4f77893755e70"
     },
     {
       "bytes": 56418,
@@ -63895,7 +63905,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 465643178,
-    "files": 12778
+    "bytes": 465659628,
+    "files": 12780
   }
 }

@@ -9,6 +9,7 @@ import {
 import { createHistory } from './lib/history.js';
 import { createAppController } from './lib/app-controller.js';
 import { createCustomWork } from './lib/custom-work.js';
+import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import { createStickerDocument, STICKER_TYPES } from './lib/sticker-document.js';
@@ -168,6 +169,8 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   detailsBrand: requiredElement('details-brand'),
   detailsRelease: requiredElement('details-release'),
   detailsScore: requiredElement('details-score'),
+  detailsAliasRow: requiredElement('details-alias-row'),
+  detailsAliases: requiredElement('details-aliases'),
   detailsTags: requiredElement('details-tags'),
   status: requiredElement('status-message')
 });
@@ -479,6 +482,31 @@ async function fetchJsonWithSha256(url, label) {
   };
 }
 
+async function fetchOptionalJsonWithSha256(url, label) {
+  try {
+    return await fetchJsonWithSha256(url, label);
+  } catch (error) {
+    console.warn(`${label} unavailable; continuing without aliases`, error);
+    return null;
+  }
+}
+
+function projectBrandsWithAliases(brands, companyAliasesById) {
+  return brands.map(brand => {
+    const aliases = companyAliasesById?.get?.(brand.brandId);
+    if (!Array.isArray(aliases) || aliases.length === 0) return brand;
+    const existing = Array.isArray(brand.searchAliases) ? brand.searchAliases : [];
+    const seen = new Set();
+    const merged = [...existing, ...aliases].filter(alias => {
+      const normalized = String(alias).normalize('NFKC').trim().toLocaleLowerCase('ja-JP');
+      if (normalized.length === 0 || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+    return { ...brand, searchAliases: merged };
+  });
+}
+
 function browserStorage() {
   try {
     return window.localStorage;
@@ -513,9 +541,12 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function showDetails(work, filterById) {
+function showDetails(work, filterById, workAliasesById = null) {
   elements.detailsTitle.textContent = work.title;
   elements.detailsBrand.textContent = work.brandName;
+  const aliases = workAliasesById?.get?.(work.workId) ?? [];
+  elements.detailsAliasRow.hidden = aliases.length === 0;
+  elements.detailsAliases.textContent = aliases.join(' / ');
   elements.detailsRelease.textContent = work.releaseDate || '未记录';
   elements.detailsScore.textContent = `${work.median} / ${work.voteCount} 票`;
   const createTag = (filter, hidden = false) => {
@@ -578,20 +609,23 @@ async function initialize() {
   });
   assertRuntimeContracts();
   const [
-    sampleSource,
+    catalogSource,
     backendIndexesSource,
     assetsManifestSource,
     filterAuthoritySource,
     workGroupAuthoritySource,
-    reviewQueueSource
+    reviewQueueSource,
+    enrichmentSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
-    fetchJson(DATA_URLS.catalog, '样本'),
+    fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
     fetchJsonWithSha256(DATA_URLS.assetsManifest, 'assets manifest'),
     fetchJsonWithSha256(DATA_URLS.filterAuthority, '筛选权威'),
     fetchJsonWithSha256(DATA_URLS.workGroups, '作品组权威'),
-    fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue')
+    fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue'),
+    fetchOptionalJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar')
   ]));
+  const sampleSource = catalogSource.value;
   const backendIndexes = backendIndexesSource.value;
   const assetsManifest = assetsManifestSource.value;
   const filterAuthority = filterAuthoritySource.value;
@@ -615,6 +649,24 @@ async function initialize() {
         : { reviewQueue: reviewQueueSource.sha256 })
     }
   }));
+  let enrichment = null;
+  if (enrichmentSource !== null) {
+    try {
+      enrichment = prepareEnrichmentSidecar(enrichmentSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: new Set(sample.works.map(work => work.workId)),
+        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+      });
+    } catch (error) {
+      console.warn('alias enrichment sidecar rejected; continuing without aliases', error);
+    }
+  }
+  const workAliasesById = enrichment?.workAliasesById ?? null;
+  const workerWorkAliasesById = workAliasesById === null
+    ? null
+    : new Map(workAliasesById);
+  const brands = projectBrandsWithAliases(sample.brands, enrichment?.companyAliasesById);
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   const worksById = new Map(sample.works.map(work => [work.workId, work]));
   let mediaStore = null;
@@ -648,8 +700,9 @@ async function initialize() {
   await startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init({
     works: sample.works,
     knownFilterIds: sample.filters.map(filter => filter.filterId),
-    brands: sample.brands,
-    backendIndexes: sample.backendIndexes
+    brands,
+    backendIndexes: sample.backendIndexes,
+    workAliasesById: workerWorkAliasesById
   }));
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
@@ -1069,7 +1122,7 @@ async function initialize() {
       return runStateChange(() => controller.setFilterState({ selectedOnly }));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById);
+      showDetails(work, filterById, workAliasesById);
     },
     onCardViewChange(cardView) {
       return runStateChange(() => controller.setSelectionCardView(cardView));
@@ -1153,7 +1206,7 @@ async function initialize() {
         : controller.deselectWorks([work.workId]));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById);
+      showDetails(work, filterById, workAliasesById);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1208,7 +1261,7 @@ async function initialize() {
       else openMediaUpload(files);
     },
     onOpenDetails(work) {
-      showDetails(work, filterById);
+      showDetails(work, filterById, workAliasesById);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1570,7 +1623,7 @@ async function initialize() {
   filterView = createFilterView({
     root: document,
     filters: sample.filters,
-    brands: sample.brands,
+    brands,
     releaseYearCounts: sample.works.reduce((counts, work) => {
       const year = Number(work.releaseDate.slice(0, 4));
       counts[year] = (counts[year] ?? 0) + 1;
