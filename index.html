@@ -399,6 +399,7 @@
               <option value="releaseYearStart-asc">最早发售</option>
               <option value="brandName-asc">名称</option>
             </select>
+            <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary" type="button" aria-expanded="false">会社排榜</button>
             <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button">返回排榜</button>
           </div>
         </header>
@@ -419,6 +420,20 @@
             <div id="company-detail-works" class="company-directory-works"></div>
           </aside>
         </div>
+        <section id="company-ranking" class="company-ranking" hidden aria-label="会社排榜">
+          <div class="company-ranking-heading">
+            <div>
+              <h2>会社排榜</h2>
+              <p>在目录卡片左上角选择会社，再拖动候选卡片完成排榜。</p>
+            </div>
+            <button id="company-ranking-close" class="toolbar-button toolbar-button-neutral" type="button">收起</button>
+          </div>
+          <div id="company-ranking-board" class="company-ranking-board"></div>
+          <section class="company-ranking-candidate-section" aria-labelledby="company-ranking-candidates-title">
+            <h3 id="company-ranking-candidates-title">候选会社</h3>
+            <div id="company-ranking-candidates" class="company-ranking-candidates"></div>
+          </section>
+        </section>
       </section>
     </main>
 

@@ -442,6 +442,149 @@ h3 {
   text-align: center;
 }
 
+/* Company cards intentionally share the square work-card footprint. */
+.company-directory-list {
+  grid-template-columns: repeat(auto-fill, var(--selection-card-size));
+  justify-content: start;
+}
+
+.company-directory-card {
+  position: relative;
+  width: var(--selection-card-size);
+  height: var(--selection-card-size);
+  min-width: var(--selection-card-size);
+  overflow: hidden;
+  padding: 0;
+  border-color: var(--border-strong);
+  background: #dce1e4;
+}
+
+.company-directory-card:hover,
+.company-directory-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.company-directory-card-open {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.company-directory-card-open > .company-avatar {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  object-fit: cover;
+}
+
+.company-directory-card-select {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.company-directory-card-name,
+.company-directory-card-work-count,
+.company-directory-card-vote-count {
+  position: absolute;
+  z-index: 2;
+  bottom: 7px;
+  color: #ffffff;
+  font-weight: 800;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+  text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
+}
+
+.company-directory-card-name {
+  right: 7px;
+  bottom: 25px;
+  left: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.company-directory-card-work-count,
+.company-directory-card-vote-count {
+  font-size: 11px;
+}
+
+.company-directory-card-work-count { left: 7px; }
+.company-directory-card-vote-count { right: 7px; }
+
+.company-ranking {
+  max-width: 1400px;
+  margin: 18px auto 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.company-ranking-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.company-ranking-heading h2,
+.company-ranking-candidate-section h3 { margin: 0; font-size: 18px; }
+.company-ranking-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.company-ranking-board { display: grid; gap: 8px; }
+.company-ranking-tier {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  min-height: calc(var(--ranking-card-size) + 18px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #111821;
+}
+.company-ranking-tier h3 { display: grid; place-items: center; margin: 0; color: #ffffff; }
+.company-ranking-track,
+.company-ranking-candidates {
+  min-width: 0;
+  min-height: calc(var(--ranking-card-size) + 18px);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  overflow-x: auto;
+  background: #111821;
+}
+.company-ranking-candidate-section { margin-top: 14px; }
+.company-ranking-candidates { margin-top: 8px; border: 1px dashed var(--border-strong); }
+.company-ranking-card {
+  position: relative;
+  flex: 0 0 var(--ranking-card-size);
+  width: var(--ranking-card-size);
+  height: var(--ranking-card-size);
+  min-width: var(--ranking-card-size);
+  padding: 0;
+  overflow: hidden;
+  color: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: #dce1e4;
+  text-align: left;
+}
+.company-ranking-card img { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); object-fit: cover; }
+.company-ranking-card-title { position: absolute; right: 4px; bottom: 4px; left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 800; -webkit-text-stroke: 1px #000000; paint-order: stroke fill; text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000; }
+.details-company-link { padding: 0; color: inherit; background: transparent; border: 0; font: inherit; text-align: left; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+
 .selection-view {
   display: flex;
   flex-direction: column;
@@ -3119,8 +3262,13 @@ dialog::backdrop {
   }
 
   .company-directory-list {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, var(--selection-card-size));
+    justify-content: center;
   }
+
+  .company-ranking-tier { grid-template-columns: 72px minmax(0, 1fr); }
+
+  .company-ranking-heading { align-items: start; }
 
   .company-directory-detail {
     position: static;

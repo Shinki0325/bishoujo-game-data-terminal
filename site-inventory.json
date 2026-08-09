@@ -64322,9 +64322,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 34661,
+      "bytes": 35662,
       "path": "index.html",
-      "sha256": "25ac043e91fe53210d0b5f4d939de07972a9a7d5a66c1a2049f415af9f3568c3"
+      "sha256": "54c3f6673e95c7e3388a7c8b8124009202e86202bbfec5a6aaa9230583bb7858"
     },
     {
       "bytes": 4161,
@@ -64367,14 +64367,19 @@
       "sha256": "3872f1ffc40e6b9b3d50ed9c6e6478b65f424e1e0c886fdddcfc3eee104b4783"
     },
     {
-      "bytes": 3481,
+      "bytes": 3903,
       "path": "lib/company-directory.js",
-      "sha256": "045db43952de5764a52cde8df7bf2a532a180d9ee0ef56f9571bd61c465c6904"
+      "sha256": "40f5b769a0cdc3e508b1cbac4326dddb3e753ea264ff9e9f4e2cb110cecdc592"
     },
     {
       "bytes": 4421,
       "path": "lib/company-profile-sidecar.js",
       "sha256": "31a4369fc48e779e609bea013b3c9b3f4f47fff9956e12660564e3a9fd03813a"
+    },
+    {
+      "bytes": 4040,
+      "path": "lib/company-ranking.js",
+      "sha256": "0505308ffeb82327c356bbfb92977e0a1f85196f544167fde59773fda5a83273"
     },
     {
       "bytes": 935,
@@ -64542,19 +64547,24 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 81461,
+      "bytes": 84074,
       "path": "main.js",
-      "sha256": "6cc5048bf7da73e76c7fb4ebc5298f0f3086b98f9c0565fcd521d4177612c295"
+      "sha256": "4c04f91ec0e485f41fd40b7a3ce426c4ecf5477551b43af28de51b7ea0f50b1a"
     },
     {
-      "bytes": 60709,
+      "bytes": 64961,
       "path": "styles.css",
-      "sha256": "5e658cb4f79577a63a453ae8e60cd5e360d44d64a03415f70a3cd39ff96bce91"
+      "sha256": "71d7312f196ac6118f20c03e0cd7145c51cde46eeaf24e3ab6dd51eefa760c18"
     },
     {
-      "bytes": 4853,
+      "bytes": 5671,
       "path": "views/company-directory-view.js",
-      "sha256": "b90b3b9b8c5a80d6d1f93f69bb490b61ca51b4e6646ec2d28fc1e30433783ccd"
+      "sha256": "2066c5a2893eba167649d963f0232070b0428e9f9b3d58a95f521270c1c75811"
+    },
+    {
+      "bytes": 3935,
+      "path": "views/company-ranking-view.js",
+      "sha256": "7469d2f62d78195a13ff4c6495bd98d6931b24453206097f3c5e14b54d0de32a"
     },
     {
       "bytes": 44581,
@@ -64595,7 +64605,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 470256746,
-    "files": 12918
+    "bytes": 470273827,
+    "files": 12920
   }
 }

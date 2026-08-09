@@ -18,9 +18,9 @@ function formatCount(value) {
   return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(value);
 }
 
-export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCompany, onOpenWork }) {
+export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCompany, onToggleCompany, onOpenWork }) {
   if (!root || typeof root.querySelector !== 'function') throw new TypeError('root must provide querySelector');
-  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onOpenWork !== 'function') {
+  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function') {
     throw new TypeError('company directory callbacks must be functions');
   }
   const documentRef = root.ownerDocument;
@@ -37,8 +37,9 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
   search.addEventListener('input', () => onSearch(search.value));
   sort.addEventListener('change', () => onSort(sort.value));
 
-  function avatarFor(parent, company, className, avatarUrlForCompany) {
-    if (!company.avatar || typeof avatarUrlForCompany !== 'function') {
+  function imageFor(parent, company, className, imageUrlForCompany) {
+    const imageUrl = typeof imageUrlForCompany === 'function' ? imageUrlForCompany(company) : null;
+    if (!imageUrl) {
       parent.append(text(documentRef, 'span', `${className} company-avatar-fallback`, '无头像'));
       return;
     }
@@ -47,7 +48,7 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     image.alt = '';
     image.loading = 'lazy';
     image.decoding = 'async';
-    image.src = avatarUrlForCompany(company.avatar);
+    image.src = imageUrl;
     image.addEventListener('error', () => {
       image.remove();
       parent.append(text(documentRef, 'span', `${className} company-avatar-fallback`, '无头像'));
@@ -55,34 +56,43 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     parent.append(image);
   }
 
-  function render({ companies = [], selectedCompanyId = null, selectedWorks = [], avatarUrlForCompany = null } = {}) {
+  function render({ companies = [], selectedCompanyId = null, selectedCompanyIds = new Set(), selectedWorks = [], imageUrlForCompany = null } = {}) {
     list.replaceChildren();
     empty.hidden = companies.length !== 0;
     for (const company of companies) {
-      const button = documentRef.createElement('button');
-      button.type = 'button';
-      button.className = 'company-directory-card';
-      button.classList.toggle('is-selected', company.companyId === selectedCompanyId);
-      button.dataset.companyId = company.companyId;
-      const avatar = documentRef.createElement('span');
-      avatar.className = 'company-directory-card-avatar';
-      avatarFor(avatar, company, 'company-avatar', avatarUrlForCompany);
-      const body = documentRef.createElement('span');
-      body.className = 'company-directory-card-body';
-      body.append(
+      const card = documentRef.createElement('article');
+      card.className = 'company-directory-card';
+      card.classList.toggle('is-selected', company.companyId === selectedCompanyId);
+      card.dataset.companyId = company.companyId;
+      const open = documentRef.createElement('button');
+      open.type = 'button';
+      open.className = 'company-directory-card-open';
+      open.setAttribute('aria-label', `打开会社 ${company.brandName}`);
+      imageFor(open, company, 'company-avatar', imageUrlForCompany);
+      const overlay = documentRef.createElement('span');
+      overlay.className = 'company-directory-card-overlay';
+      overlay.append(
         text(documentRef, 'strong', 'company-directory-card-name', company.brandName),
-        text(documentRef, 'span', 'company-directory-card-stats', `${company.workCount} 部作品`)
+        text(documentRef, 'span', 'company-directory-card-work-count', `${company.workCount} 部`),
+        text(documentRef, 'span', 'company-directory-card-vote-count', `${formatCount(company.totalVoteCount)} 票`)
       );
-      button.append(avatar, body);
-      button.addEventListener('click', () => onSelectCompany(company.companyId));
-      list.append(button);
+      open.append(overlay);
+      open.addEventListener('click', () => onSelectCompany(company.companyId));
+      const select = documentRef.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'company-directory-card-select';
+      select.checked = selectedCompanyIds.has(company.companyId);
+      select.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
+      select.addEventListener('change', () => onToggleCompany(company.companyId, select.checked));
+      card.append(open, select);
+      list.append(card);
     }
     const selected = companies.find(company => company.companyId === selectedCompanyId) ?? null;
     detail.hidden = selected === null;
     if (!selected) return;
     detailTitle.textContent = selected.brandName;
     detailAvatar.replaceChildren();
-    avatarFor(detailAvatar, selected, 'company-detail-avatar-image', avatarUrlForCompany);
+    imageFor(detailAvatar, selected, 'company-detail-avatar-image', imageUrlForCompany);
     detailMeta.textContent = `${selected.workCount} 部作品 · ${selected.releaseYearStart ?? '未知'}-${selected.releaseYearEnd ?? '未知'} · 总评分 ${formatCount(selected.totalVoteCount)} · 平均每作 ${formatCount(selected.averageVoteCount)}`;
     detailWorks.replaceChildren();
     for (const work of selectedWorks) {
@@ -98,6 +108,7 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
   return Object.freeze({ render, elements: Object.freeze({ search, sort, list, detail }) });
 }
 
-export function companyAvatarUrl(avatar, assetBase) {
-  return avatar ? resolveAssetUrl(avatar.path, assetBase) : null;
+export function companyImageUrl(company, assetBase) {
+  const path = company?.avatar?.path ?? company?.fallbackCoverPath;
+  return typeof path === 'string' && path.length > 0 ? resolveAssetUrl(path, assetBase) : null;
 }

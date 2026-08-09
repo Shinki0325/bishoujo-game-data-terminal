@@ -49,7 +49,9 @@ import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
-import { createCompanyDirectoryView, companyAvatarUrl } from './views/company-directory-view.js';
+import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
+import { createCompanyRankingView } from './views/company-ranking-view.js';
+import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
 import {
@@ -116,6 +118,9 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companyView: requiredElement('company-view'),
   companySearch: requiredElement('company-directory-search'),
   companySort: requiredElement('company-sort'),
+  companyRankingToggle: requiredElement('company-ranking-toggle'),
+  companyRankingClose: requiredElement('company-ranking-close'),
+  companyRanking: requiredElement('company-ranking'),
   companyBack: requiredElement('company-back'),
   companyList: requiredElement('company-list'),
   companyDetail: requiredElement('company-detail'),
@@ -569,9 +574,15 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function showDetails(work, filterById, workAliasesById = null) {
+function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null) {
   elements.detailsTitle.textContent = work.title;
-  elements.detailsBrand.textContent = work.brandName;
+  elements.detailsBrand.replaceChildren();
+  const brandButton = document.createElement('button');
+  brandButton.type = 'button';
+  brandButton.className = 'details-company-link';
+  brandButton.textContent = work.brandName;
+  brandButton.addEventListener('click', () => onOpenCompany?.(work.brandId));
+  elements.detailsBrand.append(brandButton);
   const aliases = workAliasesById?.get?.(work.workId) ?? [];
   elements.detailsAliasRow.hidden = aliases.length === 0;
   elements.detailsAliases.textContent = aliases.join(' / ');
@@ -782,9 +793,24 @@ async function initialize() {
   let lastRenderedModel = null;
   let replacementWork = null;
   let companyDirectoryOpen = false;
+  let companyRankingOpen = false;
   let companyQuery = '';
   let companySort = 'workCount-desc';
   let selectedCompanyId = null;
+  const companyRanking = createCompanyRanking({
+    companies: companyDirectory.companies,
+    tiers: controller.inspectState().tiers,
+    storage: window.localStorage
+  });
+  let companyRankingView;
+
+  function openCompanyDirectory(companyId = null) {
+    companyDirectoryOpen = true;
+    selectedCompanyId = companyId;
+    if (elements.detailsDialog.open) elements.detailsDialog.close();
+    if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
+    renderCompanyDirectory();
+  }
 
   async function coverUrlForWork(work) {
     if (mediaStore !== null && work.localMediaKind === 'custom') {
@@ -1184,7 +1210,7 @@ async function initialize() {
       return runStateChange(() => controller.setFilterState({ selectedOnly }));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById, workAliasesById);
+      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
     },
     onCardViewChange(cardView) {
       return runStateChange(() => controller.setSelectionCardView(cardView));
@@ -1209,7 +1235,16 @@ async function initialize() {
       companies,
       selectedCompanyId,
       selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId) : [],
-      avatarUrlForCompany: avatar => companyAvatarUrl(avatar, assetBase)
+      selectedCompanyIds: companyRanking.inspect().selectedSet,
+      imageUrlForCompany: company => companyImageUrl(company, assetBase)
+    });
+    elements.companyRanking.hidden = !companyRankingOpen;
+    elements.companyRankingToggle.setAttribute('aria-expanded', String(companyRankingOpen));
+    companyRankingView?.render({
+      companies: companyDirectory.companies,
+      tiers: controller.inspectState().tiers,
+      ranking: companyRanking.inspect(),
+      imageUrlForCompany: company => companyImageUrl(company, assetBase)
     });
   }
   companyDirectoryView = createCompanyDirectoryView({
@@ -1226,8 +1261,27 @@ async function initialize() {
       selectedCompanyId = companyId;
       renderCompanyDirectory();
     },
+    onToggleCompany(companyId, selected) {
+      companyRanking.toggle(companyId, selected);
+      renderCompanyDirectory();
+    },
     onOpenWork(work) {
-      showDetails(work, filterById, workAliasesById);
+      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    }
+  });
+  companyRankingView = createCompanyRankingView({
+    root: elements.companyView,
+    onMoveToTier(companyId, tierId) {
+      companyRanking.moveToTier(companyId, tierId);
+      renderCompanyDirectory();
+    },
+    onMoveToCandidates(companyId) {
+      companyRanking.moveToCandidates(companyId);
+      renderCompanyDirectory();
+    },
+    onOpenCompany(companyId) {
+      selectedCompanyId = companyId;
+      renderCompanyDirectory();
     }
   });
   let mobileHelpShown = false;
@@ -1302,7 +1356,7 @@ async function initialize() {
         : controller.deselectWorks([work.workId]));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById, workAliasesById);
+      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1357,7 +1411,7 @@ async function initialize() {
       else openMediaUpload(files);
     },
     onOpenDetails(work) {
-      showDetails(work, filterById, workAliasesById);
+      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1918,8 +1972,17 @@ async function initialize() {
   });
   elements.companyBack.addEventListener('click', () => {
     companyDirectoryOpen = false;
+    companyRankingOpen = false;
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     void render();
+  });
+  elements.companyRankingToggle.addEventListener('click', () => {
+    companyRankingOpen = !companyRankingOpen;
+    renderCompanyDirectory();
+  });
+  elements.companyRankingClose.addEventListener('click', () => {
+    companyRankingOpen = false;
+    renderCompanyDirectory();
   });
   elements.mobileCompanyMode.addEventListener('click', () => {
     companyDirectoryOpen = true;
