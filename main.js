@@ -10,6 +10,8 @@ import { createHistory } from './lib/history.js';
 import { createAppController } from './lib/app-controller.js';
 import { createCustomWork } from './lib/custom-work.js';
 import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
+import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
+import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import { createStickerDocument, STICKER_TYPES } from './lib/sticker-document.js';
@@ -47,6 +49,7 @@ import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingView } from './views/ranking-view.js';
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
+import { createCompanyDirectoryView, companyAvatarUrl } from './views/company-directory-view.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
 import {
@@ -95,6 +98,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileHelpDismiss: requiredElement('mobile-help-dismiss'),
   mobileTitleSearch: requiredElement('mobile-title-search'),
   mobileFilterToggle: requiredElement('mobile-filter-toggle'),
+  mobileCompanyMode: requiredElement('mobile-company-mode'),
   mobileShareWarning: requiredElement('mobile-share-warning'),
   mobileShareWarningDismiss: requiredElement('mobile-share-warning-dismiss'),
   shareImportDialog: requiredElement('share-import-dialog'),
@@ -106,8 +110,20 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   shareImportCancel: requiredElement('share-import-cancel'),
   modeSelection: requiredElement('mode-selection'),
   modeRanking: requiredElement('mode-ranking'),
+  modeCompany: requiredElement('mode-company'),
   selectionView: requiredElement('selection-view'),
   rankingView: requiredElement('ranking-view'),
+  companyView: requiredElement('company-view'),
+  companySearch: requiredElement('company-directory-search'),
+  companySort: requiredElement('company-sort'),
+  companyBack: requiredElement('company-back'),
+  companyList: requiredElement('company-list'),
+  companyDetail: requiredElement('company-detail'),
+  companyDetailTitle: requiredElement('company-detail-title'),
+  companyDetailAvatar: requiredElement('company-detail-avatar'),
+  companyDetailMeta: requiredElement('company-detail-meta'),
+  companyDetailWorks: requiredElement('company-detail-works'),
+  companyEmpty: requiredElement('company-empty'),
   selectedCount: requiredElement('selected-count'),
   rankedCount: requiredElement('ranked-count'),
   unrankedCount: requiredElement('global-unranked-count'),
@@ -491,10 +507,14 @@ async function fetchOptionalJsonWithSha256(url, label) {
   }
 }
 
-function projectBrandsWithAliases(brands, companyAliasesById) {
+function projectBrandsWithAliases(brands, companyAliasesById, companyPinyinById = null) {
   return brands.map(brand => {
     const aliases = companyAliasesById?.get?.(brand.brandId);
-    if (!Array.isArray(aliases) || aliases.length === 0) return brand;
+    const pinyin = companyPinyinById?.get?.(brand.brandId);
+    if (
+      (!Array.isArray(aliases) || aliases.length === 0)
+      && (!Array.isArray(pinyin) || pinyin.length === 0)
+    ) return brand;
     const existing = Array.isArray(brand.searchAliases) ? brand.searchAliases : [];
     const seen = new Set();
     const merged = [...existing, ...aliases].filter(alias => {
@@ -503,7 +523,15 @@ function projectBrandsWithAliases(brands, companyAliasesById) {
       seen.add(normalized);
       return true;
     });
-    return { ...brand, searchAliases: merged };
+    const existingPinyin = Array.isArray(brand.searchPinyin) ? brand.searchPinyin : [];
+    const mergedPinyin = [...existingPinyin, ...(Array.isArray(pinyin) ? pinyin : [])]
+      .map(value => String(value).normalize('NFKC').trim().toLocaleLowerCase('en-US'))
+      .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
+    return {
+      ...brand,
+      searchAliases: merged,
+      ...(mergedPinyin.length > 0 ? { searchPinyin: mergedPinyin } : {})
+    };
   });
 }
 
@@ -615,7 +643,8 @@ async function initialize() {
     filterAuthoritySource,
     workGroupAuthoritySource,
     reviewQueueSource,
-    enrichmentSource
+    enrichmentSource,
+    companyProfileSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -623,7 +652,8 @@ async function initialize() {
     fetchJsonWithSha256(DATA_URLS.filterAuthority, '筛选权威'),
     fetchJsonWithSha256(DATA_URLS.workGroups, '作品组权威'),
     fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue'),
-    fetchOptionalJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar')
+    fetchOptionalJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar'),
+    fetchOptionalJsonWithSha256(DATA_URLS.companyProfile, 'company profile sidecar')
   ]));
   const sampleSource = catalogSource.value;
   const backendIndexes = backendIndexesSource.value;
@@ -663,10 +693,37 @@ async function initialize() {
     }
   }
   const workAliasesById = enrichment?.workAliasesById ?? null;
+  const workPinyinById = enrichment?.workPinyinById ?? null;
   const workerWorkAliasesById = workAliasesById === null
     ? null
     : new Map(workAliasesById);
-  const brands = projectBrandsWithAliases(sample.brands, enrichment?.companyAliasesById);
+  const workerWorkPinyinById = workPinyinById === null
+    ? null
+    : new Map(workPinyinById);
+  const brands = projectBrandsWithAliases(
+    sample.brands,
+    enrichment?.companyAliasesById,
+    enrichment?.companyPinyinById
+  );
+  let companyProfile = null;
+  if (companyProfileSource !== null) {
+    try {
+      companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+      });
+    } catch (error) {
+      console.warn('company profile sidecar rejected; continuing without avatars', error);
+    }
+  }
+  const companyDirectory = buildCompanyDirectory({
+    brands,
+    works: sample.works,
+    companyAliasesById: enrichment?.companyAliasesById,
+    companyPinyinById: enrichment?.companyPinyinById,
+    avatarByCompanyId: companyProfile?.avatarByCompanyId
+  });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   const worksById = new Map(sample.works.map(work => [work.workId, work]));
   let mediaStore = null;
@@ -702,7 +759,8 @@ async function initialize() {
     knownFilterIds: sample.filters.map(filter => filter.filterId),
     brands,
     backendIndexes: sample.backendIndexes,
-    workAliasesById: workerWorkAliasesById
+    workAliasesById: workerWorkAliasesById,
+    workPinyinById: workerWorkPinyinById
   }));
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
@@ -723,6 +781,10 @@ async function initialize() {
   let renderedFilterKey = null;
   let lastRenderedModel = null;
   let replacementWork = null;
+  let companyDirectoryOpen = false;
+  let companyQuery = '';
+  let companySort = 'workCount-desc';
+  let selectedCompanyId = null;
 
   async function coverUrlForWork(work) {
     if (mediaStore !== null && work.localMediaKind === 'custom') {
@@ -1134,6 +1196,40 @@ async function initialize() {
   });
   const filterIconHost = elements.filterToggle.querySelector('.toolbar-button-icon');
   filterIconHost?.replaceChildren(createActionIcon(document, 'filter'));
+  let companyDirectoryView;
+  function renderCompanyDirectory() {
+    const [sortKey, direction] = companySort.split('-');
+    const companies = searchCompanyDirectory(companyDirectory, companyQuery, { sortKey, direction });
+    const selected = companies.find(company => company.companyId === selectedCompanyId)
+      ?? companyDirectory.companies.find(company => company.companyId === selectedCompanyId)
+      ?? companies[0]
+      ?? null;
+    selectedCompanyId = selected?.companyId ?? null;
+    companyDirectoryView.render({
+      companies,
+      selectedCompanyId,
+      selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId) : [],
+      avatarUrlForCompany: avatar => companyAvatarUrl(avatar, assetBase)
+    });
+  }
+  companyDirectoryView = createCompanyDirectoryView({
+    root: elements.companyView,
+    onSearch(query) {
+      companyQuery = query;
+      renderCompanyDirectory();
+    },
+    onSort(value) {
+      companySort = value;
+      renderCompanyDirectory();
+    },
+    onSelectCompany(companyId) {
+      selectedCompanyId = companyId;
+      renderCompanyDirectory();
+    },
+    onOpenWork(work) {
+      showDetails(work, filterById, workAliasesById);
+    }
+  });
   let mobileHelpShown = false;
   const mobileHelpStorageKey = 'egs-tier-mobile-help-seen-v1';
 
@@ -1470,11 +1566,25 @@ async function initialize() {
 
   function renderWorkspace(model) {
     document.body.classList.toggle('is-mobile-companion', mobileCompanion);
+    if (companyDirectoryOpen) {
+      elements.modeSelection.setAttribute('aria-selected', 'false');
+      elements.modeRanking.setAttribute('aria-selected', 'false');
+      elements.modeCompany.setAttribute('aria-selected', 'true');
+      elements.modeSelection.tabIndex = -1;
+      elements.modeRanking.tabIndex = -1;
+      elements.modeCompany.tabIndex = 0;
+      elements.selectionView.hidden = true;
+      elements.rankingView.hidden = true;
+      elements.mobileSelectionView.hidden = true;
+      elements.companyView.hidden = false;
+      return;
+    }
     if (mobileCompanion) {
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
       elements.modeSelection.tabIndex = -1;
       elements.modeRanking.tabIndex = -1;
+      elements.modeCompany.tabIndex = -1;
       elements.selectionView.hidden = true;
       elements.rankingView.hidden = true;
       elements.mobileSelectionView.hidden = false;
@@ -1483,10 +1593,13 @@ async function initialize() {
     const ranking = model.state.workspaceMode === 'ranking';
     elements.modeSelection.setAttribute('aria-selected', String(!ranking));
     elements.modeRanking.setAttribute('aria-selected', String(ranking));
+    elements.modeCompany.setAttribute('aria-selected', 'false');
     elements.modeSelection.tabIndex = ranking ? -1 : 0;
     elements.modeRanking.tabIndex = ranking ? 0 : -1;
+    elements.modeCompany.tabIndex = -1;
     elements.selectionView.hidden = ranking;
     elements.rankingView.hidden = !ranking;
+    elements.companyView.hidden = true;
     elements.mobileSelectionView.hidden = true;
   }
 
@@ -1573,7 +1686,9 @@ async function initialize() {
     elements.unrankedCount.textContent = String(model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
     renderWorkspace(model);
-    if (mobileCompanion) {
+    if (companyDirectoryOpen) {
+      renderCompanyDirectory();
+    } else if (mobileCompanion) {
       mobileSelectionView.render({
         works: model.visibleWorks,
         selectedWorkIds: model.state.selectedWorkIds
@@ -1604,14 +1719,16 @@ async function initialize() {
       renderedFilterKey = nextFilterKey;
     }
     renderControlStates(model);
-    if (mobileCompanion) {
+    if (companyDirectoryOpen) {
+      // The directory owns its own scroll surface and is intentionally not persisted.
+    } else if (mobileCompanion) {
       mobileSelectionView.restoreScroll(mobileSelectionScrollPosition);
     } else if (model.state.workspaceMode === 'ranking') {
       rankingView.restoreScroll(rankingScrollPosition);
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
-    if (!mobileCompanion && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
+    if (!companyDirectoryOpen && !mobileCompanion && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
     if (rankingModel !== null && !mobileCompanion) void refreshRankingPreload(rankingModel);
@@ -1777,12 +1894,44 @@ async function initialize() {
   });
 
   elements.modeSelection.addEventListener('click', () => {
+    companyDirectoryOpen = false;
     return runStateChange(() => {
       return controller.setWorkspaceMode('selection');
     });
   });
   elements.modeRanking.addEventListener('click', () => {
+    companyDirectoryOpen = false;
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
+  });
+  elements.modeCompany.addEventListener('click', () => {
+    companyDirectoryOpen = true;
+    closeToolbarMenus();
+    const open = () => {
+      if (lastRenderedModel === null) {
+        window.setTimeout(open, 0);
+        return;
+      }
+      renderWorkspace(lastRenderedModel);
+      renderCompanyDirectory();
+    };
+    open();
+  });
+  elements.companyBack.addEventListener('click', () => {
+    companyDirectoryOpen = false;
+    if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
+    void render();
+  });
+  elements.mobileCompanyMode.addEventListener('click', () => {
+    companyDirectoryOpen = true;
+    const open = () => {
+      if (lastRenderedModel === null) {
+        window.setTimeout(open, 0);
+        return;
+      }
+      renderWorkspace(lastRenderedModel);
+      renderCompanyDirectory();
+    };
+    open();
   });
   elements.rankingHelpButton.addEventListener('click', () => help.openFull());
   elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());

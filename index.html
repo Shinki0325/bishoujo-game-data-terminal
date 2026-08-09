@@ -46,6 +46,14 @@
           <output id="global-unranked-count">0</output>
         </div>
       </div>
+      <button
+        id="mode-company"
+        type="button"
+        role="tab"
+        tabindex="-1"
+        aria-controls="company-view"
+        aria-selected="false"
+      >会社</button>
     </header>
 
     <main id="workspace" class="workspace">
@@ -56,6 +64,7 @@
             <button id="mobile-help-button" class="icon-button" type="button" aria-label="移动端使用说明" title="移动端使用说明">?</button>
           </div>
           <div class="mobile-selection-tools">
+            <button id="mobile-company-mode" type="button">会社</button>
             <label class="search-field" for="mobile-title-search">
               <span class="visually-hidden">搜索作品标题</span>
               <input id="mobile-title-search" type="search" placeholder="搜索标题" autocomplete="off">
@@ -369,6 +378,46 @@
           </div>
           <div id="ranking-candidate-grid" class="ranking-candidate-grid" aria-live="polite"></div>
         </section>
+      </section>
+      <section id="company-view" class="company-view" role="tabpanel" aria-labelledby="mode-company" hidden>
+        <header class="company-directory-header">
+          <div>
+            <p class="section-kicker">PUBLIC DIRECTORY</p>
+            <h2>会社目录</h2>
+            <p class="company-directory-summary">按作品数量浏览公开会社资料，拼音和别名仅用于搜索。</p>
+          </div>
+          <div class="company-directory-tools">
+            <label class="search-field" for="company-directory-search">
+              <span class="visually-hidden">搜索会社</span>
+              <input id="company-directory-search" type="search" placeholder="搜索会社名称、别名或拼音" autocomplete="off">
+            </label>
+            <label class="visually-hidden" for="company-sort">会社排序</label>
+            <select id="company-sort">
+              <option value="workCount-desc">作品数量</option>
+              <option value="averageScore-desc">平均评分</option>
+              <option value="releaseYearStart-asc">最早发售</option>
+              <option value="brandName-asc">名称</option>
+            </select>
+            <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button">返回排榜</button>
+          </div>
+        </header>
+        <div class="company-directory-layout">
+          <div>
+            <div id="company-list" class="company-directory-list" aria-live="polite"></div>
+            <p id="company-empty" class="company-empty" hidden>没有匹配的会社。</p>
+          </div>
+          <aside id="company-detail" class="company-directory-detail" hidden aria-live="polite">
+            <div class="company-detail-heading">
+              <div id="company-detail-avatar" class="company-detail-avatar"></div>
+              <div>
+                <h2 id="company-detail-title"></h2>
+                <p id="company-detail-meta"></p>
+              </div>
+            </div>
+            <h3>作品</h3>
+            <div id="company-detail-works" class="company-directory-works"></div>
+          </aside>
+        </div>
       </section>
     </main>
 

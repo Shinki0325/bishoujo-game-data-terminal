@@ -42,7 +42,8 @@ function normalizeCompanySearchText(value) {
 function companyMatchesQuery(brand, query) {
   if (!query) return true;
   const aliases = Array.isArray(brand.searchAliases) ? brand.searchAliases : [];
-  return [brand.brandName, ...aliases]
+  const pinyin = Array.isArray(brand.searchPinyin) ? brand.searchPinyin : [];
+  return [brand.brandName, ...aliases, ...pinyin]
     .some(value => normalizeCompanySearchText(value).includes(query));
 }
 
