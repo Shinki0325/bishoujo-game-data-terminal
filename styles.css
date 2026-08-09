@@ -246,21 +246,6 @@ h3 {
   min-height: calc(100dvh - var(--header-height));
 }
 
-.tool-header > #mode-company {
-  color: #dfe5e8;
-  background: #333c42;
-  border: 1px solid #69747c;
-  border-radius: var(--radius);
-  min-height: 34px;
-  padding: 0 14px;
-}
-
-.tool-header > #mode-company[aria-selected="true"] {
-  color: #ffffff;
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
 .company-view {
   min-height: calc(100dvh - var(--header-height));
   overflow: auto;
@@ -352,8 +337,8 @@ h3 {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: #20282d;
-  color: var(--muted);
+  background: #f6f8f9;
+  color: #68757d;
 }
 
 .company-directory-card-avatar {
@@ -3097,15 +3082,6 @@ dialog::backdrop {
   .workspace-counts {
     min-width: 0;
     width: 100%;
-  }
-
-  .tool-header > #mode-company {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  body.is-mobile-companion .tool-header > #mode-company {
-    display: block;
   }
 
   .company-view {

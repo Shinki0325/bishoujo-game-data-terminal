@@ -13,6 +13,11 @@ function text(documentRef, tag, className, value) {
   return element;
 }
 
+function formatCount(value) {
+  if (!Number.isFinite(value)) return '暂无';
+  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(value);
+}
+
 export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCompany, onOpenWork }) {
   if (!root || typeof root.querySelector !== 'function') throw new TypeError('root must provide querySelector');
   if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onOpenWork !== 'function') {
@@ -78,7 +83,7 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     detailTitle.textContent = selected.brandName;
     detailAvatar.replaceChildren();
     avatarFor(detailAvatar, selected, 'company-detail-avatar-image', avatarUrlForCompany);
-    detailMeta.textContent = `${selected.workCount} 部作品 · ${selected.releaseYearStart ?? '未知'}-${selected.releaseYearEnd ?? '未知'} · 平均 ${selected.averageScore ?? '暂无'}`;
+    detailMeta.textContent = `${selected.workCount} 部作品 · ${selected.releaseYearStart ?? '未知'}-${selected.releaseYearEnd ?? '未知'} · 总评分 ${formatCount(selected.totalVoteCount)} · 平均每作 ${formatCount(selected.averageVoteCount)}`;
     detailWorks.replaceChildren();
     for (const work of selectedWorks) {
       const item = documentRef.createElement('button');
