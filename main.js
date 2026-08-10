@@ -46,11 +46,10 @@ import {
   FILTER_GROUP_ORDER
 } from './lib/attribute-filters.js';
 import { createFilterView } from './views/filter-view.js';
-import { buildRankingModel, createRankingView } from './views/ranking-view.js';
+import { buildRankingModel, createRankingCard, createRankingView } from './views/ranking-view.js';
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
-import { createCompanyRankingView } from './views/company-ranking-view.js';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -143,6 +142,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   catalogResults: requiredElement('catalog-results'),
   tierBoard: requiredElement('tier-board'),
   rankingCandidateSearch: requiredElement('ranking-candidate-search'),
+  rankingCandidatesTitle: requiredElement('ranking-candidates-title'),
   rankingCandidateGrid: requiredElement('ranking-candidate-grid'),
   undoEdit: requiredElement('undo-edit'),
   redoEdit: requiredElement('redo-edit'),
@@ -798,14 +798,13 @@ async function initialize() {
   let rankingSubject = 'work';
   let companyQuery = '';
   let companySort = 'workCount-desc';
+  let companyCandidateQuery = '';
   let selectedCompanyId = null;
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
     storage: window.localStorage
   });
-  let companyRankingView;
-  elements.rankingView.append(elements.companyRanking);
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
 
@@ -1245,17 +1244,76 @@ async function initialize() {
     });
   }
 
-  function renderCompanyRanking() {
-    elements.rankingView.classList.toggle('is-company-ranking', rankingSubject === 'company');
-    elements.companyRanking.hidden = rankingSubject !== 'company';
-    elements.rankingSubjectWork.setAttribute('aria-pressed', String(rankingSubject === 'work'));
-    elements.rankingSubjectCompany.setAttribute('aria-pressed', String(rankingSubject === 'company'));
-    companyRankingView?.render({
-      companies: companyDirectory.companies,
-      tiers: controller.inspectState().tiers,
-      ranking: companyRanking.inspect(),
-      imageUrlForCompany: company => companyImageUrl(company, assetBase)
+  function companyRankingItems() {
+    return new Map(companyDirectory.companies.map(company => [
+      company.companyId,
+      {
+        workId: company.companyId,
+        title: company.brandName,
+        company,
+        companyImageUrl: companyImageUrl(company, assetBase),
+        coverPath: companyImageUrl(company, assetBase) ?? `company:${company.companyId}`,
+        coverWidth: 512,
+        coverHeight: 512
+      }
+    ]));
+  }
+
+  function createCompanyRankingCard(documentRef, companyItem, callbacks) {
+    const card = documentRef.createElement('article');
+    card.className = 'ranking-card is-company-card';
+    card.dataset.workId = companyItem.workId;
+    card.draggable = true;
+    card.tabIndex = 0;
+    card.setAttribute('aria-label', companyItem.title);
+    const cover = documentRef.createElement('button');
+    cover.type = 'button';
+    cover.className = 'ranking-card-cover';
+    cover.setAttribute('aria-label', `打开会社 ${companyItem.title}`);
+    cover.title = `打开会社 ${companyItem.title}`;
+    const image = documentRef.createElement('img');
+    image.alt = '';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.draggable = false;
+    image.src = companyItem.companyImageUrl ?? '';
+    image.addEventListener('error', () => {
+      image.hidden = true;
+      card.classList.add('is-image-missing');
+    }, { once: true });
+    cover.append(image);
+    const title = documentRef.createElement('span');
+    title.className = 'ranking-card-title';
+    title.dataset.field = 'title';
+    title.textContent = companyItem.title;
+    card.append(cover, title);
+    cover.addEventListener('click', event => {
+      event.stopPropagation();
+      callbacks.onOpenDetails(companyItem);
     });
+    card.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      callbacks.onContextMenu(companyItem, card, event);
+    });
+    card.addEventListener('dragstart', event => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData?.('text/plain', companyItem.workId);
+      }
+      callbacks.onDragStart(companyItem, card, event);
+    });
+    card.addEventListener('dragend', event => callbacks.onDragEnd(companyItem, card, event));
+    return card;
+  }
+
+  function buildCompanyRankingModel() {
+    const ranking = companyRanking.inspect();
+    const state = controller.inspectState();
+    return buildRankingModel({
+      selectedWorkIds: ranking.selectedCompanyIds,
+      tiers: state.tiers,
+      tierOrder: ranking.tierOrder
+    }, companyRankingItems(), companyCandidateQuery);
   }
   companyDirectoryView = createCompanyDirectoryView({
     root: elements.companyView,
@@ -1277,20 +1335,6 @@ async function initialize() {
     },
     onOpenWork(work) {
       showDetails(work, filterById, workAliasesById, openCompanyDirectory);
-    }
-  });
-  companyRankingView = createCompanyRankingView({
-    root: elements.rankingView,
-    onMoveToTier(companyId, tierId) {
-      companyRanking.moveToTier(companyId, tierId);
-      renderCompanyRanking();
-    },
-    onMoveToCandidates(companyId) {
-      companyRanking.moveToCandidates(companyId);
-      renderCompanyRanking();
-    },
-    onOpenCompany(companyId) {
-      openCompanyDirectory(companyId);
     }
   });
   let mobileHelpShown = false;
@@ -1390,28 +1434,42 @@ async function initialize() {
   });
   const rankingView = createRankingView({
     root: elements.rankingView,
+    createCard: (documentRef, item, callbacks) => rankingSubject === 'company'
+      ? createCompanyRankingCard(documentRef, item, callbacks)
+      : createRankingCard(documentRef, item, callbacks),
     onMoveToTier(workId, tierId, insertionIndex) {
+      if (rankingSubject === 'company') {
+        return runStateChange(() => companyRanking.moveToTier(workId, tierId, insertionIndex));
+      }
       return runStateChange(() => controller.moveToTier(workId, tierId, insertionIndex));
     },
     onMoveToUnranked(workId) {
+      if (rankingSubject === 'company') {
+        return runStateChange(() => companyRanking.moveToCandidates(workId));
+      }
       return runStateChange(() => controller.moveToUnranked(workId));
     },
     onTierConfigChange(nextTiers) {
+      companyRanking.setTiers(nextTiers);
       return runStateChange(() => controller.saveTierConfig(nextTiers));
     },
     onTierDelete(tierId) {
       const state = controller.inspectState();
       const tier = state.tiers.find(item => item.id === tierId);
       if (!tier || state.tiers.length <= 3) return false;
-      const count = state.tierOrder[tierId]?.length ?? 0;
+      const count = rankingSubject === 'company'
+        ? companyRanking.inspect().tierOrder[tierId]?.length ?? 0
+        : state.tierOrder[tierId]?.length ?? 0;
       if (count > 0 && !window.confirm(`等级“${tier.name}”中有 ${count} 部作品，删除后这些作品将移回候选区。是否继续？`)) {
         return false;
       }
       const nextTiers = state.tiers.filter(item => item.id !== tierId);
+      companyRanking.setTiers(nextTiers);
       return runStateChange(() => controller.saveTierConfig(nextTiers));
     },
     onAddTier() {
       const appended = appendTier(controller.inspectState().tiers, () => crypto.randomUUID());
+      companyRanking.setTiers(appended);
       rankingView.focusTier(appended.at(-1).id);
       return runStateChange(() => controller.saveTierConfig(appended));
     },
@@ -1420,6 +1478,10 @@ async function initialize() {
       else openMediaUpload(files);
     },
     onOpenDetails(work) {
+      if (rankingSubject === 'company') {
+        openCompanyDirectory(work.workId);
+        return;
+      }
       showDetails(work, filterById, workAliasesById, openCompanyDirectory);
     },
     onOpenMedia(work) {
@@ -1430,31 +1492,53 @@ async function initialize() {
     },
     onCandidateSearch(query) {
       if (importBusy) return;
+      if (rankingSubject === 'company') {
+        companyCandidateQuery = query;
+        if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
+        rankingScrollPosition = rankingView.captureScroll();
+        void render();
+        return;
+      }
       candidateTitleQuery = query;
       if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
       rankingScrollPosition = rankingView.captureScroll();
       void render();
     },
     onAnnotationChange(workId, value) {
-      presentation.setAnnotation(workId, value);
-      rankingView.setAnnotations(presentation.inspect().annotations);
+      const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+      activePresentation.setAnnotation(workId, value);
+      rankingView.setAnnotations(activePresentation.inspect().annotations);
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
     },
     onRemoveCandidate(workId) {
+      if (rankingSubject === 'company') {
+        return runStateChange(() => companyRanking.toggle(workId, false));
+      }
       return runStateChange(() => controller.deselectWorks([workId]));
     },
     onRemoveCandidates(workIds) {
+      if (rankingSubject === 'company') {
+        return runStateChange(() => workIds.every(workId => companyRanking.toggle(workId, false)));
+      }
       return runStateChange(() => controller.deselectWorks(workIds));
     },
     onMoveCandidatesToTier(workIds, tierId, insertionIndex) {
+      if (rankingSubject === 'company') {
+        return runStateChange(() => workIds.every((workId, offset) => (
+          companyRanking.moveToTier(workId, tierId, insertionIndex + offset)
+        )));
+      }
       return runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
     },
+    showImportTile: () => rankingSubject === 'work',
     assetBase
   });
   const presentation = createRankingPresentation({
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
   });
+  // Company ranking shares the work ranking presentation state; only ranking data is separate.
+  const companyPresentation = presentation;
   const help = createRankingHelp({
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value),
@@ -1680,15 +1764,27 @@ async function initialize() {
   }
 
   function renderControlStates(model) {
+    const companyState = rankingSubject === 'company' ? companyRanking.inspect() : null;
+    const activePresentation = companyState === null ? presentation : companyPresentation;
+    const activeRankingState = companyState === null
+      ? model
+      : {
+        ...model,
+        selectedCount: companyState.selectedCompanyIds.length,
+        rankedCount: companyState.rankedCount,
+        unrankedCount: companyState.candidateCompanyIds.length,
+        canUndo: companyState.canUndo,
+        canRedo: companyState.canRedo
+      };
     elements.modeSelection.disabled = importBusy;
     elements.modeRanking.disabled = importBusy;
-    elements.undoEdit.disabled = importBusy || !model.canUndo;
-    elements.redoEdit.disabled = importBusy || !model.canRedo;
-    elements.clearBoard.disabled = importBusy || model.rankedCount === 0;
-    elements.clearCandidates.disabled = importBusy || model.selectedCount === 0;
+    elements.undoEdit.disabled = importBusy || !activeRankingState.canUndo;
+    elements.redoEdit.disabled = importBusy || !activeRankingState.canRedo;
+    elements.clearBoard.disabled = importBusy || activeRankingState.rankedCount === 0;
+    elements.clearCandidates.disabled = importBusy || activeRankingState.selectedCount === 0;
     elements.clearAnnotations.disabled = importBusy
-      || Object.keys(presentation.inspect().annotations).length === 0;
-    elements.rankingCandidateSearch.disabled = importBusy || model.unrankedCount === 0;
+      || Object.keys(activePresentation.inspect().annotations).length === 0;
+    elements.rankingCandidateSearch.disabled = importBusy || activeRankingState.unrankedCount === 0;
     elements.rankingShowCounts.disabled = importBusy;
     elements.rankingShowTitles.disabled = importBusy;
     for (const [, input] of scaleControls) input.disabled = importBusy;
@@ -1699,7 +1795,7 @@ async function initialize() {
     elements.displayMenuButton.disabled = importBusy;
     elements.fileMenuButton.disabled = importBusy;
     elements.exportState.disabled = importBusy;
-    elements.exportPng.disabled = importBusy || model.rankedCount === 0 || pngExportInProgress;
+    elements.exportPng.disabled = importBusy || activeRankingState.rankedCount === 0 || pngExportInProgress;
   }
 
   function setImportBusy(nextBusy) {
@@ -1756,30 +1852,39 @@ async function initialize() {
     if (outcome.status === 'stale') return false;
     const model = controller.inspect(outcome.workIds);
     const ranking = model.state.workspaceMode === 'ranking';
+    const companyState = ranking && rankingSubject === 'company' ? companyRanking.inspect() : null;
+    const activePresentation = companyState === null ? presentation : companyPresentation;
     let rankingModel = null;
-    elements.selectedCount.textContent = String(model.selectedCount);
-    elements.rankedCount.textContent = String(model.rankedCount);
-    elements.unrankedCount.textContent = String(model.unrankedCount);
+    elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
+    elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
+    elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
-    } else if (ranking && rankingSubject === 'company') {
-      renderCompanyRanking();
-    } else if (mobileCompanion) {
+    } else if (mobileCompanion && !(ranking && rankingSubject === 'company')) {
       mobileSelectionView.render({
         works: model.visibleWorks,
         selectedWorkIds: model.state.selectedWorkIds
       });
     } else if (ranking) {
-      renderCompanyRanking();
-      if (rankingSubject === 'work') {
-        rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
-        rankingView.render(rankingModel, await resolveCoverUrls([
-          ...rankingModel.candidateWorks,
-          ...rankingModel.tiers.flatMap(tier => tier.works)
-        ]));
-      }
+      rankingModel = rankingSubject === 'company'
+        ? buildCompanyRankingModel()
+        : buildRankingModel(model.state, worksById, candidateTitleQuery);
+      elements.rankingShowCounts.checked = activePresentation.inspect().showCounts;
+      elements.rankingShowTitles.checked = activePresentation.inspect().showTitles;
+      rankingView.setShowCounts(activePresentation.inspect().showCounts);
+      rankingView.setShowTitles(activePresentation.inspect().showTitles);
+      rankingView.setAnnotations(activePresentation.inspect().annotations);
+      elements.rankingView.classList.toggle('is-company-ranking', rankingSubject === 'company');
+      elements.rankingSubjectWork.setAttribute('aria-pressed', String(rankingSubject === 'work'));
+      elements.rankingSubjectCompany.setAttribute('aria-pressed', String(rankingSubject === 'company'));
+      elements.rankingCandidatesTitle.textContent = rankingSubject === 'company' ? '候选会社' : '候选作品';
+      elements.rankingCandidateSearch.placeholder = rankingSubject === 'company' ? '搜索候选会社' : '搜索候选标题';
+      rankingView.render(rankingModel, rankingSubject === 'work' ? await resolveCoverUrls([
+        ...rankingModel.candidateWorks,
+        ...rankingModel.tiers.flatMap(tier => tier.works)
+      ]) : null);
     } else {
       selectionView.render({
         works: model.visibleWorks,
@@ -1812,7 +1917,9 @@ async function initialize() {
     if (!companyDirectoryOpen && !mobileCompanion && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
-    if (rankingModel !== null && !mobileCompanion) void refreshRankingPreload(rankingModel);
+    if (rankingModel !== null && rankingSubject === 'work' && !mobileCompanion) {
+      void refreshRankingPreload(rankingModel);
+    }
     else cancelRankingPreload();
     showMobileHelpOnce();
     return true;
@@ -2037,10 +2144,12 @@ async function initialize() {
   elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());
   elements.rankingHelpDismiss.addEventListener('click', () => elements.rankingHelp.close());
   elements.rankingShowCounts.addEventListener('change', () => {
-    rankingView.setShowCounts(presentation.setShowCounts(elements.rankingShowCounts.checked));
+    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+    rankingView.setShowCounts(activePresentation.setShowCounts(elements.rankingShowCounts.checked));
   });
   elements.rankingShowTitles.addEventListener('change', () => {
-    rankingView.setShowTitles(presentation.setShowTitles(elements.rankingShowTitles.checked));
+    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+    rankingView.setShowTitles(activePresentation.setShowTitles(elements.rankingShowTitles.checked));
   });
   elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
   elements.mediaFiles.addEventListener('change', () => {
@@ -2073,24 +2182,37 @@ async function initialize() {
   }
   elements.clearCandidates.addEventListener('click', () => {
     closeToolbarMenus();
+    if (rankingSubject === 'company') {
+      return runStateChange(() => companyRanking.clearCandidates());
+    }
     return runStateChange(() => controller.clearCandidates());
   });
   elements.clearBoard.addEventListener('click', () => {
     closeToolbarMenus();
+    if (rankingSubject === 'company') {
+      return runStateChange(() => companyRanking.clearBoard());
+    }
     return runStateChange(() => controller.clearBoard());
   });
   elements.clearAnnotations.addEventListener('click', () => {
     if (elements.clearAnnotations.disabled) return;
     if (!window.confirm('清空全部本地标记？')) return;
-    presentation.clearAnnotations();
-    rankingView.setAnnotations(presentation.inspect().annotations);
+    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+    activePresentation.clearAnnotations();
+    rankingView.setAnnotations(activePresentation.inspect().annotations);
     closeToolbarMenus();
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
   });
   elements.undoEdit.addEventListener('click', () => {
+    if (rankingSubject === 'company') {
+      return runStateChange(() => companyRanking.undo());
+    }
     return runStateChange(() => controller.undo());
   });
   elements.redoEdit.addEventListener('click', () => {
+    if (rankingSubject === 'company') {
+      return runStateChange(() => companyRanking.redo());
+    }
     return runStateChange(() => controller.redo());
   });
   elements.importState.addEventListener('click', () => {
@@ -2101,6 +2223,19 @@ async function initialize() {
     const file = elements.stateFile.files?.[0] ?? null;
     elements.stateFile.value = '';
     if (file === null) return;
+    if (rankingSubject === 'company') {
+      try {
+        companyRanking.importState(JSON.parse(await file.text()));
+        companyCandidateQuery = '';
+        rankingScrollPosition = { top: 0, left: 0, tiers: {}, poolLeft: 0 };
+        void render();
+        announce('会社排榜 JSON 已导入。', 'success');
+      } catch (error) {
+        announce('会社排榜 JSON 无效，未修改当前排榜。', 'error');
+        console.error(error);
+      }
+      return;
+    }
     const outcome = await importCoordinator.importFile(file);
     if (outcome.status === 'stale') return;
     if (outcome.status === 'error') {
@@ -2131,6 +2266,20 @@ async function initialize() {
     if (importBusy) return;
     closeToolbarMenus();
     try {
+      if (rankingSubject === 'company') {
+        const ranking = companyRanking.inspect();
+        const result = downloadJson({
+          filename: 'company-ranking-v1.json',
+          text: JSON.stringify({
+            schemaVersion: 1,
+            selectedCompanyIds: ranking.selectedCompanyIds,
+            tierOrder: ranking.tierOrder
+          }, null, 2),
+          mimeType: 'application/json;charset=utf-8'
+        });
+        announce(`会社排榜 JSON 已导出：${result.filename}`, 'success');
+        return;
+      }
       const result = controller.exportJson();
       announce(`JSON 已导出：${result.filename}`, 'success');
     } catch (error) {
@@ -2141,24 +2290,33 @@ async function initialize() {
 
   elements.exportPng.addEventListener('click', async () => {
     if (importBusy || pngExportInProgress) return;
-    const snapshot = lastRenderedModel ?? controller.inspect([]);
-    if (snapshot.rankedCount === 0) return;
+    const isCompanyRanking = rankingSubject === 'company';
+    const snapshot = isCompanyRanking ? null : (lastRenderedModel ?? controller.inspect([]));
+    const companySnapshot = isCompanyRanking ? companyRanking.inspect() : null;
+    const rankedCount = isCompanyRanking ? companySnapshot.rankedCount : snapshot.rankedCount;
+    if (rankedCount === 0) return;
 
     pngExportInProgress = true;
     renderControlStates(snapshot);
     try {
-      const exportWorksById = new Map();
-      for (const { id: tierId } of snapshot.state.tiers) {
-        for (const workId of snapshot.state.tierOrder[tierId]) {
-          const work = worksById.get(workId);
-          if (work) exportWorksById.set(workId, work);
+      const exportState = isCompanyRanking
+        ? controller.inspectState()
+        : snapshot.state;
+      const exportTierOrder = isCompanyRanking ? companySnapshot.tierOrder : exportState.tierOrder;
+      const exportWorksById = isCompanyRanking ? companyRankingItems() : new Map();
+      for (const { id: tierId } of exportState.tiers) {
+        for (const workId of exportTierOrder[tierId]) {
+          if (!isCompanyRanking) {
+            const work = worksById.get(workId);
+            if (work) exportWorksById.set(workId, work);
+          }
         }
       }
       const result = await exportTierPng({
-        tiers: snapshot.state.tiers,
-        tierOrder: snapshot.state.tierOrder,
+        tiers: exportState.tiers,
+        tierOrder: exportTierOrder,
         worksById: exportWorksById,
-        presentation: presentation.inspect(),
+        presentation: (isCompanyRanking ? companyPresentation : presentation).inspect(),
         createCanvas({ width, height }) {
           const canvas = document.createElement('canvas');
           canvas.width = width;
@@ -2168,6 +2326,7 @@ async function initialize() {
         fontsReady: document.fonts?.ready ?? Promise.resolve(),
         loadCover: async (_coverPath, record) => {
           const work = record.work;
+          if (isCompanyRanking) return loadImageUrl(work.companyImageUrl, { crossOrigin: 'anonymous' });
           const url = await coverUrlForWork(work);
           return loadImageUrl(url, { crossOrigin: work.localMediaKind === 'custom' ? null : 'anonymous' });
         }

@@ -64377,9 +64377,9 @@
       "sha256": "31a4369fc48e779e609bea013b3c9b3f4f47fff9956e12660564e3a9fd03813a"
     },
     {
-      "bytes": 4040,
+      "bytes": 6688,
       "path": "lib/company-ranking.js",
-      "sha256": "0505308ffeb82327c356bbfb92977e0a1f85196f544167fde59773fda5a83273"
+      "sha256": "33d84d48bcaf4ee32348d16e464def102458c36acd91433ac7abcaf139445511"
     },
     {
       "bytes": 935,
@@ -64487,9 +64487,9 @@
       "sha256": "5cca647d02fba1a8774d625bf2e09f9f8ea98c11db9f3e0b20265b4a907689c4"
     },
     {
-      "bytes": 8593,
+      "bytes": 8751,
       "path": "lib/ranking-presentation.js",
-      "sha256": "9bec7d2c295ae50cc251d656460022a6f4c11141883d3b030fca0e11000ae2c7"
+      "sha256": "a16f0feae6b488c9b64e5a1c45bfea89bbb2294179f209ea7a396ebb7e876544"
     },
     {
       "bytes": 1433,
@@ -64547,14 +64547,14 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 85895,
+      "bytes": 93612,
       "path": "main.js",
-      "sha256": "31b99dfb260912a714d62de85b17a44f9762deb40869ea3a7e607a84836a3bc7"
+      "sha256": "a41d7519ea156bf68f125ca9504e0b81892145ac05300ece7bb4aa284f86852d"
     },
     {
-      "bytes": 65872,
+      "bytes": 65752,
       "path": "styles.css",
-      "sha256": "53959d7c8b8ebfd45a51569fd6bd292a56bb12bd07146a446e673c9cf3706fab"
+      "sha256": "eaa4a15f2338ad7a5cecc5595bb37743179d026dc47dd7392e2d9806fd396916"
     },
     {
       "bytes": 5671,
@@ -64582,9 +64582,9 @@
       "sha256": "ee4727b6b5aacb4b74b9685df57dcaf9ed27b329a81b986a509afc0d610f13d0"
     },
     {
-      "bytes": 50968,
+      "bytes": 51210,
       "path": "views/ranking-view.js",
-      "sha256": "e8b000c20268ebc239adde6f9715828d82bf4baf867c8f05bdd354f55547910a"
+      "sha256": "9ab9ceed805a408fd30891be7d769095c8af24453347768f21bd751211940722"
     },
     {
       "bytes": 18619,
@@ -64605,7 +64605,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 470276855,
+    "bytes": 470287500,
     "files": 12920
   }
 }

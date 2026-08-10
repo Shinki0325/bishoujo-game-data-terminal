@@ -259,6 +259,7 @@ export function buildRankingModel(state, worksById, candidateTitleQuery) {
 
 export function createRankingView({
   root,
+  createCard = (documentRef, item, callbacks) => createRankingCard(documentRef, item, callbacks),
   onMoveToTier,
   onMoveToUnranked,
   onOpenDetails,
@@ -272,6 +273,7 @@ export function createRankingView({
   onRemoveCandidate = () => {},
   onRemoveCandidates = workIds => onRemoveCandidate(workIds[0]),
   onMoveCandidatesToTier = () => {},
+  showImportTile = () => true,
   candidateHoldDelayMs = 300,
   assetBase
 }) {
@@ -283,6 +285,7 @@ export function createRankingView({
     throw new TypeError('root must provide ownerDocument.createElement');
   }
   assertFunction(onMoveToTier, 'onMoveToTier');
+  assertFunction(createCard, 'createCard');
   assertFunction(onMoveToUnranked, 'onMoveToUnranked');
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
@@ -295,6 +298,7 @@ export function createRankingView({
   assertFunction(onRemoveCandidate, 'onRemoveCandidate');
   assertFunction(onRemoveCandidates, 'onRemoveCandidates');
   assertFunction(onMoveCandidatesToTier, 'onMoveCandidatesToTier');
+  assertFunction(showImportTile, 'showImportTile');
   if (!Number.isFinite(candidateHoldDelayMs) || candidateHoldDelayMs < 0) {
     throw new TypeError('candidateHoldDelayMs must be a non-negative number');
   }
@@ -1147,7 +1151,7 @@ export function createRankingView({
           throw new TypeError(`model.tiers contains duplicate tier ID ${tier.id}`);
         }
         const { row, track } = createTierRow(tier);
-        const cards = tier.works.map(item => createRankingCard(documentRef, item, {
+        const cards = tier.works.map(item => createCard(documentRef, item, {
           ...callbacks,
           coverUrl: coverUrls?.get?.(item.workId) ?? null
         }));
@@ -1168,7 +1172,7 @@ export function createRankingView({
         if (!immersive && !addTier.disabled) onAddTier();
       });
       const candidates = model.candidateWorks.map(item => {
-        const card = createRankingCard(documentRef, item, {
+        const card = createCard(documentRef, item, {
           ...callbacks,
           coverUrl: coverUrls?.get?.(item.workId) ?? null
         });
@@ -1208,7 +1212,7 @@ export function createRankingView({
         const retained = retainedTierScroll[tierId];
         track.scrollLeft = Number.isFinite(retained) ? retained : 0;
       }
-      candidatePool.replaceChildren(...candidates, uploadTile);
+      candidatePool.replaceChildren(...candidates, ...(showImportTile() ? [uploadTile] : []));
       updateCandidateSelection();
       updateTierTrackRows();
       candidateSearch.value = model.candidateTitleQuery;
