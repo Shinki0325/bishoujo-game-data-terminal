@@ -14,6 +14,7 @@
   --radius: 6px;
   --bg: #e8ecef;
   --surface: #ffffff;
+  --panel: var(--surface);
   --surface-muted: #f3f5f6;
   --surface-strong: #20262b;
   --text: #1c2328;
@@ -310,7 +311,7 @@ h3 {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--text);
-  background: var(--panel);
+  background: var(--surface);
 }
 
 .company-directory-action-controls {
@@ -368,7 +369,7 @@ h3 {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  background: var(--panel);
+  background: var(--surface);
   text-align: left;
 }
 
@@ -534,12 +535,14 @@ h3 {
 
 #company-directory-help {
   width: min(520px, calc(100vw - 32px));
+  height: min(640px, calc(100dvh - 32px));
   max-height: min(640px, calc(100dvh - 32px));
+  overflow: hidden;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--text);
-  background: var(--panel);
+  background: var(--surface);
 }
 
 #company-directory-help::backdrop {
@@ -548,12 +551,16 @@ h3 {
 
 .company-directory-help-shell {
   display: grid;
-  max-height: inherit;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
 }
 
 .company-directory-help-body {
+  min-height: 0;
   overflow-y: auto;
   padding: 0 20px 4px;
+  background: var(--surface);
 }
 
 .company-directory-help-body section + section {
