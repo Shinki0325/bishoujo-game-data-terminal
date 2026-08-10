@@ -119,6 +119,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companyView: requiredElement('company-view'),
   companySearch: requiredElement('company-directory-search'),
   companySort: requiredElement('company-sort'),
+  companyHasImage: requiredElement('company-has-image'),
   companyRankingToggle: requiredElement('company-ranking-toggle'),
   companyRankingClose: requiredElement('company-ranking-close'),
   companyRanking: requiredElement('company-ranking'),
@@ -797,7 +798,8 @@ async function initialize() {
   let companyDirectoryOpen = false;
   let rankingSubject = 'work';
   let companyQuery = '';
-  let companySort = 'workCount-desc';
+  let companySort = 'totalVoteCount-desc';
+  let companyHasImage = true;
   let companyCandidateQuery = '';
   let selectedCompanyId = null;
   const companyRanking = createCompanyRanking({
@@ -1229,7 +1231,11 @@ async function initialize() {
   let companyDirectoryView;
   function renderCompanyDirectory() {
     const [sortKey, direction] = companySort.split('-');
-    const companies = searchCompanyDirectory(companyDirectory, companyQuery, { sortKey, direction });
+    const companies = searchCompanyDirectory(companyDirectory, companyQuery, {
+      sortKey,
+      direction,
+      hasAvatar: companyHasImage ? true : null
+    });
     const selected = companies.find(company => company.companyId === selectedCompanyId)
       ?? companyDirectory.companies.find(company => company.companyId === selectedCompanyId)
       ?? companies[0]
@@ -1336,6 +1342,10 @@ async function initialize() {
     onOpenWork(work) {
       showDetails(work, filterById, workAliasesById, openCompanyDirectory);
     }
+  });
+  elements.companyHasImage.addEventListener('change', () => {
+    companyHasImage = elements.companyHasImage.checked;
+    renderCompanyDirectory();
   });
   let mobileHelpShown = false;
   const mobileHelpStorageKey = 'egs-tier-mobile-help-seen-v1';

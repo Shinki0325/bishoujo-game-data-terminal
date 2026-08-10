@@ -278,6 +278,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   min-width: min(540px, 100%);
 }
 
@@ -292,6 +293,24 @@ h3 {
   border-radius: var(--radius);
   color: var(--text);
   background: var(--panel);
+}
+
+.company-image-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 4px;
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.company-image-filter input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
 }
 
 .company-directory-layout {

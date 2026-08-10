@@ -169,6 +169,16 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     pageIndex = Math.max(0, Math.min(nextPageIndex, pageCount(latestModel.companies) - 1));
     clearPageError();
     render(latestModel);
+    root.scrollTop = 0;
+    const scrollWindow = root.ownerDocument?.defaultView
+      ?? (typeof window !== 'undefined' ? window : null);
+    if (typeof scrollWindow?.scrollTo === 'function') {
+      try {
+        scrollWindow.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      } catch {
+        try { scrollWindow.scrollTo(0, 0); } catch { /* no-op in test DOMs */ }
+      }
+    }
   }
 
   pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
