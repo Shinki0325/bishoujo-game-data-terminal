@@ -306,6 +306,10 @@
       </section>
 
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking">
+        <div class="ranking-subject-tabs" role="group" aria-label="排榜类型">
+          <button id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
+          <button id="ranking-subject-company" type="button" aria-pressed="false">会社</button>
+        </div>
         <div class="ranking-toolbar" aria-label="排榜操作">
           <div class="edit-actions">
             <button id="undo-edit" class="icon-button" type="button" aria-label="撤销" title="撤销">↶</button>
@@ -400,7 +404,7 @@
               <option value="brandName-asc">名称</option>
             </select>
             <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary" type="button" aria-expanded="false">会社排榜</button>
-            <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button">返回排榜</button>
+            <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button" hidden>返回排榜</button>
           </div>
         </header>
         <div class="company-directory-layout">

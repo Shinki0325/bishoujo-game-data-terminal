@@ -115,6 +115,8 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   modeCompany: requiredElement('mode-company'),
   selectionView: requiredElement('selection-view'),
   rankingView: requiredElement('ranking-view'),
+  rankingSubjectWork: requiredElement('ranking-subject-work'),
+  rankingSubjectCompany: requiredElement('ranking-subject-company'),
   companyView: requiredElement('company-view'),
   companySearch: requiredElement('company-directory-search'),
   companySort: requiredElement('company-sort'),
@@ -793,7 +795,7 @@ async function initialize() {
   let lastRenderedModel = null;
   let replacementWork = null;
   let companyDirectoryOpen = false;
-  let companyRankingOpen = false;
+  let rankingSubject = 'work';
   let companyQuery = '';
   let companySort = 'workCount-desc';
   let selectedCompanyId = null;
@@ -803,6 +805,9 @@ async function initialize() {
     storage: window.localStorage
   });
   let companyRankingView;
+  elements.rankingView.append(elements.companyRanking);
+  elements.companyRankingToggle.textContent = '进入排榜';
+  elements.companyRankingClose.textContent = '返回会社';
 
   function openCompanyDirectory(companyId = null) {
     companyDirectoryOpen = true;
@@ -1238,8 +1243,13 @@ async function initialize() {
       selectedCompanyIds: companyRanking.inspect().selectedSet,
       imageUrlForCompany: company => companyImageUrl(company, assetBase)
     });
-    elements.companyRanking.hidden = !companyRankingOpen;
-    elements.companyRankingToggle.setAttribute('aria-expanded', String(companyRankingOpen));
+  }
+
+  function renderCompanyRanking() {
+    elements.rankingView.classList.toggle('is-company-ranking', rankingSubject === 'company');
+    elements.companyRanking.hidden = rankingSubject !== 'company';
+    elements.rankingSubjectWork.setAttribute('aria-pressed', String(rankingSubject === 'work'));
+    elements.rankingSubjectCompany.setAttribute('aria-pressed', String(rankingSubject === 'company'));
     companyRankingView?.render({
       companies: companyDirectory.companies,
       tiers: controller.inspectState().tiers,
@@ -1270,18 +1280,17 @@ async function initialize() {
     }
   });
   companyRankingView = createCompanyRankingView({
-    root: elements.companyView,
+    root: elements.rankingView,
     onMoveToTier(companyId, tierId) {
       companyRanking.moveToTier(companyId, tierId);
-      renderCompanyDirectory();
+      renderCompanyRanking();
     },
     onMoveToCandidates(companyId) {
       companyRanking.moveToCandidates(companyId);
-      renderCompanyDirectory();
+      renderCompanyRanking();
     },
     onOpenCompany(companyId) {
-      selectedCompanyId = companyId;
-      renderCompanyDirectory();
+      openCompanyDirectory(companyId);
     }
   });
   let mobileHelpShown = false;
@@ -1634,6 +1643,19 @@ async function initialize() {
       return;
     }
     if (mobileCompanion) {
+      if (model.state.workspaceMode === 'ranking' && rankingSubject === 'company') {
+        elements.modeSelection.setAttribute('aria-selected', 'false');
+        elements.modeRanking.setAttribute('aria-selected', 'true');
+        elements.modeCompany.setAttribute('aria-selected', 'false');
+        elements.modeSelection.tabIndex = -1;
+        elements.modeRanking.tabIndex = 0;
+        elements.modeCompany.tabIndex = -1;
+        elements.selectionView.hidden = true;
+        elements.rankingView.hidden = false;
+        elements.companyView.hidden = true;
+        elements.mobileSelectionView.hidden = true;
+        return;
+      }
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
       elements.modeSelection.tabIndex = -1;
@@ -1742,17 +1764,22 @@ async function initialize() {
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
+    } else if (ranking && rankingSubject === 'company') {
+      renderCompanyRanking();
     } else if (mobileCompanion) {
       mobileSelectionView.render({
         works: model.visibleWorks,
         selectedWorkIds: model.state.selectedWorkIds
       });
     } else if (ranking) {
-      rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
-      rankingView.render(rankingModel, await resolveCoverUrls([
-        ...rankingModel.candidateWorks,
-        ...rankingModel.tiers.flatMap(tier => tier.works)
-      ]));
+      renderCompanyRanking();
+      if (rankingSubject === 'work') {
+        rankingModel = buildRankingModel(model.state, worksById, candidateTitleQuery);
+        rankingView.render(rankingModel, await resolveCoverUrls([
+          ...rankingModel.candidateWorks,
+          ...rankingModel.tiers.flatMap(tier => tier.works)
+        ]));
+      }
     } else {
       selectionView.render({
         works: model.visibleWorks,
@@ -1972,17 +1999,27 @@ async function initialize() {
   });
   elements.companyBack.addEventListener('click', () => {
     companyDirectoryOpen = false;
-    companyRankingOpen = false;
+    rankingSubject = 'work';
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     void render();
   });
   elements.companyRankingToggle.addEventListener('click', () => {
-    companyRankingOpen = !companyRankingOpen;
-    renderCompanyDirectory();
+    companyDirectoryOpen = false;
+    rankingSubject = 'company';
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.companyRankingClose.addEventListener('click', () => {
-    companyRankingOpen = false;
+    companyDirectoryOpen = true;
+    if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     renderCompanyDirectory();
+  });
+  elements.rankingSubjectWork.addEventListener('click', () => {
+    rankingSubject = 'work';
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+  });
+  elements.rankingSubjectCompany.addEventListener('click', () => {
+    rankingSubject = 'company';
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.mobileCompanyMode.addEventListener('click', () => {
     companyDirectoryOpen = true;
