@@ -391,23 +391,28 @@
             <p class="company-directory-summary">按作品数量浏览公开会社资料；拼音和别名仅用于搜索。</p>
           </div>
           <div class="company-directory-tools">
-            <label class="search-field" for="company-directory-search">
+            <label class="search-field company-directory-search" for="company-directory-search">
               <span class="visually-hidden">搜索会社</span>
               <input id="company-directory-search" type="search" placeholder="搜索会社名称、别名或拼音" autocomplete="off">
             </label>
-            <label class="company-image-filter" for="company-has-image">
-              <input id="company-has-image" type="checkbox" checked>
-              <span>仅显示已有会社图片</span>
-            </label>
-            <label class="visually-hidden" for="company-sort">会社排序</label>
-            <select id="company-sort">
-              <option value="totalVoteCount-desc">总评分数量</option>
-              <option value="workCount-desc">作品数量</option>
-              <option value="averageVoteCount-desc">平均每作评分数量</option>
-              <option value="releaseYearStart-asc">最早发售</option>
-              <option value="brandName-asc">名称</option>
-            </select>
-            <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary" type="button" aria-expanded="false">会社排榜</button>
+            <div class="company-directory-control-group company-directory-filter-controls">
+              <label class="company-image-filter" for="company-has-image">
+                <input id="company-has-image" type="checkbox" checked>
+                <span>仅显示已有会社图片</span>
+              </label>
+              <label class="visually-hidden" for="company-sort">会社排序</label>
+              <select id="company-sort">
+                <option value="totalVoteCount-desc">总评分数量</option>
+                <option value="workCount-desc">作品数量</option>
+                <option value="averageVoteCount-desc">平均每作评分数量</option>
+                <option value="releaseYearStart-asc">最早发售</option>
+                <option value="brandName-asc">名称</option>
+              </select>
+            </div>
+            <div class="company-directory-control-group company-directory-action-controls">
+              <button id="company-help-button" class="icon-button company-directory-help-button" type="button" aria-label="打开会社目录使用说明" title="打开会社目录使用说明">?</button>
+              <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary" type="button" aria-expanded="false">会社排榜</button>
+            </div>
             <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button" hidden>返回排榜</button>
           </div>
         </header>
@@ -434,7 +439,20 @@
                 <p id="company-detail-meta"></p>
               </div>
             </div>
-            <h3>作品</h3>
+            <div class="company-detail-works-heading">
+              <h3>作品</h3>
+              <div class="company-detail-sort-controls" aria-label="作品排序">
+                <label class="visually-hidden" for="company-detail-sort">作品排序</label>
+                <select id="company-detail-sort">
+                  <option value="releaseDate">年份</option>
+                  <option value="median">评分</option>
+                  <option value="voteCount">评分人数</option>
+                </select>
+                <button id="company-detail-sort-direction" class="icon-button company-detail-sort-direction" type="button" aria-pressed="true" aria-label="作品排序：升序，点击切换" title="作品排序：升序，点击切换">
+                  <span id="company-detail-sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-up-a-z" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
             <div id="company-detail-works" class="company-directory-works"></div>
           </aside>
         </div>
@@ -574,6 +592,40 @@
         </div>
         <div class="dialog-actions ranking-help-actions">
           <button id="ranking-help-dismiss" type="button">知道了</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="company-directory-help" aria-labelledby="company-directory-help-title">
+      <div class="company-directory-help-shell">
+        <div class="dialog-heading">
+          <h2 id="company-directory-help-title">会社目录使用说明</h2>
+        </div>
+        <div class="company-directory-help-body">
+          <section>
+            <h3>浏览会社</h3>
+            <ul>
+              <li>默认只显示已有会社图片的条目；取消勾选可浏览完整目录。</li>
+              <li>可按总评分数量、作品数量、平均评分数量、最早发售年份或名称整理卡片。</li>
+              <li>点击公司卡片会在当前页面右侧展开资料，不会离开目录。</li>
+            </ul>
+          </section>
+          <section>
+            <h3>查看作品</h3>
+            <ul>
+              <li>右侧列表可按年份、评分或评分人数切换排序；方向按钮控制升序和降序。</li>
+              <li>点击作品可查看详情；详情中的会社名称可随时回到对应会社目录。</li>
+            </ul>
+          </section>
+          <section>
+            <h3>会社排榜</h3>
+            <ul>
+              <li>勾选卡片左上角的复选框后，点击“进入排榜”即可使用与作品排榜一致的操作界面。</li>
+            </ul>
+          </section>
+        </div>
+        <div class="dialog-actions">
+          <button id="company-directory-help-dismiss" type="button">知道了</button>
         </div>
       </div>
     </dialog>

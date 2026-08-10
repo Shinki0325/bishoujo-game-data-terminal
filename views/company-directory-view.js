@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
+import { createActionIcon } from '../lib/action-icons.js';
 
 const COMPANY_PAGE_SIZE = 36;
 
@@ -20,9 +21,17 @@ function formatCount(value) {
   return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(value);
 }
 
-export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCompany, onToggleCompany, onOpenWork }) {
+export function createCompanyDirectoryView({
+  root,
+  onSearch,
+  onSort,
+  onSelectCompany,
+  onToggleCompany,
+  onOpenWork,
+  onDetailWorkSort
+}) {
   if (!root || typeof root.querySelector !== 'function') throw new TypeError('root must provide querySelector');
-  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function') {
+  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function' || typeof onDetailWorkSort !== 'function') {
     throw new TypeError('company directory callbacks must be functions');
   }
   const documentRef = root.ownerDocument;
@@ -34,6 +43,9 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
   const detailAvatar = requireElement(root, 'company-detail-avatar');
   const detailMeta = requireElement(root, 'company-detail-meta');
   const detailWorks = requireElement(root, 'company-detail-works');
+  const detailSort = requireElement(root, 'company-detail-sort');
+  const detailSortDirection = requireElement(root, 'company-detail-sort-direction');
+  const detailSortDirectionIcon = requireElement(root, 'company-detail-sort-direction-icon');
   const empty = requireElement(root, 'company-empty');
   const pagination = requireElement(root, 'company-directory-pagination');
   const pagePrevious = requireElement(root, 'company-page-previous');
@@ -49,6 +61,10 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
 
   search.addEventListener('input', () => onSearch(search.value));
   sort.addEventListener('change', () => onSort(sort.value));
+  detailSort.addEventListener('change', () => onDetailWorkSort({ sortKey: detailSort.value }));
+  detailSortDirection.addEventListener('click', () => {
+    onDetailWorkSort({ direction: detailSortDirection.getAttribute('aria-pressed') === 'true' ? 'desc' : 'asc' });
+  });
 
   function pageCount(companies) {
     return Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
@@ -83,7 +99,15 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     parent.append(image);
   }
 
-  function render({ companies = [], selectedCompanyId = null, selectedCompanyIds = new Set(), selectedWorks = [], imageUrlForCompany = null } = {}) {
+  function render({
+    companies = [],
+    selectedCompanyId = null,
+    selectedCompanyIds = new Set(),
+    selectedWorks = [],
+    detailWorkSortKey = 'releaseDate',
+    detailWorkSortDirection = 'asc',
+    imageUrlForCompany = null
+  } = {}) {
     const companyKey = companies.map(company => company.companyId).join('\u001f');
     if (companyKey !== renderedCompanyKey) {
       renderedCompanyKey = companyKey;
@@ -93,7 +117,15 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     }
     const selectedCompanyChanged = selectedCompanyId !== renderedSelectedCompanyId;
     renderedSelectedCompanyId = selectedCompanyId;
-    latestModel = { companies, selectedCompanyId, selectedCompanyIds, selectedWorks, imageUrlForCompany };
+    latestModel = {
+      companies,
+      selectedCompanyId,
+      selectedCompanyIds,
+      selectedWorks,
+      detailWorkSortKey,
+      detailWorkSortDirection,
+      imageUrlForCompany
+    };
     const totalPages = pageCount(companies);
     const selectedIndex = companies.findIndex(company => company.companyId === selectedCompanyId);
     if (selectedCompanyChanged && selectedIndex >= 0 && (selectedIndex < pageIndex * COMPANY_PAGE_SIZE || selectedIndex >= (pageIndex + 1) * COMPANY_PAGE_SIZE)) {
@@ -153,6 +185,12 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     detailAvatar.replaceChildren();
     imageFor(detailAvatar, selected, 'company-detail-avatar-image', imageUrlForCompany);
     detailMeta.textContent = `${selected.workCount} 部作品 · ${selected.releaseYearStart ?? '未知'}-${selected.releaseYearEnd ?? '未知'} · 总评分 ${formatCount(selected.totalVoteCount)} · 平均每作 ${formatCount(selected.averageVoteCount)}`;
+    detailSort.value = detailWorkSortKey;
+    const ascending = detailWorkSortDirection === 'asc';
+    detailSortDirection.setAttribute('aria-pressed', String(ascending));
+    detailSortDirection.setAttribute('aria-label', `作品排序：${ascending ? '升序' : '降序'}，点击切换`);
+    detailSortDirection.title = `作品排序：${ascending ? '升序' : '降序'}，点击切换`;
+    detailSortDirectionIcon.replaceChildren(createActionIcon(documentRef, ascending ? 'arrow-up-a-z' : 'arrow-down-a-z'));
     detailWorks.replaceChildren();
     for (const work of selectedWorks) {
       const item = documentRef.createElement('button');
@@ -195,7 +233,23 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     setPage(requested - 1);
   });
 
-  return Object.freeze({ render, elements: Object.freeze({ search, sort, list, detail, pagination, pagePrevious, pageInput, pageTotal, pageNext, pageError }) });
+  return Object.freeze({
+    render,
+    elements: Object.freeze({
+      search,
+      sort,
+      list,
+      detail,
+      detailSort,
+      detailSortDirection,
+      pagination,
+      pagePrevious,
+      pageInput,
+      pageTotal,
+      pageNext,
+      pageError
+    })
+  });
 }
 
 export function companyImageUrl(company, assetBase) {

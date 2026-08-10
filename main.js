@@ -120,6 +120,9 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companySearch: requiredElement('company-directory-search'),
   companySort: requiredElement('company-sort'),
   companyHasImage: requiredElement('company-has-image'),
+  companyHelpButton: requiredElement('company-help-button'),
+  companyHelp: requiredElement('company-directory-help'),
+  companyHelpDismiss: requiredElement('company-directory-help-dismiss'),
   companyRankingToggle: requiredElement('company-ranking-toggle'),
   companyRankingClose: requiredElement('company-ranking-close'),
   companyRanking: requiredElement('company-ranking'),
@@ -800,8 +803,12 @@ async function initialize() {
   let companyQuery = '';
   let companySort = 'totalVoteCount-desc';
   let companyHasImage = true;
+  let companyDetailSortKey = 'releaseDate';
+  let companyDetailSortDirection = 'asc';
   let companyCandidateQuery = '';
   let selectedCompanyId = null;
+  const companyHelpStorageKey = 'egs-tier-terminal:company-directory-help-v1';
+  let companyDirectoryHelpShown = false;
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
@@ -810,12 +817,34 @@ async function initialize() {
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
 
+  function openCompanyDirectoryHelp() {
+    if (elements.companyHelp.open) return;
+    if (typeof elements.companyHelp.showModal === 'function') elements.companyHelp.showModal();
+    else elements.companyHelp.open = true;
+  }
+
+  function showCompanyDirectoryHelpOnce() {
+    if (companyDirectoryHelpShown) return;
+    try {
+      if (window.localStorage.getItem(companyHelpStorageKey) === 'seen') {
+        companyDirectoryHelpShown = true;
+        return;
+      }
+      window.localStorage.setItem(companyHelpStorageKey, 'seen');
+    } catch {
+      // Keep the guide session-scoped when browser storage is unavailable.
+    }
+    companyDirectoryHelpShown = true;
+    openCompanyDirectoryHelp();
+  }
+
   function openCompanyDirectory(companyId = null) {
     companyDirectoryOpen = true;
     selectedCompanyId = companyId;
     if (elements.detailsDialog.open) elements.detailsDialog.close();
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     renderCompanyDirectory();
+    showCompanyDirectoryHelpOnce();
   }
 
   async function coverUrlForWork(work) {
@@ -1244,7 +1273,12 @@ async function initialize() {
     companyDirectoryView.render({
       companies,
       selectedCompanyId,
-      selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId) : [],
+      selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId, {
+        sortKey: companyDetailSortKey,
+        direction: companyDetailSortDirection
+      }) : [],
+      detailWorkSortKey: companyDetailSortKey,
+      detailWorkSortDirection: companyDetailSortDirection,
       selectedCompanyIds: companyRanking.inspect().selectedSet,
       imageUrlForCompany: company => companyImageUrl(company, assetBase)
     });
@@ -1341,6 +1375,13 @@ async function initialize() {
     },
     onOpenWork(work) {
       showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    },
+    onDetailWorkSort({ sortKey, direction }) {
+      if (typeof sortKey === 'string' && ['releaseDate', 'median', 'voteCount'].includes(sortKey)) {
+        companyDetailSortKey = sortKey;
+      }
+      if (direction === 'asc' || direction === 'desc') companyDetailSortDirection = direction;
+      renderCompanyDirectory();
     }
   });
   elements.companyHasImage.addEventListener('change', () => {
@@ -2102,15 +2143,13 @@ async function initialize() {
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.modeCompany.addEventListener('click', () => {
-    companyDirectoryOpen = true;
     closeToolbarMenus();
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
         return;
       }
-      renderWorkspace(lastRenderedModel);
-      renderCompanyDirectory();
+      openCompanyDirectory();
     };
     open();
   });
@@ -2139,17 +2178,17 @@ async function initialize() {
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.mobileCompanyMode.addEventListener('click', () => {
-    companyDirectoryOpen = true;
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
         return;
       }
-      renderWorkspace(lastRenderedModel);
-      renderCompanyDirectory();
+      openCompanyDirectory();
     };
     open();
   });
+  elements.companyHelpButton.addEventListener('click', openCompanyDirectoryHelp);
+  elements.companyHelpDismiss.addEventListener('click', () => elements.companyHelp.close());
   elements.rankingHelpButton.addEventListener('click', () => help.openFull());
   elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());
   elements.rankingHelpDismiss.addEventListener('click', () => elements.rankingHelp.close());
