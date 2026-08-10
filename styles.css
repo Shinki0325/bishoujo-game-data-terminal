@@ -248,7 +248,6 @@ h3 {
 
 .company-view {
   min-height: calc(100dvh - var(--header-height));
-  overflow: auto;
   padding: clamp(18px, 3vw, 36px);
   background: var(--surface);
 }
@@ -379,7 +378,10 @@ h3 {
 .company-directory-detail {
   align-self: start;
   position: sticky;
-  top: 12px;
+  top: calc(var(--header-height) + 12px);
+  z-index: 2;
+  max-height: calc(100dvh - var(--header-height) - 24px);
+  overflow: auto;
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -2185,7 +2187,8 @@ input[type="range"] {
 
 body.is-ranking-immersive header,
 body.is-ranking-immersive .ranking-toolbar,
-body.is-ranking-immersive .candidate-toolbar {
+body.is-ranking-immersive .candidate-toolbar,
+body.is-ranking-immersive .ranking-subject-tabs {
   display: none;
 }
 
@@ -3308,6 +3311,8 @@ dialog::backdrop {
 
   .company-directory-detail {
     position: static;
+    max-height: none;
+    overflow: visible;
     margin-top: 14px;
   }
 

@@ -410,6 +410,16 @@
         <div class="company-directory-layout">
           <div>
             <div id="company-list" class="company-directory-list" aria-live="polite"></div>
+            <nav id="company-directory-pagination" class="selection-pagination company-directory-pagination" aria-label="会社目录分页">
+              <button id="company-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+              <label class="selection-page-field" for="company-page-input">
+                <span class="visually-hidden">当前页码</span>
+                <input id="company-page-input" type="text" inputmode="numeric" autocomplete="off" aria-describedby="company-page-error">
+                <span class="selection-page-total">/ <output id="company-page-total">1</output></span>
+              </label>
+              <button id="company-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+              <p id="company-page-error" class="selection-page-error" role="alert" hidden>请输入有效的页码</p>
+            </nav>
             <p id="company-empty" class="company-empty" hidden>没有匹配的会社。</p>
           </div>
           <aside id="company-detail" class="company-directory-detail" hidden aria-live="polite">

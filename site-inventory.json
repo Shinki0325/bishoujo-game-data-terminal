@@ -64322,9 +64322,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 35958,
+      "bytes": 36895,
       "path": "index.html",
-      "sha256": "0e12fc2065c3e6aad19b50b9b91b5fd6b463c544e8577737203172dbe4de5fd3"
+      "sha256": "79cbe44721cde4882359c2b7421889205776bf129a9722e1569f420690de0ac6"
     },
     {
       "bytes": 4161,
@@ -64552,14 +64552,14 @@
       "sha256": "a41d7519ea156bf68f125ca9504e0b81892145ac05300ece7bb4aa284f86852d"
     },
     {
-      "bytes": 65752,
+      "bytes": 65947,
       "path": "styles.css",
-      "sha256": "eaa4a15f2338ad7a5cecc5595bb37743179d026dc47dd7392e2d9806fd396916"
+      "sha256": "287f1f734ed461c20dcb0881a1abdb5f5c8b3a7669e8b5706b78305c951dcf9c"
     },
     {
-      "bytes": 5671,
+      "bytes": 9206,
       "path": "views/company-directory-view.js",
-      "sha256": "2066c5a2893eba167649d963f0232070b0428e9f9b3d58a95f521270c1c75811"
+      "sha256": "46af8ee8b95d5bef58d33128704b4343ad80e7d3e827c362b7fe99fb52939db2"
     },
     {
       "bytes": 3935,
@@ -64605,7 +64605,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 470287500,
+    "bytes": 470292167,
     "files": 12920
   }
 }

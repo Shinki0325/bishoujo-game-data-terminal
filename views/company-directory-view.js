@@ -1,5 +1,7 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
 
+const COMPANY_PAGE_SIZE = 36;
+
 function requireElement(root, id) {
   const element = root.querySelector?.(`#${id}`);
   if (!element) throw new Error(`Company directory root is missing #${id}`);
@@ -33,9 +35,34 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
   const detailMeta = requireElement(root, 'company-detail-meta');
   const detailWorks = requireElement(root, 'company-detail-works');
   const empty = requireElement(root, 'company-empty');
+  const pagination = requireElement(root, 'company-directory-pagination');
+  const pagePrevious = requireElement(root, 'company-page-previous');
+  const pageInput = requireElement(root, 'company-page-input');
+  const pageTotal = requireElement(root, 'company-page-total');
+  const pageNext = requireElement(root, 'company-page-next');
+  const pageError = requireElement(root, 'company-page-error');
+  let latestModel = null;
+  let renderedCompanyKey = '';
+  let renderedPageKey = '';
+  let pageIndex = 0;
+  let renderedSelectedCompanyId = null;
 
   search.addEventListener('input', () => onSearch(search.value));
   sort.addEventListener('change', () => onSort(sort.value));
+
+  function pageCount(companies) {
+    return Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
+  }
+
+  function clearPageError() {
+    pageError.hidden = true;
+    pageInput.removeAttribute('aria-invalid');
+  }
+
+  function showPageError() {
+    pageError.hidden = false;
+    pageInput.setAttribute('aria-invalid', 'true');
+  }
 
   function imageFor(parent, company, className, imageUrlForCompany) {
     const imageUrl = typeof imageUrlForCompany === 'function' ? imageUrlForCompany(company) : null;
@@ -57,9 +84,28 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
   }
 
   function render({ companies = [], selectedCompanyId = null, selectedCompanyIds = new Set(), selectedWorks = [], imageUrlForCompany = null } = {}) {
-    list.replaceChildren();
-    empty.hidden = companies.length !== 0;
-    for (const company of companies) {
+    const companyKey = companies.map(company => company.companyId).join('\u001f');
+    if (companyKey !== renderedCompanyKey) {
+      renderedCompanyKey = companyKey;
+      renderedPageKey = '';
+      pageIndex = 0;
+      clearPageError();
+    }
+    const selectedCompanyChanged = selectedCompanyId !== renderedSelectedCompanyId;
+    renderedSelectedCompanyId = selectedCompanyId;
+    latestModel = { companies, selectedCompanyId, selectedCompanyIds, selectedWorks, imageUrlForCompany };
+    const totalPages = pageCount(companies);
+    const selectedIndex = companies.findIndex(company => company.companyId === selectedCompanyId);
+    if (selectedCompanyChanged && selectedIndex >= 0 && (selectedIndex < pageIndex * COMPANY_PAGE_SIZE || selectedIndex >= (pageIndex + 1) * COMPANY_PAGE_SIZE)) {
+      pageIndex = Math.floor(selectedIndex / COMPANY_PAGE_SIZE);
+    }
+    pageIndex = Math.min(pageIndex, totalPages - 1);
+    const visibleCompanies = companies.slice(pageIndex * COMPANY_PAGE_SIZE, (pageIndex + 1) * COMPANY_PAGE_SIZE);
+    const pageKey = `${companyKey}\u001f${pageIndex}`;
+    if (pageKey !== renderedPageKey) {
+      renderedPageKey = pageKey;
+      list.replaceChildren();
+      for (const company of visibleCompanies) {
       const card = documentRef.createElement('article');
       card.className = 'company-directory-card';
       card.classList.toggle('is-selected', company.companyId === selectedCompanyId);
@@ -87,6 +133,19 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
       card.append(open, select);
       list.append(card);
     }
+    }
+    empty.hidden = companies.length !== 0;
+    pagination.hidden = totalPages <= 1;
+    pagePrevious.disabled = pageIndex === 0;
+    pageNext.disabled = pageIndex >= totalPages - 1;
+    pageInput.value = String(pageIndex + 1);
+    pageTotal.textContent = String(totalPages);
+    for (const card of list.querySelectorAll('.company-directory-card')) {
+      const companyId = card.dataset.companyId;
+      card.classList.toggle('is-selected', companyId === selectedCompanyId);
+      const select = card.querySelector('.company-directory-card-select');
+      if (select !== null) select.checked = selectedCompanyIds.has(companyId);
+    }
     const selected = companies.find(company => company.companyId === selectedCompanyId) ?? null;
     detail.hidden = selected === null;
     if (!selected) return;
@@ -105,7 +164,28 @@ export function createCompanyDirectoryView({ root, onSearch, onSort, onSelectCom
     }
   }
 
-  return Object.freeze({ render, elements: Object.freeze({ search, sort, list, detail }) });
+  function setPage(nextPageIndex) {
+    if (latestModel === null) return;
+    pageIndex = Math.max(0, Math.min(nextPageIndex, pageCount(latestModel.companies) - 1));
+    clearPageError();
+    render(latestModel);
+  }
+
+  pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
+  pageNext.addEventListener('click', () => setPage(pageIndex + 1));
+  pageInput.addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const raw = String(pageInput.value ?? '').trim();
+    const requested = Number(raw);
+    if (!/^\d+$/u.test(raw) || !Number.isSafeInteger(requested) || requested < 1 || requested > pageCount(latestModel?.companies ?? [])) {
+      showPageError();
+      return;
+    }
+    setPage(requested - 1);
+  });
+
+  return Object.freeze({ render, elements: Object.freeze({ search, sort, list, detail, pagination, pagePrevious, pageInput, pageTotal, pageNext, pageError }) });
 }
 
 export function companyImageUrl(company, assetBase) {
