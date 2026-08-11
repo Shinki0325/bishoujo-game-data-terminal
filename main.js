@@ -2373,9 +2373,9 @@ async function initialize() {
           return canvas;
         },
         fontsReady: document.fonts?.ready ?? Promise.resolve(),
-        loadCover: async (_coverPath, record) => {
+        loadCover: async (coverPath, record) => {
           const work = record.work;
-          if (isCompanyRanking) return loadImageUrl(work.companyImageUrl, { crossOrigin: 'anonymous' });
+          if (isCompanyRanking) return loadImageUrl(coverPath, { crossOrigin: 'anonymous' });
           const url = await coverUrlForWork(work);
           return loadImageUrl(url, { crossOrigin: work.localMediaKind === 'custom' ? null : 'anonymous' });
         }
