@@ -1,6 +1,6 @@
 import { edgeScrollVelocity, insertionIndexFromPoint } from '../lib/drag.js';
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
-import { moveTier } from '../lib/tier-config.js';
+import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
 
@@ -1165,7 +1165,7 @@ export function createRankingView({
       addTier.type = 'button';
       addTier.className = 'tier-add-button';
       addTier.textContent = '+';
-      addTier.disabled = model.tiers.length >= 8;
+      addTier.disabled = model.tiers.length >= MAX_TIERS;
       addTier.setAttribute('aria-label', '添加等级');
       addTier.setAttribute('title', '添加等级');
       addTier.addEventListener('click', () => {

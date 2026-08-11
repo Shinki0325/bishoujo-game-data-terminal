@@ -64857,9 +64857,9 @@
       "sha256": "510b3de6df05edfe3ea12c5e223940fd917ea1c88aa6acccd2729b6806b8fefb"
     },
     {
-      "bytes": 11978,
+      "bytes": 11993,
       "path": "lib/ordered-board.js",
-      "sha256": "226fb018d1b67ef595549ac24a97eead7bb9d576b24fc4f99f77adaa27efa96b"
+      "sha256": "41248fbe93de988afd6723467c150ed614ceeb93ffaef5d3ba08ab54355b0ebf"
     },
     {
       "bytes": 43559,
@@ -64897,9 +64897,9 @@
       "sha256": "df1f63a67b788a7f707cf30c50b49b4ae1f6e8a0f11b0942b0306ca6391d3685"
     },
     {
-      "bytes": 16245,
+      "bytes": 16261,
       "path": "lib/selection.js",
-      "sha256": "663d2501f892d6f46599bffeaaa484f9f8248fc18210996ce10ab48b0a6e60f7"
+      "sha256": "1146bf2693a2e8ff6b104bf48c374873ca93199f3f75d1d7f8652e118d49e476"
     },
     {
       "bytes": 1766,
@@ -64932,9 +64932,9 @@
       "sha256": "2189dc9e5bb0a9d5cf8bff0c8f5c2898e0fdfe8de87c81b8accf1f62d101dd93"
     },
     {
-      "bytes": 13251,
+      "bytes": 13252,
       "path": "lib/tier-config.js",
-      "sha256": "adb6f889538a55716c9669ed90daa561f875faf57c1cf7d2faedfbf885c7a4de"
+      "sha256": "f793fdf67e98cd78a5c06d03820107da60bd9b7acd75b50593b0c91e3498e705"
     },
     {
       "bytes": 1529,
@@ -64982,9 +64982,9 @@
       "sha256": "ee4727b6b5aacb4b74b9685df57dcaf9ed27b329a81b986a509afc0d610f13d0"
     },
     {
-      "bytes": 51210,
+      "bytes": 51229,
       "path": "views/ranking-view.js",
-      "sha256": "9ab9ceed805a408fd30891be7d769095c8af24453347768f21bd751211940722"
+      "sha256": "968ca668eaa4f598a55fbff27f7270eb83e7478dd2f4ae591911c3cabf298bff"
     },
     {
       "bytes": 18619,
