@@ -2590,6 +2590,26 @@ body.is-ranking-immersive .ranking-immersive-edge {
   border-radius: 2px;
 }
 
+.tier-custom-color-input {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tier-custom-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.tier-custom-color-input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 1px;
+}
+
 .tier-label output {
   font-size: 11px;
   font-weight: 650;

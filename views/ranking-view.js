@@ -335,6 +335,8 @@ export function createRankingView({
   let autoScrollFrame = null;
   let autoScrollTrack = null;
   let autoScrollPointerX = 0;
+  let autoScrollRoot = false;
+  let autoScrollPointerY = 0;
   let editingTierId = null;
   let focusTierId = null;
   let immersive = false;
@@ -558,6 +560,23 @@ export function createRankingView({
       });
       palette.append(option);
     }
+    const customColor = documentRef.createElement('input');
+    customColor.type = 'color';
+    customColor.className = 'tier-custom-color-input';
+    customColor.value = tierColor(tier.colorId).background;
+    customColor.setAttribute('aria-label', '自定义颜色');
+    customColor.setAttribute('title', '自定义颜色');
+    customColor.addEventListener('change', event => {
+      event.stopPropagation();
+      const colorId = tierColor(customColor.value).background;
+      const nextTiers = model.tiers.map(item => ({
+        ...item,
+        colorId: item.id === tier.id ? colorId : item.colorId
+      }));
+      closeColorPalette();
+      onTierConfigChange(snapshotTierConfig(nextTiers));
+    });
+    palette.append(customColor);
     documentRef.body.append(palette);
     colorPalette = palette;
     colorPaletteTrigger = trigger;
@@ -565,10 +584,10 @@ export function createRankingView({
     const anchor = trigger.getBoundingClientRect?.() ?? {
       left: 8, right: 30, top: 8, bottom: 30, width: 22, height: 22
     };
-    const measured = palette.getBoundingClientRect?.() ?? { width: 119, height: 54 };
+    const measured = palette.getBoundingClientRect?.() ?? { width: 119, height: 81 };
     const panel = {
       width: Number.isFinite(measured.width) && measured.width > 0 ? measured.width : 119,
-      height: Number.isFinite(measured.height) && measured.height > 0 ? measured.height : 54
+      height: Number.isFinite(measured.height) && measured.height > 0 ? measured.height : 81
     };
     const position = placeFloatingPanel({
       anchor,
@@ -590,6 +609,7 @@ export function createRankingView({
 
   function stopAutoScroll() {
     autoScrollTrack = null;
+    autoScrollRoot = false;
     if (autoScrollFrame !== null) {
       cancelFrame(autoScrollFrame);
       autoScrollFrame = null;
@@ -598,41 +618,71 @@ export function createRankingView({
 
   function runAutoScroll() {
     autoScrollFrame = null;
-    if (autoScrollTrack === null) return;
-    let rect;
+    if (autoScrollTrack === null && !autoScrollRoot) return;
+    let shouldContinue = false;
     try {
-      rect = autoScrollTrack.getBoundingClientRect();
-      const velocity = edgeScrollVelocity({
-        pointerX: autoScrollPointerX,
-        left: rect.left,
-        right: rect.right
-      });
-      if (velocity === 0) {
-        autoScrollTrack = null;
-        return;
+      if (autoScrollTrack !== null) {
+        const rect = autoScrollTrack.getBoundingClientRect();
+        const velocity = edgeScrollVelocity({
+          pointerX: autoScrollPointerX,
+          left: rect.left,
+          right: rect.right
+        });
+        if (velocity === 0) {
+          autoScrollTrack = null;
+        } else {
+          const before = Number(autoScrollTrack.scrollLeft);
+          autoScrollTrack.scrollLeft = before + velocity;
+          const after = Number(autoScrollTrack.scrollLeft);
+          const maximum = Number(autoScrollTrack.scrollWidth) - Number(autoScrollTrack.clientWidth);
+          const reachedBoundary = !Number.isFinite(before)
+            || !Number.isFinite(after)
+            || after === before
+            || (velocity < 0 && after <= 0)
+            || (velocity > 0 && Number.isFinite(maximum) && after >= Math.max(0, maximum));
+          if (reachedBoundary) autoScrollTrack = null;
+          else shouldContinue = true;
+        }
       }
-      const before = Number(autoScrollTrack.scrollLeft);
-      autoScrollTrack.scrollLeft = before + velocity;
-      const after = Number(autoScrollTrack.scrollLeft);
-      const maximum = Number(autoScrollTrack.scrollWidth) - Number(autoScrollTrack.clientWidth);
-      const reachedBoundary = !Number.isFinite(before)
-        || !Number.isFinite(after)
-        || after === before
-        || (velocity < 0 && after <= 0)
-        || (velocity > 0 && Number.isFinite(maximum) && after >= Math.max(0, maximum));
-      if (reachedBoundary) {
-        autoScrollTrack = null;
-        return;
+      if (autoScrollRoot && typeof root.getBoundingClientRect === 'function') {
+        const rect = root.getBoundingClientRect();
+        const velocity = edgeScrollVelocity({
+          pointerX: autoScrollPointerY,
+          left: rect.top,
+          right: rect.bottom,
+          threshold: 64,
+          maxSpeed: 20
+        });
+        if (velocity === 0) {
+          autoScrollRoot = false;
+        } else {
+          const before = Number(root.scrollTop);
+          root.scrollTop = before + velocity;
+          const after = Number(root.scrollTop);
+          const maximum = Number(root.scrollHeight) - Number(root.clientHeight);
+          const reachedBoundary = !Number.isFinite(before)
+            || !Number.isFinite(after)
+            || after === before
+            || (velocity < 0 && after <= 0)
+            || (velocity > 0 && Number.isFinite(maximum) && after >= Math.max(0, maximum));
+          if (reachedBoundary) autoScrollRoot = false;
+          else shouldContinue = true;
+        }
+      } else if (autoScrollRoot) {
+        autoScrollRoot = false;
       }
-      autoScrollFrame = requestFrame(runAutoScroll);
+      if (shouldContinue) autoScrollFrame = requestFrame(runAutoScroll);
     } catch {
       autoScrollTrack = null;
+      autoScrollRoot = false;
     }
   }
 
-  function startAutoScroll(track, pointerX) {
+  function startAutoScroll(track, pointerX, pointerY) {
     autoScrollTrack = track;
     autoScrollPointerX = pointerX;
+    autoScrollRoot = typeof root.getBoundingClientRect === 'function';
+    autoScrollPointerY = pointerY;
     if (autoScrollFrame === null) autoScrollFrame = requestFrame(runAutoScroll);
   }
 
@@ -758,7 +808,7 @@ export function createRankingView({
     for (const item of tierRows.values()) item.classList.toggle('is-drop-target', item === row);
     candidatePool.classList.remove('is-drop-target');
     dropPlan = { type: 'tier', tierId, insertionIndex };
-    startAutoScroll(track, event.clientX);
+    startAutoScroll(track, event.clientX, event.clientY);
   }
 
   function handleTierDrop(tierId, event) {

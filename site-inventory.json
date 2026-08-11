@@ -64832,9 +64832,9 @@
       "sha256": "1331e04967cc3f43b7da684aee88042241e8d556e24557feea2aefa4e77ec38f"
     },
     {
-      "bytes": 15414,
+      "bytes": 15409,
       "path": "lib/history.js",
-      "sha256": "173f3f12bd53f443f8d906f9c1b613025194dc2f8fcd1757a0c8dee04c98b695"
+      "sha256": "a9abf42c36ed3961ad46cb8e0f422aebae329c954ea9c7dc437d8f89eab59094"
     },
     {
       "bytes": 3545,
@@ -64917,9 +64917,9 @@
       "sha256": "1181f7e348e7f1f8383012243e03919cc499e796bbe16aca83d6fa5fe37f036c"
     },
     {
-      "bytes": 56680,
+      "bytes": 56641,
       "path": "lib/state.js",
-      "sha256": "ee4e56358842cc5b328756e10b79b8bcbeadd30a43903b91b7a1d836cf345c61"
+      "sha256": "43295238596c6b6cb2bd87917d5980c27776edea7d36367c9cffdd34cc32cfab"
     },
     {
       "bytes": 5395,
@@ -64932,14 +64932,14 @@
       "sha256": "2189dc9e5bb0a9d5cf8bff0c8f5c2898e0fdfe8de87c81b8accf1f62d101dd93"
     },
     {
-      "bytes": 13252,
+      "bytes": 13230,
       "path": "lib/tier-config.js",
-      "sha256": "f793fdf67e98cd78a5c06d03820107da60bd9b7acd75b50593b0c91e3498e705"
+      "sha256": "f70159c145f459f82d7b75b932fde421519e8a825bffa22a3727fe043ae3c256"
     },
     {
-      "bytes": 1529,
+      "bytes": 2862,
       "path": "lib/tier-palette.js",
-      "sha256": "90176006b911e00bc0160796381954d5bc2e3f86a34564431c947cf4cf42b0e0"
+      "sha256": "f0cf98f0f9601927f8653b7157084496d2f6c0643545203d0f8a2f37fc4a8eaa"
     },
     {
       "bytes": 36,
@@ -64952,9 +64952,9 @@
       "sha256": "0f216f768630721d0e9129c66b6b3333d7b449602036f48101c63d585089c3f5"
     },
     {
-      "bytes": 68554,
+      "bytes": 68932,
       "path": "styles.css",
-      "sha256": "fd7ed1a399a6c01e08fc9ab0274c1bf64b88513f561bdc33e7a4013855bfbb9b"
+      "sha256": "a63869afdfbcc27f774987d450cac331af7227c880f3af04a65ed84dbb8f017b"
     },
     {
       "bytes": 11066,
@@ -64982,9 +64982,9 @@
       "sha256": "ee4727b6b5aacb4b74b9685df57dcaf9ed27b329a81b986a509afc0d610f13d0"
     },
     {
-      "bytes": 51229,
+      "bytes": 53474,
       "path": "views/ranking-view.js",
-      "sha256": "968ca668eaa4f598a55fbff27f7270eb83e7478dd2f4ae591911c3cabf298bff"
+      "sha256": "d6a92de4be12e58bbf23e11e8820c427ccedbdf46f287452d70746527520a43f"
     },
     {
       "bytes": 18619,
