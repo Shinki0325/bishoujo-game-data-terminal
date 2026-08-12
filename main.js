@@ -1255,6 +1255,7 @@ async function initialize() {
     // Contract marker: createSelectionView({ root, onToggleWork, onToggleCurrentPage, onToggleCurrentResults, onToggleSelectedOnly, onOpenDetails, onCardViewChange, onFilterChange, assetBase })
     root: elements.catalogResults,
     onToggleWork(work, selected) {
+      if (!selectionMode) return;
       return runStateChange(() => selected
         ? controller.selectWorks([work.workId])
         : controller.deselectWorks([work.workId]));
@@ -1509,6 +1510,7 @@ async function initialize() {
   const mobileSelectionView = createMobileSelectionView({
     root: elements.mobileSelectionView,
     onToggleWork(work, selected) {
+      if (!selectionMode) return;
       return runStateChange(() => selected
         ? controller.selectWorks([work.workId])
         : controller.deselectWorks([work.workId]));

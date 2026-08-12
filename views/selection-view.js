@@ -281,6 +281,7 @@ export function createSelectionView({
   let latestModel = null;
   let latestCoverUrls = null;
   const defaultSelectionMode = true;
+  let selectionModeActive = defaultSelectionMode;
 
   const titleCommit = createDebouncedCommit(titleQuery => {
     onFilterChange({ titleQuery });
@@ -395,7 +396,9 @@ export function createSelectionView({
         view: model.view,
         selected: selected.has(work.workId),
         selectionEnabled: Boolean(model.selectionMode),
-        onToggle: onToggleWork,
+        onToggle: (...args) => {
+          if (selectionModeActive) onToggleWork(...args);
+        },
         onOpenDetails,
         coverUrl: latestCoverUrls?.get?.(work.workId) ?? null,
         assetBase
@@ -474,6 +477,7 @@ export function createSelectionView({
         ...model,
         selectionMode: typeof model.selectionMode === 'boolean' ? model.selectionMode : defaultSelectionMode
       };
+      selectionModeActive = latestModel.selectionMode;
       latestCoverUrls = coverUrls;
       renderLatest();
     },

@@ -103,7 +103,9 @@ export function createMobileSelectionView({
         view: 'compact',
         selected: selectedSet.has(work.workId),
         selectionEnabled: selectionMode,
-        onToggle: onToggleWork,
+        onToggle: (...args) => {
+          if (selectionMode) onToggleWork(...args);
+        },
         onOpenDetails,
         onOpenMedia,
         assetBase
