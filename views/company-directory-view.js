@@ -166,7 +166,13 @@ export function createCompanyDirectoryView({
         text(documentRef, 'span', 'company-directory-card-vote-count', `${formatCount(company.totalVoteCount)} 票`)
       );
       open.append(overlay);
-      open.addEventListener('click', () => onSelectCompany(company.companyId, { revealDetail: true }));
+      if (currentSelectionMode) {
+        open.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
+        open.setAttribute('aria-pressed', String(selectedCompanyIds.has(company.companyId)));
+        open.addEventListener('click', () => onToggleCompany(company.companyId, !selectedCompanyIds.has(company.companyId)));
+      } else {
+        open.addEventListener('click', () => onSelectCompany(company.companyId, { revealDetail: true }));
+      }
       if (currentSelectionMode) {
         const select = documentRef.createElement('input');
         select.type = 'checkbox';

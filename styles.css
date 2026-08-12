@@ -5298,29 +5298,33 @@ dialog::backdrop {
   .ranking-toolbar {
     position: sticky;
     top: 0;
-    height: auto;
-    min-height: 94px;
+    min-height: 78px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     padding: 7px 10px;
     overflow: visible;
   }
 
-  .ranking-toolbar .edit-actions {
-    display: flex;
-    gap: 6px;
-  }
-
+  .ranking-toolbar .edit-actions,
   .ranking-toolbar .state-actions {
-    display: grid;
-    grid-template-columns: 64px 36px minmax(0, 1fr) minmax(0, 1fr);
-    gap: 6px;
-    width: 100%;
+    display: contents;
   }
 
-  .ranking-toolbar .state-actions > * {
+  .ranking-toolbar #undo-edit { order: 1; }
+  .ranking-toolbar #redo-edit { order: 2; }
+  .ranking-toolbar #ranking-immersive { order: 3; }
+  .ranking-toolbar .edit-actions > .toolbar-menu-shell { order: 4; }
+  .ranking-toolbar .state-actions > .toolbar-menu-shell { order: 5; }
+  .ranking-toolbar #export-png { order: 6; }
+  .ranking-toolbar #ranking-help-button { order: 7; }
+
+  .ranking-toolbar .toolbar-menu-shell {
     min-width: 0;
+  }
+
+  .ranking-toolbar .toolbar-menu-shell > button {
+    width: 100%;
   }
 
   .ranking-toolbar .icon-button,
@@ -5332,7 +5336,8 @@ dialog::backdrop {
 
   .ranking-toolbar #cleanup-menu-button,
   .ranking-toolbar #display-menu-button {
-    padding-inline: 7px;
+    width: 100%;
+    padding-inline: 5px;
     font-size: 12px;
   }
 
@@ -5357,8 +5362,92 @@ dialog::backdrop {
     display: none;
   }
 
+  .ranking-toolbar #ranking-immersive {
+    min-width: 0;
+    padding-inline: 5px;
+  }
+
+  /* Mobile ranking follows an editor-workbench model: a compact command deck,
+     one focused board canvas, then a separate candidate workspace. */
+  .ranking-view {
+    background: #0d141a;
+  }
+
+  .ranking-page-heading {
+    gap: 7px;
+    padding: 13px 14px 8px;
+    background: #0d141a;
+    border-bottom: 0;
+  }
+
+  .ranking-page-title h2 {
+    font-size: 22px;
+    font-weight: 760;
+  }
+
+  .ranking-subject-tabs {
+    padding: 2px;
+    border: 1px solid #31414b;
+    border-radius: 5px;
+    background: #121d24;
+  }
+
+  .ranking-subject-tabs button {
+    min-height: 28px;
+    border-color: transparent;
+    border-radius: 3px;
+  }
+
+  .ranking-page-heading .workspace-counts {
+    gap: 0;
+    border: 1px solid #2c3b45;
+    border-radius: 6px;
+    background: #121d24;
+  }
+
+  .ranking-page-heading .count-item {
+    min-height: 34px;
+    border-color: #2c3b45;
+  }
+
+  .ranking-toolbar {
+    grid-template-columns: 40px 40px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 5px;
+    min-height: 78px;
+    padding: 7px 14px 10px;
+    background: #0d141a;
+    border-bottom: 0;
+  }
+
+  .ranking-toolbar #undo-edit { order: 1; }
+  .ranking-toolbar #redo-edit { order: 2; }
+  .ranking-toolbar .state-actions > .toolbar-menu-shell { order: 3; }
+  .ranking-toolbar #ranking-immersive { order: 4; }
+  .ranking-toolbar .edit-actions > .toolbar-menu-shell { order: 5; }
+  .ranking-toolbar #ranking-help-button { order: 6; }
+  .ranking-toolbar #export-png { order: 7; grid-column: 3 / -1; }
+
+  .ranking-toolbar .icon-button,
+  .ranking-toolbar #cleanup-menu-button,
+  .ranking-toolbar #display-menu-button,
+  .ranking-toolbar .ranking-live-mode,
+  .ranking-toolbar #export-png {
+    border-radius: 5px;
+  }
+
+  .ranking-toolbar .icon-button {
+    width: 40px;
+    min-width: 40px;
+  }
+
   .tier-board {
-    padding: 6px;
+    margin: 0 14px 12px;
+    padding: 0;
+    overflow: hidden;
+    background: #f6f7f8;
+    border: 1px solid #ced6da;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 22%);
   }
 
   .tier-board[data-tier-count="5"] {
@@ -5367,21 +5456,80 @@ dialog::backdrop {
 
   .tier-row {
     grid-template-columns: 76px minmax(0, 1fr);
+    border-bottom-color: #d6dde0;
   }
 
   .tier-track {
     gap: 6px;
     padding: 7px 6px;
+    background: #fbfcfc;
+  }
+
+  .tier-label {
+    font-size: 18px;
+  }
+
+  .tier-label span {
+    -webkit-text-stroke-width: 1px;
+  }
+
+  .tier-label output {
+    font-size: 9px;
+  }
+
+  /* Tier actions belong to their tier row, and stay discoverable on touch. */
+  .tier-editing-state[hidden] {
+    display: block !important;
+  }
+
+  .tier-edit-control {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    color: #17242c;
+    background: rgb(255 255 255 / 84%);
+    border-color: rgb(21 39 49 / 32%);
+    font-size: 12px;
+  }
+
+  .tier-add-button {
+    min-height: 42px;
+    color: #314750;
+    background: #eef2f3;
+    border-top-color: #ced6da;
+    font-size: 18px;
+  }
+
+  .ranking-candidates {
+    margin: 0 14px calc(14px + var(--safe-bottom));
+    overflow: hidden;
+    background: #101920;
+    border: 1px solid #2e404a;
+    border-radius: 6px;
   }
 
   .candidate-toolbar {
     min-height: 0;
     gap: 7px;
-    padding: 9px 10px;
+    padding: 11px 10px 9px;
+    background: #16232b;
+    border-bottom-color: #2e404a;
   }
 
   .candidate-toolbar h2 {
     margin: 0;
     font-size: 15px;
+  }
+
+  .candidate-toolbar .search-field {
+    width: 100%;
+    max-width: none;
+  }
+
+  .ranking-candidate-grid {
+    min-height: calc(112px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-rail));
+    padding: 9px;
+    background: #101920;
   }
 }
