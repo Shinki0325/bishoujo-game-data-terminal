@@ -119,12 +119,15 @@ export function createSelectionCard(documentRef, work, {
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
 
+  const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
+    ? work.displayTitle
+    : work.title;
   const card = documentRef.createElement('article');
   card.className = `selection-card selection-card-${view}`;
   card.classList.toggle('is-selected', Boolean(selected));
   card.classList.toggle('is-selectable', Boolean(selectionEnabled));
   card.dataset.workId = work.workId;
-  card.setAttribute('aria-label', `查看 ${work.title} 详情`);
+  card.setAttribute('aria-label', `查看 ${displayTitle} 详情`);
   card.addEventListener('click', () => {
     if (selectionEnabled) onToggle(work, !selected);
     else onOpenDetails(work);
@@ -153,8 +156,8 @@ export function createSelectionCard(documentRef, work, {
   cover.type = 'button';
   cover.className = 'selection-card-cover';
   cover.dataset.controlType = 'details';
-  cover.setAttribute('aria-label', `查看 ${work.title} 详情`);
-  cover.title = `查看 ${work.title} 详情`;
+  cover.setAttribute('aria-label', `查看 ${displayTitle} 详情`);
+  cover.title = `查看 ${displayTitle} 详情`;
   cover.addEventListener('click', event => {
     event.stopPropagation();
     onOpenDetails(work);
@@ -168,7 +171,7 @@ export function createSelectionCard(documentRef, work, {
     checkbox.type = 'checkbox';
     checkbox.dataset.controlType = 'checkbox';
     checkbox.checked = Boolean(selected);
-    checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${work.title}`);
+    checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${displayTitle}`);
     checkbox.addEventListener('click', event => event.stopPropagation());
     checkbox.addEventListener('change', event => {
       event.stopPropagation();
@@ -181,7 +184,7 @@ export function createSelectionCard(documentRef, work, {
 
   const overlay = documentRef.createElement('div');
   overlay.className = 'selection-card-overlay';
-  appendTextElement(documentRef, overlay, 'p', 'selection-card-title', work.title);
+  appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
   if (view === 'full') {
     appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
     const stats = documentRef.createElement('p');

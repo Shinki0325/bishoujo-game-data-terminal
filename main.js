@@ -561,6 +561,12 @@ function projectBrandsWithAliases(brands, companyAliasesById, companyPinyinById 
   });
 }
 
+function projectWorkWithDisplayTitle(work, workDisplayTitlesById = null) {
+  const displayTitle = workDisplayTitlesById?.get?.(work.workId);
+  if (typeof displayTitle !== 'string' || displayTitle.length === 0) return work;
+  return { ...work, displayTitle };
+}
+
 function browserStorage() {
   try {
     return window.localStorage;
@@ -726,6 +732,8 @@ async function initialize() {
   }
   const workAliasesById = enrichment?.workAliasesById ?? null;
   const workPinyinById = enrichment?.workPinyinById ?? null;
+  const workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
+  const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
   const workerWorkAliasesById = workAliasesById === null
     ? null
     : new Map(workAliasesById);
@@ -751,13 +759,13 @@ async function initialize() {
   }
   const companyDirectory = buildCompanyDirectory({
     brands,
-    works: sample.works,
+    works: displayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
     companyPinyinById: enrichment?.companyPinyinById,
     avatarByCompanyId: companyProfile?.avatarByCompanyId
   });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
-  const worksById = new Map(sample.works.map(work => [work.workId, work]));
+  const worksById = new Map(displayWorks.map(work => [work.workId, work]));
   let mediaStore = null;
   let customWorks = [];
   await startupMetrics.measureAsync('local-media-hydration', async () => {
@@ -1361,8 +1369,8 @@ async function initialize() {
     });
     const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
     card.addEventListener('contextmenu', event => {
-      if (!desktopDetails || event.pointerType === 'touch') return;
       event.preventDefault();
+      if (!desktopDetails || event.pointerType === 'touch') return;
       callbacks.onContextMenu(companyItem, card, event);
     });
     card.addEventListener('dragstart', event => {
@@ -1970,7 +1978,7 @@ async function initialize() {
       ]) : null);
     } else {
       selectionView.render({
-        works: model.visibleWorks,
+        works: model.visibleWorks.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById)),
         view: model.state.selectionCardView,
         selectedWorkIds: model.state.selectedWorkIds,
         selectAllState: model.selectAllState,

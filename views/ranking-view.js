@@ -154,12 +154,15 @@ export function createRankingCard(documentRef, work, callbacks) {
   assertFunction(onDragEnd, 'onDragEnd');
   assertFunction(shouldSuppressMediaClick, 'shouldSuppressMediaClick');
 
+  const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
+    ? work.displayTitle
+    : work.title;
   const card = documentRef.createElement('article');
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
   card.draggable = true;
   card.tabIndex = 0;
-  card.setAttribute('aria-label', work.title);
+  card.setAttribute('aria-label', displayTitle);
 
   const image = documentRef.createElement('img');
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
@@ -184,8 +187,8 @@ export function createRankingCard(documentRef, work, callbacks) {
   const cover = documentRef.createElement('button');
   cover.type = 'button';
   cover.className = 'ranking-card-cover';
-  cover.setAttribute('aria-label', `放大 ${work.title}`);
-  cover.title = `放大 ${work.title}`;
+  cover.setAttribute('aria-label', `放大 ${displayTitle}`);
+  cover.title = `放大 ${displayTitle}`;
   cover.addEventListener('click', event => {
     if (shouldSuppressMediaClick(work)) {
       event.preventDefault();
@@ -200,12 +203,12 @@ export function createRankingCard(documentRef, work, callbacks) {
   const title = documentRef.createElement('span');
   title.className = 'ranking-card-title';
   title.dataset.field = 'title';
-  title.textContent = work.title;
+  title.textContent = displayTitle;
   card.append(cover, title);
   const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
   card.addEventListener('contextmenu', event => {
-    if (!desktopDetails) return;
     event.preventDefault();
+    if (!desktopDetails) return;
     onContextMenu(work, card, event);
   });
   card.addEventListener('dragstart', event => {
