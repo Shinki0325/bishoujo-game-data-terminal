@@ -29,6 +29,7 @@ import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
 import { createMediaPreviewActions } from './lib/media-preview-actions.js';
 import { createRankingHelp } from './lib/ranking-help.js';
+import { createGuideController } from './lib/guide-controller.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
@@ -59,6 +60,7 @@ import {
   parseSelectionShare
 } from './lib/share-selection.js';
 import { planSharedSelectionImport } from './lib/share-import.js';
+import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
@@ -117,6 +119,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   rankingSubjectWork: requiredElement('ranking-subject-work'),
   rankingSubjectCompany: requiredElement('ranking-subject-company'),
   companyView: requiredElement('company-view'),
+  companyDirectoryCount: requiredElement('company-directory-count'),
   companySearch: requiredElement('company-directory-search'),
   companySort: requiredElement('company-sort'),
   companyHasImage: requiredElement('company-has-image'),
@@ -127,6 +130,12 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companyRankingClose: requiredElement('company-ranking-close'),
   companyRanking: requiredElement('company-ranking'),
   companyBack: requiredElement('company-back'),
+  companySelectionModeToggle: requiredElement('company-selection-mode-toggle'),
+  companySelectionContextBar: requiredElement('company-selection-context-bar'),
+  companySelectionContextCount: requiredElement('company-selection-context-count'),
+  clearSelectedCompanies: requiredElement('clear-selected-companies'),
+  startCompanyRanking: requiredElement('start-company-ranking'),
+  companyDetailClose: requiredElement('company-detail-close'),
   companyList: requiredElement('company-list'),
   companyDetail: requiredElement('company-detail'),
   companyDetailTitle: requiredElement('company-detail-title'),
@@ -137,6 +146,12 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   selectedCount: requiredElement('selected-count'),
   rankedCount: requiredElement('ranked-count'),
   unrankedCount: requiredElement('global-unranked-count'),
+  catalogResultCount: requiredElement('catalog-result-count'),
+  selectionModeToggle: requiredElement('selection-mode-toggle'),
+  selectionContextBar: requiredElement('selection-context-bar'),
+  selectionContextCount: requiredElement('selection-context-count'),
+  clearSelectedWorks: requiredElement('clear-selected-works'),
+  startWorkRanking: requiredElement('start-work-ranking'),
   filterToggle: requiredElement('filter-toggle'),
   filterBackdrop: requiredElement('filter-backdrop'),
   filterDrawer: requiredElement('filter-drawer'),
@@ -807,8 +822,17 @@ async function initialize() {
   let companyDetailSortDirection = 'asc';
   let companyCandidateQuery = '';
   let selectedCompanyId = null;
-  const companyHelpStorageKey = 'egs-tier-terminal:company-directory-help-v1';
-  let companyDirectoryHelpShown = false;
+  let selectionMode = false;
+  let companySelectionMode = false;
+  let currentWorkDetailId = null;
+  let applyingUiLocation = false;
+  let locationScrollTimer = null;
+  const companyGuide = createGuideController({
+    key: 'egs-tier-terminal:company-directory-guide-v2',
+    read: key => window.localStorage.getItem(key),
+    write: (key, value) => window.localStorage.setItem(key, value),
+    open: openCompanyDirectoryHelp
+  });
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
@@ -824,27 +848,18 @@ async function initialize() {
   }
 
   function showCompanyDirectoryHelpOnce() {
-    if (companyDirectoryHelpShown) return;
-    try {
-      if (window.localStorage.getItem(companyHelpStorageKey) === 'seen') {
-        companyDirectoryHelpShown = true;
-        return;
-      }
-      window.localStorage.setItem(companyHelpStorageKey, 'seen');
-    } catch {
-      // Keep the guide session-scoped when browser storage is unavailable.
-    }
-    companyDirectoryHelpShown = true;
-    openCompanyDirectoryHelp();
+    companyGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
   }
 
-  function openCompanyDirectory(companyId = null) {
+  function openCompanyDirectory(companyId = null, { push = true } = {}) {
     companyDirectoryOpen = true;
     selectedCompanyId = companyId;
+    currentWorkDetailId = null;
     if (elements.detailsDialog.open) elements.detailsDialog.close();
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     renderCompanyDirectory();
     showCompanyDirectoryHelpOnce();
+    if (push) pushUiLocation();
   }
 
   async function coverUrlForWork(work) {
@@ -1229,6 +1244,7 @@ async function initialize() {
     await render();
   }
   const selectionView = createSelectionView({
+    // Contract marker: createSelectionView({ root, onToggleWork, onToggleCurrentPage, onToggleCurrentResults, onToggleSelectedOnly, onOpenDetails, onCardViewChange, onFilterChange, assetBase })
     root: elements.catalogResults,
     onToggleWork(work, selected) {
       return runStateChange(() => selected
@@ -1245,13 +1261,18 @@ async function initialize() {
       return runStateChange(() => controller.setFilterState({ selectedOnly }));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+      openWorkDetails(work);
     },
     onCardViewChange(cardView) {
       return runStateChange(() => controller.setSelectionCardView(cardView));
     },
     onFilterChange(patch) {
-      return runStateChange(() => controller.setFilterState(patch));
+      const result = runStateChange(() => controller.setFilterState(patch));
+      replaceUiLocation();
+      return result;
+    },
+    onPageChange() {
+      replaceUiLocation();
     },
     assetBase
   });
@@ -1265,9 +1286,9 @@ async function initialize() {
       direction,
       hasAvatar: companyHasImage ? true : null
     });
+    elements.companyDirectoryCount.textContent = String(companies.length);
     const selected = companies.find(company => company.companyId === selectedCompanyId)
       ?? companyDirectory.companies.find(company => company.companyId === selectedCompanyId)
-      ?? companies[0]
       ?? null;
     selectedCompanyId = selected?.companyId ?? null;
     companyDirectoryView.render({
@@ -1280,7 +1301,9 @@ async function initialize() {
       detailWorkSortKey: companyDetailSortKey,
       detailWorkSortDirection: companyDetailSortDirection,
       selectedCompanyIds: companyRanking.inspect().selectedSet,
-      imageUrlForCompany: company => companyImageUrl(company, assetBase)
+      selectionMode: companySelectionMode,
+      imageUrlForCompany: company => companyImageUrl(company, assetBase),
+      imageUrlForWork: work => resolveAssetUrl(work.coverPath, assetBase)
     });
   }
 
@@ -1360,21 +1383,30 @@ async function initialize() {
     onSearch(query) {
       companyQuery = query;
       renderCompanyDirectory();
+      replaceUiLocation();
     },
     onSort(value) {
       companySort = value;
       renderCompanyDirectory();
+      replaceUiLocation();
     },
     onSelectCompany(companyId) {
       selectedCompanyId = companyId;
       renderCompanyDirectory();
+      pushUiLocation();
+    },
+    onCloseDetail() {
+      selectedCompanyId = null;
+      renderCompanyDirectory();
+      pushUiLocation();
     },
     onToggleCompany(companyId, selected) {
       companyRanking.toggle(companyId, selected);
       renderCompanyDirectory();
+      if (lastRenderedModel !== null) renderControlStates(lastRenderedModel);
     },
     onOpenWork(work) {
-      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+      openWorkDetails(work);
     },
     onDetailWorkSort({ sortKey, direction }) {
       if (typeof sortKey === 'string' && ['releaseDate', 'median', 'voteCount'].includes(sortKey)) {
@@ -1382,28 +1414,29 @@ async function initialize() {
       }
       if (direction === 'asc' || direction === 'desc') companyDetailSortDirection = direction;
       renderCompanyDirectory();
+    },
+    onPageChange() {
+      replaceUiLocation();
     }
   });
   elements.companyHasImage.addEventListener('change', () => {
     companyHasImage = elements.companyHasImage.checked;
     renderCompanyDirectory();
+    replaceUiLocation();
   });
-  let mobileHelpShown = false;
-  const mobileHelpStorageKey = 'egs-tier-mobile-help-seen-v1';
-
-  function mobileHelpWasSeen() {
-    try {
-      return window.localStorage.getItem(mobileHelpStorageKey) === '1';
-    } catch {
-      return false;
+  const mobileGuide = createGuideController({
+    key: 'egs-tier-terminal:mobile-guide-v2',
+    read: key => window.localStorage.getItem(key),
+    write: (key, value) => window.localStorage.setItem(key, value),
+    open: () => {
+      if (typeof elements.mobileHelpDialog.showModal === 'function') elements.mobileHelpDialog.showModal();
+      else elements.mobileHelpDialog.open = true;
     }
-  }
+  });
 
   function showMobileHelpOnce() {
-    if (!mobileCompanion || mobileHelpShown || mobileHelpWasSeen()) return;
-    mobileHelpShown = true;
-    if (typeof elements.mobileHelpDialog.showModal === 'function') elements.mobileHelpDialog.showModal();
-    else elements.mobileHelpDialog.open = true;
+    if (!mobileCompanion) return;
+    mobileGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
   }
 
   async function copySelectionUrl(url) {
@@ -1460,7 +1493,7 @@ async function initialize() {
         : controller.deselectWorks([work.workId]));
     },
     onOpenDetails(work) {
-      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+      openWorkDetails(work);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1533,7 +1566,7 @@ async function initialize() {
         openCompanyDirectory(work.workId);
         return;
       }
-      showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+      openWorkDetails(work);
     },
     onOpenMedia(work) {
       void openMediaPreview(work).catch(error => {
@@ -1829,6 +1862,21 @@ async function initialize() {
       };
     elements.modeSelection.disabled = importBusy;
     elements.modeRanking.disabled = importBusy;
+    elements.selectionModeToggle.disabled = importBusy;
+    elements.companySelectionModeToggle.disabled = importBusy;
+    elements.selectionModeToggle.setAttribute('aria-pressed', String(selectionMode));
+    elements.selectionModeToggle.textContent = selectionMode ? '退出选择' : '选择';
+    elements.companySelectionModeToggle.setAttribute('aria-pressed', String(companySelectionMode));
+    elements.companySelectionModeToggle.textContent = companySelectionMode ? '退出选择' : '选择';
+    elements.selectionContextBar.hidden = mobileCompanion || companyDirectoryOpen || model.state.workspaceMode === 'ranking' || !selectionMode;
+    elements.selectionContextCount.textContent = String(model.selectedCount);
+    elements.startWorkRanking.disabled = importBusy || model.selectedCount === 0;
+    elements.clearSelectedWorks.disabled = importBusy || model.selectedCount === 0;
+    const companySelectedCount = companyRanking.inspect().selectedCompanyIds.length;
+    elements.companySelectionContextBar.hidden = !companyDirectoryOpen || !companySelectionMode;
+    elements.companySelectionContextCount.textContent = String(companySelectedCount);
+    elements.startCompanyRanking.disabled = importBusy || companySelectedCount === 0;
+    elements.clearSelectedCompanies.disabled = importBusy || companySelectedCount === 0;
     elements.undoEdit.disabled = importBusy || !activeRankingState.canUndo;
     elements.redoEdit.disabled = importBusy || !activeRankingState.canRedo;
     elements.clearBoard.disabled = importBusy || activeRankingState.rankedCount === 0;
@@ -1856,6 +1904,8 @@ async function initialize() {
       controls: [
         elements.modeSelection,
         elements.modeRanking,
+        elements.selectionModeToggle,
+        elements.companySelectionModeToggle,
         elements.undoEdit,
         elements.redoEdit,
         elements.clearBoard,
@@ -1910,6 +1960,7 @@ async function initialize() {
     elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
     elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
     elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
+    elements.catalogResultCount.textContent = `${model.visibleWorks.length} 项`;
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
@@ -1943,7 +1994,8 @@ async function initialize() {
         selectedWorkIds: model.state.selectedWorkIds,
         selectAllState: model.selectAllState,
         selectionCapacity: Math.max(0, USER_WORK_LIMIT - model.selectedCount),
-        filterState: model.state.filterState
+        filterState: model.state.filterState,
+        selectionMode
       }, await resolveCoverUrls(selectionInitialWorks(model.visibleWorks)));
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
@@ -2040,6 +2092,44 @@ async function initialize() {
     window.history.replaceState({}, '', cleanUrl.href);
   }
 
+  function currentUiLocation() {
+    const state = controller.inspectState();
+    if (companyDirectoryOpen) {
+      if (selectedCompanyId !== null) return { page: 'companies', companyId: selectedCompanyId };
+      return {
+        page: 'companies',
+        query: companyQuery,
+        sort: companySort,
+        hasImage: companyHasImage,
+        pageNumber: companyDirectoryView?.getPageNumber?.() ?? 1
+      };
+    }
+    if (state.workspaceMode === 'ranking') return { page: 'ranking', subject: rankingSubject };
+    if (currentWorkDetailId !== null) return { page: 'works', workId: currentWorkDetailId };
+    return {
+      page: 'works',
+      query: state.filterState.titleQuery,
+      sort: `${state.filterState.sortKey}-${state.filterState.sortDirection}`,
+      pageNumber: selectionView?.getPageNumber?.() ?? 1
+    };
+  }
+
+  function updateUiLocation(method = 'replaceState') {
+    if (applyingUiLocation) return;
+    const url = new URL(window.location.href);
+    url.hash = formatUiLocationHash(currentUiLocation()).slice(1);
+    window.history[method]({}, '', url.href);
+  }
+
+  function replaceUiLocation() { updateUiLocation('replaceState'); }
+  function pushUiLocation() { updateUiLocation('pushState'); }
+
+  function openWorkDetails(work, { push = true } = {}) {
+    currentWorkDetailId = work.workId;
+    showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    if (push) pushUiLocation();
+  }
+
   function resetShareImportDialog() {
     pendingShareImport = null;
     elements.shareImportMessage.hidden = true;
@@ -2088,6 +2178,61 @@ async function initialize() {
     return true;
   }
 
+  async function applyUiLocation() {
+    if (parseSelectionShare(window.location) !== null) return false;
+    const location = parseUiLocationHash(window.location.hash);
+    if (location === null) {
+      replaceUiLocation();
+      return false;
+    }
+    applyingUiLocation = true;
+    try {
+      if (location.page === 'ranking') {
+        companyDirectoryOpen = false;
+        currentWorkDetailId = null;
+        rankingSubject = location.subject;
+        controller.setWorkspaceMode('ranking');
+        await render();
+        return true;
+      }
+      if (location.page === 'companies') {
+        companyQuery = location.query;
+        companySort = location.sort;
+        companyHasImage = location.hasImage;
+        elements.companyHasImage.checked = companyHasImage;
+        openCompanyDirectory(location.companyId, { push: false });
+        companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
+        await render();
+        if (location.companyId === null) companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
+        return true;
+      }
+      companyDirectoryOpen = false;
+      rankingSubject = 'work';
+      const [sortKey, sortDirection] = location.sort.split('-');
+      controller.setWorkspaceMode('selection');
+      controller.setFilterState({ titleQuery: location.query, sortKey, sortDirection });
+      currentWorkDetailId = null;
+      await render();
+      selectionView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
+      if (location.workId !== null) {
+        const work = worksById.get(location.workId);
+        if (work) openWorkDetails(work, { push: false });
+        else replaceUiLocation();
+      }
+      return true;
+    } finally {
+      applyingUiLocation = false;
+    }
+  }
+
+  window.addEventListener('popstate', () => { void applyUiLocation(); });
+  window.addEventListener('hashchange', () => { void applyUiLocation(); });
+  elements.detailsDialog.addEventListener('close', () => {
+    if (currentWorkDetailId === null || applyingUiLocation) return;
+    currentWorkDetailId = null;
+    pushUiLocation();
+  });
+
   function commitShareImport(mode) {
     if (pendingShareImport === null || pendingShareImport.validWorkIds.length === 0) return false;
     try {
@@ -2134,16 +2279,25 @@ async function initialize() {
 
   elements.modeSelection.addEventListener('click', () => {
     companyDirectoryOpen = false;
-    return runStateChange(() => {
+    companySelectionMode = false;
+    const result = runStateChange(() => {
       return controller.setWorkspaceMode('selection');
     });
+    replaceUiLocation();
+    return result;
   });
   elements.modeRanking.addEventListener('click', () => {
     companyDirectoryOpen = false;
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    selectionMode = false;
+    companySelectionMode = false;
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
   });
   elements.modeCompany.addEventListener('click', () => {
     closeToolbarMenus();
+    selectionMode = false;
+    companySelectionMode = false;
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
@@ -2158,9 +2312,42 @@ async function initialize() {
     rankingSubject = 'work';
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     void render();
+    pushUiLocation();
   });
   elements.companyRankingToggle.addEventListener('click', () => {
     companyDirectoryOpen = false;
+    rankingSubject = 'company';
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
+  });
+  elements.selectionModeToggle.addEventListener('click', () => {
+    selectionMode = !selectionMode;
+    void render();
+  });
+  elements.companySelectionModeToggle.addEventListener('click', () => {
+    companySelectionMode = !companySelectionMode;
+    void render();
+  });
+  elements.clearSelectedWorks.addEventListener('click', () => {
+    if (controller.inspectState().selectedWorkIds.length === 0) return;
+    return runStateChange(() => controller.clearCandidates());
+  });
+  elements.startWorkRanking.addEventListener('click', () => {
+    if (controller.inspectState().selectedWorkIds.length === 0) return;
+    companyDirectoryOpen = false;
+    selectionMode = false;
+    rankingSubject = 'work';
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+  });
+  elements.clearSelectedCompanies.addEventListener('click', () => {
+    if (companyRanking.inspect().selectedCompanyIds.length === 0) return;
+    return runStateChange(() => companyRanking.clearCandidates());
+  });
+  elements.startCompanyRanking.addEventListener('click', () => {
+    if (companyRanking.inspect().selectedCompanyIds.length === 0) return;
+    companyDirectoryOpen = false;
+    companySelectionMode = false;
     rankingSubject = 'company';
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
@@ -2168,16 +2355,23 @@ async function initialize() {
     companyDirectoryOpen = true;
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     renderCompanyDirectory();
+    pushUiLocation();
   });
   elements.rankingSubjectWork.addEventListener('click', () => {
     rankingSubject = 'work';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    replaceUiLocation();
+    return result;
   });
   elements.rankingSubjectCompany.addEventListener('click', () => {
     rankingSubject = 'company';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    replaceUiLocation();
+    return result;
   });
   elements.mobileCompanyMode.addEventListener('click', () => {
+    selectionMode = false;
+    companySelectionMode = false;
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
@@ -2187,7 +2381,8 @@ async function initialize() {
     };
     open();
   });
-  elements.companyHelpButton.addEventListener('click', openCompanyDirectoryHelp);
+  elements.companyHelpButton.addEventListener('click', () => companyGuide.open());
+  elements.mobileHelpButton.addEventListener('click', () => mobileGuide.open());
   elements.companyHelpDismiss.addEventListener('click', () => elements.companyHelp.close());
   elements.rankingHelpButton.addEventListener('click', () => help.openFull());
   elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());
@@ -2346,7 +2541,7 @@ async function initialize() {
     if (rankedCount === 0) return;
 
     pngExportInProgress = true;
-    renderControlStates(snapshot);
+    renderControlStates(lastRenderedModel ?? controller.inspect([]));
     try {
       const exportState = isCompanyRanking
         ? controller.inspectState()
@@ -2397,7 +2592,10 @@ async function initialize() {
     }
   });
 
-  await startupMetrics.measureAsync('first-render', () => render());
+  await startupMetrics.measureAsync('first-render', async () => {
+    const restored = await applyUiLocation();
+    if (!restored) await render();
+  });
   if (mobileCompanion) openMobileShareWarning();
   else openShareImportDialog();
 }

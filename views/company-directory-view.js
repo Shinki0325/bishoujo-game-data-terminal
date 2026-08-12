@@ -1,5 +1,6 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
 import { createActionIcon } from '../lib/action-icons.js';
+import { setListState } from '../lib/list-state.js';
 
 const COMPANY_PAGE_SIZE = 36;
 
@@ -28,25 +29,31 @@ export function createCompanyDirectoryView({
   onSelectCompany,
   onToggleCompany,
   onOpenWork,
-  onDetailWorkSort
+  onDetailWorkSort,
+  onCloseDetail = () => {},
+  onPageChange = () => {},
+  selectionMode = true
 }) {
   if (!root || typeof root.querySelector !== 'function') throw new TypeError('root must provide querySelector');
-  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function' || typeof onDetailWorkSort !== 'function') {
+  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function' || typeof onDetailWorkSort !== 'function' || typeof onCloseDetail !== 'function' || typeof onPageChange !== 'function') {
     throw new TypeError('company directory callbacks must be functions');
   }
   const documentRef = root.ownerDocument;
   const search = requireElement(root, 'company-directory-search');
   const sort = requireElement(root, 'company-sort');
   const list = requireElement(root, 'company-list');
+  const layout = root.querySelector?.('.company-directory-layout');
   const detail = requireElement(root, 'company-detail');
   const detailTitle = requireElement(root, 'company-detail-title');
   const detailAvatar = requireElement(root, 'company-detail-avatar');
   const detailMeta = requireElement(root, 'company-detail-meta');
+  const detailClose = root.querySelector?.('#company-detail-close');
   const detailWorks = requireElement(root, 'company-detail-works');
   const detailSort = requireElement(root, 'company-detail-sort');
   const detailSortDirection = requireElement(root, 'company-detail-sort-direction');
   const detailSortDirectionIcon = requireElement(root, 'company-detail-sort-direction-icon');
   const empty = requireElement(root, 'company-empty');
+  const listState = requireElement(root, 'company-list-state');
   const pagination = requireElement(root, 'company-directory-pagination');
   const pagePrevious = requireElement(root, 'company-page-previous');
   const pageInput = requireElement(root, 'company-page-input');
@@ -65,6 +72,7 @@ export function createCompanyDirectoryView({
   detailSortDirection.addEventListener('click', () => {
     onDetailWorkSort({ direction: detailSortDirection.getAttribute('aria-pressed') === 'true' ? 'desc' : 'asc' });
   });
+  detailClose?.addEventListener('click', () => onCloseDetail());
 
   function pageCount(companies) {
     return Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
@@ -106,7 +114,9 @@ export function createCompanyDirectoryView({
     selectedWorks = [],
     detailWorkSortKey = 'releaseDate',
     detailWorkSortDirection = 'asc',
-    imageUrlForCompany = null
+    selectionMode: currentSelectionMode = selectionMode,
+    imageUrlForCompany = null,
+    imageUrlForWork = null
   } = {}) {
     const companyKey = companies.map(company => company.companyId).join('\u001f');
     if (companyKey !== renderedCompanyKey) {
@@ -124,7 +134,8 @@ export function createCompanyDirectoryView({
       selectedWorks,
       detailWorkSortKey,
       detailWorkSortDirection,
-      imageUrlForCompany
+      imageUrlForCompany,
+      imageUrlForWork
     };
     const totalPages = pageCount(companies);
     const selectedIndex = companies.findIndex(company => company.companyId === selectedCompanyId);
@@ -133,7 +144,7 @@ export function createCompanyDirectoryView({
     }
     pageIndex = Math.min(pageIndex, totalPages - 1);
     const visibleCompanies = companies.slice(pageIndex * COMPANY_PAGE_SIZE, (pageIndex + 1) * COMPANY_PAGE_SIZE);
-    const pageKey = `${companyKey}\u001f${pageIndex}`;
+    const pageKey = `${companyKey}\u001f${pageIndex}\u001f${currentSelectionMode}`;
     if (pageKey !== renderedPageKey) {
       renderedPageKey = pageKey;
       list.replaceChildren();
@@ -156,17 +167,33 @@ export function createCompanyDirectoryView({
       );
       open.append(overlay);
       open.addEventListener('click', () => onSelectCompany(company.companyId));
-      const select = documentRef.createElement('input');
-      select.type = 'checkbox';
-      select.className = 'company-directory-card-select';
-      select.checked = selectedCompanyIds.has(company.companyId);
-      select.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
-      select.addEventListener('change', () => onToggleCompany(company.companyId, select.checked));
-      card.append(open, select);
+      if (currentSelectionMode) {
+        const select = documentRef.createElement('input');
+        select.type = 'checkbox';
+        select.className = 'company-directory-card-select';
+        select.checked = selectedCompanyIds.has(company.companyId);
+        select.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
+        select.addEventListener('change', () => onToggleCompany(company.companyId, select.checked));
+        card.append(open, select);
+      } else {
+        card.append(open);
+        if (selectedCompanyIds.has(company.companyId)) {
+          const marker = documentRef.createElement('span');
+          marker.className = 'company-directory-card-selected-mark';
+          marker.textContent = '已选';
+          marker.setAttribute('aria-label', '已选');
+          card.append(marker);
+        }
+      }
       list.append(card);
     }
     }
-    empty.hidden = companies.length !== 0;
+    empty.hidden = true;
+    setListState({
+      status: listState,
+      state: companies.length === 0 ? 'empty' : 'ready',
+      message: '没有匹配的会社。'
+    });
     pagination.hidden = totalPages <= 1;
     pagePrevious.disabled = pageIndex === 0;
     pageNext.disabled = pageIndex >= totalPages - 1;
@@ -179,6 +206,8 @@ export function createCompanyDirectoryView({
       if (select !== null) select.checked = selectedCompanyIds.has(companyId);
     }
     const selected = companies.find(company => company.companyId === selectedCompanyId) ?? null;
+    const isMobile = Boolean(root.ownerDocument?.defaultView?.matchMedia?.('(max-width: 899px)')?.matches);
+    if (!isMobile && layout && detail.parentElement !== layout) layout.append(detail);
     detail.hidden = selected === null;
     if (!selected) return;
     detailTitle.textContent = selected.brandName;
@@ -196,27 +225,53 @@ export function createCompanyDirectoryView({
       const item = documentRef.createElement('button');
       item.type = 'button';
       item.className = 'company-directory-work';
-      item.textContent = `${work.title} · ${work.releaseDate || '未知'}`;
+      const cover = documentRef.createElement('span');
+      cover.className = 'company-directory-work-cover';
+      const imageUrl = typeof imageUrlForWork === 'function' ? imageUrlForWork(work) : null;
+      if (imageUrl) {
+        const image = documentRef.createElement('img');
+        image.alt = '';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        image.src = imageUrl;
+        image.addEventListener('error', () => image.remove(), { once: true });
+        cover.append(image);
+      }
+      const copy = documentRef.createElement('span');
+      copy.className = 'company-directory-work-copy';
+      copy.append(
+        text(documentRef, 'strong', 'company-directory-work-title', work.title),
+        text(documentRef, 'span', 'company-directory-work-meta', `${work.releaseDate?.slice(0, 4) || '未知'} · ${Number.isFinite(work.median) ? work.median.toFixed(1) : '-'} · ${formatCount(work.voteCount)}`)
+      );
+      item.append(cover, copy);
       item.addEventListener('click', () => onOpenWork(work));
       detailWorks.append(item);
     }
+    if (isMobile) {
+      const selectedIndex = visibleCompanies.findIndex(company => company.companyId === selectedCompanyId);
+      const rowEnd = Math.min(visibleCompanies.length, (Math.floor(selectedIndex / 2) + 1) * 2);
+      const anchor = list.children[rowEnd - 1];
+      if (anchor) anchor.after(detail);
+    }
   }
 
-  function setPage(nextPageIndex) {
+  function setPage(nextPageIndex, { scroll = true, notify = true } = {}) {
     if (latestModel === null) return;
+    const previousIndex = pageIndex;
     pageIndex = Math.max(0, Math.min(nextPageIndex, pageCount(latestModel.companies) - 1));
     clearPageError();
     render(latestModel);
-    root.scrollTop = 0;
+    if (scroll && pageIndex !== previousIndex) root.scrollTop = 0;
     const scrollWindow = root.ownerDocument?.defaultView
       ?? (typeof window !== 'undefined' ? window : null);
-    if (typeof scrollWindow?.scrollTo === 'function') {
+    if (scroll && pageIndex !== previousIndex && typeof scrollWindow?.scrollTo === 'function') {
       try {
         scrollWindow.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       } catch {
         try { scrollWindow.scrollTo(0, 0); } catch { /* no-op in test DOMs */ }
       }
     }
+    if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
   }
 
   pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
@@ -235,11 +290,21 @@ export function createCompanyDirectoryView({
 
   return Object.freeze({
     render,
+    getPageNumber() {
+      return pageIndex + 1;
+    },
+    setPageNumber(pageNumber, { scroll = false, notify = false } = {}) {
+      const number = Number(pageNumber);
+      if (!Number.isSafeInteger(number) || number < 1) return false;
+      setPage(number - 1, { scroll, notify });
+      return true;
+    },
     elements: Object.freeze({
       search,
       sort,
       list,
       detail,
+      detailClose,
       detailSort,
       detailSortDirection,
       pagination,

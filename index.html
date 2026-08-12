@@ -21,7 +21,7 @@
           tabindex="-1"
           aria-controls="selection-view"
           aria-selected="false"
-        >选片</button>
+        >作品库</button>
         <button
           id="mode-ranking"
           type="button"
@@ -37,22 +37,7 @@
           tabindex="-1"
           aria-controls="company-view"
           aria-selected="false"
-        >会社</button>
-      </div>
-
-      <div class="workspace-counts" aria-label="作品计数">
-        <div class="count-item">
-          <span>已选</span>
-          <output id="selected-count">0</output>
-        </div>
-        <div class="count-item">
-          <span>已排</span>
-          <output id="ranked-count">0</output>
-        </div>
-        <div class="count-item">
-          <span>未排</span>
-          <output id="global-unranked-count">0</output>
-        </div>
+        >会社库</button>
       </div>
     </header>
 
@@ -60,7 +45,7 @@
       <section id="mobile-selection-view" class="mobile-selection-view" aria-label="移动端选片" hidden>
         <header class="mobile-selection-header">
           <div class="mobile-selection-heading">
-            <h1>选片</h1>
+            <h1>作品库</h1>
             <button id="mobile-help-button" class="icon-button" type="button" aria-label="移动端使用说明" title="移动端使用说明">?</button>
           </div>
           <div class="mobile-selection-tools">
@@ -251,25 +236,24 @@
         <section id="catalog-results" class="catalog-results" aria-labelledby="catalog-title">
           <div class="results-toolbar">
             <div class="results-heading">
-              <h2 id="catalog-title">作品目录</h2>
+              <h2 id="catalog-title">作品库</h2>
               <div class="active-filter-state">
                 <output id="active-filter-summary">全部作品</output>
                 <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
               </div>
-              <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">卡片显示：完整</button>
-              <button id="selected-works-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">已选作品 0</button>
+              <span class="results-heading-count" aria-live="polite"><output id="catalog-result-count">0 项</output></span>
+              <button id="selection-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">选择</button>
             </div>
 
             <div class="catalog-controls">
+              <label class="search-field catalog-search" for="title-search">
+                <span class="visually-hidden">搜索标题</span>
+                <input id="title-search" type="search" placeholder="搜索作品" autocomplete="off">
+              </label>
               <button id="filter-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-controls="filter-drawer" aria-expanded="false">
                 <span class="toolbar-button-icon" data-icon="filter" aria-hidden="true"></span>
                 <span>筛选</span>
               </button>
-              <label class="search-field catalog-search" for="title-search">
-                <span class="visually-hidden">搜索标题</span>
-                <input id="title-search" type="search" placeholder="搜索标题" autocomplete="off">
-              </label>
-
               <label class="select-field" for="sort-key">
                 <span class="visually-hidden">排序</span>
                 <select id="sort-key">
@@ -285,13 +269,23 @@
                 <span id="sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-down-a-z" aria-hidden="true"></span>
                 <span id="sort-direction-label" class="sort-direction-label">降序</span>
               </button>
-              <button id="select-current-page" class="toolbar-button toolbar-button-primary" type="button">选择当前页</button>
-              <button id="select-all-results" class="toolbar-button toolbar-button-strong" type="button">全选</button>
+              <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">显示</button>
+            </div>
+            <div id="selection-context-bar" class="selection-context-bar" hidden>
+              <div class="selection-context-summary"><strong>已选作品</strong><output id="selection-context-count">0</output></div>
+              <div class="catalog-selection-actions">
+                <button id="selected-works-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">查看已选</button>
+                <button id="select-current-page" class="toolbar-button toolbar-button-primary" type="button">选择当前页</button>
+                <button id="select-all-results" class="toolbar-button toolbar-button-strong" type="button">全选</button>
+                <button id="clear-selected-works" class="toolbar-button toolbar-button-neutral" type="button">清除</button>
+                <button id="start-work-ranking" class="toolbar-button toolbar-button-primary" type="button">开始作品排榜</button>
+              </div>
               <p id="selection-capacity-status" class="selection-capacity-status" aria-live="polite" hidden></p>
             </div>
           </div>
 
           <div id="catalog-grid" class="catalog-grid" aria-live="polite"></div>
+          <p id="catalog-list-state" class="list-state" role="status" hidden></p>
           <nav id="selection-pagination" class="selection-pagination" aria-label="选片分页">
             <button id="selection-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
             <label class="selection-page-field" for="selection-page-input">
@@ -306,17 +300,31 @@
       </section>
 
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking">
-        <div class="ranking-subject-tabs" role="group" aria-label="排榜类型">
-          <button id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
-          <button id="ranking-subject-company" type="button" aria-pressed="false">会社</button>
-        </div>
+        <header class="ranking-page-heading">
+          <div class="ranking-page-title">
+            <h2>排榜</h2>
+            <div class="ranking-subject-tabs" role="group" aria-label="排榜对象">
+              <button id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
+              <button id="ranking-subject-company" type="button" aria-pressed="false">会社</button>
+            </div>
+          </div>
+          <div class="workspace-counts" aria-label="当前排榜计数">
+            <div class="count-item"><span>已选</span><output id="selected-count">0</output></div>
+            <div class="count-item"><span>已排</span><output id="ranked-count">0</output></div>
+            <div class="count-item"><span>未排</span><output id="global-unranked-count">0</output></div>
+          </div>
+        </header>
         <div class="ranking-toolbar" aria-label="排榜操作">
           <div class="edit-actions">
             <button id="undo-edit" class="icon-button" type="button" aria-label="撤销" title="撤销">↶</button>
             <button id="redo-edit" class="icon-button" type="button" aria-label="重做" title="重做">↷</button>
             <div class="toolbar-menu-shell">
-              <button id="cleanup-menu-button" type="button" aria-expanded="false" aria-controls="cleanup-menu">清理 ▾</button>
+              <button id="cleanup-menu-button" type="button" aria-expanded="false" aria-controls="cleanup-menu">更多 ▾</button>
               <div id="cleanup-menu" class="toolbar-menu" hidden>
+                <strong class="toolbar-menu-section-title">数据</strong>
+                <button id="import-state" type="button">导入 JSON</button>
+                <button id="export-state" type="button">导出 JSON</button>
+                <strong class="toolbar-menu-section-title">清理</strong>
                 <button id="clear-board" type="button">清空分级</button>
                 <button id="clear-candidates" type="button">清空候选</button>
                 <button id="clear-annotations" type="button">清空标记</button>
@@ -360,11 +368,10 @@
               title="进入直播模式"
             ><span aria-hidden="true">⛶</span><span>直播模式</span></button>
             <button id="export-png" type="button">导出 PNG</button>
-            <div class="toolbar-menu-shell">
+            <div class="toolbar-menu-shell legacy-file-menu" hidden>
               <button id="file-menu-button" type="button" aria-expanded="false" aria-controls="file-menu">文件 ▾</button>
               <div id="file-menu" class="toolbar-menu" hidden>
-                <button id="import-state" type="button">导入 JSON</button>
-                <button id="export-state" type="button">导出 JSON</button>
+                <span>文件操作已移至更多</span>
               </div>
             </div>
           </div>
@@ -385,11 +392,11 @@
       </section>
       <section id="company-view" class="company-view" role="tabpanel" aria-labelledby="mode-company" hidden>
         <header class="company-directory-header">
-          <div>
-            <p class="section-kicker">PUBLIC DIRECTORY</p>
-            <h2>会社目录</h2>
-            <p class="company-directory-summary">按作品数量浏览公开会社资料；拼音和别名仅用于搜索。</p>
+          <div class="company-directory-heading">
+            <h2>会社库</h2>
+            <p class="company-directory-summary">COMPANY ARCHIVE · <span id="company-directory-count">213</span></p>
           </div>
+          <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary company-ranking-entry" type="button" aria-expanded="false">进入排榜 →</button>
           <div class="company-directory-tools">
             <label class="search-field company-directory-search" for="company-directory-search">
               <span class="visually-hidden">搜索会社</span>
@@ -398,24 +405,34 @@
             <div class="company-directory-control-group company-directory-filter-controls">
               <label class="company-image-filter" for="company-has-image">
                 <input id="company-has-image" type="checkbox" checked>
+                <span class="company-image-filter-indicator" aria-hidden="true"></span>
                 <span>仅显示已有会社图片</span>
               </label>
               <label class="visually-hidden" for="company-sort">会社排序</label>
-              <select id="company-sort">
-                <option value="totalVoteCount-desc">总评分数量</option>
-                <option value="workCount-desc">作品数量</option>
-                <option value="averageVoteCount-desc">平均每作评分数量</option>
-                <option value="releaseYearStart-asc">最早发售</option>
-                <option value="brandName-asc">名称</option>
-              </select>
+              <span class="company-sort-control">
+                <select id="company-sort" aria-label="会社排序">
+                  <option value="totalVoteCount-desc">总评分数量</option>
+                  <option value="workCount-desc">作品数量</option>
+                  <option value="averageVoteCount-desc">平均每作评分数量</option>
+                  <option value="releaseYearStart-asc">最早发售</option>
+                  <option value="brandName-asc">名称</option>
+                </select>
+              </span>
             </div>
             <div class="company-directory-control-group company-directory-action-controls">
               <button id="company-help-button" class="icon-button company-directory-help-button" type="button" aria-label="打开会社目录使用说明" title="打开会社目录使用说明">?</button>
-              <button id="company-ranking-toggle" class="toolbar-button toolbar-button-primary" type="button" aria-expanded="false">会社排榜</button>
+              <button id="company-selection-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">选择</button>
             </div>
             <button id="company-back" class="toolbar-button toolbar-button-neutral" type="button" hidden>返回排榜</button>
           </div>
         </header>
+        <div id="company-selection-context-bar" class="selection-context-bar" hidden>
+          <div class="selection-context-summary"><strong>已选会社</strong><output id="company-selection-context-count">0</output></div>
+          <div class="catalog-selection-actions">
+            <button id="clear-selected-companies" class="toolbar-button toolbar-button-neutral" type="button">清除</button>
+            <button id="start-company-ranking" class="toolbar-button toolbar-button-primary" type="button">开始会社排榜</button>
+          </div>
+        </div>
         <div class="company-directory-layout">
           <div>
             <div id="company-list" class="company-directory-list" aria-live="polite"></div>
@@ -429,6 +446,7 @@
               <button id="company-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
               <p id="company-page-error" class="selection-page-error" role="alert" hidden>请输入有效的页码</p>
             </nav>
+            <p id="company-list-state" class="list-state" role="status" hidden></p>
             <p id="company-empty" class="company-empty" hidden>没有匹配的会社。</p>
           </div>
           <aside id="company-detail" class="company-directory-detail" hidden aria-live="polite">
@@ -438,6 +456,7 @@
                 <h2 id="company-detail-title"></h2>
                 <p id="company-detail-meta"></p>
               </div>
+              <button id="company-detail-close" class="icon-button" type="button" aria-label="关闭会社详情" title="关闭会社详情">×</button>
             </div>
             <div class="company-detail-works-heading">
               <h3>作品</h3>

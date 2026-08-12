@@ -1,5 +1,6 @@
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { createActionIcon } from '../lib/action-icons.js';
+import { setListState } from '../lib/list-state.js';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
@@ -121,9 +122,13 @@ export function createSelectionCard(documentRef, work, {
   const card = documentRef.createElement('article');
   card.className = `selection-card selection-card-${view}`;
   card.classList.toggle('is-selected', Boolean(selected));
+  card.classList.toggle('is-selectable', Boolean(selectionEnabled));
   card.dataset.workId = work.workId;
   card.setAttribute('aria-label', `查看 ${work.title} 详情`);
-  card.addEventListener('click', () => onOpenDetails(work));
+  card.addEventListener('click', () => {
+    if (selectionEnabled) onToggle(work, !selected);
+    else onOpenDetails(work);
+  });
 
   const image = documentRef.createElement('img');
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
@@ -199,6 +204,13 @@ export function createSelectionCard(documentRef, work, {
   });
 
   card.append(cover, ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
+  if (selected && !selectionEnabled) {
+    const marker = documentRef.createElement('span');
+    marker.className = 'selection-card-selected-mark';
+    marker.textContent = '已选';
+    marker.setAttribute('aria-label', '已选');
+    card.append(marker);
+  }
   return card;
 }
 
@@ -223,6 +235,7 @@ export function createSelectionView({
   onOpenDetails,
   onCardViewChange,
   onFilterChange,
+  onPageChange = () => {},
   assetBase
 }) {
   if (root === null || typeof root?.querySelector !== 'function') {
@@ -248,6 +261,7 @@ export function createSelectionView({
     pageTotal: requiredOwnedElement(root, 'selection-page-total'),
     pageNext: requiredOwnedElement(root, 'selection-page-next'),
     pageError: requiredOwnedElement(root, 'selection-page-error'),
+    listState: requiredOwnedElement(root, 'catalog-list-state'),
     title: requiredOwnedElement(root, 'title-search'),
     sortKey: requiredOwnedElement(root, 'sort-key')
   };
@@ -258,10 +272,12 @@ export function createSelectionView({
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onCardViewChange, 'onCardViewChange');
   assertFunction(onFilterChange, 'onFilterChange');
+  assertFunction(onPageChange, 'onPageChange');
   let renderedWorkKey = '';
   let pageIndex = 0;
   let latestModel = null;
   let latestCoverUrls = null;
+  const defaultSelectionMode = true;
 
   const titleCommit = createDebouncedCommit(titleQuery => {
     onFilterChange({ titleQuery });
@@ -320,14 +336,15 @@ export function createSelectionView({
     return selectionPages(model?.works?.length ?? 0).length;
   }
 
-  function setPage(nextIndex) {
+  function setPage(nextIndex, { scroll = true, notify = true } = {}) {
     if (latestModel === null) return;
     const pages = selectionPages(latestModel.works.length);
     const previousIndex = pageIndex;
     pageIndex = Math.max(0, Math.min(nextIndex, pages.length - 1));
     clearPageError();
-    if (pageIndex !== previousIndex) root.scrollTop = 0;
+    if (scroll && pageIndex !== previousIndex) root.scrollTop = 0;
     renderLatest();
+    if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
   }
 
   elements.pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
@@ -366,9 +383,15 @@ export function createSelectionView({
       pageIndex = Math.min(pageIndex, pages.length - 1);
       const page = pages[pageIndex];
       const visibleWorks = model.works.slice(page.start, page.end);
+      setListState({
+        status: elements.listState,
+        state: model.works.length === 0 ? 'empty' : 'ready',
+        message: '没有匹配的作品。'
+      });
       const cards = visibleWorks.map(work => createSelectionCard(documentRef, work, {
         view: model.view,
         selected: selected.has(work.workId),
+        selectionEnabled: Boolean(model.selectionMode),
         onToggle: onToggleWork,
         onOpenDetails,
         coverUrl: latestCoverUrls?.get?.(work.workId) ?? null,
@@ -444,7 +467,10 @@ export function createSelectionView({
         renderedWorkKey = workKey;
         pageIndex = 0;
       }
-      latestModel = model;
+      latestModel = {
+        ...model,
+        selectionMode: typeof model.selectionMode === 'boolean' ? model.selectionMode : defaultSelectionMode
+      };
       latestCoverUrls = coverUrls;
       renderLatest();
     },
@@ -457,6 +483,18 @@ export function createSelectionView({
       if (position === null || typeof position !== 'object') return;
       root.scrollTop = Number.isFinite(position.top) ? position.top : 0;
       root.scrollLeft = Number.isFinite(position.left) ? position.left : 0;
-    }
+    },
+
+    getPageNumber() {
+      return pageIndex + 1;
+    },
+
+    setPageNumber(pageNumber, { scroll = false, notify = false } = {}) {
+      const number = Number(pageNumber);
+      if (!Number.isSafeInteger(number) || number < 1) return false;
+      setPage(number - 1, { scroll, notify });
+      return true;
+    },
+
   });
 }
