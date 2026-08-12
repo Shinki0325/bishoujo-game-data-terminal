@@ -2063,6 +2063,7 @@ input[type="range"] {
   padding: 0;
   color: #ffffff;
   text-align: left;
+  touch-action: none;
   border: 1px solid var(--border-strong);
 }
 
@@ -5298,29 +5299,33 @@ dialog::backdrop {
   .ranking-toolbar {
     position: sticky;
     top: 0;
-    height: auto;
-    min-height: 94px;
+    min-height: 78px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     padding: 7px 10px;
     overflow: visible;
   }
 
-  .ranking-toolbar .edit-actions {
-    display: flex;
-    gap: 6px;
-  }
-
+  .ranking-toolbar .edit-actions,
   .ranking-toolbar .state-actions {
-    display: grid;
-    grid-template-columns: 64px 36px minmax(0, 1fr) minmax(0, 1fr);
-    gap: 6px;
-    width: 100%;
+    display: contents;
   }
 
-  .ranking-toolbar .state-actions > * {
+  .ranking-toolbar #undo-edit { order: 1; }
+  .ranking-toolbar #redo-edit { order: 2; }
+  .ranking-toolbar #ranking-immersive { order: 3; }
+  .ranking-toolbar .edit-actions > .toolbar-menu-shell { order: 4; }
+  .ranking-toolbar .state-actions > .toolbar-menu-shell { order: 5; }
+  .ranking-toolbar #export-png { order: 6; }
+  .ranking-toolbar #ranking-help-button { order: 7; }
+
+  .ranking-toolbar .toolbar-menu-shell {
     min-width: 0;
+  }
+
+  .ranking-toolbar .toolbar-menu-shell > button {
+    width: 100%;
   }
 
   .ranking-toolbar .icon-button,
@@ -5332,7 +5337,8 @@ dialog::backdrop {
 
   .ranking-toolbar #cleanup-menu-button,
   .ranking-toolbar #display-menu-button {
-    padding-inline: 7px;
+    width: 100%;
+    padding-inline: 5px;
     font-size: 12px;
   }
 
@@ -5357,8 +5363,9 @@ dialog::backdrop {
     display: none;
   }
 
-  .tier-board {
-    padding: 6px;
+  .ranking-toolbar #ranking-immersive {
+    min-width: 0;
+    padding-inline: 5px;
   }
 
   .tier-board[data-tier-count="5"] {
@@ -5384,4 +5391,5 @@ dialog::backdrop {
     margin: 0;
     font-size: 15px;
   }
+
 }

@@ -143,6 +143,7 @@ export function createRankingCard(documentRef, work, callbacks) {
     onContextMenu = (item => onOpenDetails(item)),
     onDragStart,
     onDragEnd,
+    shouldSuppressMediaClick = () => false,
     assetBase,
     coverUrl = null
   } = callbacks;
@@ -151,6 +152,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   assertFunction(onContextMenu, 'onContextMenu');
   assertFunction(onDragStart, 'onDragStart');
   assertFunction(onDragEnd, 'onDragEnd');
+  assertFunction(shouldSuppressMediaClick, 'shouldSuppressMediaClick');
 
   const card = documentRef.createElement('article');
   card.className = 'ranking-card';
@@ -185,6 +187,11 @@ export function createRankingCard(documentRef, work, callbacks) {
   cover.setAttribute('aria-label', `放大 ${work.title}`);
   cover.title = `放大 ${work.title}`;
   cover.addEventListener('click', event => {
+    if (shouldSuppressMediaClick(work)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     event.stopPropagation();
     onOpenMedia(work);
   });
@@ -343,6 +350,10 @@ export function createRankingView({
   let colorPalette = null;
   let colorPaletteTrigger = null;
   let annotationEditor = null;
+  let touchDrag = null;
+  let suppressedTouchClickWorkId = null;
+  let suppressedTouchClickTimer = null;
+  const touchDragHoldDelayMs = 220;
 
   const scheduleHold = typeof viewWindow.setTimeout === 'function'
     ? (callback, delay) => viewWindow.setTimeout(callback, delay)
@@ -421,6 +432,141 @@ export function createRankingView({
     candidatePointerId = null;
     for (const card of arrayFrom(candidatePool.querySelectorAll?.('.ranking-card'))) {
       card.draggable = true;
+    }
+  }
+
+  function isTouchPointer(event) {
+    return event?.pointerType === 'touch';
+  }
+
+  function clearSuppressedTouchClick() {
+    if (suppressedTouchClickTimer !== null) cancelHold(suppressedTouchClickTimer);
+    suppressedTouchClickTimer = null;
+    suppressedTouchClickWorkId = null;
+  }
+
+  function suppressNextTouchClick(workId) {
+    clearSuppressedTouchClick();
+    suppressedTouchClickWorkId = workId;
+    suppressedTouchClickTimer = scheduleHold(clearSuppressedTouchClick, 600);
+  }
+
+  function shouldSuppressMediaClick(work) {
+    if (suppressedTouchClickWorkId !== work.workId) return false;
+    clearSuppressedTouchClick();
+    return true;
+  }
+
+  function rankingCardFromNode(node) {
+    let current = node;
+    while (current && current !== root) {
+      if (isRankingCard(current) && root.contains(current)) return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  function tierIdFromNode(node) {
+    let current = node;
+    while (current && current !== root) {
+      if (current.classList?.contains?.('tier-row') && typeof current.dataset?.tierId === 'string') {
+        return current.dataset.tierId;
+      }
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  function dropNodeForPointer(event) {
+    const x = Number(event?.clientX);
+    const y = Number(event?.clientY);
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      const hit = documentRef.elementFromPoint?.(x, y);
+      if (hit) return hit;
+    }
+    return event?.target ?? null;
+  }
+
+  function startDrag(workId, card) {
+    clearDropState();
+    draggedWorkId = workId;
+    dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
+    draggedWorkIds = dragOrigin === 'pool' && candidateSelection.has(workId)
+      ? candidateSelectionIds()
+      : [workId];
+    card.classList.add('is-dragging');
+    if (draggedWorkIds.length > 1) {
+      card.dataset.selectionCount = String(draggedWorkIds.length);
+      card.classList.add('is-dragging-group');
+    }
+  }
+
+  function clearDragCard(card) {
+    card?.classList?.remove('is-dragging');
+    card?.classList?.remove('is-dragging-group');
+    if (card?.dataset) delete card.dataset.selectionCount;
+  }
+
+  function clearTouchDrag() {
+    if (touchDrag?.timer !== null) cancelHold(touchDrag.timer);
+    touchDrag = null;
+  }
+
+  function beginTouchDrag(event) {
+    if (!isTouchPointer(event) || immersive || touchDrag !== null) return;
+    const card = rankingCardFromNode(event.target);
+    if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
+      || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
+    const pointerId = event.pointerId ?? 0;
+    const gesture = { pointerId, card, started: false, timer: null };
+    gesture.timer = scheduleHold(() => {
+      if (touchDrag !== gesture) return;
+      gesture.timer = null;
+      gesture.started = true;
+      clearCandidateHold();
+      finishCandidateSelectionGesture();
+      startDrag(card.dataset.workId, card);
+      card.setPointerCapture?.(pointerId);
+    }, touchDragHoldDelayMs);
+    touchDrag = gesture;
+  }
+
+  function updateTouchDrag(event) {
+    const gesture = touchDrag;
+    if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
+    if (!gesture.started) return;
+    const target = dropNodeForPointer(event);
+    const tierId = tierIdFromNode(target);
+    if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
+    else if (target && candidatePool.contains(target)) handlePoolDragOver(event);
+    else clearDropState();
+    event.preventDefault?.();
+  }
+
+  function finishTouchDrag(event) {
+    const gesture = touchDrag;
+    if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
+    clearTouchDrag();
+    if (!gesture.started) return;
+    const workId = draggedWorkId;
+    const workIds = [...draggedWorkIds];
+    const plan = dropPlan;
+    clearDropState();
+    draggedWorkId = null;
+    draggedWorkIds = [];
+    dragOrigin = null;
+    clearDragCard(gesture.card);
+    suppressNextTouchClick(gesture.card.dataset.workId);
+    event.preventDefault?.();
+    if (workId === null || plan === null) return;
+    if (plan.type === 'tier') {
+      if (workIds.length > 1 && workIds.every(id => model?.candidateWorks?.some(item => item.workId === id))) {
+        onMoveCandidatesToTier(workIds, plan.tierId, plan.insertionIndex);
+      } else {
+        onMoveToTier(workId, plan.tierId, plan.insertionIndex);
+      }
+    } else if (plan.type === 'pool') {
+      onMoveToUnranked(workId);
     }
   }
 
@@ -866,17 +1012,7 @@ export function createRankingView({
       },
       onOpenMedia,
       onDragStart(work, card) {
-        clearDropState();
-        draggedWorkId = work.workId;
-        dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
-        draggedWorkIds = dragOrigin === 'pool' && candidateSelection.has(work.workId)
-          ? candidateSelectionIds()
-          : [work.workId];
-        card.classList.add('is-dragging');
-        if (draggedWorkIds.length > 1) {
-          card.dataset.selectionCount = String(draggedWorkIds.length);
-          card.classList.add('is-dragging-group');
-        }
+        startDrag(work.workId, card);
       },
       onDragEnd(work, card) {
         const shouldReturnToPool = draggedWorkId === work.workId && dragOrigin === 'tier';
@@ -885,11 +1021,10 @@ export function createRankingView({
           dragOrigin = null;
           onMoveToUnranked(work.workId);
         }
-        card.classList.remove('is-dragging');
-        card.classList.remove('is-dragging-group');
-        delete card.dataset.selectionCount;
+        clearDragCard(card);
         finishDrag();
       },
+      shouldSuppressMediaClick,
       assetBase
     };
   }
@@ -1107,6 +1242,10 @@ export function createRankingView({
       || event.target?.classList?.contains('ranking-candidate-remove')) return;
     beginCandidateHold(card.dataset.workId, card, event);
   });
+  root.addEventListener('pointerdown', beginTouchDrag);
+  root.addEventListener('pointermove', updateTouchDrag);
+  root.addEventListener('pointerup', finishTouchDrag);
+  root.addEventListener('pointercancel', finishTouchDrag);
   candidatePool.addEventListener('pointermove', event => {
     if (!candidateSelectionActive || (event.pointerId ?? 0) !== candidatePointerId) return;
     const card = candidateCardFromNode(event.target);
