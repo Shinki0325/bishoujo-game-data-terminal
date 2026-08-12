@@ -960,29 +960,6 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-body.is-mobile-companion .tool-header,
-body.is-mobile-companion #workspace-mode,
-body.is-mobile-companion .workspace-counts,
-body.is-mobile-companion #selection-view,
-body.is-mobile-companion #ranking-view {
-  display: none !important;
-}
-
-body.is-mobile-companion #mobile-selection-view {
-  display: block;
-  min-height: 100dvh;
-  padding-bottom: calc(58px + var(--safe-bottom));
-}
-
-body.is-mobile-companion #ranking-view.is-company-ranking {
-  display: block !important;
-  height: 100dvh;
-}
-
-body.is-mobile-companion #ranking-view.is-company-ranking .ranking-subject-tabs {
-  display: none;
-}
-
 .filter-backdrop {
   position: fixed;
   inset: 0;
@@ -3667,6 +3644,8 @@ dialog::backdrop {
   }
 
   .mode-switch {
+    grid-column: 1 / -1;
+    width: 100%;
     grid-auto-columns: minmax(64px, 1fr);
   }
 
@@ -3766,7 +3745,7 @@ dialog::backdrop {
   .selection-view {
     display: block;
     height: auto;
-    min-height: calc(100dvh - 112px);
+    min-height: calc(100dvh - var(--header-height));
   }
 
   .filter-drawer {
@@ -3784,12 +3763,13 @@ dialog::backdrop {
 
   .catalog-results {
     height: auto;
-    min-height: calc(100dvh - 112px);
+    min-height: calc(100dvh - var(--header-height));
     overflow: visible;
   }
 
   .results-heading {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
   }
 
   .results-heading .active-filter-state > output {
@@ -3803,6 +3783,7 @@ dialog::backdrop {
 
   .catalog-controls {
     display: flex;
+    gap: 8px;
   }
 
   .catalog-search {
@@ -3811,6 +3792,13 @@ dialog::backdrop {
 
   .catalog-selection-actions {
     flex-basis: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .catalog-selection-actions button:last-child {
+    grid-column: 1 / -1;
   }
 
   .toolbar-button {

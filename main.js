@@ -800,9 +800,9 @@ async function initialize() {
   let importBusy = false;
   let candidateTitleQuery = '';
   let selectionScrollPosition = { top: 0, left: 0 };
-  let mobileSelectionScrollPosition = { top: 0, left: 0 };
-  const mobileCompanionMedia = window.matchMedia('(max-width: 899px), (pointer: coarse)');
-  let mobileCompanion = mobileCompanionMedia.matches;
+  // Mobile uses the same workspace as desktop. The companion view remains inert
+  // until it can offer feature parity rather than hiding the ranking workspace.
+  const mobileCompanion = false;
   let rankingScrollPosition = {
     top: 0,
     left: 0,
@@ -1786,9 +1786,7 @@ async function initialize() {
   rankingView.setAnnotations(presentation.inspect().annotations);
 
   function captureWorkspaceScroll() {
-    if (mobileCompanion) {
-      mobileSelectionScrollPosition = mobileSelectionView.captureScroll();
-    } else if (renderedWorkspaceMode === 'selection') {
+    if (renderedWorkspaceMode === 'selection') {
       selectionScrollPosition = selectionView.captureScroll();
     } else if (renderedWorkspaceMode === 'ranking') {
       rankingScrollPosition = rankingView.captureScroll();
@@ -1796,7 +1794,6 @@ async function initialize() {
   }
 
   function renderWorkspace(model) {
-    document.body.classList.toggle('is-mobile-companion', mobileCompanion);
     if (companyDirectoryOpen) {
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
@@ -1808,30 +1805,6 @@ async function initialize() {
       elements.rankingView.hidden = true;
       elements.mobileSelectionView.hidden = true;
       elements.companyView.hidden = false;
-      return;
-    }
-    if (mobileCompanion) {
-      if (model.state.workspaceMode === 'ranking' && rankingSubject === 'company') {
-        elements.modeSelection.setAttribute('aria-selected', 'false');
-        elements.modeRanking.setAttribute('aria-selected', 'true');
-        elements.modeCompany.setAttribute('aria-selected', 'false');
-        elements.modeSelection.tabIndex = -1;
-        elements.modeRanking.tabIndex = 0;
-        elements.modeCompany.tabIndex = -1;
-        elements.selectionView.hidden = true;
-        elements.rankingView.hidden = false;
-        elements.companyView.hidden = true;
-        elements.mobileSelectionView.hidden = true;
-        return;
-      }
-      elements.modeSelection.setAttribute('aria-selected', 'false');
-      elements.modeRanking.setAttribute('aria-selected', 'false');
-      elements.modeSelection.tabIndex = -1;
-      elements.modeRanking.tabIndex = -1;
-      elements.modeCompany.tabIndex = -1;
-      elements.selectionView.hidden = true;
-      elements.rankingView.hidden = true;
-      elements.mobileSelectionView.hidden = false;
       return;
     }
     const ranking = model.state.workspaceMode === 'ranking';
@@ -1868,7 +1841,7 @@ async function initialize() {
     elements.selectionModeToggle.textContent = selectionMode ? '退出选择' : '选择';
     elements.companySelectionModeToggle.setAttribute('aria-pressed', String(companySelectionMode));
     elements.companySelectionModeToggle.textContent = companySelectionMode ? '退出选择' : '选择';
-    elements.selectionContextBar.hidden = mobileCompanion || companyDirectoryOpen || model.state.workspaceMode === 'ranking' || !selectionMode;
+    elements.selectionContextBar.hidden = companyDirectoryOpen || model.state.workspaceMode === 'ranking' || !selectionMode;
     elements.selectionContextCount.textContent = String(model.selectedCount);
     elements.startWorkRanking.disabled = importBusy || model.selectedCount === 0;
     elements.clearSelectedWorks.disabled = importBusy || model.selectedCount === 0;
@@ -1964,11 +1937,6 @@ async function initialize() {
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
-    } else if (mobileCompanion && !(ranking && rankingSubject === 'company')) {
-      mobileSelectionView.render({
-        works: model.visibleWorks,
-        selectedWorkIds: model.state.selectedWorkIds
-      });
     } else if (ranking) {
       rankingModel = rankingSubject === 'company'
         ? buildCompanyRankingModel()
@@ -2010,17 +1978,15 @@ async function initialize() {
     renderControlStates(model);
     if (companyDirectoryOpen) {
       // The directory owns its own scroll surface and is intentionally not persisted.
-    } else if (mobileCompanion) {
-      mobileSelectionView.restoreScroll(mobileSelectionScrollPosition);
     } else if (model.state.workspaceMode === 'ranking') {
       rankingView.restoreScroll(rankingScrollPosition);
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
-    if (!companyDirectoryOpen && !mobileCompanion && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
+    if (!companyDirectoryOpen && ranking && renderedWorkspaceMode !== 'ranking') help.enterRanking();
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
-    if (rankingModel !== null && rankingSubject === 'work' && !mobileCompanion) {
+    if (rankingModel !== null && rankingSubject === 'work') {
       void refreshRankingPreload(rankingModel);
     }
     else cancelRankingPreload();
@@ -2271,10 +2237,6 @@ async function initialize() {
   elements.mobileShareWarningDismiss.addEventListener('click', () => {
     closeDialog(elements.mobileShareWarning);
     clearShareHash();
-  });
-  mobileCompanionMedia.addEventListener?.('change', event => {
-    mobileCompanion = Boolean(event.matches);
-    void render();
   });
 
   elements.modeSelection.addEventListener('click', () => {
@@ -2596,8 +2558,7 @@ async function initialize() {
     const restored = await applyUiLocation();
     if (!restored) await render();
   });
-  if (mobileCompanion) openMobileShareWarning();
-  else openShareImportDialog();
+  openShareImportDialog();
 }
 
 if (typeof document !== 'undefined') {
