@@ -1390,10 +1390,16 @@ async function initialize() {
       renderCompanyDirectory();
       replaceUiLocation();
     },
-    onSelectCompany(companyId) {
+    onSelectCompany(companyId, { revealDetail = false } = {}) {
       selectedCompanyId = companyId;
       renderCompanyDirectory();
       pushUiLocation();
+      const windowRef = elements.companyView.ownerDocument?.defaultView;
+      if (revealDetail && windowRef?.matchMedia?.('(max-width: 899px)').matches) {
+        windowRef.requestAnimationFrame(() => {
+          elements.companyDetail.scrollIntoView({ block: 'start', behavior: 'auto' });
+        });
+      }
     },
     onCloseDetail() {
       selectedCompanyId = null;

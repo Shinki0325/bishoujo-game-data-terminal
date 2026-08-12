@@ -166,7 +166,7 @@ export function createCompanyDirectoryView({
         text(documentRef, 'span', 'company-directory-card-vote-count', `${formatCount(company.totalVoteCount)} 票`)
       );
       open.append(overlay);
-      open.addEventListener('click', () => onSelectCompany(company.companyId));
+      open.addEventListener('click', () => onSelectCompany(company.companyId, { revealDetail: true }));
       if (currentSelectionMode) {
         const select = documentRef.createElement('input');
         select.type = 'checkbox';

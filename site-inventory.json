@@ -64962,19 +64962,19 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 102663,
+      "bytes": 103005,
       "path": "main.js",
-      "sha256": "51de3e4d44ca004e42e47b414309b5bc17f7146d5e5773f229c543d13b7203f2"
+      "sha256": "2dded557b1718a4b43213cff323bda2bc131b486fa1e0342437898afda6b121b"
     },
     {
-      "bytes": 90648,
+      "bytes": 100228,
       "path": "styles.css",
-      "sha256": "894281201a92e4c80ac9bbe22afdcaccd7c733927990eccc2e56b05305932467"
+      "sha256": "92f62b4426b247623a7cba099f7604b841b72e8afbbdd7ff92973845d95b16c7"
     },
     {
-      "bytes": 14217,
+      "bytes": 14241,
       "path": "views/company-directory-view.js",
-      "sha256": "e5eb4450aeeb0f3be5e97997b12322c101b2af8eef2626a468e326275d1be7aa"
+      "sha256": "1ee72726ca7fd1723f589d3eaef9488c4fdc113c4f957aa68fa574079c072579"
     },
     {
       "bytes": 3935,
@@ -65020,7 +65020,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 474299310,
+    "bytes": 474309256,
     "files": 13003
   }
 }
