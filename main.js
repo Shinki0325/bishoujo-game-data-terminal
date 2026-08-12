@@ -1351,10 +1351,17 @@ async function initialize() {
     title.textContent = companyItem.title;
     card.append(cover, title);
     cover.addEventListener('click', event => {
+      if (callbacks.shouldSuppressMediaClick?.(companyItem)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       event.stopPropagation();
       callbacks.onOpenDetails(companyItem);
     });
+    const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
     card.addEventListener('contextmenu', event => {
+      if (!desktopDetails || event.pointerType === 'touch') return;
       event.preventDefault();
       callbacks.onContextMenu(companyItem, card, event);
     });

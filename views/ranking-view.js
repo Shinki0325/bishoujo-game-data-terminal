@@ -513,7 +513,7 @@ export function createRankingView({
   }
 
   function beginTouchDrag(event) {
-    if (!isTouchPointer(event) || immersive || touchDrag !== null) return;
+    if (!isTouchPointer(event) || touchDrag !== null) return;
     const card = rankingCardFromNode(event.target);
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
