@@ -165,6 +165,23 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   rankingCandidateSearch: requiredElement('ranking-candidate-search'),
   rankingCandidatesTitle: requiredElement('ranking-candidates-title'),
   rankingCandidateGrid: requiredElement('ranking-candidate-grid'),
+  rankingCandidates: requiredElement('ranking-candidates'),
+  mobileRankingDock: requiredElement('mobile-ranking-dock'),
+  mobileRankingUndo: requiredElement('mobile-ranking-undo'),
+  mobileRankingRedo: requiredElement('mobile-ranking-redo'),
+  mobileRankingCandidates: requiredElement('mobile-ranking-candidates'),
+  mobileRankingCandidateCount: requiredElement('mobile-ranking-candidate-count'),
+  mobileRankingLive: requiredElement('mobile-ranking-live'),
+  mobileRankingMore: requiredElement('mobile-ranking-more'),
+  mobileRankingMenu: requiredElement('mobile-ranking-menu'),
+  mobileRankingShowCounts: requiredElement('mobile-ranking-show-counts'),
+  mobileRankingShowTitles: requiredElement('mobile-ranking-show-titles'),
+  mobileRankingImport: requiredElement('mobile-ranking-import'),
+  mobileRankingExport: requiredElement('mobile-ranking-export'),
+  mobileRankingExportPng: requiredElement('mobile-ranking-export-png'),
+  mobileRankingClearBoard: requiredElement('mobile-ranking-clear-board'),
+  mobileRankingClearCandidates: requiredElement('mobile-ranking-clear-candidates'),
+  mobileRankingClearAnnotations: requiredElement('mobile-ranking-clear-annotations'),
   undoEdit: requiredElement('undo-edit'),
   redoEdit: requiredElement('redo-edit'),
   clearBoard: requiredElement('clear-board'),
@@ -682,6 +699,17 @@ async function initialize() {
     elements.themeToggle.title = `切换到${nextThemeLabel}界面`;
   };
   renderThemeToggle();
+  for (const [button, iconName, label] of [
+    [elements.modeSelection, 'library', '作品'],
+    [elements.modeCompany, 'building', '会社'],
+    [elements.modeRanking, 'ranking', '排榜']
+  ]) {
+    const icon = createActionIcon(document, iconName);
+    icon.classList.add('workspace-tab-icon');
+    const copy = document.createElement('span');
+    copy.textContent = label;
+    button.replaceChildren(icon, copy);
+  }
   elements.themeToggle.addEventListener('click', () => {
     activeTheme = saveTheme(themeStorage, activeTheme === 'dark' ? 'light' : 'dark');
     applyTheme(document, activeTheme);
@@ -883,6 +911,8 @@ async function initialize() {
   }
 
   function openCompanyDirectory(companyId = null, { push = true } = {}) {
+    // Disable stale work-card handlers before the asynchronous workspace refresh.
+    setWorkSelectionMode(false);
     companyDirectoryOpen = true;
     selectedCompanyId = companyId;
     currentWorkDetailId = null;
@@ -1562,6 +1592,12 @@ async function initialize() {
     onHelpOpen() {},
     assetBase
   });
+
+  function setWorkSelectionMode(active) {
+    selectionMode = Boolean(active);
+    selectionView.setSelectionMode(selectionMode);
+    mobileSelectionView.setSelectionInteractionEnabled(selectionMode);
+  }
   const rankingView = createRankingView({
     root: elements.rankingView,
     createCard: (documentRef, item, callbacks) => rankingSubject === 'company'
@@ -1735,6 +1771,22 @@ async function initialize() {
     }
   }
 
+  function closeMobileRankingCandidates() {
+    document.body.classList.remove('is-mobile-ranking-candidates-open');
+    elements.mobileRankingCandidates.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMobileRankingCandidates() {
+    const opening = !document.body.classList.contains('is-mobile-ranking-candidates-open');
+    document.body.classList.toggle('is-mobile-ranking-candidates-open', opening);
+    elements.mobileRankingCandidates.setAttribute('aria-expanded', String(opening));
+  }
+
+  function openMobileRankingMenu() {
+    if (typeof elements.mobileRankingMenu.showModal === 'function') elements.mobileRankingMenu.showModal();
+    else elements.mobileRankingMenu.open = true;
+  }
+
   function toggleToolbarMenu(item) {
     const opening = item.menu.hidden;
     closeToolbarMenus(item);
@@ -1762,13 +1814,17 @@ async function initialize() {
     closeToolbarMenus();
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closeToolbarMenus();
+    if (event.key === 'Escape') {
+      closeToolbarMenus();
+      closeMobileRankingCandidates();
+    }
   });
   const immersive = createImmersiveController({
     root: document.body,
     documentRef: document,
     onChange(value) {
       closeToolbarMenus();
+      closeMobileRankingCandidates();
       previewLoader.cancel();
       previewActions.clear();
       if (value) {
@@ -1841,6 +1897,7 @@ async function initialize() {
 
   function renderWorkspace(model) {
     if (companyDirectoryOpen) {
+      closeMobileRankingCandidates();
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
       elements.modeCompany.setAttribute('aria-selected', 'true');
@@ -1854,6 +1911,7 @@ async function initialize() {
       return;
     }
     const ranking = model.state.workspaceMode === 'ranking';
+    if (!ranking) closeMobileRankingCandidates();
     elements.modeSelection.setAttribute('aria-selected', String(!ranking));
     elements.modeRanking.setAttribute('aria-selected', String(ranking));
     elements.modeCompany.setAttribute('aria-selected', 'false');
@@ -1914,6 +1972,22 @@ async function initialize() {
     elements.fileMenuButton.disabled = importBusy;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || activeRankingState.rankedCount === 0 || pngExportInProgress;
+    elements.mobileRankingUndo.disabled = elements.undoEdit.disabled;
+    elements.mobileRankingRedo.disabled = elements.redoEdit.disabled;
+    elements.mobileRankingCandidateCount.textContent = String(activeRankingState.unrankedCount);
+    elements.mobileRankingCandidates.disabled = importBusy || activeRankingState.unrankedCount === 0;
+    elements.mobileRankingLive.disabled = importBusy;
+    elements.mobileRankingMore.disabled = importBusy;
+    elements.mobileRankingShowCounts.disabled = importBusy;
+    elements.mobileRankingShowTitles.disabled = importBusy;
+    elements.mobileRankingShowCounts.checked = elements.rankingShowCounts.checked;
+    elements.mobileRankingShowTitles.checked = elements.rankingShowTitles.checked;
+    elements.mobileRankingImport.disabled = importBusy;
+    elements.mobileRankingExport.disabled = importBusy;
+    elements.mobileRankingExportPng.disabled = elements.exportPng.disabled;
+    elements.mobileRankingClearBoard.disabled = elements.clearBoard.disabled;
+    elements.mobileRankingClearCandidates.disabled = elements.clearCandidates.disabled;
+    elements.mobileRankingClearAnnotations.disabled = elements.clearAnnotations.disabled;
   }
 
   function setImportBusy(nextBusy) {
@@ -1931,6 +2005,19 @@ async function initialize() {
         elements.clearCandidates,
         elements.clearAnnotations,
         elements.rankingCandidateSearch,
+        elements.mobileRankingUndo,
+        elements.mobileRankingRedo,
+        elements.mobileRankingCandidates,
+        elements.mobileRankingLive,
+        elements.mobileRankingMore,
+        elements.mobileRankingShowCounts,
+        elements.mobileRankingShowTitles,
+        elements.mobileRankingImport,
+        elements.mobileRankingExport,
+        elements.mobileRankingExportPng,
+        elements.mobileRankingClearBoard,
+        elements.mobileRankingClearCandidates,
+        elements.mobileRankingClearAnnotations,
         elements.rankingShowCounts,
         elements.rankingShowTitles,
         elements.rankingHelpButton,
@@ -2201,6 +2288,7 @@ async function initialize() {
     try {
       if (location.page === 'ranking') {
         companyDirectoryOpen = false;
+        setWorkSelectionMode(false);
         currentWorkDetailId = null;
         rankingSubject = location.subject;
         controller.setWorkspaceMode('ranking');
@@ -2208,6 +2296,7 @@ async function initialize() {
         return true;
       }
       if (location.page === 'companies') {
+        setWorkSelectionMode(false);
         companyQuery = location.query;
         companySort = location.sort;
         companyHasImage = location.hasImage;
@@ -2219,6 +2308,7 @@ async function initialize() {
         return true;
       }
       companyDirectoryOpen = false;
+      setWorkSelectionMode(false);
       rankingSubject = 'work';
       const [sortKey, sortDirection] = location.sort.split('-');
       controller.setWorkspaceMode('selection');
@@ -2286,7 +2376,9 @@ async function initialize() {
   });
 
   elements.modeSelection.addEventListener('click', () => {
+    closeMobileRankingCandidates();
     companyDirectoryOpen = false;
+    setWorkSelectionMode(false);
     companySelectionMode = false;
     const result = runStateChange(() => {
       return controller.setWorkspaceMode('selection');
@@ -2296,15 +2388,16 @@ async function initialize() {
   });
   elements.modeRanking.addEventListener('click', () => {
     companyDirectoryOpen = false;
-    selectionMode = false;
+    setWorkSelectionMode(false);
     companySelectionMode = false;
     const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
     pushUiLocation();
     return result;
   });
   elements.modeCompany.addEventListener('click', () => {
+    closeMobileRankingCandidates();
     closeToolbarMenus();
-    selectionMode = false;
+    setWorkSelectionMode(false);
     companySelectionMode = false;
     const open = () => {
       if (lastRenderedModel === null) {
@@ -2330,7 +2423,7 @@ async function initialize() {
     return result;
   });
   elements.selectionModeToggle.addEventListener('click', () => {
-    selectionMode = !selectionMode;
+    setWorkSelectionMode(!selectionMode);
     void render();
   });
   elements.companySelectionModeToggle.addEventListener('click', () => {
@@ -2344,7 +2437,7 @@ async function initialize() {
   elements.startWorkRanking.addEventListener('click', () => {
     if (controller.inspectState().selectedWorkIds.length === 0) return;
     companyDirectoryOpen = false;
-    selectionMode = false;
+    setWorkSelectionMode(false);
     rankingSubject = 'work';
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
@@ -2378,7 +2471,7 @@ async function initialize() {
     return result;
   });
   elements.mobileCompanyMode.addEventListener('click', () => {
-    selectionMode = false;
+    setWorkSelectionMode(false);
     companySelectionMode = false;
     const open = () => {
       if (lastRenderedModel === null) {
@@ -2403,6 +2496,25 @@ async function initialize() {
     const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
     rankingView.setShowTitles(activePresentation.setShowTitles(elements.rankingShowTitles.checked));
   });
+  elements.mobileRankingUndo.addEventListener('click', () => elements.undoEdit.click());
+  elements.mobileRankingRedo.addEventListener('click', () => elements.redoEdit.click());
+  elements.mobileRankingCandidates.addEventListener('click', () => toggleMobileRankingCandidates());
+  elements.mobileRankingLive.addEventListener('click', () => void immersive.enter());
+  elements.mobileRankingMore.addEventListener('click', () => openMobileRankingMenu());
+  elements.mobileRankingShowCounts.addEventListener('change', () => {
+    elements.rankingShowCounts.checked = elements.mobileRankingShowCounts.checked;
+    elements.rankingShowCounts.dispatchEvent(new Event('change'));
+  });
+  elements.mobileRankingShowTitles.addEventListener('change', () => {
+    elements.rankingShowTitles.checked = elements.mobileRankingShowTitles.checked;
+    elements.rankingShowTitles.dispatchEvent(new Event('change'));
+  });
+  elements.mobileRankingImport.addEventListener('click', () => elements.importState.click());
+  elements.mobileRankingExport.addEventListener('click', () => elements.exportState.click());
+  elements.mobileRankingExportPng.addEventListener('click', () => elements.exportPng.click());
+  elements.mobileRankingClearBoard.addEventListener('click', () => elements.clearBoard.click());
+  elements.mobileRankingClearCandidates.addEventListener('click', () => elements.clearCandidates.click());
+  elements.mobileRankingClearAnnotations.addEventListener('click', () => elements.clearAnnotations.click());
   elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
   elements.mediaFiles.addEventListener('change', () => {
     const files = Array.from(elements.mediaFiles.files ?? []);

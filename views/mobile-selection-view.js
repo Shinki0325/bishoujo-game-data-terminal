@@ -103,6 +103,7 @@ export function createMobileSelectionView({
         view: 'compact',
         selected: selectedSet.has(work.workId),
         selectionEnabled: selectionMode,
+        isSelectionEnabled: () => selectionMode,
         onToggle: (...args) => {
           if (selectionMode) onToggleWork(...args);
         },
@@ -183,6 +184,10 @@ export function createMobileSelectionView({
   }
 
   return Object.freeze({
+    setSelectionInteractionEnabled(active) {
+      selectionMode = Boolean(active);
+    },
+
     render,
     setSelectionMode,
     openDrawer,

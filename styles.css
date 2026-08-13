@@ -5076,6 +5076,270 @@ dialog::backdrop {
 
 :root[data-theme="light"] body.is-ranking-immersive .ranking-view { background: #e8eef0; }
 
+.mobile-ranking-dock,
+.mobile-ranking-menu {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  :root {
+    --header-height: 52px;
+    --mobile-nav-height: calc(62px + var(--safe-bottom));
+    --mobile-ranking-dock-height: calc(56px + var(--safe-bottom));
+    --selection-card-size: calc((100vw - 38px) / 3);
+  }
+
+  body {
+    padding-bottom: var(--mobile-nav-height);
+  }
+
+  .tool-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    min-height: var(--header-height);
+    padding: calc(8px + var(--safe-top)) calc(12px + var(--safe-right)) 8px calc(12px + var(--safe-left));
+  }
+
+  .tool-heading {
+    min-height: 0;
+    margin: 0;
+  }
+
+  .tool-heading h1 {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .theme-toggle {
+    position: static;
+    margin-left: auto;
+  }
+
+  /* The existing workspace buttons become the fixed native-style bottom navigation. */
+  .mode-switch {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: auto;
+    min-height: var(--mobile-nav-height);
+    padding: 7px calc(8px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(8px + var(--safe-left));
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface-strong);
+    box-shadow: 0 -8px 22px rgb(0 0 0 / 24%);
+  }
+
+  .mode-switch button,
+  .mode-switch button:first-child,
+  .mode-switch button:last-child {
+    min-height: 42px;
+    padding: 5px;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-muted);
+    background: transparent;
+    box-shadow: none;
+    font-size: 12px;
+  }
+
+  .mode-switch button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .workspace-tab-icon { width: 19px; height: 19px; }
+
+  .mode-switch button[aria-selected="true"] {
+    color: var(--accent);
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .selection-view,
+  .company-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    padding-bottom: 14px;
+  }
+
+  .catalog-grid,
+  .company-directory-list {
+    grid-template-columns: repeat(3, minmax(0, var(--selection-card-size)));
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .catalog-grid .selection-card-title,
+  .company-directory-card-name {
+    font-size: 10px;
+  }
+
+  .selection-card-company,
+  .selection-card-stats,
+  .company-directory-card-work-count,
+  .company-directory-card-vote-count {
+    display: none;
+  }
+
+  .results-heading,
+  .company-directory-header {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 15;
+    background: var(--bg);
+  }
+
+  .catalog-controls,
+  .company-directory-tools {
+    position: sticky;
+    top: calc(var(--header-height) + 48px);
+    z-index: 14;
+    background: var(--bg);
+  }
+
+  .ranking-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    height: auto;
+    padding-bottom: var(--mobile-ranking-dock-height);
+    background: var(--surface-strong);
+  }
+
+  .ranking-page-heading {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 16;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-strong);
+  }
+
+  .ranking-page-heading .workspace-counts,
+  .ranking-toolbar {
+    display: none;
+  }
+
+  .ranking-page-title h2 { font-size: 17px; }
+  .ranking-subject-tabs button { min-height: 32px; }
+
+  .tier-board {
+    min-height: calc(100dvh - var(--header-height) - 48px - var(--mobile-nav-height) - var(--mobile-ranking-dock-height));
+    padding: 7px 5px;
+  }
+
+  .tier-row { grid-template-columns: 46px minmax(0, 1fr); }
+  .tier-row[data-track-rows="2"] { min-height: 126px; }
+  .tier-track { gap: 4px; padding: 5px; }
+
+  .ranking-candidates {
+    position: fixed;
+    right: 0;
+    bottom: var(--mobile-ranking-dock-height);
+    left: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: min(66dvh, 560px);
+    min-height: 280px;
+    padding: 0;
+    border-top: 1px solid var(--border-strong);
+    background: var(--surface);
+    box-shadow: 0 -14px 32px rgb(0 0 0 / 36%);
+    transform: translateY(calc(100% + var(--mobile-ranking-dock-height)));
+    transition: transform 180ms ease;
+  }
+
+  body.is-mobile-ranking-candidates-open .ranking-candidates { transform: translateY(0); }
+
+  .candidate-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 50px;
+    padding: 8px 10px;
+  }
+
+  .candidate-toolbar .search-field {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+  }
+
+  .ranking-candidate-grid {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .mobile-ranking-dock {
+    position: fixed;
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    z-index: 41;
+    display: grid;
+    grid-template-columns: 40px 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    gap: 5px;
+    min-height: var(--mobile-ranking-dock-height);
+    padding: 7px calc(9px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(9px + var(--safe-left));
+    border-top: 1px solid var(--border);
+    background: var(--surface-strong);
+  }
+
+  .mobile-ranking-dock button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+
+  #mobile-ranking-live {
+    color: #071216;
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .mobile-ranking-menu[open] {
+    position: fixed;
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(72dvh, 610px);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px 6px 0 0;
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .mobile-ranking-menu::backdrop { background: rgb(0 0 0 / 42%); }
+  .mobile-ranking-menu .dialog-heading { padding: 12px; }
+  .mobile-ranking-menu-body { display: grid; gap: 16px; padding: 12px; }
+  .mobile-ranking-menu-body section { display: grid; gap: 7px; }
+  .mobile-ranking-menu-body h3 { margin: 0; color: var(--muted); font-size: 12px; }
+  .mobile-ranking-menu-body label { min-height: 36px; }
+  .mobile-ranking-menu-body button { min-height: 42px; text-align: left; }
+
+  body.is-ranking-immersive .mobile-ranking-dock,
+  body.is-ranking-immersive .mode-switch { display: none; }
+}
+
 @media (max-width: 899px) {
   .tool-header {
     box-shadow: 0 3px 12px rgb(12 20 26 / 14%);
@@ -5678,4 +5942,168 @@ dialog::backdrop {
     font-size: 15px;
   }
 
+}
+
+/* Final mobile shell authority. These rules intentionally retire the earlier
+   responsive desktop-toolbar treatment without changing desktop behavior. */
+@media (max-width: 899px) {
+  :root {
+    --header-height: 52px;
+    --mobile-nav-height: calc(62px + var(--safe-bottom));
+    --mobile-ranking-dock-height: 56px;
+    --selection-card-size: calc((100vw - 38px) / 3);
+  }
+
+  body { padding-bottom: var(--mobile-nav-height); }
+
+  .tool-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    min-height: var(--header-height);
+    padding: calc(8px + var(--safe-top)) calc(12px + var(--safe-right)) 8px calc(12px + var(--safe-left));
+  }
+
+  .tool-heading { min-height: 0; margin: 0; }
+  .tool-heading h1 { font-size: 16px; line-height: 24px; }
+  .theme-toggle { position: static; margin-left: auto; }
+
+  .mode-switch {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: auto;
+    min-height: var(--mobile-nav-height);
+    padding: 7px calc(8px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(8px + var(--safe-left));
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface-strong);
+  }
+
+  .mode-switch button,
+  .mode-switch button:first-child,
+  .mode-switch button:last-child {
+    min-height: 42px;
+    margin: 0;
+    padding: 5px;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-muted);
+    background: transparent;
+    box-shadow: none;
+    font-size: 12px;
+  }
+
+  .mode-switch button[aria-selected="true"] {
+    color: var(--accent);
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .selection-view,
+  .company-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    padding-bottom: 14px;
+  }
+
+  .catalog-grid,
+  .company-directory-list {
+    grid-template-columns: repeat(3, minmax(0, var(--selection-card-size)));
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .catalog-grid { padding: 9px; }
+  .company-directory-list { padding: 0; }
+  .catalog-grid .selection-card-title,
+  .company-directory-card-name { font-size: 10px; }
+  .selection-card-company,
+  .selection-card-stats,
+  .company-directory-card-work-count,
+  .company-directory-card-vote-count { display: none; }
+
+  #card-view-toggle,
+  #company-ranking-toggle { display: none; }
+
+  .results-heading,
+  .company-directory-header {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 15;
+    background: var(--bg);
+  }
+
+  .ranking-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    height: auto;
+    padding-bottom: var(--mobile-ranking-dock-height);
+  }
+
+  .ranking-page-heading {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 16;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 7px 10px;
+  }
+
+  .ranking-page-heading .workspace-counts,
+  .ranking-toolbar { display: none; }
+  .ranking-page-title h2 { font-size: 17px; }
+  .ranking-subject-tabs button { min-height: 32px; }
+  .tier-board { min-height: calc(100dvh - var(--header-height) - 48px - var(--mobile-nav-height) - var(--mobile-ranking-dock-height)); }
+  .tier-row { grid-template-columns: 46px minmax(0, 1fr); }
+  .tier-track { gap: 4px; padding: 5px; }
+
+  .ranking-candidates {
+    position: fixed;
+    right: 0;
+    bottom: calc(var(--mobile-nav-height) + var(--mobile-ranking-dock-height));
+    left: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: min(66dvh, 560px);
+    min-height: 280px;
+    padding: 0;
+    border-top: 1px solid var(--border-strong);
+    background: var(--surface);
+    transform: translateY(calc(100% + var(--mobile-ranking-dock-height)));
+    transition: transform 180ms ease;
+  }
+
+  body.is-mobile-ranking-candidates-open .ranking-candidates { transform: translateY(0); }
+  .candidate-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; min-height: 50px; padding: 8px 10px; }
+  .candidate-toolbar .search-field { grid-column: 1 / -1; width: 100%; max-width: none; }
+  .ranking-candidate-grid { min-height: 0; overflow-y: auto; padding: 8px; }
+
+  .mobile-ranking-dock {
+    position: fixed;
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    z-index: 41;
+    display: grid;
+    grid-template-columns: 40px 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    gap: 5px;
+    min-height: var(--mobile-ranking-dock-height);
+    padding: 7px calc(9px + var(--safe-right)) 7px calc(9px + var(--safe-left));
+    border-top: 1px solid var(--border);
+    background: var(--surface-strong);
+  }
+
+  .mobile-ranking-dock button { min-width: 0; min-height: 40px; padding: 4px 6px; font-size: 12px; }
+  #mobile-ranking-live { color: #071216; border-color: var(--accent); background: var(--accent); }
+  .mobile-ranking-menu[open] { display: block; }
+  body.is-ranking-immersive .mobile-ranking-dock,
+  body.is-ranking-immersive .mode-switch { display: none; }
 }

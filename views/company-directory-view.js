@@ -255,7 +255,8 @@ export function createCompanyDirectoryView({
     }
     if (isMobile) {
       const selectedIndex = visibleCompanies.findIndex(company => company.companyId === selectedCompanyId);
-      const rowEnd = Math.min(visibleCompanies.length, (Math.floor(selectedIndex / 2) + 1) * 2);
+      const columns = Number(root.ownerDocument?.defaultView?.innerWidth) <= 899 ? 3 : 2;
+      const rowEnd = Math.min(visibleCompanies.length, (Math.floor(selectedIndex / columns) + 1) * columns);
       const anchor = list.children[rowEnd - 1];
       if (anchor) anchor.after(detail);
     }

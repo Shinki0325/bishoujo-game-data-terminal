@@ -27,17 +27,17 @@
           id="mode-selection"
           type="button"
           role="tab"
-          tabindex="-1"
+          tabindex="0"
           aria-controls="selection-view"
-          aria-selected="false"
+          aria-selected="true"
         >作品库</button>
         <button
           id="mode-ranking"
           type="button"
           role="tab"
-          tabindex="0"
+          tabindex="-1"
           aria-controls="ranking-view"
-          aria-selected="true"
+          aria-selected="false"
         >排榜</button>
         <button
           id="mode-company"
@@ -116,7 +116,7 @@
           </div>
         </dialog>
       </section>
-      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection" hidden>
+      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection">
         <button
           id="filter-backdrop"
           class="filter-backdrop"
@@ -316,7 +316,7 @@
         </section>
       </section>
 
-      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking">
+      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
         <header class="ranking-page-heading">
           <div class="ranking-page-title">
             <h2>排榜</h2>
@@ -396,7 +396,7 @@
 
         <section id="tier-board" class="tier-board" aria-label="分级板" tabindex="-1"></section>
 
-        <section class="ranking-candidates" aria-labelledby="ranking-candidates-title">
+        <section id="ranking-candidates" class="ranking-candidates" aria-labelledby="ranking-candidates-title">
           <div class="candidate-toolbar">
             <h2 id="ranking-candidates-title">候选作品</h2>
             <label class="search-field" for="ranking-candidate-search">
@@ -406,6 +406,38 @@
           </div>
           <div id="ranking-candidate-grid" class="ranking-candidate-grid" aria-live="polite"></div>
         </section>
+        <div id="mobile-ranking-dock" class="mobile-ranking-dock" aria-label="移动端排榜操作">
+          <button id="mobile-ranking-undo" type="button" aria-label="撤销">↶</button>
+          <button id="mobile-ranking-redo" type="button" aria-label="重做">↷</button>
+          <button id="mobile-ranking-candidates" type="button" aria-controls="ranking-candidates" aria-expanded="false">候选 <output id="mobile-ranking-candidate-count">0</output></button>
+          <button id="mobile-ranking-live" type="button">直播</button>
+          <button id="mobile-ranking-more" type="button" aria-haspopup="dialog">更多</button>
+        </div>
+        <dialog id="mobile-ranking-menu" class="mobile-ranking-menu" aria-labelledby="mobile-ranking-menu-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-ranking-menu-title">排榜设置</h2>
+            <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭">×</button></form>
+          </div>
+          <div class="mobile-ranking-menu-body">
+            <section>
+              <h3>显示</h3>
+              <label><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
+              <label><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
+            </section>
+            <section>
+              <h3>文件</h3>
+              <button id="mobile-ranking-import" type="button">导入 JSON</button>
+              <button id="mobile-ranking-export" type="button">导出 JSON</button>
+              <button id="mobile-ranking-export-png" type="button">导出 PNG</button>
+            </section>
+            <section>
+              <h3>清理</h3>
+              <button id="mobile-ranking-clear-board" type="button">清空分级</button>
+              <button id="mobile-ranking-clear-candidates" type="button">清空候选</button>
+              <button id="mobile-ranking-clear-annotations" type="button">清空标记</button>
+            </section>
+          </div>
+        </dialog>
       </section>
       <section id="company-view" class="company-view" role="tabpanel" aria-labelledby="mode-company" hidden>
         <header class="company-directory-header">

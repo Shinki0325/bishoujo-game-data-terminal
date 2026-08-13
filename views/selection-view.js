@@ -107,7 +107,8 @@ export function createSelectionCard(documentRef, work, {
   onOpenDetails,
   assetBase,
   coverUrl = null,
-  selectionEnabled = true
+  selectionEnabled = true,
+  isSelectionEnabled = () => Boolean(selectionEnabled)
 }) {
   if (documentRef === null || typeof documentRef?.createElement !== 'function') {
     throw new TypeError('documentRef must provide createElement');
@@ -118,6 +119,7 @@ export function createSelectionCard(documentRef, work, {
   if (!CARD_VIEWS.has(view)) throw new RangeError('view must be full or compact');
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
+  assertFunction(isSelectionEnabled, 'isSelectionEnabled');
 
   const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
     ? work.displayTitle
@@ -129,7 +131,7 @@ export function createSelectionCard(documentRef, work, {
   card.dataset.workId = work.workId;
   card.setAttribute('aria-label', `查看 ${displayTitle} 详情`);
   card.addEventListener('click', () => {
-    if (selectionEnabled) onToggle(work, !selected);
+    if (isSelectionEnabled()) onToggle(work, !selected);
     else onOpenDetails(work);
   });
 
@@ -175,7 +177,8 @@ export function createSelectionCard(documentRef, work, {
     checkbox.addEventListener('click', event => event.stopPropagation());
     checkbox.addEventListener('change', event => {
       event.stopPropagation();
-      onToggle(work, checkbox.checked);
+      if (isSelectionEnabled()) onToggle(work, checkbox.checked);
+      else checkbox.checked = Boolean(selected);
     });
     checkbox.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
@@ -396,6 +399,7 @@ export function createSelectionView({
         view: model.view,
         selected: selected.has(work.workId),
         selectionEnabled: Boolean(model.selectionMode),
+        isSelectionEnabled: () => selectionModeActive,
         onToggle: (...args) => {
           if (selectionModeActive) onToggleWork(...args);
         },
@@ -459,6 +463,10 @@ export function createSelectionView({
   }
 
   return Object.freeze({
+    setSelectionMode(active) {
+      selectionModeActive = Boolean(active);
+    },
+
     render(model, coverUrls = null) {
       if (
         !Array.isArray(model?.works)
