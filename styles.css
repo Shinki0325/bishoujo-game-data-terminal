@@ -2135,6 +2135,7 @@ input[type="range"] {
   font-weight: 700;
   text-align: center;
   background: #dce1e4;
+  pointer-events: none;
 }
 
 .ranking-card-missing-image {
@@ -6390,4 +6391,27 @@ dialog::backdrop {
   .selection-view,
   .catalog-results,
   .company-view { overflow: visible; }
+}
+
+/* Touch browsing and ranking are distinct gestures: an ordinary vertical swipe
+   must scroll the board, while a held card still enters the existing drag flow. */
+@media (max-width: 899px) {
+  .ranking-card { touch-action: pan-y; }
+
+  /* Page-owned controls stay in normal flow. On short mobile viewports a
+     nested sticky layer covers the first card or selected-company work list. */
+  .results-toolbar,
+  .company-directory-header {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .ranking-page-heading {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .company-view {
+    overflow: visible;
+  }
 }

@@ -65287,9 +65287,9 @@
       "sha256": "5cca647d02fba1a8774d625bf2e09f9f8ea98c11db9f3e0b20265b4a907689c4"
     },
     {
-      "bytes": 8751,
+      "bytes": 9109,
       "path": "lib/ranking-presentation.js",
-      "sha256": "a16f0feae6b488c9b64e5a1c45bfea89bbb2294179f209ea7a396ebb7e876544"
+      "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
       "bytes": 1433,
@@ -65357,14 +65357,14 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 111247,
+      "bytes": 111279,
       "path": "main.js",
-      "sha256": "2f8c3fe7bd32f85c365ed19995ba6399ce10f51f695e86e63c82aa8d0804e231"
+      "sha256": "9f18ef832a9a822c6f2162a6a7b6c2637341cbcc0f41d7ff64684fe1788c1355"
     },
     {
-      "bytes": 128675,
+      "bytes": 129340,
       "path": "styles.css",
-      "sha256": "a8a8355405098a74d0a78bd01243bc5c81fadd137418e9f2ca66d44948dcd332"
+      "sha256": "6bcbda85d956b1f865707d12ca6bb5e551d3db52dc4b9eb1a07bbf1c4dc173c5"
     },
     {
       "bytes": 14734,
@@ -65397,9 +65397,9 @@
       "sha256": "839c585ba2b20fcc148ff0f6aedde6eeefe107f3775b6b363dd97d370ec88efe"
     },
     {
-      "bytes": 20703,
+      "bytes": 21967,
       "path": "views/selection-view.js",
-      "sha256": "585f019b7a500ec04ac6d6df9bd2235ba03288d1feeba293095e2ff97de79221"
+      "sha256": "c3f074051c90892e86f11ffc803503d0b37455c05e4b6638f428d53b694aa375"
     },
     {
       "bytes": 20169,
@@ -65415,7 +65415,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 489222550,
+    "bytes": 489224869,
     "files": 13082
   }
 }

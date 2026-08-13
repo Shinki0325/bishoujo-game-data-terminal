@@ -108,7 +108,9 @@ export function createSelectionCard(documentRef, work, {
   assetBase,
   coverUrl = null,
   selectionEnabled = true,
-  isSelectionEnabled = () => Boolean(selectionEnabled)
+  isSelectionEnabled = () => Boolean(selectionEnabled),
+  selectionHotspots = false,
+  isCardActive = () => true
 }) {
   if (documentRef === null || typeof documentRef?.createElement !== 'function') {
     throw new TypeError('documentRef must provide createElement');
@@ -120,6 +122,8 @@ export function createSelectionCard(documentRef, work, {
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(isSelectionEnabled, 'isSelectionEnabled');
+  assertFunction(isCardActive, 'isCardActive');
+  const shouldToggleFromCardSurface = () => selectionHotspots && isSelectionEnabled();
 
   const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
     ? work.displayTitle
@@ -131,6 +135,7 @@ export function createSelectionCard(documentRef, work, {
   card.dataset.workId = work.workId;
   card.setAttribute('aria-label', `查看 ${displayTitle} 详情`);
   card.addEventListener('click', () => {
+    if (!isCardActive()) return;
     if (isSelectionEnabled()) onToggle(work, !selected);
     else onOpenDetails(work);
   });
@@ -162,7 +167,9 @@ export function createSelectionCard(documentRef, work, {
   cover.title = `查看 ${displayTitle} 详情`;
   cover.addEventListener('click', event => {
     event.stopPropagation();
-    onOpenDetails(work);
+    if (!isCardActive()) return;
+    if (shouldToggleFromCardSurface()) onToggle(work, !selected);
+    else onOpenDetails(work);
   });
   cover.append(image);
 
@@ -175,8 +182,12 @@ export function createSelectionCard(documentRef, work, {
     checkbox.checked = Boolean(selected);
     checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${displayTitle}`);
     checkbox.addEventListener('click', event => event.stopPropagation());
-    checkbox.addEventListener('change', event => {
+  checkbox.addEventListener('change', event => {
       event.stopPropagation();
+      if (!isCardActive()) {
+        checkbox.checked = Boolean(selected);
+        return;
+      }
       if (isSelectionEnabled()) onToggle(work, checkbox.checked);
       else checkbox.checked = Boolean(selected);
     });
@@ -206,7 +217,9 @@ export function createSelectionCard(documentRef, work, {
   details.textContent = 'i';
   details.addEventListener('click', event => {
     event.stopPropagation();
-    onOpenDetails(work);
+    if (!isCardActive()) return;
+    if (shouldToggleFromCardSurface()) onToggle(work, !selected);
+    else onOpenDetails(work);
   });
 
   card.append(cover, ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
@@ -242,7 +255,8 @@ export function createSelectionView({
   onCardViewChange,
   onFilterChange,
   onPageChange = () => {},
-  assetBase
+  assetBase,
+  cardSurfaceSelection = false
 }) {
   if (root === null || typeof root?.querySelector !== 'function') {
     throw new TypeError('root must provide querySelector');
@@ -285,6 +299,7 @@ export function createSelectionView({
   let latestCoverUrls = null;
   const defaultSelectionMode = true;
   let selectionModeActive = defaultSelectionMode;
+  let selectionModeEpoch = 0;
 
   const titleCommit = createDebouncedCommit(titleQuery => {
     onFilterChange({ titleQuery });
@@ -377,6 +392,9 @@ export function createSelectionView({
   function renderLatest() {
     const model = latestModel;
     if (model === null) return;
+      // Every card render invalidates handlers retained by a previous page or
+      // filter result before the new DOM is installed.
+      selectionModeEpoch += 1;
       const activeElement = documentRef.activeElement;
       const activeCard = activeElement?.parentElement;
       const focusTarget = activeCard?.dataset?.workId && activeElement?.dataset?.controlType
@@ -395,14 +413,17 @@ export function createSelectionView({
         state: model.works.length === 0 ? 'empty' : 'ready',
         message: '没有匹配的作品。'
       });
+      const renderedSelectionEpoch = selectionModeEpoch;
       const cards = visibleWorks.map(work => createSelectionCard(documentRef, work, {
         view: model.view,
         selected: selected.has(work.workId),
         selectionEnabled: Boolean(model.selectionMode),
-        isSelectionEnabled: () => selectionModeActive,
+        isSelectionEnabled: () => selectionModeActive && selectionModeEpoch === renderedSelectionEpoch,
         onToggle: (...args) => {
-          if (selectionModeActive) onToggleWork(...args);
+          if (selectionModeActive && selectionModeEpoch === renderedSelectionEpoch) onToggleWork(...args);
         },
+        selectionHotspots: cardSurfaceSelection && Boolean(model.selectionMode),
+        isCardActive: () => selectionModeEpoch === renderedSelectionEpoch,
         onOpenDetails,
         coverUrl: latestCoverUrls?.get?.(work.workId) ?? null,
         assetBase
@@ -464,7 +485,9 @@ export function createSelectionView({
 
   return Object.freeze({
     setSelectionMode(active) {
-      selectionModeActive = Boolean(active);
+      const nextActive = Boolean(active);
+      if (selectionModeActive !== nextActive) selectionModeEpoch += 1;
+      selectionModeActive = nextActive;
     },
 
     render(model, coverUrls = null) {
@@ -485,6 +508,7 @@ export function createSelectionView({
         ...model,
         selectionMode: typeof model.selectionMode === 'boolean' ? model.selectionMode : defaultSelectionMode
       };
+      if (selectionModeActive !== latestModel.selectionMode) selectionModeEpoch += 1;
       selectionModeActive = latestModel.selectionMode;
       latestCoverUrls = coverUrls;
       renderLatest();

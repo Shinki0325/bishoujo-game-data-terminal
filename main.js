@@ -1336,7 +1336,8 @@ async function initialize() {
     onPageChange() {
       replaceUiLocation();
     },
-    assetBase
+    assetBase,
+    cardSurfaceSelection: true
   });
   const filterIconHost = elements.filterToggle.querySelector('.toolbar-button-icon');
   filterIconHost?.replaceChildren(createActionIcon(document, 'filter'));
