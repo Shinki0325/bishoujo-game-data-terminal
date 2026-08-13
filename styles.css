@@ -5263,6 +5263,10 @@ dialog::backdrop {
   }
 
   body.is-mobile-ranking-candidates-open .ranking-candidates { transform: translateY(0); }
+  body.is-mobile-ranking-candidates-open .tier-board,
+  body.is-mobile-ranking-candidates-open .ranking-page-heading {
+    pointer-events: none;
+  }
 
   .candidate-toolbar {
     display: grid;
@@ -6396,7 +6400,28 @@ dialog::backdrop {
 /* Touch browsing and ranking are distinct gestures: an ordinary vertical swipe
    must scroll the board, while a held card still enters the existing drag flow. */
 @media (max-width: 899px) {
-  .ranking-card { touch-action: pan-y; }
+  .ranking-card {
+    touch-action: pan-y;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Candidate selection is explicit on touch; long holds are reserved for drag. */
+  .ranking-candidate-remove { display: none; }
+  .ranking-candidate-select {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .candidate-batch-actions {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
 
   /* Page-owned controls stay in normal flow. On short mobile viewports a
      nested sticky layer covers the first card or selected-company work list. */

@@ -134,6 +134,7 @@ export function createCompanyDirectoryView({
       selectedWorks,
       detailWorkSortKey,
       detailWorkSortDirection,
+      selectionMode: currentSelectionMode,
       imageUrlForCompany,
       imageUrlForWork
     };

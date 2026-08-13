@@ -1414,7 +1414,8 @@ async function initialize() {
     title.textContent = companyItem.title;
     card.append(cover, title);
     cover.addEventListener('click', event => {
-      if (callbacks.shouldSuppressMediaClick?.(companyItem)) {
+      if (!callbacks.isCardActivationEnabled?.(companyItem)
+        || callbacks.shouldSuppressMediaClick?.(companyItem)) {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -1599,6 +1600,11 @@ async function initialize() {
     selectionView.setSelectionMode(selectionMode);
     mobileSelectionView.setSelectionInteractionEnabled(selectionMode);
   }
+
+  function isMobileRankingInteraction() {
+    return document.defaultView?.matchMedia?.('(max-width: 899px)')?.matches === true;
+  }
+
   const rankingView = createRankingView({
     root: elements.rankingView,
     createCard: (documentRef, item, callbacks) => rankingSubject === 'company'
@@ -1698,6 +1704,9 @@ async function initialize() {
       return runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
     },
     showImportTile: () => rankingSubject === 'work',
+    // On touch, a card is a drag surface. Details remain available from the
+    // library/directory, which removes tap-versus-hold ambiguity for both subjects.
+    isCardActivationEnabled: () => !isMobileRankingInteraction(),
     assetBase
   });
   const presentation = createRankingPresentation({
@@ -2066,8 +2075,12 @@ async function initialize() {
     elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
     elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
     elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
-    elements.filterResultCount.textContent = `${model.visibleWorks.length} 项`;
-    elements.catalogResultCount.textContent = `${model.visibleWorks.length} 项`;
+    // Keep the filtered result distinct from the full catalog size. This is
+    // especially important on mobile, where the compact header used to make
+    // 3788 look like the total number of works.
+    const catalogTotal = sample.works.length;
+    elements.filterResultCount.textContent = `${model.visibleWorks.length} / ${catalogTotal} 项`;
+    elements.catalogResultCount.textContent = `${model.visibleWorks.length} / ${catalogTotal} 项`;
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();

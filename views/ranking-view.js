@@ -144,6 +144,7 @@ export function createRankingCard(documentRef, work, callbacks) {
     onDragStart,
     onDragEnd,
     shouldSuppressMediaClick = () => false,
+    isCardActivationEnabled = () => true,
     assetBase,
     coverUrl = null
   } = callbacks;
@@ -153,6 +154,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   assertFunction(onDragStart, 'onDragStart');
   assertFunction(onDragEnd, 'onDragEnd');
   assertFunction(shouldSuppressMediaClick, 'shouldSuppressMediaClick');
+  assertFunction(isCardActivationEnabled, 'isCardActivationEnabled');
 
   const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
     ? work.displayTitle
@@ -190,7 +192,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   cover.setAttribute('aria-label', `放大 ${displayTitle}`);
   cover.title = `放大 ${displayTitle}`;
   cover.addEventListener('click', event => {
-    if (shouldSuppressMediaClick(work)) {
+    if (!isCardActivationEnabled(work) || shouldSuppressMediaClick(work)) {
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -284,6 +286,7 @@ export function createRankingView({
   onRemoveCandidates = workIds => onRemoveCandidate(workIds[0]),
   onMoveCandidatesToTier = () => {},
   showImportTile = () => true,
+  isCardActivationEnabled = () => true,
   candidateHoldDelayMs = 300,
   assetBase
 }) {
@@ -309,6 +312,7 @@ export function createRankingView({
   assertFunction(onRemoveCandidates, 'onRemoveCandidates');
   assertFunction(onMoveCandidatesToTier, 'onMoveCandidatesToTier');
   assertFunction(showImportTile, 'showImportTile');
+  assertFunction(isCardActivationEnabled, 'isCardActivationEnabled');
   if (!Number.isFinite(candidateHoldDelayMs) || candidateHoldDelayMs < 0) {
     throw new TypeError('candidateHoldDelayMs must be a non-negative number');
   }
@@ -521,7 +525,14 @@ export function createRankingView({
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
     const pointerId = event.pointerId ?? 0;
-    const gesture = { pointerId, card, started: false, timer: null };
+    const gesture = {
+      pointerId,
+      card,
+      started: false,
+      timer: null,
+      startX: Number(event.clientX) || 0,
+      startY: Number(event.clientY) || 0
+    };
     gesture.timer = scheduleHold(() => {
       if (touchDrag !== gesture) return;
       gesture.timer = null;
@@ -537,7 +548,14 @@ export function createRankingView({
   function updateTouchDrag(event) {
     const gesture = touchDrag;
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
-    if (!gesture.started) return;
+    if (!gesture.started) {
+      const deltaX = (Number(event.clientX) || 0) - gesture.startX;
+      const deltaY = (Number(event.clientY) || 0) - gesture.startY;
+      // A moving finger is a scroll gesture. Only a stationary hold may
+      // become a drag, otherwise long pages become impossible to scroll.
+      if (Math.hypot(deltaX, deltaY) >= 10) clearTouchDrag();
+      return;
+    }
     const target = dropNodeForPointer(event);
     const tierId = tierIdFromNode(target);
     if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
@@ -583,6 +601,9 @@ export function createRankingView({
   }
 
   function beginCandidateHold(workId, card, event) {
+    // Touch holds are reserved for dragging. Candidate multi-selection on touch
+    // remains explicit through the checkbox, so the two gesture timers cannot race.
+    if (isTouchPointer(event)) return;
     if (immersive || event.target?.classList?.contains('ranking-candidate-select')
       || event.target?.classList?.contains('ranking-candidate-remove')) return;
     clearCandidateHold();
@@ -1028,6 +1049,7 @@ export function createRankingView({
         finishDrag();
       },
       shouldSuppressMediaClick,
+      isCardActivationEnabled,
       assetBase
     };
   }
@@ -1172,6 +1194,7 @@ export function createRankingView({
     }
 
     label.addEventListener('click', event => {
+      if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
       if (event.target === input || event.target === editingState || editingState.contains(event.target)) return;
       if (editingTierId === tier.id) closeTierEditing();
       else beginEdit();
