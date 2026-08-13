@@ -65112,14 +65112,14 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 42467,
+      "bytes": 42981,
       "path": "index.html",
-      "sha256": "a257b47b13391979a4dc8e410e7aada1fb2bf892fbd8cf072d23394dfc80c160"
+      "sha256": "51cb0425ecd2a98fc8119c1f99681dc1b126d8cf1eb3e0cb8045eaadcb8d1878"
     },
     {
-      "bytes": 4161,
+      "bytes": 4639,
       "path": "lib/action-icons.js",
-      "sha256": "0492c3ae058ddbdbe63492242b428ea1f41a4c89e9723c4094bf4501eb947d76"
+      "sha256": "5953c32e4612618bd09118ba809068a0160283a259ea6a1b383fd09c7775bbca"
     },
     {
       "bytes": 22577,
@@ -65332,6 +65332,11 @@
       "sha256": "2189dc9e5bb0a9d5cf8bff0c8f5c2898e0fdfe8de87c81b8accf1f62d101dd93"
     },
     {
+      "bytes": 1098,
+      "path": "lib/theme-preference.js",
+      "sha256": "2fd16e45039bb14c50b5cb2ce265c9dd807fa3bdac7b3c39fe8e4a2905a3486b"
+    },
+    {
       "bytes": 13230,
       "path": "lib/tier-config.js",
       "sha256": "f70159c145f459f82d7b75b932fde421519e8a825bffa22a3727fe043ae3c256"
@@ -65352,14 +65357,14 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 103928,
+      "bytes": 104996,
       "path": "main.js",
-      "sha256": "84629d7227ff382a0ff5132d967f3203f1a9efe850f7612709ff37e5f8aa7119"
+      "sha256": "545357ffc3891134b4d851db62b64fc56bf643b5a071218bb1aa92b030a486ca"
     },
     {
-      "bytes": 100659,
+      "bytes": 109656,
       "path": "styles.css",
-      "sha256": "ce5d683902db666ed31abd61aba6ade4e5224ed4909f640152464153576b1fd4"
+      "sha256": "45cd41956d93175000d14aeef892b7578e4609b6d15037fe9fe7ef9e9d68594d"
     },
     {
       "bytes": 14632,
@@ -65410,7 +65415,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 489181567,
-    "files": 13081
+    "bytes": 489193722,
+    "files": 13082
   }
 }

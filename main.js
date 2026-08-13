@@ -27,6 +27,7 @@ import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
+import { applyTheme, readTheme, saveTheme } from './lib/theme-preference.js';
 import { createMediaPreviewActions } from './lib/media-preview-actions.js';
 import { createRankingHelp } from './lib/ranking-help.js';
 import { createGuideController } from './lib/guide-controller.js';
@@ -114,6 +115,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   modeSelection: requiredElement('mode-selection'),
   modeRanking: requiredElement('mode-ranking'),
   modeCompany: requiredElement('mode-company'),
+  themeToggle: requiredElement('theme-toggle'),
   selectionView: requiredElement('selection-view'),
   rankingView: requiredElement('ranking-view'),
   rankingSubjectWork: requiredElement('ranking-subject-work'),
@@ -664,6 +666,27 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
 }
 
 async function initialize() {
+  let themeStorage = null;
+  try {
+    themeStorage = window.localStorage;
+  } catch {
+    // Private browsing or a blocked storage policy should not block startup.
+  }
+  let activeTheme = applyTheme(document, readTheme(themeStorage));
+  const renderThemeToggle = () => {
+    const isLight = activeTheme === 'light';
+    const nextThemeLabel = isLight ? '暗色' : '亮色';
+    elements.themeToggle.replaceChildren(createActionIcon(document, isLight ? 'moon' : 'sun'));
+    elements.themeToggle.setAttribute('aria-label', `切换到${nextThemeLabel}界面`);
+    elements.themeToggle.setAttribute('aria-pressed', String(isLight));
+    elements.themeToggle.title = `切换到${nextThemeLabel}界面`;
+  };
+  renderThemeToggle();
+  elements.themeToggle.addEventListener('click', () => {
+    activeTheme = saveTheme(themeStorage, activeTheme === 'dark' ? 'light' : 'dark');
+    applyTheme(document, activeTheme);
+    renderThemeToggle();
+  });
   const startupMetrics = createStartupMetrics();
   const assetBase = configuredAssetBase();
   const previewMedia = createPreviewMediaResolver({
