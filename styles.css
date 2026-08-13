@@ -5340,6 +5340,270 @@ dialog::backdrop {
   body.is-ranking-immersive .mode-switch { display: none; }
 }
 
+/* Final mobile geometry authority. Workspace-local sticky regions start at
+   the top of their own scroll container; the global header is a sibling and
+   must not be counted a second time. */
+@media (max-width: 899px) {
+  .results-toolbar,
+  .company-directory-header,
+  .ranking-page-heading {
+    top: 0;
+  }
+
+  .results-heading,
+  .catalog-controls,
+  .selection-context-bar,
+  .company-directory-tools {
+    position: static;
+    top: auto;
+  }
+
+  .results-toolbar { position: sticky; }
+  .results-heading { z-index: auto; }
+  .company-directory-header { z-index: 15; }
+  .ranking-page-heading { z-index: 16; }
+
+  .selection-view,
+  .catalog-results,
+  .company-view {
+    overflow: visible;
+  }
+
+  .ranking-candidates {
+    bottom: calc(var(--mobile-nav-height) + var(--mobile-ranking-dock-height));
+    transform: translateY(calc(100% + var(--mobile-ranking-dock-height)));
+  }
+}
+
+/* Last-in-file mobile geometry overrides. The shell header is a sibling of
+   each workspace, so workspace-local sticky regions must start at 0 within
+   their own scroll container; using --header-height here creates a phantom
+   header-sized gap and makes nested sticky children drift apart. */
+@media (max-width: 899px) {
+  .results-toolbar,
+  .company-directory-header,
+  .ranking-page-heading {
+    top: 0;
+  }
+
+  .results-heading,
+  .catalog-controls,
+  .selection-context-bar,
+  .company-directory-tools {
+    position: static;
+    top: auto;
+  }
+
+  .results-heading { z-index: auto; }
+  .company-directory-header { z-index: 15; }
+  .ranking-page-heading { z-index: 16; }
+
+  .selection-view,
+  .catalog-results,
+  .company-view {
+    overflow: visible;
+  }
+
+  .ranking-candidates {
+    bottom: calc(var(--mobile-nav-height) + var(--mobile-ranking-dock-height));
+    transform: translateY(calc(100% + var(--mobile-ranking-dock-height)));
+  }
+}
+
+/* Mobile layout alignment authority.
+   Earlier responsive rules predate the native mobile shell. Keep their touch
+   sizing, but make every vertical offset here derive from one shell geometry. */
+@media (max-width: 899px) {
+  :root {
+    --header-height: 52px;
+    --mobile-nav-height: calc(62px + var(--safe-bottom));
+    --mobile-ranking-dock-height: 56px;
+    --selection-card-size: calc((100vw - 38px) / 3);
+  }
+
+  body { padding-bottom: var(--mobile-nav-height); }
+
+  .tool-header {
+    display: flex;
+    align-items: center;
+    min-height: var(--header-height);
+    padding: calc(8px + var(--safe-top)) calc(12px + var(--safe-right)) 8px calc(12px + var(--safe-left));
+  }
+
+  .tool-heading { min-height: 0; margin: 0; }
+  .tool-heading h1 { font-size: 16px; line-height: 24px; }
+  .theme-toggle { position: static; margin-left: auto; }
+
+  .mode-switch {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: auto;
+    min-height: var(--mobile-nav-height);
+    padding: 7px calc(8px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(8px + var(--safe-left));
+    gap: 0;
+  }
+
+  .mode-switch button,
+  .mode-switch button:first-child,
+  .mode-switch button:last-child {
+    min-height: 42px;
+    margin: 0;
+    padding: 5px;
+    border: 0;
+    border-radius: 0;
+    font-size: 12px;
+  }
+
+  .mode-switch button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .selection-view,
+  .company-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    padding-bottom: 14px;
+    overflow: visible;
+  }
+
+  .catalog-results {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* One sticky wrapper keeps variable-height headings and their controls together. */
+  .results-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    background: var(--bg);
+  }
+
+  .results-heading,
+  .catalog-controls,
+  .selection-context-bar {
+    position: static;
+  }
+
+  .results-heading {
+    min-height: 48px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+    padding: 8px 12px 6px;
+  }
+
+  .results-heading .active-filter-state,
+  .results-heading .active-filter-state > output {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .catalog-controls {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    gap: 6px;
+    padding: 7px 12px 10px;
+  }
+
+  .catalog-controls .catalog-search { grid-column: 1 / -1; min-width: 0; }
+  .catalog-controls .catalog-search input { min-height: 40px; }
+  .catalog-controls .toolbar-button,
+  .catalog-controls .select-field select { min-width: 0; min-height: 36px; }
+  .catalog-controls .select-field { min-width: 0; }
+  #filter-toggle,
+  #sort-direction-toggle { width: 42px; padding: 0; }
+  #filter-toggle > span:last-child,
+  #sort-direction-label,
+  #card-view-toggle { display: none; }
+
+  .catalog-grid,
+  .company-directory-list {
+    grid-template-columns: repeat(3, minmax(0, var(--selection-card-size)));
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .catalog-grid { padding: 9px; }
+  .company-directory-list { padding: 0; }
+  .catalog-grid .selection-card-title,
+  .company-directory-card-name { font-size: 10px; }
+  .selection-card-company,
+  .selection-card-stats,
+  .company-directory-card-work-count,
+  .company-directory-card-vote-count { display: none; }
+
+  .company-view { padding: 14px 12px; }
+  .company-directory-header {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    background: var(--bg);
+  }
+
+  .company-directory-header h2 { font-size: 20px; }
+  .company-directory-tools { position: static; }
+  .company-directory-list > .company-directory-detail {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .ranking-view {
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    height: auto;
+    padding-bottom: var(--mobile-ranking-dock-height);
+  }
+
+  .ranking-page-heading {
+    position: sticky;
+    top: 0;
+    z-index: 16;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 7px 10px;
+  }
+
+  .ranking-page-heading .workspace-counts,
+  .ranking-toolbar { display: none; }
+  .tier-board {
+    min-height: calc(100dvh - var(--header-height) - 48px - var(--mobile-nav-height) - var(--mobile-ranking-dock-height));
+    padding: 7px 5px;
+  }
+  .tier-row { grid-template-columns: 46px minmax(0, 1fr); }
+  .tier-track { gap: 4px; padding: 5px; }
+
+  .ranking-candidates {
+    right: 0;
+    bottom: calc(var(--mobile-nav-height) + var(--mobile-ranking-dock-height));
+    left: 0;
+    z-index: 40;
+    max-height: min(66dvh, 560px);
+    min-height: 280px;
+    transform: translateY(calc(100% + var(--mobile-nav-height) + var(--mobile-ranking-dock-height)));
+  }
+
+  .mobile-ranking-dock {
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    z-index: 41;
+    min-height: var(--mobile-ranking-dock-height);
+    padding: 7px calc(9px + var(--safe-right)) 7px calc(9px + var(--safe-left));
+  }
+}
+
 @media (max-width: 899px) {
   .tool-header {
     box-shadow: 0 3px 12px rgb(12 20 26 / 14%);
@@ -6032,13 +6296,29 @@ dialog::backdrop {
   #card-view-toggle,
   #company-ranking-toggle { display: none; }
 
+  .results-toolbar {
+    position: sticky;
+    top: 0;
+  }
+
   .results-heading,
   .company-directory-header {
     position: sticky;
-    top: var(--header-height);
+    top: 0;
     z-index: 15;
     background: var(--bg);
   }
+
+  .results-heading,
+  .catalog-controls,
+  .selection-context-bar,
+  .company-directory-tools {
+    position: static;
+    top: auto;
+  }
+
+  .results-heading { z-index: auto; }
+  .company-directory-header { z-index: 15; }
 
   .ranking-view {
     min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
@@ -6048,7 +6328,7 @@ dialog::backdrop {
 
   .ranking-page-heading {
     position: sticky;
-    top: var(--header-height);
+    top: 0;
     z-index: 16;
     display: flex;
     align-items: center;
@@ -6106,4 +6386,8 @@ dialog::backdrop {
   .mobile-ranking-menu[open] { display: block; }
   body.is-ranking-immersive .mobile-ranking-dock,
   body.is-ranking-immersive .mode-switch { display: none; }
+
+  .selection-view,
+  .catalog-results,
+  .company-view { overflow: visible; }
 }
