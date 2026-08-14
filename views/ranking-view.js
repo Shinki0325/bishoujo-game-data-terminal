@@ -369,7 +369,6 @@ export function createRankingView({
   let colorPaletteTrigger = null;
   let annotationEditor = null;
   let touchDrag = null;
-  let mobileArrangeMode = false;
   let mobileSortables = [];
   let suppressedTouchClickWorkId = null;
   let suppressedTouchClickTimer = null;
@@ -524,6 +523,7 @@ export function createRankingView({
   function clearDragCard(card) {
     card?.classList?.remove('is-dragging');
     card?.classList?.remove('is-dragging-group');
+    card?.classList?.remove('is-mobile-dragging');
     if (card?.dataset) delete card.dataset.selectionCount;
   }
 
@@ -539,23 +539,24 @@ export function createRankingView({
 
   function mountMobileSortables() {
     destroyMobileSortables();
-    if (!mobileArrangeMode || !viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
+    if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
     const group = { name: 'egs-ranking', pull: true, put: true };
     const mount = (element, kind, tierId = null) => {
       const sortable = Sortable.create(element, {
         group,
         draggable: '.ranking-card',
         animation: 120,
-        delay: 120,
-        delayOnTouchOnly: true,
+        delay: 0,
+        delayOnTouchOnly: false,
         forceFallback: true,
-        fallbackTolerance: 6,
+        fallbackTolerance: 0,
         direction: 'horizontal',
         scroll: true,
         bubbleScroll: true,
         onStart(event) {
           const card = event.item;
           const workId = card?.dataset?.workId;
+          card?.classList?.add('is-mobile-dragging');
           if (typeof workId === 'string') startDrag(workId, card);
         },
         onEnd(event) {
@@ -765,7 +766,6 @@ export function createRankingView({
   function applyCardPresentation(card) {
     const title = card.querySelector?.('.ranking-card-title');
     if (title) title.hidden = !showTitles;
-    card.classList.toggle('is-mobile-arrange-mode', mobileArrangeMode);
     const workId = card.dataset.workId;
     const value = annotations[workId] ?? '';
     let overlay = card.querySelector?.('.ranking-card-annotation');
@@ -1615,12 +1615,9 @@ export function createRankingView({
       }
     },
 
-    setMobileArrangeMode(nextMode) {
-      if (typeof nextMode !== 'boolean') throw new TypeError('mobile arrange mode must be boolean');
-      mobileArrangeMode = nextMode;
-      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
-        card.classList.toggle('is-mobile-arrange-mode', mobileArrangeMode);
-      }
+    setMobileDragEnabled(nextEnabled) {
+      if (typeof nextEnabled !== 'boolean') throw new TypeError('mobile drag enabled must be boolean');
+      root.classList.toggle('is-mobile-drag-enabled', nextEnabled);
       mountMobileSortables();
     },
 

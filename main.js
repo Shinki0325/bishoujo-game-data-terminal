@@ -171,7 +171,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileRankingRedo: requiredElement('mobile-ranking-redo'),
   mobileRankingCandidates: requiredElement('mobile-ranking-candidates'),
   mobileRankingCandidateCount: requiredElement('mobile-ranking-candidate-count'),
-  mobileRankingArrange: requiredElement('mobile-ranking-arrange'),
   mobileRankingMore: requiredElement('mobile-ranking-more'),
   mobileRankingMenu: requiredElement('mobile-ranking-menu'),
   mobileRankingShowCounts: requiredElement('mobile-ranking-show-counts'),
@@ -1990,7 +1989,6 @@ async function initialize() {
     elements.mobileRankingRedo.disabled = elements.redoEdit.disabled;
     elements.mobileRankingCandidateCount.textContent = String(activeRankingState.unrankedCount);
     elements.mobileRankingCandidates.disabled = importBusy || activeRankingState.unrankedCount === 0;
-    elements.mobileRankingArrange.disabled = importBusy;
     elements.mobileRankingMore.disabled = importBusy;
     elements.mobileRankingShowCounts.disabled = importBusy;
     elements.mobileRankingShowTitles.disabled = importBusy;
@@ -2022,7 +2020,6 @@ async function initialize() {
         elements.mobileRankingUndo,
         elements.mobileRankingRedo,
         elements.mobileRankingCandidates,
-        elements.mobileRankingArrange,
         elements.mobileRankingMore,
         elements.mobileRankingShowCounts,
         elements.mobileRankingShowTitles,
@@ -2106,9 +2103,7 @@ async function initialize() {
         ...rankingModel.candidateWorks,
         ...rankingModel.tiers.flatMap(tier => tier.works)
       ]) : null);
-      rankingView.setMobileArrangeMode(
-        elements.mobileRankingArrange.getAttribute('aria-pressed') === 'true'
-      );
+      rankingView.setMobileDragEnabled(true);
     } else {
       selectionView.render({
         works: model.visibleWorks.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById)),
@@ -2420,9 +2415,6 @@ async function initialize() {
     closeToolbarMenus();
     setWorkSelectionMode(false);
     companySelectionMode = false;
-    elements.mobileRankingArrange.setAttribute('aria-pressed', 'false');
-    document.body.classList.remove('is-mobile-ranking-arrange-mode');
-    rankingView.setMobileArrangeMode(false);
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
@@ -2442,9 +2434,6 @@ async function initialize() {
   elements.companyRankingToggle.addEventListener('click', () => {
     companyDirectoryOpen = false;
     rankingSubject = 'company';
-    elements.mobileRankingArrange.setAttribute('aria-pressed', 'false');
-    document.body.classList.remove('is-mobile-ranking-arrange-mode');
-    rankingView.setMobileArrangeMode(false);
     const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
     pushUiLocation();
     return result;
@@ -2477,9 +2466,6 @@ async function initialize() {
     companyDirectoryOpen = false;
     companySelectionMode = false;
     rankingSubject = 'company';
-    elements.mobileRankingArrange.setAttribute('aria-pressed', 'false');
-    document.body.classList.remove('is-mobile-ranking-arrange-mode');
-    rankingView.setMobileArrangeMode(false);
     return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.companyRankingClose.addEventListener('click', () => {
@@ -2529,12 +2515,6 @@ async function initialize() {
   elements.mobileRankingUndo.addEventListener('click', () => elements.undoEdit.click());
   elements.mobileRankingRedo.addEventListener('click', () => elements.redoEdit.click());
   elements.mobileRankingCandidates.addEventListener('click', () => toggleMobileRankingCandidates());
-  elements.mobileRankingArrange.addEventListener('click', () => {
-    const active = elements.mobileRankingArrange.getAttribute('aria-pressed') !== 'true';
-    elements.mobileRankingArrange.setAttribute('aria-pressed', String(active));
-    document.body.classList.toggle('is-mobile-ranking-arrange-mode', active);
-    rankingView.setMobileArrangeMode(active);
-  });
   elements.mobileRankingMore.addEventListener('click', () => openMobileRankingMenu());
   elements.mobileRankingShowCounts.addEventListener('change', () => {
     elements.rankingShowCounts.checked = elements.mobileRankingShowCounts.checked;

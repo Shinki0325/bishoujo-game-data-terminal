@@ -5269,17 +5269,15 @@ dialog::backdrop {
     pointer-events: none;
   }
 
-  /* In arrange mode the candidate drawer remains open beside the board so a
-     handle drag can cross from the pool into a visible tier. */
-  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .tier-board {
+  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .tier-board {
     pointer-events: auto;
   }
 
-  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .ranking-candidates {
+  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .ranking-candidates {
     pointer-events: none;
   }
 
-  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .ranking-candidates .ranking-candidate-grid {
+  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .ranking-candidates .ranking-candidate-grid {
     pointer-events: auto;
   }
 
@@ -5310,7 +5308,7 @@ dialog::backdrop {
     left: 0;
     z-index: 41;
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-columns: 40px minmax(0, 1fr) 48px;
     gap: 5px;
     min-height: var(--mobile-ranking-dock-height);
     padding: 7px calc(9px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(9px + var(--safe-left));
@@ -5326,11 +5324,6 @@ dialog::backdrop {
     font-size: 12px;
   }
 
-  #mobile-ranking-arrange[aria-pressed="true"] {
-    color: #071216;
-    border-color: var(--accent);
-    background: var(--accent);
-  }
 
   .mobile-ranking-menu[open] {
     position: fixed;
@@ -6393,7 +6386,7 @@ dialog::backdrop {
     left: 0;
     z-index: 41;
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-columns: 40px minmax(0, 1fr) 48px;
     gap: 5px;
     min-height: var(--mobile-ranking-dock-height);
     padding: 7px calc(9px + var(--safe-right)) 7px calc(9px + var(--safe-left));
@@ -6402,7 +6395,6 @@ dialog::backdrop {
   }
 
   .mobile-ranking-dock button { min-width: 0; min-height: 40px; padding: 4px 6px; font-size: 12px; }
-  #mobile-ranking-arrange[aria-pressed="true"] { color: #071216; border-color: var(--accent); background: var(--accent); }
   .mobile-ranking-menu[open] { display: block; }
   body.is-ranking-immersive .mobile-ranking-dock,
   body.is-ranking-immersive .mode-switch { display: none; }
@@ -6424,12 +6416,31 @@ dialog::backdrop {
 
   .ranking-drag-handle { display: none !important; }
 
-  .ranking-card.is-mobile-arrange-mode {
+  .ranking-view.is-mobile-drag-enabled .ranking-card {
     cursor: grab;
     touch-action: none;
   }
 
-  .ranking-card.is-mobile-arrange-mode > * {
+  .ranking-card.is-mobile-dragging > * {
+    pointer-events: none;
+  }
+
+  /* The visual tier frame is wider than its card track. While arranging, make
+     the track cover the whole frame so its label and border remain valid drops. */
+  .ranking-view.is-mobile-drag-enabled .tier-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ranking-view.is-mobile-drag-enabled .tier-track {
+    grid-column: 1;
+    grid-row: 1;
+    padding-left: 54px;
+  }
+
+  .ranking-view.is-mobile-drag-enabled .tier-label {
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 2;
     pointer-events: none;
   }
 
