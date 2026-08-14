@@ -6642,7 +6642,7 @@ dialog::backdrop {
   .ranking-candidates-close { display: none; }
 
   /* Candidate browsing yields the full board as soon as a drag starts. */
-  .ranking-view.is-mobile-ranking-dragging .ranking-candidates {
+  .ranking-view.is-mobile-ranking-dragging-from-pool .ranking-candidates {
     pointer-events: none;
     transition: none;
     transform: translateY(calc(100% + var(--mobile-nav-height))) !important;
@@ -6702,6 +6702,7 @@ dialog::backdrop {
     background: var(--surface-strong);
     border: 1px solid var(--border-strong);
     box-shadow: 0 4px 12px rgb(0 0 0 / 28%);
+    pointer-events: none;
     will-change: transform;
   }
 

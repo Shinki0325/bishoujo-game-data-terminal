@@ -540,6 +540,21 @@ export function createRankingView({
     return event?.target ?? null;
   }
 
+  function pointerIsInsideCandidatePool(event) {
+    const x = Number(event?.clientX);
+    const y = Number(event?.clientY);
+    const rect = candidatePool.getBoundingClientRect?.();
+    return Boolean(
+      rect
+      && Number.isFinite(x)
+      && Number.isFinite(y)
+      && x >= rect.left
+      && x <= rect.right
+      && y >= rect.top
+      && y <= rect.bottom
+    );
+  }
+
   function startDrag(workId, card, { includeCandidateSelection = true } = {}) {
     clearDropState();
     draggedWorkId = workId;
@@ -568,7 +583,9 @@ export function createRankingView({
   }
 
   function mobileCandidateDrawerButton() {
-    return root.querySelector?.('#mobile-ranking-candidates') ?? null;
+    return documentRef.getElementById?.('mobile-ranking-candidates')
+      ?? root.querySelector?.('#mobile-ranking-candidates')
+      ?? null;
   }
 
   function setMobileCandidateDrawer(open) {
@@ -627,7 +644,7 @@ export function createRankingView({
     updateMobileDragVisuals(event, null);
   }
 
-  function updateMobileDragVisuals(event, tierId) {
+  function updateMobileDragVisuals(event, tierId, candidateTarget = false) {
     const x = Number(event?.clientX);
     const y = Number(event?.clientY);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -636,8 +653,8 @@ export function createRankingView({
     mobileDropHint?.style?.setProperty('transform', `translate3d(${x + 10}px, ${y - 30}px, 0)`);
     if (!mobileDropHint) return;
     const tier = tierId === null ? null : model?.tiers?.find(item => item.id === tierId) ?? null;
-    mobileDropHint.textContent = tier ? `放入 ${tier.name}` : '拖到分级';
-    mobileDropHint.classList.toggle('has-target', tier !== null);
+    mobileDropHint.textContent = candidateTarget ? '放回候选' : tier ? `放入 ${tier.name}` : '拖到分级';
+    mobileDropHint.classList.toggle('has-target', candidateTarget || tier !== null);
   }
 
   function startMobileRootAutoScroll(pointerY) {
@@ -699,6 +716,7 @@ export function createRankingView({
     finishCandidateSelectionGesture();
     startDrag(card.dataset.workId, card, { includeCandidateSelection: false });
     root.classList.add('is-mobile-ranking-dragging');
+    root.classList.toggle('is-mobile-ranking-dragging-from-pool', dragOrigin === 'pool');
     gesture.restoreCandidateDrawer = dragOrigin === 'pool'
       && documentRef.body?.classList?.contains('is-mobile-ranking-candidates-open');
     if (gesture.restoreCandidateDrawer) setMobileCandidateDrawer(false);
@@ -714,10 +732,11 @@ export function createRankingView({
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
     const target = dropNodeForPointer(event);
     const tierId = tierIdFromPointer(event) ?? tierIdFromNode(target);
-    if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
-    else if (target && candidatePool.contains(target)) handlePoolDragOver(event);
+    const candidateTarget = pointerIsInsideCandidatePool(event);
+    if (candidateTarget) handlePoolDragOver(event);
+    else if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
     else clearDropState();
-    updateMobileDragVisuals(event, tierId);
+    updateMobileDragVisuals(event, candidateTarget ? null : tierId, candidateTarget);
     startMobileRootAutoScroll(Number(event.clientY) || 0);
     event.preventDefault?.();
   }
@@ -731,14 +750,14 @@ export function createRankingView({
     if (!cancelled) {
       const finalTarget = dropNodeForPointer(event);
       const finalTierId = tierIdFromPointer(event) ?? tierIdFromNode(finalTarget);
-      if (finalTierId !== null && tierTracks.has(finalTierId)) handleTierDragOver(finalTierId, event);
-      else if (finalTarget && candidatePool.contains(finalTarget)) handlePoolDragOver(event);
+      if (pointerIsInsideCandidatePool(event)) handlePoolDragOver(event);
+      else if (finalTierId !== null && tierTracks.has(finalTierId)) handleTierDragOver(finalTierId, event);
     }
     const workId = draggedWorkId;
     const workIds = [...draggedWorkIds];
     const plan = cancelled ? null : dropPlan;
     clearDropState();
-    root.classList.remove('is-mobile-ranking-dragging');
+    root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
     draggedWorkId = null;
     draggedWorkIds = [];
     dragOrigin = null;
@@ -760,6 +779,7 @@ export function createRankingView({
     } else if (plan.type === 'pool') {
       onMoveToUnranked(workId);
     }
+    if (gesture.restoreCandidateDrawer) setMobileCandidateDrawer(true);
   }
 
   function candidateCardFromNode(node) {
@@ -1042,6 +1062,7 @@ export function createRankingView({
     draggedWorkId = null;
     draggedWorkIds = [];
     dragOrigin = null;
+    root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
   }
 
   function placeIndicator(track, pointerX, pointerY) {
