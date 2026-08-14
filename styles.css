@@ -5083,6 +5083,10 @@ dialog::backdrop {
   display: none;
 }
 
+.mobile-ranking-candidates-trigger {
+  display: none;
+}
+
 @media (max-width: 899px) {
   :root {
     --header-height: 52px;
@@ -5264,23 +5268,6 @@ dialog::backdrop {
   }
 
   body.is-mobile-ranking-candidates-open .ranking-candidates { transform: translateY(0); }
-  body.is-mobile-ranking-candidates-open .tier-board,
-  body.is-mobile-ranking-candidates-open .ranking-page-heading {
-    pointer-events: none;
-  }
-
-  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .tier-board {
-    pointer-events: auto;
-  }
-
-  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .ranking-candidates {
-    pointer-events: none;
-  }
-
-  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-drag-enabled .ranking-candidates .ranking-candidate-grid {
-    pointer-events: auto;
-  }
-
   .candidate-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -6425,40 +6412,17 @@ dialog::backdrop {
     pointer-events: none;
   }
 
+  .tier-row.is-mobile-touch-dragging {
+    touch-action: none;
+  }
+
   /* The visual tier frame is wider than its card track. While arranging, make
      the track cover the whole frame so its label and border remain valid drops. */
-  .ranking-view.is-mobile-drag-enabled .tier-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ranking-view.is-mobile-drag-enabled .tier-track {
-    grid-column: 1;
-    grid-row: 1;
-    padding-left: 54px;
-  }
-
-  .ranking-view.is-mobile-drag-enabled .tier-label {
-    grid-column: 1;
-    grid-row: 1;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  /* Candidate selection is explicit on touch; long holds are reserved for drag. */
+  /* The candidate pool is a direct-manipulation bench on touch: every card
+     begins a single-card drag, so no checkbox may cover the card surface. */
   .ranking-candidate-remove { display: none; }
-  .ranking-candidate-select {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    min-height: 34px;
-  }
-
-  .candidate-batch-actions {
-    grid-column: 1 / -1;
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
+  .ranking-candidate-select,
+  .candidate-batch-actions { display: none; }
 
   /* Page-owned controls stay in normal flow. On short mobile viewports a
      nested sticky layer covers the first card or selected-company work list. */
@@ -6473,7 +6437,133 @@ dialog::backdrop {
     top: auto !important;
   }
 
-  .company-view {
+.company-view {
     overflow: visible;
+  }
+}
+
+/* Mobile ranking follows a single document flow. The candidate drawer stays
+   as the FIFA-style holding area, while the obsolete action dock and desktop
+   subject switch are removed from the touch surface. */
+@media (max-width: 899px) {
+  .ranking-view {
+    height: auto !important;
+    min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
+    overflow: visible !important;
+    padding-bottom: 18px !important;
+    overscroll-behavior: auto;
+  }
+
+  .ranking-page-heading {
+    position: static !important;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 8px 10px;
+  }
+
+  .ranking-page-title { flex: 1 1 auto; }
+  .ranking-page-title h2 { font-size: 19px; }
+  .ranking-subject-tabs { display: none !important; }
+  .ranking-page-heading .workspace-counts { display: none; }
+
+  .mobile-ranking-candidates-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 78px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--text);
+    background: var(--surface-muted);
+    font-size: 12px;
+  }
+
+  .mobile-ranking-candidates-trigger output {
+    color: var(--accent);
+    font-weight: 750;
+  }
+
+  .mobile-ranking-dock { display: none !important; }
+  .ranking-toolbar { display: none !important; }
+
+  .tier-board {
+    min-height: 0 !important;
+    padding: 6px 5px 10px;
+    overflow: visible;
+  }
+
+  .tier-row {
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+    height: auto !important;
+    min-height: 72px;
+    block-size: auto !important;
+  }
+
+  .tier-track {
+    min-height: 70px;
+    height: auto;
+    align-items: flex-start;
+    padding: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x pan-y;
+  }
+
+  .ranking-candidates {
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    max-height: min(64dvh, 540px);
+    min-height: 220px;
+    transform: translateY(calc(100% + var(--mobile-nav-height)));
+  }
+
+  body.is-mobile-ranking-candidates-open .ranking-candidates {
+    transform: translateY(0);
+  }
+
+  body.is-mobile-ranking-candidates-open .ranking-page-heading {
+    pointer-events: auto;
+  }
+
+  .candidate-toolbar {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 50px;
+  }
+
+  .candidate-toolbar .search-field { grid-column: 1 / -1; }
+  .ranking-candidates-close { display: none; }
+
+  /* During a candidate drag the sheet remains visible but cannot intercept
+     hit testing; the captured pointer continues to report board positions. */
+  .ranking-view.is-mobile-ranking-dragging .ranking-candidates {
+    pointer-events: none;
+  }
+
+  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-ranking-dragging .ranking-candidate-grid {
+    pointer-events: none;
+  }
+
+  .ranking-view.is-mobile-ranking-dragging .tier-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ranking-view.is-mobile-ranking-dragging .tier-track {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 70px;
+    padding-left: 52px;
+  }
+
+  .ranking-view.is-mobile-ranking-dragging .tier-label {
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 2;
+    pointer-events: none;
   }
 }

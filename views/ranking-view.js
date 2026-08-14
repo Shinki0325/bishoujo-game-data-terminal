@@ -3,7 +3,6 @@ import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
-import Sortable from '../vendor/sortable.esm.js';
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -25,6 +24,11 @@ function arrayFrom(value) {
 
 function isRankingCard(node) {
   return node?.classList?.contains?.('ranking-card') === true;
+}
+
+function supportsNativeDrag(viewWindow) {
+  const width = Number(viewWindow?.innerWidth);
+  return !(Number.isFinite(width) && width > 0 && width <= 899);
 }
 
 function isDescendant(root, candidate) {
@@ -163,7 +167,10 @@ export function createRankingCard(documentRef, work, callbacks) {
   const card = documentRef.createElement('article');
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
-  card.draggable = true;
+  // Mobile uses the same pointer-capture drag path as the reference Tier
+  // board. Keeping HTML5 draggable active here causes the browser to cancel
+  // the pointer stream before the custom drop-zone calculation can run.
+  card.draggable = supportsNativeDrag(documentRef.defaultView);
   card.tabIndex = 0;
   card.setAttribute('aria-label', displayTitle);
 
@@ -221,7 +228,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
   card.addEventListener('contextmenu', event => {
     event.preventDefault();
-    if (!desktopDetails) return;
+    if (event.pointerType === 'touch' || !desktopDetails) return;
     onContextMenu(work, card, event);
   });
   card.addEventListener('dragstart', event => {
@@ -369,7 +376,6 @@ export function createRankingView({
   let colorPaletteTrigger = null;
   let annotationEditor = null;
   let touchDrag = null;
-  let mobileSortables = [];
   let suppressedTouchClickWorkId = null;
   let suppressedTouchClickTimer = null;
   const touchDragHoldDelayMs = 220;
@@ -450,7 +456,7 @@ export function createRankingView({
     candidateSelectionActive = false;
     candidatePointerId = null;
     for (const card of arrayFrom(candidatePool.querySelectorAll?.('.ranking-card'))) {
-      card.draggable = true;
+      card.draggable = supportsNativeDrag(viewWindow);
     }
   }
 
@@ -485,6 +491,18 @@ export function createRankingView({
     return null;
   }
 
+  function rankingCardFromPointer(event) {
+    const directCard = rankingCardFromNode(event?.target);
+    if (directCard) return directCard;
+    const x = Number(event?.clientX);
+    const y = Number(event?.clientY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return arrayFrom(root.querySelectorAll?.('.ranking-card')).find(card => {
+      const rect = card.getBoundingClientRect?.();
+      return rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }) ?? null;
+  }
+
   function tierIdFromNode(node) {
     let current = node;
     while (current && current !== root) {
@@ -492,6 +510,17 @@ export function createRankingView({
         return current.dataset.tierId;
       }
       current = current.parentElement;
+    }
+    return null;
+  }
+
+  function tierIdFromPointer(event) {
+    const x = Number(event?.clientX);
+    const y = Number(event?.clientY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    for (const [tierId, row] of tierRows) {
+      const rect = row.getBoundingClientRect?.();
+      if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) return tierId;
     }
     return null;
   }
@@ -506,11 +535,11 @@ export function createRankingView({
     return event?.target ?? null;
   }
 
-  function startDrag(workId, card) {
+  function startDrag(workId, card, { includeCandidateSelection = true } = {}) {
     clearDropState();
     draggedWorkId = workId;
     dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
-    draggedWorkIds = dragOrigin === 'pool' && candidateSelection.has(workId)
+    draggedWorkIds = includeCandidateSelection && dragOrigin === 'pool' && candidateSelection.has(workId)
       ? candidateSelectionIds()
       : [workId];
     card.classList.add('is-dragging');
@@ -524,59 +553,13 @@ export function createRankingView({
     card?.classList?.remove('is-dragging');
     card?.classList?.remove('is-dragging-group');
     card?.classList?.remove('is-mobile-dragging');
+    if (card) card.draggable = supportsNativeDrag(viewWindow);
     if (card?.dataset) delete card.dataset.selectionCount;
   }
 
   function clearTouchDrag() {
     if (touchDrag?.timer !== null) cancelHold(touchDrag.timer);
     touchDrag = null;
-  }
-
-  function destroyMobileSortables() {
-    for (const sortable of mobileSortables) sortable.destroy();
-    mobileSortables = [];
-  }
-
-  function mountMobileSortables() {
-    destroyMobileSortables();
-    if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
-    const group = { name: 'egs-ranking', pull: true, put: true };
-    const mount = (element, kind, tierId = null) => {
-      const sortable = Sortable.create(element, {
-        group,
-        draggable: '.ranking-card',
-        animation: 120,
-        delay: 0,
-        delayOnTouchOnly: false,
-        forceFallback: true,
-        fallbackTolerance: 0,
-        direction: 'horizontal',
-        scroll: true,
-        bubbleScroll: true,
-        onStart(event) {
-          const card = event.item;
-          const workId = card?.dataset?.workId;
-          card?.classList?.add('is-mobile-dragging');
-          if (typeof workId === 'string') startDrag(workId, card);
-        },
-        onEnd(event) {
-          const card = event.item;
-          const workId = card?.dataset?.workId;
-          if (typeof workId !== 'string') return finishDrag();
-          const destinationRow = event.to?.closest?.('.tier-row');
-          const destinationTierId = destinationRow?.dataset?.tierId ?? null;
-          const cards = arrayFrom(event.to?.querySelectorAll?.(':scope > .ranking-card'));
-          const insertionIndex = Math.max(0, cards.indexOf(card));
-          clearDragCard(card);
-          finishDrag();
-          if (destinationTierId !== null) onMoveToTier(workId, destinationTierId, insertionIndex);
-          else if (kind !== 'pool' || event.to === candidatePool) onMoveToUnranked(workId);
-        }
-      });
-      mobileSortables.push(sortable);
-    };
-    for (const [tierId, track] of tierTracks) mount(track, 'tier', tierId);
-    mount(candidatePool, 'pool');
   }
 
   function scrollableAncestor(node, axis) {
@@ -611,56 +594,38 @@ export function createRankingView({
   }
 
   function beginTouchDrag(event) {
-    if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
+    if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
     if (!isTouchPointer(event) || touchDrag !== null) return;
-    const card = rankingCardFromNode(event.target);
+    const card = rankingCardFromPointer(event);
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
     const pointerId = event.pointerId ?? 0;
+    event.preventDefault?.();
     const gesture = {
       pointerId,
       card,
-      started: false,
-      browsing: false,
+      row: card.closest?.('.tier-row'),
+      started: true,
       timer: null,
       startX: Number(event.clientX) || 0,
-      startY: Number(event.clientY) || 0,
-      lastX: Number(event.clientX) || 0,
-      lastY: Number(event.clientY) || 0
+      startY: Number(event.clientY) || 0
     };
-    gesture.timer = scheduleHold(() => {
-      if (touchDrag !== gesture) return;
-      gesture.timer = null;
-      gesture.started = true;
-      clearCandidateHold();
-      finishCandidateSelectionGesture();
-      startDrag(card.dataset.workId, card);
-      card.setPointerCapture?.(pointerId);
-    }, touchDragHoldDelayMs);
     touchDrag = gesture;
+    clearCandidateHold();
+    finishCandidateSelectionGesture();
+    startDrag(card.dataset.workId, card, { includeCandidateSelection: false });
+    root.classList.add('is-mobile-ranking-dragging');
+    card.classList.add('is-mobile-dragging');
+    card.draggable = false;
+    gesture.row?.classList.add('is-mobile-touch-dragging');
+    card.setPointerCapture?.(pointerId);
   }
 
   function updateTouchDrag(event) {
     const gesture = touchDrag;
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
-    if (!gesture.started) {
-        const deltaX = (Number(event.clientX) || 0) - gesture.startX;
-        const deltaY = (Number(event.clientY) || 0) - gesture.startY;
-        // Before the hold threshold this is browsing, not a drag. Cards use
-        // touch-action:none so the browser cannot steal the pointer stream;
-        // scroll the nearest board/track explicitly instead.
-        if (Math.hypot(deltaX, deltaY) >= 10) {
-          gesture.browsing = true;
-          scrollTouchBrowse(gesture, event);
-          if (gesture.timer !== null) {
-            cancelHold(gesture.timer);
-            gesture.timer = null;
-          }
-        }
-        return;
-    }
     const target = dropNodeForPointer(event);
-    const tierId = tierIdFromNode(target);
+    const tierId = tierIdFromPointer(event) ?? tierIdFromNode(target);
     if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
     else if (target && candidatePool.contains(target)) handlePoolDragOver(event);
     else clearDropState();
@@ -672,14 +637,20 @@ export function createRankingView({
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
     clearTouchDrag();
     if (!gesture.started) return;
+    const finalTarget = dropNodeForPointer(event);
+    const finalTierId = tierIdFromPointer(event) ?? tierIdFromNode(finalTarget);
+    if (finalTierId !== null && tierTracks.has(finalTierId)) handleTierDragOver(finalTierId, event);
+    else if (finalTarget && candidatePool.contains(finalTarget)) handlePoolDragOver(event);
     const workId = draggedWorkId;
     const workIds = [...draggedWorkIds];
     const plan = dropPlan;
     clearDropState();
+    root.classList.remove('is-mobile-ranking-dragging');
     draggedWorkId = null;
     draggedWorkIds = [];
     dragOrigin = null;
     clearDragCard(gesture.card);
+    gesture.row?.classList.remove('is-mobile-touch-dragging');
     suppressNextTouchClick(gesture.card.dataset.workId);
     event.preventDefault?.();
     if (workId === null || plan === null) return;
@@ -1533,7 +1504,6 @@ export function createRankingView({
       candidatePool.replaceChildren(...candidates, ...(showImportTile() ? [uploadTile] : []));
       updateCandidateSelection();
       updateTierTrackRows();
-      mountMobileSortables();
       candidateSearch.value = model.candidateTitleQuery;
       if (focusedWorkId !== null) {
         const nextCard = cardForWorkId(focusedWorkId);
@@ -1618,7 +1588,10 @@ export function createRankingView({
     setMobileDragEnabled(nextEnabled) {
       if (typeof nextEnabled !== 'boolean') throw new TypeError('mobile drag enabled must be boolean');
       root.classList.toggle('is-mobile-drag-enabled', nextEnabled);
-      mountMobileSortables();
+      const nativeDrag = supportsNativeDrag(viewWindow);
+      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
+        card.draggable = nativeDrag;
+      }
     },
 
     visibleWorkIds() {

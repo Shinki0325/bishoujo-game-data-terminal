@@ -318,6 +318,7 @@
 
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
         <header class="ranking-page-heading">
+          <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-controls="ranking-candidates" aria-expanded="false">候选 <output id="mobile-ranking-candidate-count">0</output></button>
           <div class="ranking-page-title">
             <h2>排榜</h2>
             <div class="ranking-subject-tabs" role="group" aria-label="排榜对象">
@@ -409,7 +410,7 @@
         <div id="mobile-ranking-dock" class="mobile-ranking-dock" aria-label="移动端排榜操作">
           <button id="mobile-ranking-undo" type="button" aria-label="撤销">↶</button>
           <button id="mobile-ranking-redo" type="button" aria-label="重做">↷</button>
-          <button id="mobile-ranking-candidates" type="button" aria-controls="ranking-candidates" aria-expanded="false">候选 <output id="mobile-ranking-candidate-count">0</output></button>
+          <button class="mobile-ranking-candidates-legacy" type="button" tabindex="-1" aria-hidden="true">候选</button>
           <button id="mobile-ranking-more" type="button" aria-haspopup="dialog">更多</button>
         </div>
         <dialog id="mobile-ranking-menu" class="mobile-ranking-menu" aria-labelledby="mobile-ranking-menu-title">
