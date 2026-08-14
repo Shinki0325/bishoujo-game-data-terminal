@@ -37,8 +37,9 @@ import { createPreviewMediaResolver } from './lib/preview-media.js';
 import {
   configuredAssetBase,
   DATA_URLS,
-  PREVIEW_MANIFEST_PATH
-} from './lib/runtime-config.js';
+  PREVIEW_MANIFEST_PATH,
+  RUNTIME_DATA_CACHE_MODE
+} from './lib/runtime-config.js?v=538e0d454ed3a84da8b558367d6a93e5a2e563045e6ea5a72282f57f09fd770f';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -524,13 +525,13 @@ export function prepareRuntimeSample(candidate, authorities = {}) {
 }
 
 async function fetchJson(url, label) {
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await fetch(url, { cache: 'default' });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
   return response.json();
 }
 
 async function fetchJsonWithSha256(url, label) {
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await fetch(url, { cache: RUNTIME_DATA_CACHE_MODE });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
   const bytes = await response.arrayBuffer();
   const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -869,6 +870,7 @@ async function initialize() {
     poolLeft: 0
   };
   let renderedWorkspaceMode = null;
+  let rankingWorkspaceVisible = false;
   let renderedFilterKey = null;
   let lastRenderedModel = null;
   let replacementWork = null;
@@ -1783,6 +1785,8 @@ async function initialize() {
     document.body.classList.toggle('is-mobile-ranking-candidates-open', open);
     elements.mobileRankingCandidates.setAttribute('aria-expanded', String(open));
     elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '展开候选';
+    const candidateLabel = rankingSubject === 'company' ? '候选会社' : '候选作品';
+    elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '展开'}${candidateLabel}`);
   }
 
   function closeMobileRankingCandidates() {
@@ -1909,6 +1913,7 @@ async function initialize() {
 
   function renderWorkspace(model) {
     if (companyDirectoryOpen) {
+      rankingWorkspaceVisible = false;
       closeMobileRankingCandidates();
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
@@ -1923,7 +1928,13 @@ async function initialize() {
       return;
     }
     const ranking = model.state.workspaceMode === 'ranking';
-    if (!ranking) closeMobileRankingCandidates();
+    if (!ranking) {
+      rankingWorkspaceVisible = false;
+      closeMobileRankingCandidates();
+    } else if (!rankingWorkspaceVisible && window.matchMedia('(max-width: 899px)').matches) {
+      setMobileRankingCandidatesOpen(true);
+    }
+    rankingWorkspaceVisible = ranking;
     elements.modeSelection.setAttribute('aria-selected', String(!ranking));
     elements.modeRanking.setAttribute('aria-selected', String(ranking));
     elements.modeCompany.setAttribute('aria-selected', 'false');
@@ -1987,7 +1998,7 @@ async function initialize() {
     elements.mobileRankingUndo.disabled = elements.undoEdit.disabled;
     elements.mobileRankingRedo.disabled = elements.redoEdit.disabled;
     elements.mobileRankingCandidateCount.textContent = String(activeRankingState.unrankedCount);
-    elements.mobileRankingCandidates.disabled = importBusy || activeRankingState.unrankedCount === 0;
+    elements.mobileRankingCandidates.disabled = importBusy;
     elements.mobileRankingMore.disabled = importBusy;
     elements.mobileRankingShowCounts.disabled = importBusy;
     elements.mobileRankingShowTitles.disabled = importBusy;
@@ -2099,8 +2110,7 @@ async function initialize() {
       const isCompanyRanking = rankingSubject === 'company';
       const candidateLabel = isCompanyRanking ? '候选会社' : '候选作品';
       elements.rankingCandidatesTitle.textContent = candidateLabel;
-      elements.mobileRankingCandidatesLabel.textContent = '展开候选';
-      elements.mobileRankingCandidates.setAttribute('aria-label', `展开${candidateLabel}`);
+      setMobileRankingCandidatesOpen(document.body.classList.contains('is-mobile-ranking-candidates-open'));
       elements.rankingCandidateSearch.closest('.search-field').hidden = isCompanyRanking;
       elements.rankingCandidateSearch.placeholder = '搜索候选标题';
       rankingView.render(rankingModel, rankingSubject === 'work' ? await resolveCoverUrls([
