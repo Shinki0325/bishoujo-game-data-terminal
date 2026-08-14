@@ -353,6 +353,9 @@ export function createRankingView({
   indicator.setAttribute('aria-hidden', 'true');
   let mobileDragProxy = null;
   let mobileDropHint = null;
+  let mobileDragOffsetX = 0;
+  let mobileDragOffsetY = 0;
+  let mobileTierEditor = null;
 
   let model = null;
   let draggedWorkId = null;
@@ -570,7 +573,10 @@ export function createRankingView({
 
   function setMobileCandidateDrawer(open) {
     documentRef.body?.classList?.toggle('is-mobile-ranking-candidates-open', open);
-    mobileCandidateDrawerButton()?.setAttribute?.('aria-expanded', String(open));
+    const button = mobileCandidateDrawerButton();
+    button?.setAttribute?.('aria-expanded', String(open));
+    const label = button?.querySelector?.('#mobile-ranking-candidates-label');
+    if (label) label.textContent = open ? '收起候选' : '展开候选';
   }
 
   function removeMobileDragVisuals() {
@@ -584,6 +590,8 @@ export function createRankingView({
     }
     mobileDragProxy = null;
     mobileDropHint = null;
+    mobileDragOffsetX = 0;
+    mobileDragOffsetY = 0;
   }
 
   function createMobileDragVisuals(card, event) {
@@ -591,6 +599,10 @@ export function createRankingView({
     const host = documentRef.body ?? root;
     if (!host?.append) return;
     const rect = card.getBoundingClientRect?.();
+    if (rect) {
+      mobileDragOffsetX = Math.max(0, Math.min(rect.width, Number(event?.clientX) - rect.left));
+      mobileDragOffsetY = Math.max(0, Math.min(rect.height, Number(event?.clientY) - rect.top));
+    }
     const proxy = card.cloneNode?.(true) ?? documentRef.createElement('div');
     if (proxy) {
       if (typeof proxy.cloneNode !== 'function') {
@@ -619,11 +631,9 @@ export function createRankingView({
     const x = Number(event?.clientX);
     const y = Number(event?.clientY);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    const offsetX = 14;
-    const offsetY = 18;
-    const transform = `translate3d(${x + offsetX}px, ${y + offsetY}px, 0)`;
+    const transform = `translate3d(${x - mobileDragOffsetX}px, ${y - mobileDragOffsetY}px, 0)`;
     mobileDragProxy?.style?.setProperty('transform', transform);
-    mobileDropHint?.style?.setProperty('transform', `translate3d(${x + offsetX}px, ${y + offsetY - 28}px, 0)`);
+    mobileDropHint?.style?.setProperty('transform', `translate3d(${x + 10}px, ${y - 30}px, 0)`);
     if (!mobileDropHint) return;
     const tier = tierId === null ? null : model?.tiers?.find(item => item.id === tierId) ?? null;
     mobileDropHint.textContent = tier ? `放入 ${tier.name}` : '拖到分级';
@@ -1241,6 +1251,125 @@ export function createRankingView({
     editingTierId = null;
   }
 
+  function closeMobileTierEditor() {
+    const editor = mobileTierEditor;
+    mobileTierEditor = null;
+    if (!editor) return;
+    if (editor.open && typeof editor.close === 'function') editor.close();
+    editor.remove?.();
+  }
+
+  function openMobileTierEditor(tier) {
+    if (immersive) return;
+    closeMobileTierEditor();
+    const host = documentRef.body ?? root;
+    if (!host?.append) return;
+    const tierIndex = model.tiers.findIndex(item => item.id === tier.id);
+    const dialog = documentRef.createElement('dialog');
+    dialog.className = 'mobile-tier-edit-menu';
+    dialog.setAttribute('aria-labelledby', 'mobile-tier-edit-title');
+
+    const heading = documentRef.createElement('div');
+    heading.className = 'dialog-heading';
+    const title = documentRef.createElement('h2');
+    title.id = 'mobile-tier-edit-title';
+    title.textContent = `编辑 ${tier.name} 分级`;
+    const closeButton = documentRef.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'icon-button';
+    closeButton.textContent = '×';
+    closeButton.setAttribute('aria-label', '关闭分级编辑');
+    closeButton.addEventListener('click', closeMobileTierEditor);
+    heading.append(title, closeButton);
+
+    const body = documentRef.createElement('div');
+    body.className = 'mobile-tier-edit-body';
+    const nameField = documentRef.createElement('label');
+    nameField.textContent = '分级名称';
+    const nameInput = documentRef.createElement('input');
+    nameInput.type = 'text';
+    nameInput.maxLength = 24;
+    nameInput.value = tier.name;
+    nameInput.setAttribute('aria-label', '分级名称');
+    nameField.append(nameInput);
+
+    const colorField = documentRef.createElement('label');
+    colorField.textContent = '分级颜色';
+    const colorInput = documentRef.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = tier.colorId.startsWith('#') ? tier.colorId : tierColor(tier.colorId).background;
+    colorInput.setAttribute('aria-label', '分级颜色');
+    colorField.append(colorInput);
+
+    const actions = documentRef.createElement('div');
+    actions.className = 'mobile-tier-edit-actions';
+    const moveUp = documentRef.createElement('button');
+    moveUp.type = 'button';
+    moveUp.textContent = '上移';
+    moveUp.disabled = tierIndex === 0;
+    const moveDown = documentRef.createElement('button');
+    moveDown.type = 'button';
+    moveDown.textContent = '下移';
+    moveDown.disabled = tierIndex === model.tiers.length - 1;
+    const remove = documentRef.createElement('button');
+    remove.type = 'button';
+    remove.textContent = '删除分级';
+    remove.className = 'mobile-tier-edit-delete';
+    remove.disabled = model.tiers.length <= 3;
+    actions.append(moveUp, moveDown, remove);
+
+    const submit = documentRef.createElement('button');
+    submit.type = 'button';
+    submit.className = 'mobile-tier-edit-save';
+    submit.textContent = '保存名称';
+
+    const closeEditorAfterAction = () => closeButton.click();
+    const updateTiers = transform => {
+      focusTierId = tier.id;
+      const nextTiers = snapshotTierConfig(transform(model.tiers));
+      closeEditorAfterAction();
+      onTierConfigChange(nextTiers);
+    };
+    submit.addEventListener('click', () => {
+      const nextName = nameInput.value.trim();
+      if (nextName.length === 0) {
+        nameInput.focus?.();
+        return;
+      }
+      updateTiers(tiers => tiers.map(item => item.id === tier.id ? { ...item, name: nextName } : item));
+    });
+    nameInput.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      event.preventDefault();
+      submit.click();
+    });
+    colorInput.addEventListener('change', () => {
+      updateTiers(tiers => tiers.map(item => item.id === tier.id ? { ...item, colorId: colorInput.value } : item));
+    });
+    moveUp.addEventListener('click', () => updateTiers(tiers => moveTier(snapshotTierConfig(tiers), tier.id, -1)));
+    moveDown.addEventListener('click', () => updateTiers(tiers => moveTier(snapshotTierConfig(tiers), tier.id, 1)));
+    remove.addEventListener('click', () => {
+      closeEditorAfterAction();
+      onTierDelete(tier.id);
+    });
+
+    body.append(nameField, colorField, actions, submit);
+    dialog.append(heading, body);
+    dialog.addEventListener('close', () => {
+      if (mobileTierEditor === dialog) mobileTierEditor = null;
+      dialog.remove?.();
+    });
+    host.append(dialog);
+    mobileTierEditor = dialog;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else {
+      dialog.open = true;
+      dialog.setAttribute('open', '');
+    }
+    nameInput.focus?.();
+    nameInput.select?.();
+  }
+
   function createTierRow(tier) {
     const tierIndex = model.tiers.findIndex(item => item.id === tier.id);
     const color = tierColor(tier.colorId);
@@ -1356,7 +1485,10 @@ export function createRankingView({
     }
 
     label.addEventListener('click', event => {
-      if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
+      if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) {
+        openMobileTierEditor(tier);
+        return;
+      }
       if (event.target === input || event.target === editingState || editingState.contains(event.target)) return;
       if (editingTierId === tier.id) closeTierEditing();
       else beginEdit();
@@ -1598,8 +1730,9 @@ export function createRankingView({
         if (nextCard) nextCard.focus?.();
       }
       if (!immersive && focusTierId !== null) {
-        const nextRow = tierRows.get(focusTierId);
-        nextRow?.querySelector?.('.tier-label')?.click?.();
+        const nextLabel = tierRows.get(focusTierId)?.querySelector?.('.tier-label') ?? null;
+        if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) nextLabel?.focus?.();
+        else nextLabel?.click?.();
       }
       focusTierId = null;
     },

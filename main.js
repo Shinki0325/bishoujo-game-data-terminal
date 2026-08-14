@@ -170,6 +170,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileRankingUndo: requiredElement('mobile-ranking-undo'),
   mobileRankingRedo: requiredElement('mobile-ranking-redo'),
   mobileRankingCandidates: requiredElement('mobile-ranking-candidates'),
+  mobileRankingCandidatesLabel: requiredElement('mobile-ranking-candidates-label'),
   mobileRankingCandidateCount: requiredElement('mobile-ranking-candidate-count'),
   mobileRankingMore: requiredElement('mobile-ranking-more'),
   mobileRankingMenu: requiredElement('mobile-ranking-menu'),
@@ -1456,7 +1457,7 @@ async function initialize() {
       selectedWorkIds: ranking.selectedCompanyIds,
       tiers: state.tiers,
       tierOrder: ranking.tierOrder
-    }, companyRankingItems(), companyCandidateQuery);
+    }, companyRankingItems(), '');
   }
   companyDirectoryView = createCompanyDirectoryView({
     root: elements.companyView,
@@ -1670,13 +1671,7 @@ async function initialize() {
     },
     onCandidateSearch(query) {
       if (importBusy) return;
-      if (rankingSubject === 'company') {
-        companyCandidateQuery = query;
-        if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
-        rankingScrollPosition = rankingView.captureScroll();
-        void render();
-        return;
-      }
+      if (rankingSubject === 'company') return;
       candidateTitleQuery = query;
       if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
       rankingScrollPosition = rankingView.captureScroll();
@@ -1784,15 +1779,19 @@ async function initialize() {
     }
   }
 
+  function setMobileRankingCandidatesOpen(open) {
+    document.body.classList.toggle('is-mobile-ranking-candidates-open', open);
+    elements.mobileRankingCandidates.setAttribute('aria-expanded', String(open));
+    elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '展开候选';
+  }
+
   function closeMobileRankingCandidates() {
-    document.body.classList.remove('is-mobile-ranking-candidates-open');
-    elements.mobileRankingCandidates.setAttribute('aria-expanded', 'false');
+    setMobileRankingCandidatesOpen(false);
   }
 
   function toggleMobileRankingCandidates() {
     const opening = !document.body.classList.contains('is-mobile-ranking-candidates-open');
-    document.body.classList.toggle('is-mobile-ranking-candidates-open', opening);
-    elements.mobileRankingCandidates.setAttribute('aria-expanded', String(opening));
+    setMobileRankingCandidatesOpen(opening);
   }
 
   function openMobileRankingMenu() {
@@ -2097,8 +2096,13 @@ async function initialize() {
       elements.rankingView.classList.toggle('is-company-ranking', rankingSubject === 'company');
       elements.rankingSubjectWork.setAttribute('aria-pressed', String(rankingSubject === 'work'));
       elements.rankingSubjectCompany.setAttribute('aria-pressed', String(rankingSubject === 'company'));
-      elements.rankingCandidatesTitle.textContent = rankingSubject === 'company' ? '候选会社' : '候选作品';
-      elements.rankingCandidateSearch.placeholder = rankingSubject === 'company' ? '搜索候选会社' : '搜索候选标题';
+      const isCompanyRanking = rankingSubject === 'company';
+      const candidateLabel = isCompanyRanking ? '候选会社' : '候选作品';
+      elements.rankingCandidatesTitle.textContent = candidateLabel;
+      elements.mobileRankingCandidatesLabel.textContent = '展开候选';
+      elements.mobileRankingCandidates.setAttribute('aria-label', `展开${candidateLabel}`);
+      elements.rankingCandidateSearch.closest('.search-field').hidden = isCompanyRanking;
+      elements.rankingCandidateSearch.placeholder = '搜索候选标题';
       rankingView.render(rankingModel, rankingSubject === 'work' ? await resolveCoverUrls([
         ...rankingModel.candidateWorks,
         ...rankingModel.tiers.flatMap(tier => tier.works)
@@ -2482,6 +2486,7 @@ async function initialize() {
   });
   elements.rankingSubjectCompany.addEventListener('click', () => {
     rankingSubject = 'company';
+    companyCandidateQuery = '';
     const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
     replaceUiLocation();
     return result;

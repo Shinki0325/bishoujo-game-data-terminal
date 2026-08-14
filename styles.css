@@ -6442,9 +6442,8 @@ dialog::backdrop {
   }
 }
 
-/* Mobile ranking follows a single document flow. The candidate drawer stays
-   as the FIFA-style holding area, while the obsolete action dock and desktop
-   subject switch are removed from the touch surface. */
+/* Mobile ranking keeps the candidate drawer in one document flow while
+   preserving its subject switch and enough board clearance for the final tier. */
 @media (max-width: 899px) {
   .ranking-view {
     height: auto !important;
@@ -6456,23 +6455,26 @@ dialog::backdrop {
 
   .ranking-page-heading {
     position: static !important;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
     align-items: center;
     min-height: 52px;
     padding: 8px 10px;
   }
 
-  .ranking-page-title { flex: 1 1 auto; }
-  .ranking-page-title h2 { font-size: 19px; }
-  .ranking-subject-tabs { display: none !important; }
+  .ranking-page-title { min-width: 0; }
+  .ranking-page-title h2 { display: none; }
+  .ranking-subject-tabs { display: inline-flex !important; }
+  .ranking-subject-tabs button { min-width: 50px; min-height: 34px; padding-inline: 7px; font-size: 12px; }
   .ranking-page-heading .workspace-counts { display: none; }
 
   .mobile-ranking-candidates-trigger {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 4px;
-    min-width: 78px;
+    min-width: 0;
     min-height: 36px;
     padding: 6px 10px;
     border: 1px solid var(--border-strong);
@@ -6487,6 +6489,19 @@ dialog::backdrop {
     font-weight: 750;
   }
 
+  .mobile-ranking-candidates-chevron {
+    width: 7px;
+    height: 7px;
+    margin-left: 2px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+  }
+
+  .mobile-ranking-candidates-trigger[aria-expanded="true"] .mobile-ranking-candidates-chevron {
+    transform: rotate(225deg) translate(-2px, -1px);
+  }
+
   .mobile-ranking-dock { display: none !important; }
   .ranking-toolbar { display: none !important; }
 
@@ -6496,11 +6511,37 @@ dialog::backdrop {
     overflow: visible;
   }
 
+  body.is-mobile-ranking-candidates-open .tier-board {
+    padding-bottom: calc(min(64dvh, 540px) + var(--mobile-nav-height) + 28px);
+    scroll-padding-bottom: calc(min(64dvh, 540px) + var(--mobile-nav-height) + 28px);
+  }
+
   .tier-row {
-    grid-template-columns: 46px minmax(0, 1fr) !important;
+    grid-template-columns: 72px minmax(0, 1fr) !important;
     height: auto !important;
     min-height: 72px;
     block-size: auto !important;
+  }
+
+  .tier-label {
+    font-size: min(18px, calc(22px * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-tier-name)));
+    line-height: 1.1;
+  }
+
+  .tier-label span {
+    display: -webkit-box;
+    max-height: 2.2em;
+    padding: 0 5px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: #ffffff;
+    text-align: center;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    -webkit-text-stroke-width: 1px;
+    text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
   }
 
   .tier-track {
@@ -6512,6 +6553,67 @@ dialog::backdrop {
     overflow-y: hidden;
     touch-action: pan-x pan-y;
   }
+
+  .mobile-tier-edit-menu {
+    width: min(420px, calc(100vw - 28px));
+    max-width: none;
+    padding: 0;
+    color: var(--text);
+    background: var(--surface-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 42%);
+  }
+
+  .mobile-tier-edit-menu::backdrop { background: rgb(0 0 0 / 56%); }
+
+  .mobile-tier-edit-body {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .mobile-tier-edit-body > label {
+    display: grid;
+    gap: 7px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .mobile-tier-edit-body input[type="text"] {
+    width: 100%;
+    min-height: 44px;
+    color: var(--text);
+    font: inherit;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+  }
+
+  .mobile-tier-edit-body input[type="color"] {
+    width: 100%;
+    height: 42px;
+    padding: 3px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+  }
+
+  .mobile-tier-edit-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mobile-tier-edit-actions button,
+  .mobile-tier-edit-save {
+    min-height: 42px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .mobile-tier-edit-delete { grid-column: 1 / -1; color: #ffb9b9; }
+  .mobile-tier-edit-save { color: #061015; background: var(--accent); border-color: var(--accent); }
 
   .ranking-candidates {
     right: 0;
@@ -6547,7 +6649,7 @@ dialog::backdrop {
   }
 
   .ranking-view.is-mobile-ranking-dragging .tier-row {
-    grid-template-columns: 46px minmax(0, 1fr) !important;
+    grid-template-columns: 72px minmax(0, 1fr) !important;
   }
 
   .ranking-view.is-mobile-ranking-dragging .tier-track {
