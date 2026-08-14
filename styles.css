@@ -6539,31 +6539,72 @@ dialog::backdrop {
   .candidate-toolbar .search-field { grid-column: 1 / -1; }
   .ranking-candidates-close { display: none; }
 
-  /* During a candidate drag the sheet remains visible but cannot intercept
-     hit testing; the captured pointer continues to report board positions. */
+  /* Candidate browsing yields the full board as soon as a drag starts. */
   .ranking-view.is-mobile-ranking-dragging .ranking-candidates {
     pointer-events: none;
-  }
-
-  body.is-mobile-ranking-candidates-open .ranking-view.is-mobile-ranking-dragging .ranking-candidate-grid {
-    pointer-events: none;
+    transition: none;
+    transform: translateY(calc(100% + var(--mobile-nav-height))) !important;
   }
 
   .ranking-view.is-mobile-ranking-dragging .tier-row {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: 46px minmax(0, 1fr) !important;
   }
 
   .ranking-view.is-mobile-ranking-dragging .tier-track {
-    grid-column: 1;
-    grid-row: 1;
+    grid-column: auto;
+    grid-row: auto;
     min-height: 70px;
-    padding-left: 52px;
+    padding-left: 6px;
   }
 
   .ranking-view.is-mobile-ranking-dragging .tier-label {
-    grid-column: 1;
-    grid-row: 1;
-    z-index: 2;
+    grid-column: auto;
+    grid-row: auto;
+    z-index: auto;
+  }
+
+  .mobile-ranking-drag-proxy {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 70;
+    margin: 0;
     pointer-events: none;
+    opacity: 0.96;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 44%);
+    transform-origin: top left;
+    transition: none !important;
+    will-change: transform;
+  }
+
+  .mobile-ranking-drag-proxy .ranking-candidate-remove,
+  .mobile-ranking-drag-proxy .ranking-candidate-select,
+  .mobile-ranking-drag-proxy .ranking-card-info,
+  .mobile-ranking-drag-proxy .ranking-drag-handle {
+    display: none !important;
+  }
+
+  .mobile-ranking-drop-hint {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 71;
+    max-width: 150px;
+    margin: 0 0 0 2px;
+    padding: 4px 7px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    background: var(--surface-strong);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 28%);
+    will-change: transform;
+  }
+
+  .mobile-ranking-drop-hint.has-target {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 }
