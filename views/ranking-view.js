@@ -3,6 +3,7 @@ import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
+import Sortable from '../vendor/sortable.esm.js';
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -206,7 +207,17 @@ export function createRankingCard(documentRef, work, callbacks) {
   title.className = 'ranking-card-title';
   title.dataset.field = 'title';
   title.textContent = displayTitle;
-  card.append(cover, title);
+  const handle = documentRef.createElement('button');
+  handle.type = 'button';
+  handle.className = 'ranking-drag-handle';
+  handle.setAttribute('aria-label', `整理 ${displayTitle}`);
+  handle.setAttribute('title', `整理 ${displayTitle}`);
+  handle.textContent = '::';
+  handle.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  card.append(cover, title, handle);
   const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
   card.addEventListener('contextmenu', event => {
     event.preventDefault();
@@ -358,6 +369,8 @@ export function createRankingView({
   let colorPaletteTrigger = null;
   let annotationEditor = null;
   let touchDrag = null;
+  let mobileArrangeMode = false;
+  let mobileSortables = [];
   let suppressedTouchClickWorkId = null;
   let suppressedTouchClickTimer = null;
   const touchDragHoldDelayMs = 220;
@@ -519,7 +532,85 @@ export function createRankingView({
     touchDrag = null;
   }
 
+  function destroyMobileSortables() {
+    for (const sortable of mobileSortables) sortable.destroy();
+    mobileSortables = [];
+  }
+
+  function mountMobileSortables() {
+    destroyMobileSortables();
+    if (!mobileArrangeMode || !viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
+    const group = { name: 'egs-ranking', pull: true, put: true };
+    const mount = (element, kind, tierId = null) => {
+      const sortable = Sortable.create(element, {
+        group,
+        draggable: '.ranking-card',
+        animation: 120,
+        delay: 120,
+        delayOnTouchOnly: true,
+        forceFallback: true,
+        fallbackTolerance: 6,
+        direction: 'horizontal',
+        scroll: true,
+        bubbleScroll: true,
+        onStart(event) {
+          const card = event.item;
+          const workId = card?.dataset?.workId;
+          if (typeof workId === 'string') startDrag(workId, card);
+        },
+        onEnd(event) {
+          const card = event.item;
+          const workId = card?.dataset?.workId;
+          if (typeof workId !== 'string') return finishDrag();
+          const destinationRow = event.to?.closest?.('.tier-row');
+          const destinationTierId = destinationRow?.dataset?.tierId ?? null;
+          const cards = arrayFrom(event.to?.querySelectorAll?.(':scope > .ranking-card'));
+          const insertionIndex = Math.max(0, cards.indexOf(card));
+          clearDragCard(card);
+          finishDrag();
+          if (destinationTierId !== null) onMoveToTier(workId, destinationTierId, insertionIndex);
+          else if (kind !== 'pool' || event.to === candidatePool) onMoveToUnranked(workId);
+        }
+      });
+      mobileSortables.push(sortable);
+    };
+    for (const [tierId, track] of tierTracks) mount(track, 'tier', tierId);
+    mount(candidatePool, 'pool');
+  }
+
+  function scrollableAncestor(node, axis) {
+    let current = node;
+    while (current && current !== root.parentElement) {
+      const style = viewWindow.getComputedStyle?.(current);
+      const overflow = axis === 'x' ? style?.overflowX : style?.overflowY;
+      const scrollSize = axis === 'x' ? Number(current.scrollWidth) : Number(current.scrollHeight);
+      const clientSize = axis === 'x' ? Number(current.clientWidth) : Number(current.clientHeight);
+      if ((overflow === 'auto' || overflow === 'scroll') && scrollSize > clientSize + 1) return current;
+      current = current.parentElement;
+    }
+    const page = documentRef.scrollingElement;
+    return page && (axis === 'x' ? page.scrollWidth > page.clientWidth + 1 : page.scrollHeight > page.clientHeight + 1)
+      ? page
+      : null;
+  }
+
+  function scrollTouchBrowse(gesture, event) {
+    const deltaX = (Number(event.clientX) || 0) - gesture.lastX;
+    const deltaY = (Number(event.clientY) || 0) - gesture.lastY;
+    gesture.lastX = Number(event.clientX) || gesture.lastX;
+    gesture.lastY = Number(event.clientY) || gesture.lastY;
+    const horizontal = Math.abs(deltaX) > Math.abs(deltaY);
+    const target = horizontal
+      ? scrollableAncestor(gesture.card, 'x')
+      : scrollableAncestor(gesture.card, 'y');
+    if (!target) return;
+    if (horizontal) target.scrollLeft -= deltaX;
+    else target.scrollTop -= deltaY;
+    event.preventDefault?.();
+  }
+
   function beginTouchDrag(event) {
+    if (viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
     if (!isTouchPointer(event) || touchDrag !== null) return;
     const card = rankingCardFromNode(event.target);
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
@@ -529,9 +620,12 @@ export function createRankingView({
       pointerId,
       card,
       started: false,
+      browsing: false,
       timer: null,
       startX: Number(event.clientX) || 0,
-      startY: Number(event.clientY) || 0
+      startY: Number(event.clientY) || 0,
+      lastX: Number(event.clientX) || 0,
+      lastY: Number(event.clientY) || 0
     };
     gesture.timer = scheduleHold(() => {
       if (touchDrag !== gesture) return;
@@ -549,12 +643,20 @@ export function createRankingView({
     const gesture = touchDrag;
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
     if (!gesture.started) {
-      const deltaX = (Number(event.clientX) || 0) - gesture.startX;
-      const deltaY = (Number(event.clientY) || 0) - gesture.startY;
-      // A moving finger is a scroll gesture. Only a stationary hold may
-      // become a drag, otherwise long pages become impossible to scroll.
-      if (Math.hypot(deltaX, deltaY) >= 10) clearTouchDrag();
-      return;
+        const deltaX = (Number(event.clientX) || 0) - gesture.startX;
+        const deltaY = (Number(event.clientY) || 0) - gesture.startY;
+        // Before the hold threshold this is browsing, not a drag. Cards use
+        // touch-action:none so the browser cannot steal the pointer stream;
+        // scroll the nearest board/track explicitly instead.
+        if (Math.hypot(deltaX, deltaY) >= 10) {
+          gesture.browsing = true;
+          scrollTouchBrowse(gesture, event);
+          if (gesture.timer !== null) {
+            cancelHold(gesture.timer);
+            gesture.timer = null;
+          }
+        }
+        return;
     }
     const target = dropNodeForPointer(event);
     const tierId = tierIdFromNode(target);
@@ -663,6 +765,7 @@ export function createRankingView({
   function applyCardPresentation(card) {
     const title = card.querySelector?.('.ranking-card-title');
     if (title) title.hidden = !showTitles;
+    card.classList.toggle('is-mobile-arrange-mode', mobileArrangeMode);
     const workId = card.dataset.workId;
     const value = annotations[workId] ?? '';
     let overlay = card.querySelector?.('.ranking-card-annotation');
@@ -1430,6 +1533,7 @@ export function createRankingView({
       candidatePool.replaceChildren(...candidates, ...(showImportTile() ? [uploadTile] : []));
       updateCandidateSelection();
       updateTierTrackRows();
+      mountMobileSortables();
       candidateSearch.value = model.candidateTitleQuery;
       if (focusedWorkId !== null) {
         const nextCard = cardForWorkId(focusedWorkId);
@@ -1509,6 +1613,15 @@ export function createRankingView({
       for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
         applyCardPresentation(card);
       }
+    },
+
+    setMobileArrangeMode(nextMode) {
+      if (typeof nextMode !== 'boolean') throw new TypeError('mobile arrange mode must be boolean');
+      mobileArrangeMode = nextMode;
+      for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
+        card.classList.toggle('is-mobile-arrange-mode', mobileArrangeMode);
+      }
+      mountMobileSortables();
     },
 
     visibleWorkIds() {

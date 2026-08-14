@@ -2120,6 +2120,7 @@ input[type="range"] {
   border-radius: 3px;
   font-size: 11px;
   font-weight: 750;
+  pointer-events: none;
 }
 
 .selection-card-missing-image,
@@ -5268,6 +5269,20 @@ dialog::backdrop {
     pointer-events: none;
   }
 
+  /* In arrange mode the candidate drawer remains open beside the board so a
+     handle drag can cross from the pool into a visible tier. */
+  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .tier-board {
+    pointer-events: auto;
+  }
+
+  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .ranking-candidates {
+    pointer-events: none;
+  }
+
+  body.is-mobile-ranking-candidates-open.is-mobile-ranking-arrange-mode .ranking-candidates .ranking-candidate-grid {
+    pointer-events: auto;
+  }
+
   .candidate-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -5295,7 +5310,7 @@ dialog::backdrop {
     left: 0;
     z-index: 41;
     display: grid;
-    grid-template-columns: 40px 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
     gap: 5px;
     min-height: var(--mobile-ranking-dock-height);
     padding: 7px calc(9px + var(--safe-right)) calc(7px + var(--safe-bottom)) calc(9px + var(--safe-left));
@@ -5311,7 +5326,7 @@ dialog::backdrop {
     font-size: 12px;
   }
 
-  #mobile-ranking-live {
+  #mobile-ranking-arrange[aria-pressed="true"] {
     color: #071216;
     border-color: var(--accent);
     background: var(--accent);
@@ -6378,7 +6393,7 @@ dialog::backdrop {
     left: 0;
     z-index: 41;
     display: grid;
-    grid-template-columns: 40px 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 48px;
     gap: 5px;
     min-height: var(--mobile-ranking-dock-height);
     padding: 7px calc(9px + var(--safe-right)) 7px calc(9px + var(--safe-left));
@@ -6387,7 +6402,7 @@ dialog::backdrop {
   }
 
   .mobile-ranking-dock button { min-width: 0; min-height: 40px; padding: 4px 6px; font-size: 12px; }
-  #mobile-ranking-live { color: #071216; border-color: var(--accent); background: var(--accent); }
+  #mobile-ranking-arrange[aria-pressed="true"] { color: #071216; border-color: var(--accent); background: var(--accent); }
   .mobile-ranking-menu[open] { display: block; }
   body.is-ranking-immersive .mobile-ranking-dock,
   body.is-ranking-immersive .mode-switch { display: none; }
@@ -6401,10 +6416,21 @@ dialog::backdrop {
    must scroll the board, while a held card still enters the existing drag flow. */
 @media (max-width: 899px) {
   .ranking-card {
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  .ranking-drag-handle { display: none !important; }
+
+  .ranking-card.is-mobile-arrange-mode {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .ranking-card.is-mobile-arrange-mode > * {
+    pointer-events: none;
   }
 
   /* Candidate selection is explicit on touch; long holds are reserved for drag. */

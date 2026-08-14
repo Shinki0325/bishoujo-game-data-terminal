@@ -65087,9 +65087,9 @@
       "sha256": "928396e0f37c7e38dcf6eb8706845da3e32f7a38f23ad95dd03b0a799182f8f0"
     },
     {
-      "bytes": 45914,
+      "bytes": 54743,
       "path": "data/egs-tier-full-enrichment-v1.json",
-      "sha256": "bb7bc7c4aaaba54c8b7f2bc308a5468b2a00121593c3886e076a2bec4c52f162"
+      "sha256": "c1e018fb9e1627b65e111f2bea31c7625ed87c34d3479c615b72fdf344847c9a"
     },
     {
       "bytes": 9881,
@@ -65112,9 +65112,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 45062,
+      "bytes": 45086,
       "path": "index.html",
-      "sha256": "a49fd44b88737ebc9a383bef5c767c647d942fe7a56e87d87d2fd13b69292089"
+      "sha256": "1a5470c9bd076874d45c4d0bdb2724ce3c91d13de73230719535a31f15e9ca72"
     },
     {
       "bytes": 5495,
@@ -65357,14 +65357,19 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 111988,
+      "bytes": 113071,
       "path": "main.js",
-      "sha256": "044b6232aa9d4cf97f449b480de6d645fdce563c3cd8a7feca34a8b1a4a4b0dd"
+      "sha256": "3983df706e1cc6056d47aa9b4da33f550a71110fd7a49223f89498f779a38884"
     },
     {
-      "bytes": 129958,
+      "bytes": 130777,
       "path": "styles.css",
-      "sha256": "d10146683d152e5fe3a5816f0391870696f8de3ecdf5df8b5253aca104b24b49"
+      "sha256": "9572b621811fd76951cb821029404a69c25063b043548394fffaa6b58bc44cbf"
+    },
+    {
+      "bytes": 122638,
+      "path": "vendor/sortable.esm.js",
+      "sha256": "f2243a186a867f6012d60bbff14fab9586872826734a7e446da77f7322ff76a9"
     },
     {
       "bytes": 14777,
@@ -65392,9 +65397,9 @@
       "sha256": "9b82ca2dc092943ea84a50493ed87222afafe3a44357242fac8373f28c36587e"
     },
     {
-      "bytes": 59256,
+      "bytes": 63939,
       "path": "views/ranking-view.js",
-      "sha256": "79847bdb8853be1b902528ed21320cb6d90122259723b270b3bf330a94085fd7"
+      "sha256": "c5e76ee13d5fb9e9bf7fa1b38a848e40c6d25206071cb106ccc92ec739930983"
     },
     {
       "bytes": 21967,
@@ -65415,7 +65420,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 489227281,
-    "files": 13082
+    "bytes": 489365357,
+    "files": 13083
   }
 }
