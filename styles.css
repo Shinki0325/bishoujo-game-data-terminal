@@ -6512,8 +6512,8 @@ dialog::backdrop {
   }
 
   body.is-mobile-ranking-candidates-open .tier-board {
-    padding-bottom: calc(min(64dvh, 540px) + var(--mobile-nav-height) + 28px);
-    scroll-padding-bottom: calc(min(64dvh, 540px) + var(--mobile-nav-height) + 28px);
+    padding-bottom: calc(var(--ranking-card-size-scaled) + var(--mobile-nav-height) + 96px);
+    scroll-padding-bottom: calc(var(--ranking-card-size-scaled) + var(--mobile-nav-height) + 96px);
   }
 
   .tier-row {
@@ -6619,8 +6619,8 @@ dialog::backdrop {
     right: 0;
     bottom: var(--mobile-nav-height);
     left: 0;
-    max-height: min(64dvh, 540px);
-    min-height: 220px;
+    max-height: none;
+    min-height: 0;
     transform: translateY(calc(100% + var(--mobile-nav-height)));
   }
 
@@ -6634,11 +6634,19 @@ dialog::backdrop {
 
   .candidate-toolbar {
     position: relative;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 50px;
   }
 
-  .candidate-toolbar .search-field { grid-column: 1 / -1; }
+  .candidate-toolbar h2 { white-space: nowrap; }
+  .candidate-toolbar .search-field {
+    display: none;
+  }
+  .ranking-candidate-grid {
+    height: calc(var(--ranking-card-size-scaled) + 16px);
+    min-height: calc(var(--ranking-card-size-scaled) + 16px);
+    overflow-y: hidden;
+  }
   .ranking-candidates-close { display: none; }
 
   /* Candidate browsing yields the full board as soon as a drag starts. */
