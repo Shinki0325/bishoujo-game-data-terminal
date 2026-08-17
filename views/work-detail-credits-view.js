@@ -13,7 +13,8 @@ const CAST_ROLE_LABELS = Object.freeze({
 const SONG_CATEGORY_LABELS = Object.freeze({
   '挿入歌': '插入歌',
   'キャラソン': '角色歌',
-  'イメージソング': '印象曲'
+  'イメージソング': '印象曲',
+  IM: '印象曲'
 });
 
 function castRoleLabel(value) {
@@ -39,7 +40,7 @@ function songCategoryRank(song) {
   if (category === '挿入歌') return 2;
   if (category === 'キャラソン') return 3;
   if (category !== 'イメージソング' && category.endsWith('イメージソング')) return 4;
-  if (category === 'イメージソング') return 5;
+  if (category === 'イメージソング' || category === 'IM') return 5;
   return 6;
 }
 
