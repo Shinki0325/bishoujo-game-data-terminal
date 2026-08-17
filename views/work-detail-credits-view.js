@@ -4,6 +4,52 @@ const TAB_LABELS = Object.freeze({
   cast: '角色·声优',
   songs: '歌曲'
 });
+const CAST_ROLE_LABELS = Object.freeze({
+  main: '主角',
+  sub: '配角',
+  'メイン': '主角',
+  'サブ': '配角'
+});
+const SONG_CATEGORY_LABELS = Object.freeze({
+  '挿入歌': '插入歌',
+  'キャラソン': '角色歌',
+  'イメージソング': '印象曲'
+});
+
+function castRoleLabel(value) {
+  const role = String(value ?? '').trim();
+  return CAST_ROLE_LABELS[role.toLowerCase()] ?? CAST_ROLE_LABELS[role] ?? role;
+}
+
+function songCategories(song) {
+  return Array.isArray(song?.categories)
+    ? song.categories.filter(category => typeof category === 'string' && category.trim())
+    : [];
+}
+
+function isPureBgm(song) {
+  const categories = songCategories(song);
+  return categories.length > 0 && categories.every(category => category.trim().toUpperCase() === 'BGM');
+}
+
+function songCategoryRank(song) {
+  const category = songCategories(song)[0]?.trim() ?? '';
+  if (category === 'OP') return 0;
+  if (category === 'ED') return 1;
+  if (category === '挿入歌') return 2;
+  if (category === 'キャラソン') return 3;
+  if (category !== 'イメージソング' && category.endsWith('イメージソング')) return 4;
+  if (category === 'イメージソング') return 5;
+  return 6;
+}
+
+function visibleSongs(songs) {
+  return (Array.isArray(songs) ? songs : [])
+    .map((song, index) => ({ song, index, rank: songCategoryRank(song) }))
+    .filter(entry => !isPureBgm(entry.song))
+    .sort((left, right) => left.rank - right.rank || left.index - right.index)
+    .map(entry => entry.song);
+}
 
 function people(documentRef, entries) {
   const fragment = documentRef.createElement('span');
@@ -57,7 +103,7 @@ function castPane(documentRef, cast) {
     character.append(name);
     if (typeof entry.role === 'string') {
       const role = documentRef.createElement('small');
-      role.textContent = entry.role;
+      role.textContent = castRoleLabel(entry.role);
       character.append(role);
     }
     const actors = people(documentRef, entry.actors);
@@ -77,7 +123,7 @@ function songsPane(documentRef, songs) {
     composition: '作曲',
     arrangement: '编曲'
   };
-  for (const song of songs) {
+  for (const song of visibleSongs(songs)) {
     const article = documentRef.createElement('article');
     article.className = 'details-song';
     const heading = documentRef.createElement('div');
@@ -85,7 +131,7 @@ function songsPane(documentRef, songs) {
     for (const category of song.categories ?? []) {
       const badge = documentRef.createElement('span');
       badge.className = 'details-song-category';
-      badge.textContent = category;
+      badge.textContent = SONG_CATEGORY_LABELS[category] ?? category;
       heading.append(badge);
     }
     const title = documentRef.createElement('strong');
@@ -117,6 +163,7 @@ function availableTabs(work) {
     if (tab === 'staff') {
       return ['artwork', 'scenario', 'music'].some(key => Array.isArray(staff[key]) && staff[key].length > 0);
     }
+    if (tab === 'songs') return visibleSongs(work?.songs).length > 0;
     return Array.isArray(work?.[tab]) && work[tab].length > 0;
   });
 }
