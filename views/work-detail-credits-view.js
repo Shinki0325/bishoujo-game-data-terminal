@@ -1,0 +1,224 @@
+const TAB_ORDER = Object.freeze(['staff', 'cast', 'songs']);
+const TAB_LABELS = Object.freeze({
+  staff: '制作',
+  cast: '角色·声优',
+  songs: '歌曲'
+});
+
+function people(documentRef, entries) {
+  const fragment = documentRef.createElement('span');
+  fragment.className = 'details-credit-people';
+  entries.forEach((person, index) => {
+    if (index > 0) {
+      const separator = documentRef.createElement('span');
+      separator.className = 'details-credit-separator';
+      separator.textContent = '、';
+      fragment.append(separator);
+    }
+    const item = documentRef.createElement('span');
+    item.className = 'details-credit-person';
+    if (typeof person.creatorId === 'string') item.dataset.creatorId = person.creatorId;
+    item.textContent = person.name;
+    if (typeof person.detail === 'string') {
+      const detail = documentRef.createElement('small');
+      detail.textContent = `（${person.detail}）`;
+      item.append(detail);
+    }
+    fragment.append(item);
+  });
+  return fragment;
+}
+function staffPane(documentRef, staff) {
+  const list = documentRef.createElement('dl');
+  list.className = 'details-credit-list';
+  for (const [key, label] of [['artwork', '原画'], ['scenario', '剧本'], ['music', '作品音乐']]) {
+    const entries = Array.isArray(staff[key]) ? staff[key] : [];
+    if (entries.length === 0) continue;
+    const row = documentRef.createElement('div');
+    const term = documentRef.createElement('dt');
+    const description = documentRef.createElement('dd');
+    term.textContent = label;
+    description.append(people(documentRef, entries));
+    row.append(term, description);
+    list.append(row);
+  }
+  return list;
+}
+
+function castPane(documentRef, cast) {
+  const list = documentRef.createElement('ul');
+  list.className = 'details-cast-list';
+  for (const entry of cast) {
+    const item = documentRef.createElement('li');
+    const character = documentRef.createElement('span');
+    character.className = 'details-cast-character';
+    const name = documentRef.createElement('strong');
+    name.textContent = entry.characterName;
+    character.append(name);
+    if (typeof entry.role === 'string') {
+      const role = documentRef.createElement('small');
+      role.textContent = entry.role;
+      character.append(role);
+    }
+    const actors = people(documentRef, entry.actors);
+    actors.classList.add('details-cast-actors');
+    item.append(character, actors);
+    list.append(item);
+  }
+  return list;
+}
+
+function songsPane(documentRef, songs) {
+  const list = documentRef.createElement('div');
+  list.className = 'details-song-list';
+  const creditLabels = {
+    vocal: '演唱',
+    lyrics: '作词',
+    composition: '作曲',
+    arrangement: '编曲'
+  };
+  for (const song of songs) {
+    const article = documentRef.createElement('article');
+    article.className = 'details-song';
+    const heading = documentRef.createElement('div');
+    heading.className = 'details-song-heading';
+    for (const category of song.categories ?? []) {
+      const badge = documentRef.createElement('span');
+      badge.className = 'details-song-category';
+      badge.textContent = category;
+      heading.append(badge);
+    }
+    const title = documentRef.createElement('strong');
+    title.textContent = song.title;
+    heading.append(title);
+    article.append(heading);
+    const credits = documentRef.createElement('dl');
+    credits.className = 'details-song-credits';
+    for (const key of ['vocal', 'lyrics', 'composition', 'arrangement']) {
+      const entries = Array.isArray(song.credits?.[key]) ? song.credits[key] : [];
+      if (entries.length === 0) continue;
+      const row = documentRef.createElement('div');
+      const term = documentRef.createElement('dt');
+      const description = documentRef.createElement('dd');
+      term.textContent = creditLabels[key];
+      description.append(people(documentRef, entries));
+      row.append(term, description);
+      credits.append(row);
+    }
+    article.append(credits);
+    list.append(article);
+  }
+  return list;
+}
+
+function availableTabs(work) {
+  const staff = work?.staff ?? {};
+  return TAB_ORDER.filter(tab => {
+    if (tab === 'staff') {
+      return ['artwork', 'scenario', 'music'].some(key => Array.isArray(staff[key]) && staff[key].length > 0);
+    }
+    return Array.isArray(work?.[tab]) && work[tab].length > 0;
+  });
+}
+
+export function createWorkDetailCreditsView({ root, tabs, content, status }) {
+  const documentRef = root.ownerDocument;
+  let tabButtons = [];
+  let panes = [];
+
+  function selectTab(tabId, { focus = false } = {}) {
+    for (const button of tabButtons) {
+      const active = button.dataset.tab === tabId;
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+      if (active && focus) button.focus();
+    }
+    for (const pane of panes) pane.hidden = pane.dataset.pane !== tabId;
+  }
+
+  function renderWork(work) {
+    const available = availableTabs(work);
+    if (available.length === 0) {
+      clear();
+      return false;
+    }
+    root.hidden = false;
+    status.hidden = true;
+    status.replaceChildren();
+    tabs.hidden = false;
+    tabButtons = available.map(tabId => {
+      const button = documentRef.createElement('button');
+      button.type = 'button';
+      button.dataset.tab = tabId;
+      button.setAttribute('role', 'tab');
+      button.textContent = TAB_LABELS[tabId];
+      button.addEventListener('click', () => selectTab(tabId));
+      return button;
+    });
+    panes = available.map(tabId => {
+      const pane = documentRef.createElement('div');
+      pane.className = 'details-credits-pane';
+      pane.dataset.pane = tabId;
+      pane.setAttribute('role', 'tabpanel');
+      if (tabId === 'staff') pane.append(staffPane(documentRef, work.staff));
+      if (tabId === 'cast') pane.append(castPane(documentRef, work.cast));
+      if (tabId === 'songs') pane.append(songsPane(documentRef, work.songs));
+      return pane;
+    });
+    tabs.replaceChildren(...tabButtons);
+    content.replaceChildren(...panes);
+    const initialTab = TAB_ORDER.find(tabId => available.includes(tabId));
+    selectTab(initialTab);
+    return true;
+  }
+
+  function clear() {
+    tabButtons = [];
+    panes = [];
+    tabs.replaceChildren();
+    content.replaceChildren();
+    status.replaceChildren();
+    tabs.hidden = true;
+    status.hidden = true;
+    root.hidden = true;
+  }
+
+  tabs.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || tabButtons.length < 2) return;
+    event.preventDefault();
+    const currentIndex = Math.max(0, tabButtons.findIndex(button => button.getAttribute('aria-selected') === 'true'));
+    const nextIndex = event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? tabButtons.length - 1
+        : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabButtons.length) % tabButtons.length;
+    selectTab(tabButtons[nextIndex].dataset.tab, { focus: true });
+  });
+
+  return Object.freeze({
+    clear,
+    renderLoading() {
+      root.hidden = false;
+      tabs.hidden = true;
+      content.replaceChildren();
+      status.hidden = false;
+      status.dataset.state = 'loading';
+      status.textContent = '正在加载制作资料…';
+    },
+    renderWork,
+    renderError(onRetry) {
+      root.hidden = false;
+      tabs.hidden = true;
+      content.replaceChildren();
+      status.hidden = false;
+      status.dataset.state = 'error';
+      const message = documentRef.createElement('span');
+      message.textContent = '制作资料暂时无法加载。';
+      const retry = documentRef.createElement('button');
+      retry.type = 'button';
+      retry.textContent = '重试';
+      retry.addEventListener('click', onRetry);
+      status.replaceChildren(message, retry);
+    }
+  });
+}

@@ -34,12 +34,13 @@ import { createGuideController } from './lib/guide-controller.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
+import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import {
   configuredAssetBase,
   DATA_URLS,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=bcbdc544d3f7ed1ed78e9ce31006b81f25501ef08c0868f3650f5f2d10702c32';
+} from './lib/runtime-config.js?v=3c75276e5b483d504245891e524dbe38fbcbee07876932e883f730379e1b5674';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -56,6 +57,7 @@ import { createCompanyDirectoryView, companyImageUrl } from './views/company-dir
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
+import { createWorkDetailCreditsView } from './views/work-detail-credits-view.js';
 import {
   buildSelectionShareUrl,
   decodeSelectionShare,
@@ -234,6 +236,10 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   detailsAliasRow: requiredElement('details-alias-row'),
   detailsAliases: requiredElement('details-aliases'),
   detailsTags: requiredElement('details-tags'),
+  detailsCredits: requiredElement('details-credits'),
+  detailsCreditsStatus: requiredElement('details-credits-status'),
+  detailsCreditsTabs: requiredElement('details-credits-tabs'),
+  detailsCreditsContent: requiredElement('details-credits-content'),
   status: requiredElement('status-message')
 });
 
@@ -886,8 +892,24 @@ async function initialize() {
   let selectionMode = false;
   let companySelectionMode = false;
   let currentWorkDetailId = null;
+  let workDetailCreditsRequest = 0;
   let applyingUiLocation = false;
   let locationScrollTimer = null;
+  const workDetailCreditsView = createWorkDetailCreditsView({
+    root: elements.detailsCredits,
+    status: elements.detailsCreditsStatus,
+    tabs: elements.detailsCreditsTabs,
+    content: elements.detailsCreditsContent
+  });
+  const workDetailCreditsLoader = createWorkDetailCreditsLoader({
+    indexUrl: DATA_URLS.workDetailCreditsIndex,
+    catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+    catalogSha256: catalogSource.sha256,
+    workIds: new Set(sample.works.map(work => work.workId)),
+    fetchImpl: fetch,
+    cryptoRef: crypto,
+    cacheMode: RUNTIME_DATA_CACHE_MODE
+  });
   const companyGuide = createGuideController({
     key: 'egs-tier-terminal:company-directory-guide-v2',
     read: key => window.localStorage.getItem(key),
@@ -2255,7 +2277,34 @@ async function initialize() {
 
   function openWorkDetails(work, { push = true } = {}) {
     currentWorkDetailId = work.workId;
+    const request = ++workDetailCreditsRequest;
+    workDetailCreditsView.renderLoading();
     showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    const loadCredits = async () => {
+      try {
+        const credits = await workDetailCreditsLoader.load(work.workId);
+        if (
+          request !== workDetailCreditsRequest
+          || currentWorkDetailId !== work.workId
+          || !elements.detailsDialog.open
+        ) return;
+        if (credits === null) workDetailCreditsView.clear();
+        else workDetailCreditsView.renderWork(credits);
+      } catch (error) {
+        if (
+          request !== workDetailCreditsRequest
+          || currentWorkDetailId !== work.workId
+          || !elements.detailsDialog.open
+        ) return;
+        console.warn('work-detail credits unavailable; keeping the base details usable', error);
+        workDetailCreditsView.renderError(() => {
+          if (currentWorkDetailId !== work.workId || request !== workDetailCreditsRequest) return;
+          workDetailCreditsView.renderLoading();
+          void loadCredits();
+        });
+      }
+    };
+    void loadCredits();
     if (push) pushUiLocation();
   }
 
@@ -2360,6 +2409,8 @@ async function initialize() {
   window.addEventListener('popstate', () => { void applyUiLocation(); });
   window.addEventListener('hashchange', () => { void applyUiLocation(); });
   elements.detailsDialog.addEventListener('close', () => {
+    workDetailCreditsRequest += 1;
+    workDetailCreditsView.clear();
     if (currentWorkDetailId === null || applyingUiLocation) return;
     currentWorkDetailId = null;
     pushUiLocation();
