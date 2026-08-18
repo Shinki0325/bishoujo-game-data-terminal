@@ -42,7 +42,7 @@ import {
   PRESENTATION_FAMILIES_SIDECAR_SHA256,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=b27a33681a3a4600d3489166b0cfdb796b88062cb360850dd40e2d5e5d64ce6d';
+} from './lib/runtime-config.js?v=53812579c1e6249f465cdc5b62184fb7444d75f5654af4b1e086ce14e83eba85';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
