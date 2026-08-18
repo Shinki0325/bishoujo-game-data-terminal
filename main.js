@@ -40,7 +40,7 @@ import {
   DATA_URLS,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=013e7422999aebc5aff18827a3af68d42e837e8f454fa618d095ebc859b56b4e';
+} from './lib/runtime-config.js?v=b27a33681a3a4600d3489166b0cfdb796b88062cb360850dd40e2d5e5d64ce6d';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
