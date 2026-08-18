@@ -27,6 +27,16 @@ const SONG_CATEGORY_LABELS = Object.freeze({
   IM: '印象曲'
 });
 
+function songCategoryLabel(value) {
+  const category = String(value ?? '').trim();
+  if (SONG_CATEGORY_LABELS[category]) return SONG_CATEGORY_LABELS[category];
+  return category
+    .replace(/アレンジ/g, ' arrange')
+    .replace(/リミックス|ミックス/g, ' remix')
+    .replace(/カバー/g, ' cover')
+    .trim();
+}
+
 function castRoleLabel(value) {
   const role = String(value ?? '').trim();
   return CAST_ROLE_LABELS[role.toLowerCase()] ?? CAST_ROLE_LABELS[role] ?? role;
@@ -50,6 +60,10 @@ function isPureBgm(song) {
   return categories.length > 0 && categories.every(category => category.trim().toUpperCase() === 'BGM');
 }
 
+function isInstrumentalSong(song) {
+  return songCategories(song).some(category => /instrumental|インスト/i.test(category));
+}
+
 function songCategoryRank(song) {
   const category = songCategories(song)[0]?.trim() ?? '';
   if (category === 'OP') return 0;
@@ -64,7 +78,7 @@ function songCategoryRank(song) {
 function visibleSongs(songs) {
   return (Array.isArray(songs) ? songs : [])
     .map((song, index) => ({ song, index, rank: songCategoryRank(song) }))
-    .filter(entry => !isPureBgm(entry.song))
+    .filter(entry => !isPureBgm(entry.song) && !isInstrumentalSong(entry.song))
     .sort((left, right) => left.rank - right.rank || left.index - right.index)
     .map(entry => entry.song);
 }
@@ -156,7 +170,7 @@ function songsPane(documentRef, songs) {
     for (const category of song.categories ?? []) {
       const badge = documentRef.createElement('span');
       badge.className = 'details-song-category';
-      badge.textContent = SONG_CATEGORY_LABELS[category] ?? category;
+      badge.textContent = songCategoryLabel(category);
       heading.append(badge);
     }
     const title = documentRef.createElement('strong');
