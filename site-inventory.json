@@ -65069,12 +65069,12 @@
     {
       "bytes": 4520944,
       "path": "data/assets-manifest.json",
-      "sha256": "7903eccecaaeae7f263510f79b14aae8ab79d932c5549bb92fc7501f94691966"
+      "sha256": "475b33e8a01678534a76635a31bc9ee1e0e1e0c39d4696f34c9dd7b364aa4c00"
     },
     {
       "bytes": 7195393,
       "path": "data/catalog.json",
-      "sha256": "142329b73be11c3853c5bc259baf9918f4980cdac1b10b98d39b668263a5ca5c"
+      "sha256": "ceb7a89ec105021a2f1e4f05ac5f9c3097caba8bccd0bec31cae7d6ac2ddbc70"
     },
     {
       "bytes": 64012,
@@ -65084,12 +65084,17 @@
     {
       "bytes": 66723,
       "path": "data/egs-tier-full-company-profile-v1.json",
-      "sha256": "928396e0f37c7e38dcf6eb8706845da3e32f7a38f23ad95dd03b0a799182f8f0"
+      "sha256": "d788a77db5612ef13c2b40da631a7e79fccc2373933038f35f39da9d58651b77"
     },
     {
       "bytes": 76068,
       "path": "data/egs-tier-full-enrichment-v1.json",
-      "sha256": "e6fdd2fc73167af242c72d53955947a817d6aab605f8ec43ae98fe974bf628d1"
+      "sha256": "d27b1f1995cd8922439cf77e9df8a2cd8e5f3004111e1552a174e60e1f5c0f81"
+    },
+    {
+      "bytes": 196174,
+      "path": "data/egs-tier-full-presentation-families-v1.json",
+      "sha256": "a6aa4c25bd6d74f725dbd645f491a3c6dcb73f22f8e625669ff266f540eb1320"
     },
     {
       "bytes": 9881,
@@ -65104,7 +65109,7 @@
     {
       "bytes": 115078,
       "path": "data/work-details/v1/index.json",
-      "sha256": "1c3a92ab1cac9d988554328d844065aba9558a6e4f2cf7aacc3802c334eba54f"
+      "sha256": "84cd806414713edc082cab6e64375be503a008a9ba82c0479d3c1e82d6901ec3"
     },
     {
       "bytes": 102966,
@@ -67122,9 +67127,9 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 45766,
+      "bytes": 46214,
       "path": "index.html",
-      "sha256": "e565b44b5278b5b57804572dc19a0143d7c85cef90fb388e6702d6bbb09c2645"
+      "sha256": "d99675ad530af1127b3ebdec065c2c1f09e541db896712bdc5964e2ee1fe5d79"
     },
     {
       "bytes": 5495,
@@ -67277,6 +67282,11 @@
       "sha256": "1611a864a04bdd7ab940c49a1d157555366da7ac038fc3df1ae215886285040a"
     },
     {
+      "bytes": 9391,
+      "path": "lib/presentation-families.js",
+      "sha256": "81b57e757761d475f507dacb14012a98b6eb0d5a186aedd568ad7530dc6caa89"
+    },
+    {
       "bytes": 3345,
       "path": "lib/preview-media.js",
       "sha256": "7e0642742866c1cea615dc0e08af41aa51860b43677042bc11bd4781d0e491be"
@@ -67302,9 +67312,9 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
-      "bytes": 1692,
+      "bytes": 1901,
       "path": "lib/runtime-config.js",
-      "sha256": "069b6c9f442ac3021c95d7d7f5607ad965671fdab84c8b2bd691973448f1ed9c"
+      "sha256": "30962251c90a7f1b75f468868c18b767dce27a2426c238ea13187a3bbe082e59"
     },
     {
       "bytes": 16261,
@@ -67372,14 +67382,14 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 115315,
+      "bytes": 119608,
       "path": "main.js",
-      "sha256": "9198d5d57f2c3e0268b11b7acef2e20873366dd30d5d26299c497c113a71f358"
+      "sha256": "3fa7f7768be60a33ab58bf3ffd43579a60bbb95cc5abd33f270780582b361145"
     },
     {
-      "bytes": 140430,
+      "bytes": 143231,
       "path": "styles.css",
-      "sha256": "8cbef8c2135061255993882a1e3410cc6170f1ed43a20553d94700bf29e86788"
+      "sha256": "0e25c5bf3d37fce4b15fce2e975173048505f9e468933a6230ca8f5fa8f382e1"
     },
     {
       "bytes": 14777,
@@ -67412,9 +67422,9 @@
       "sha256": "3bdbe651b3aa95c0f2b306d63808feca3b05a890c194f3c0bf526765a6b8a5a5"
     },
     {
-      "bytes": 21967,
+      "bytes": 22540,
       "path": "views/selection-view.js",
-      "sha256": "c3f074051c90892e86f11ffc803503d0b37455c05e4b6638f428d53b694aa375"
+      "sha256": "2cc9ee088af2676a92781190eaaa1288da5f87d921762a7aef05057d3190c4f5"
     },
     {
       "bytes": 20169,
@@ -67435,7 +67445,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 505280868,
-    "files": 13486
+    "bytes": 505494757,
+    "files": 13488
   }
 }

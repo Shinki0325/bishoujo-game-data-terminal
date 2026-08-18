@@ -11,6 +11,7 @@ import { createAppController } from './lib/app-controller.js';
 import { createCustomWork } from './lib/custom-work.js';
 import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
 import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
+import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
 import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
@@ -38,9 +39,10 @@ import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import {
   configuredAssetBase,
   DATA_URLS,
+  PRESENTATION_FAMILIES_SIDECAR_SHA256,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=b27a33681a3a4600d3489166b0cfdb796b88062cb360850dd40e2d5e5d64ce6d';
+} from './lib/runtime-config.js?v=2b0cb5680fb137af55c2fb42e997ba74e96f118249e9adb2754dee3494af15d9';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -230,6 +232,10 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mediaCropCanvas: requiredElement('media-crop-canvas'),
   detailsDialog: requiredElement('work-details'),
   detailsTitle: requiredElement('details-title'),
+  detailsVersionToggle: requiredElement('details-version-toggle'),
+  detailsVersionShelf: requiredElement('details-version-shelf'),
+  detailsVersionCurrent: requiredElement('details-version-current'),
+  detailsVersionList: requiredElement('details-version-list'),
   detailsBrand: requiredElement('details-brand'),
   detailsRelease: requiredElement('details-release'),
   detailsScore: requiredElement('details-score'),
@@ -740,7 +746,8 @@ async function initialize() {
     workGroupAuthoritySource,
     reviewQueueSource,
     enrichmentSource,
-    companyProfileSource
+    companyProfileSource,
+    presentationFamiliesSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -749,7 +756,8 @@ async function initialize() {
     fetchJsonWithSha256(DATA_URLS.workGroups, '作品组权威'),
     fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue'),
     fetchOptionalJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar'),
-    fetchOptionalJsonWithSha256(DATA_URLS.companyProfile, 'company profile sidecar')
+    fetchOptionalJsonWithSha256(DATA_URLS.companyProfile, 'company profile sidecar'),
+    fetchOptionalJsonWithSha256(DATA_URLS.presentationFamilies, 'presentation families sidecar')
   ]));
   const sampleSource = catalogSource.value;
   const backendIndexes = backendIndexesSource.value;
@@ -792,6 +800,22 @@ async function initialize() {
   const workPinyinById = enrichment?.workPinyinById ?? null;
   const workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
   const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
+  const worksById = new Map(displayWorks.map(work => [work.workId, work]));
+  let presentationFamilies = null;
+  if (presentationFamiliesSource !== null) {
+    try {
+      if (presentationFamiliesSource.sha256 !== PRESENTATION_FAMILIES_SIDECAR_SHA256) {
+        throw new TypeError('presentation families sidecar hash does not match the runtime pin');
+      }
+      presentationFamilies = preparePresentationFamiliesSidecar(presentationFamiliesSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: sample.works.map(work => work.workId)
+      });
+    } catch (error) {
+      console.warn('presentation families sidecar rejected; continuing with edition-level catalog', error);
+    }
+  }
   const workerWorkAliasesById = workAliasesById === null
     ? null
     : new Map(workAliasesById);
@@ -829,7 +853,6 @@ async function initialize() {
     avatarByCompanyId: companyProfile?.avatarByCompanyId
   });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
-  const worksById = new Map(displayWorks.map(work => [work.workId, work]));
   let mediaStore = null;
   let customWorks = [];
   await startupMetrics.measureAsync('local-media-hydration', async () => {
@@ -900,6 +923,7 @@ async function initialize() {
   let selectionMode = false;
   let companySelectionMode = false;
   let currentWorkDetailId = null;
+  let detailsVersionShelfExpanded = false;
   let workDetailCreditsRequest = 0;
   let applyingUiLocation = false;
   let locationScrollTimer = null;
@@ -2119,9 +2143,18 @@ async function initialize() {
     // Keep the filtered result distinct from the full catalog size. This is
     // especially important on mobile, where the compact header used to make
     // 3788 look like the total number of works.
-    const catalogTotal = sample.works.length;
-    elements.filterResultCount.textContent = `${model.visibleWorks.length} / ${catalogTotal} 项`;
-    elements.catalogResultCount.textContent = `${model.visibleWorks.length} / ${catalogTotal} 项`;
+    const visiblePresentationWorks = presentationFamilies === null
+      ? model.visibleWorks.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById))
+      : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
+        sortKey: model.state.filterState.sortKey,
+        sortDirection: model.state.filterState.sortDirection,
+        workById: worksById
+      });
+    const catalogTotal = presentationFamilies === null
+      ? sample.works.length
+      : sample.works.length - presentationFamilies.memberCount + presentationFamilies.familyCount;
+    elements.filterResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
+    elements.catalogResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
@@ -2150,19 +2183,21 @@ async function initialize() {
       rankingView.setMobileDragEnabled(true);
     } else {
       selectionView.render({
-        works: model.visibleWorks.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById)),
+        works: visiblePresentationWorks,
         view: model.state.selectionCardView,
         selectedWorkIds: model.state.selectedWorkIds,
-        selectAllState: model.selectAllState,
+        selectAllState: presentationFamilies === null
+          ? model.selectAllState
+          : presentationFamilies.presentationSelectionState(visiblePresentationWorks, model.state.selectedWorkIds),
         selectionCapacity: Math.max(0, USER_WORK_LIMIT - model.selectedCount),
         filterState: model.state.filterState,
         selectionMode
-      }, await resolveCoverUrls(selectionInitialWorks(model.visibleWorks)));
+      }, await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks)));
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (nextFilterKey !== renderedFilterKey) {
       filterView.render(model.state.filterState, {
-        current: model.visibleWorks.length,
+        current: visiblePresentationWorks.length,
         filters: outcome.counts.filters,
         brands: outcome.counts.brands
       });
@@ -2283,11 +2318,60 @@ async function initialize() {
   function replaceUiLocation() { updateUiLocation('replaceState'); }
   function pushUiLocation() { updateUiLocation('pushState'); }
 
-  function openWorkDetails(work, { push = true } = {}) {
+  function renderDetailsVersions(work) {
+    const family = presentationFamilies?.familyForWork(work.workId) ?? null;
+    elements.detailsVersionToggle.hidden = family === null;
+    elements.detailsVersionShelf.hidden = family === null || !detailsVersionShelfExpanded;
+    elements.detailsVersionList.replaceChildren();
+    if (family === null) return;
+    elements.detailsVersionToggle.replaceChildren(
+      createActionIcon(document, 'layers-2'),
+      document.createTextNode(`${family.members.length} 个版本`),
+      document.createTextNode(detailsVersionShelfExpanded ? '⌃' : '⌄')
+    );
+    elements.detailsVersionToggle.setAttribute('aria-expanded', String(detailsVersionShelfExpanded));
+    elements.detailsVersionToggle.onclick = () => {
+      detailsVersionShelfExpanded = !detailsVersionShelfExpanded;
+      renderDetailsVersions(work);
+    };
+    elements.detailsVersionCurrent.replaceChildren(
+      document.createTextNode('当前版本：'),
+      Object.assign(document.createElement('strong'), { textContent: family.members.find(member => member.workId === work.workId)?.label ?? work.title })
+    );
+    const rows = family.members.map(member => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'details-version-row';
+      row.setAttribute('aria-current', String(member.workId === work.workId));
+      const radio = document.createElement('span');
+      radio.className = 'details-version-radio';
+      const copy = document.createElement('span');
+      copy.className = 'details-version-copy';
+      const label = document.createElement('strong');
+      label.textContent = member.label;
+      const title = document.createElement('small');
+      title.textContent = member.title;
+      copy.append(label, title);
+      const note = document.createElement('span');
+      note.className = 'details-version-default';
+      note.textContent = member.default ? '默认' : '';
+      row.append(radio, copy, note);
+      row.addEventListener('click', () => {
+        const target = worksById.get(member.workId);
+        if (target !== undefined) openWorkDetails(target, { keepVersionShelf: true });
+      });
+      return row;
+    });
+    elements.detailsVersionList.replaceChildren(...rows);
+  }
+
+  function openWorkDetails(work, { push = true, keepVersionShelf = false } = {}) {
+    if (!keepVersionShelf) detailsVersionShelfExpanded = false;
     currentWorkDetailId = work.workId;
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
     showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    renderDetailsVersions(work);
     const loadCredits = async () => {
       try {
         const credits = await workDetailCreditsLoader.load(work.workId);

@@ -208,6 +208,15 @@ export function createSelectionCard(documentRef, work, {
     overlay.append(stats);
   }
 
+  let versionBadge = null;
+  if (Number.isInteger(work.presentationMemberCount) && work.presentationMemberCount > 1) {
+    versionBadge = documentRef.createElement('span');
+    versionBadge.className = 'selection-card-version-badge';
+    versionBadge.setAttribute('aria-label', `${work.presentationMemberCount} 个公开版本`);
+    versionBadge.append(createActionIcon(documentRef, 'layers-2'));
+    appendTextElement(documentRef, versionBadge, 'span', 'selection-card-version-count', work.presentationMemberCount);
+  }
+
   const details = documentRef.createElement('button');
   details.type = 'button';
   details.className = 'selection-card-info selection-card-details icon-button';
@@ -222,7 +231,7 @@ export function createSelectionCard(documentRef, work, {
     else onOpenDetails(work);
   });
 
-  card.append(cover, ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
+  card.append(cover, ...(versionBadge === null ? [] : [versionBadge]), ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
   if (selected && !selectionEnabled) {
     const marker = documentRef.createElement('span');
     marker.className = 'selection-card-selected-mark';

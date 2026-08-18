@@ -767,10 +767,15 @@
     <dialog id="work-details" aria-labelledby="details-title">
       <div class="dialog-heading">
         <h2 id="details-title">作品详情</h2>
-        <form method="dialog">
-          <button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button>
-        </form>
+        <div class="details-heading-actions">
+          <button id="details-version-toggle" class="details-version-toggle" type="button" aria-expanded="false" hidden></button>
+          <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button></form>
+        </div>
       </div>
+      <section id="details-version-shelf" class="details-version-shelf" aria-label="公开版本" hidden>
+        <p id="details-version-current" class="details-version-current"></p>
+        <div id="details-version-list" class="details-version-list"></div>
+      </section>
       <dl class="details-metadata">
         <div>
           <dt>会社</dt>
