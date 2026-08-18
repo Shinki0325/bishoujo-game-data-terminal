@@ -40,7 +40,7 @@ import {
   DATA_URLS,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=3c75276e5b483d504245891e524dbe38fbcbee07876932e883f730379e1b5674';
+} from './lib/runtime-config.js?v=7a6d7bebb48f3e308f04a9fe0a178dfda6f52cf9cd97b7b6cb07e174d9042e5d';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -798,6 +798,12 @@ async function initialize() {
   const workerWorkPinyinById = workPinyinById === null
     ? null
     : new Map(workPinyinById);
+  const workerCompanyAliasesById = enrichment?.companyAliasesById === null || enrichment?.companyAliasesById === undefined
+    ? null
+    : new Map(enrichment.companyAliasesById);
+  const workerCompanyPinyinById = enrichment?.companyPinyinById === null || enrichment?.companyPinyinById === undefined
+    ? null
+    : new Map(enrichment.companyPinyinById);
   const brands = projectBrandsWithAliases(
     sample.brands,
     enrichment?.companyAliasesById,
@@ -858,7 +864,9 @@ async function initialize() {
     brands,
     backendIndexes: sample.backendIndexes,
     workAliasesById: workerWorkAliasesById,
-    workPinyinById: workerWorkPinyinById
+    workPinyinById: workerWorkPinyinById,
+    companyAliasesById: workerCompanyAliasesById,
+    companyPinyinById: workerCompanyPinyinById
   }));
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 

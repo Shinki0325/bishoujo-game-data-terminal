@@ -7,8 +7,18 @@ const TAB_LABELS = Object.freeze({
 const CAST_ROLE_LABELS = Object.freeze({
   main: '主角',
   sub: '配角',
+  primary: '主角',
+  side: '配角',
   'メイン': '主角',
   'サブ': '配角'
+});
+const CAST_ROLE_RANKS = Object.freeze({
+  main: 0,
+  primary: 0,
+  'メイン': 0,
+  sub: 1,
+  side: 1,
+  'サブ': 1
 });
 const SONG_CATEGORY_LABELS = Object.freeze({
   '挿入歌': '插入歌',
@@ -20,6 +30,13 @@ const SONG_CATEGORY_LABELS = Object.freeze({
 function castRoleLabel(value) {
   const role = String(value ?? '').trim();
   return CAST_ROLE_LABELS[role.toLowerCase()] ?? CAST_ROLE_LABELS[role] ?? role;
+}
+
+function orderedCast(cast) {
+  return (Array.isArray(cast) ? cast : [])
+    .map((entry, index) => ({ entry, index, rank: CAST_ROLE_RANKS[String(entry?.role ?? '').trim().toLowerCase()] ?? 2 }))
+    .sort((left, right) => left.rank - right.rank || left.index - right.index)
+    .map(({ entry }) => entry);
 }
 
 function songCategories(song) {
@@ -55,6 +72,13 @@ function visibleSongs(songs) {
 function people(documentRef, entries) {
   const fragment = documentRef.createElement('span');
   fragment.className = 'details-credit-people';
+  if (!Array.isArray(entries) || entries.length === 0) {
+    const empty = documentRef.createElement('span');
+    empty.className = 'details-credit-empty';
+    empty.textContent = '暂无声优资料';
+    fragment.append(empty);
+    return fragment;
+  }
   entries.forEach((person, index) => {
     if (index > 0) {
       const separator = documentRef.createElement('span');
@@ -95,7 +119,7 @@ function staffPane(documentRef, staff) {
 function castPane(documentRef, cast) {
   const list = documentRef.createElement('ul');
   list.className = 'details-cast-list';
-  for (const entry of cast) {
+  for (const entry of orderedCast(cast)) {
     const item = documentRef.createElement('li');
     const character = documentRef.createElement('span');
     character.className = 'details-cast-character';
