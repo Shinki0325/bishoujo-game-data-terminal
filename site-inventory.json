@@ -67422,9 +67422,9 @@
       "sha256": "e692772f919d951993fbbb22bf3f4b9d429a9028326e40ca9c663d3cae9dd8e5"
     },
     {
-      "bytes": 10255,
+      "bytes": 10736,
       "path": "views/work-detail-credits-view.js",
-      "sha256": "d29d1589da8846db09e447589b41713d596ec79bc9a60df5e7655cd2ecb39ab6"
+      "sha256": "cf0a4c02f2e6eab98dcf18f3e37d2c4185f5d7bbd90d3015f96cd5a7893ddd7d"
     },
     {
       "bytes": 220,
@@ -67435,7 +67435,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 505218493,
+    "bytes": 505218974,
     "files": 13486
   }
 }
