@@ -67567,6 +67567,11 @@
       "sha256": "7e0642742866c1cea615dc0e08af41aa51860b43677042bc11bd4781d0e491be"
     },
     {
+      "bytes": 14473,
+      "path": "lib/project-entity-consumer.js",
+      "sha256": "2089b5150d8fdc6491a5eebef6ebc6705374a9dcb1ef1f89751d5bfc8b6ddd83"
+    },
+    {
       "bytes": 12616,
       "path": "lib/query-index.js",
       "sha256": "976655254910b8442c3797f1fa2c3557360b2cbdd762312f88be7722f3ae7b8d"
@@ -67735,7 +67740,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 507501542,
-    "files": 13546
+    "bytes": 507516015,
+    "files": 13547
   }
 }
