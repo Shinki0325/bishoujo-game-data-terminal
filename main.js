@@ -12,6 +12,9 @@ import { createCustomWork } from './lib/custom-work.js';
 import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
 import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
 import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
+import { prepareVndbRatingsSidecar } from './lib/vndb-ratings.js';
+import { prepareVndbAdmissionsSidecar } from './lib/vndb-admissions.js';
+import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js';
 import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
@@ -40,9 +43,10 @@ import {
   configuredAssetBase,
   DATA_URLS,
   PRESENTATION_FAMILIES_SIDECAR_SHA256,
+  RUNTIME_FEATURES,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=53812579c1e6249f465cdc5b62184fb7444d75f5654af4b1e086ce14e83eba85';
+} from './lib/runtime-config.js?v=0d403ea363e0324094f6e09cd4a63a9d279267c0a87881d1100e3405dfc1f793';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -536,6 +540,44 @@ export function prepareRuntimeSample(candidate, authorities = {}) {
   };
 }
 
+function mergeVndbAdmissionsIntoFixture(source, admissions) {
+  if (admissions === null || admissions.works.length === 0) return { source, admissionCount: 0 };
+  const merged = JSON.parse(JSON.stringify(source));
+  // The backend indexes are position-bound to the 6,799-work core export.
+  // Admissions are merged in memory, so discard those stale indexes and let
+  // the runtime build its own query state for the expanded presentation pool.
+  merged.indexes = null;
+  const existingWorkIds = new Set(merged.works.map(work => work.workId));
+  const companies = new Map(merged.companies.map(company => [company.companyId, company]));
+  for (const item of admissions.works) {
+    if (existingWorkIds.has(item.workId)) throw new TypeError(`VNDB admission overlaps catalog work ${item.workId}`);
+    existingWorkIds.add(item.workId);
+    const companyId = item.companyId || `vndb-${item.vndbId}`;
+    if (!companies.has(companyId)) {
+      const company = { companyId, name: `未收录会社 (${companyId})`, aliases: [] };
+      merged.companies.push(company);
+      companies.set(companyId, company);
+    }
+    merged.works.push({
+      workId: item.workId,
+      title: item.title,
+      furigana: item.furigana,
+      releaseDate: item.releaseDate || '1900-01-01',
+      companyId,
+      median: item.median,
+      voteCount: item.voteCount,
+      filterIds: [],
+      genreIds: [],
+      platformId: 'platform-pc',
+      workGroupId: null,
+      isNukige: false,
+      thumbnail: item.thumbnail,
+      preview: item.preview
+    });
+  }
+  return { source: merged, admissionCount: admissions.works.length };
+}
+
 async function fetchJson(url, label) {
   const response = await fetch(url, { cache: 'default' });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
@@ -646,7 +688,22 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
   elements.detailsAliasRow.hidden = aliases.length === 0;
   elements.detailsAliases.textContent = aliases.join(' / ');
   elements.detailsRelease.textContent = work.releaseDate || '未记录';
-  elements.detailsScore.textContent = `${work.median} / ${work.voteCount} 票`;
+  const egsRating = document.createElement('span');
+  egsRating.className = 'details-rating-line';
+  egsRating.textContent = `EGS ${work.median} / ${work.voteCount} 票`;
+  if (work.vndbRating === undefined) {
+    elements.detailsScore.replaceChildren(egsRating);
+  } else {
+    const vndbRating = document.createElement('span');
+    vndbRating.className = 'details-rating-line';
+    vndbRating.textContent = work.vndbRating.detailVotes === null
+      ? `VNDB ${work.vndbRating.detailScore} (${work.vndbRating.statusLabel})`
+      : `VNDB ${work.vndbRating.detailScore} / ${work.vndbRating.detailVotes}`;
+    const snapshot = document.createElement('small');
+    snapshot.className = 'details-rating-snapshot';
+    snapshot.textContent = `VNDB 数据快照时间：${work.vndbRating.retrievedAt ?? '未返回'}`;
+    elements.detailsScore.replaceChildren(egsRating, vndbRating, snapshot);
+  }
   const createTag = (filter, hidden = false) => {
     const item = document.createElement('li');
     item.className = filter.groupId === 'character'
@@ -747,7 +804,9 @@ async function initialize() {
     reviewQueueSource,
     enrichmentSource,
     companyProfileSource,
-    presentationFamiliesSource
+    presentationFamiliesSource,
+    vndbRatingsSource,
+    vndbAdmissionsSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -757,11 +816,28 @@ async function initialize() {
     fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue'),
     fetchOptionalJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar'),
     fetchOptionalJsonWithSha256(DATA_URLS.companyProfile, 'company profile sidecar'),
-    fetchOptionalJsonWithSha256(DATA_URLS.presentationFamilies, 'presentation families sidecar')
+    fetchOptionalJsonWithSha256(DATA_URLS.presentationFamilies, 'presentation families sidecar'),
+    RUNTIME_FEATURES.vndbRatingsV1.enabled
+      ? fetchOptionalJsonWithSha256(DATA_URLS.vndbRatings, 'VNDB ratings sidecar')
+      : Promise.resolve(null),
+    fetchOptionalJsonWithSha256(DATA_URLS.vndbAdmissions, 'VNDB admissions sidecar')
   ]));
-  const sampleSource = catalogSource.value;
-  const backendIndexes = backendIndexesSource.value;
-  const assetsManifest = assetsManifestSource.value;
+  let admissions = null;
+  try {
+    if (vndbAdmissionsSource !== null) {
+      admissions = prepareVndbAdmissionsSidecar(vndbAdmissionsSource.value, {
+        catalogSnapshotId: catalogSource.value.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: catalogSource.value.works.map(work => work.workId)
+      });
+    }
+  } catch (error) {
+    console.warn('VNDB admissions sidecar rejected; continuing without admitted works', error);
+  }
+  const mergedAdmissions = mergeVndbAdmissionsIntoFixture(catalogSource.value, admissions);
+  const sampleSource = mergedAdmissions.source;
+  const backendIndexes = admissions === null ? backendIndexesSource.value : null;
+  const assetsManifest = admissions === null ? assetsManifestSource.value : null;
   const filterAuthority = filterAuthoritySource.value;
   const workGroupAuthority = workGroupAuthoritySource.value;
   const reviewQueue = sampleSource.schemaVersion === 'egs-tier-full-v1'
@@ -773,7 +849,7 @@ async function initialize() {
     filterAuthority,
     workGroupAuthority,
     reviewQueue,
-    sourceHashes: {
+      sourceHashes: admissions === null ? {
       indexes: backendIndexesSource.sha256,
       assetsManifest: assetsManifestSource.sha256,
       filterAuthority: filterAuthoritySource.sha256,
@@ -781,7 +857,7 @@ async function initialize() {
       ...(sampleSource.schemaVersion === 'egs-tier-full-v1'
         ? {}
         : { reviewQueue: reviewQueueSource.sha256 })
-    }
+      } : null
   }));
   let enrichment = null;
   if (enrichmentSource !== null) {
@@ -789,8 +865,8 @@ async function initialize() {
       enrichment = prepareEnrichmentSidecar(enrichmentSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        workIds: new Set(sample.works.map(work => work.workId)),
-        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+        workIds: new Set(catalogSource.value.works.map(work => work.workId)),
+        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
       });
     } catch (error) {
       console.warn('alias enrichment sidecar rejected; continuing without aliases', error);
@@ -800,7 +876,24 @@ async function initialize() {
   const workPinyinById = enrichment?.workPinyinById ?? null;
   const workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
   const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
-  const worksById = new Map(displayWorks.map(work => [work.workId, work]));
+  let vndbRatings = null;
+  if (vndbRatingsSource !== null) {
+    try {
+      const config = RUNTIME_FEATURES.vndbRatingsV1;
+      if (typeof config.sha256 !== 'string' || vndbRatingsSource.sha256 !== config.sha256) {
+        throw new TypeError('VNDB ratings sidecar hash does not match the runtime pin');
+      }
+      vndbRatings = prepareVndbRatingsSidecar(vndbRatingsSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: catalogSource.value.works.map(work => work.workId)
+      });
+    } catch (error) {
+      console.warn('VNDB ratings sidecar rejected; continuing with EGS-only ratings', error);
+    }
+  }
+  const ratedDisplayWorks = displayWorks.map(work => projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId));
+  const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   let presentationFamilies = null;
   if (presentationFamiliesSource !== null) {
     try {
@@ -810,7 +903,7 @@ async function initialize() {
       presentationFamilies = preparePresentationFamiliesSidecar(presentationFamiliesSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        workIds: sample.works.map(work => work.workId)
+        workIds: catalogSource.value.works.map(work => work.workId)
       });
     } catch (error) {
       console.warn('presentation families sidecar rejected; continuing with edition-level catalog', error);
@@ -839,7 +932,7 @@ async function initialize() {
       companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
       });
     } catch (error) {
       console.warn('company profile sidecar rejected; continuing without avatars', error);
@@ -847,7 +940,7 @@ async function initialize() {
   }
   const companyDirectory = buildCompanyDirectory({
     brands,
-    works: displayWorks,
+    works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
     companyPinyinById: enrichment?.companyPinyinById,
     avatarByCompanyId: companyProfile?.avatarByCompanyId
@@ -2143,8 +2236,9 @@ async function initialize() {
     // Keep the filtered result distinct from the full catalog size. This is
     // especially important on mobile, where the compact header used to make
     // 3788 look like the total number of works.
+    const visibleWorks = model.visibleWorks.map(work => worksById.get(work.workId) ?? work);
     const visiblePresentationWorks = presentationFamilies === null
-      ? model.visibleWorks.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById))
+      ? visibleWorks
       : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
         sortKey: model.state.filterState.sortKey,
         sortDirection: model.state.filterState.sortDirection,

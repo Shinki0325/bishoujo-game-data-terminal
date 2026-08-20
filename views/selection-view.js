@@ -201,6 +201,14 @@ export function createSelectionCard(documentRef, work, {
   appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
   if (view === 'full') {
     appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
+  }
+  if (work.vndbRating !== undefined) {
+    const ratings = documentRef.createElement('div');
+    ratings.className = 'selection-card-rating-lines';
+    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', `EGS ${work.median} / ${work.voteCount} 票`);
+    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
+    overlay.append(ratings);
+  } else if (view === 'full') {
     const stats = documentRef.createElement('p');
     stats.className = 'selection-card-stats';
     appendTextElement(documentRef, stats, 'span', 'selection-card-median', work.median);
