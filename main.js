@@ -13,6 +13,7 @@ import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
 import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
 import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
 import { prepareVndbRatingsSidecar } from './lib/vndb-ratings.js';
+import { prepareVndbAdmissionsSidecar } from './lib/vndb-admissions.js';
 import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js';
 import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
@@ -38,14 +39,17 @@ import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
+import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import {
   configuredAssetBase,
   DATA_URLS,
   PRESENTATION_FAMILIES_SIDECAR_SHA256,
   RUNTIME_FEATURES,
   PREVIEW_MANIFEST_PATH,
-  RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=185b2b53b4fa3b465648646ea766f4d87f06029bec48bc54835d0c5d18465f98';
+  RUNTIME_DATA_CACHE_MODE,
+  MEDIA_CLEARANCE_BRIDGE_SHA256,
+  DATA_REVISION
+} from './lib/runtime-config.js?v=f6fa04af8ab4bc13d2774ef249884de8ebf9de5736a38163efa7b74de7371dbd';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -539,6 +543,44 @@ export function prepareRuntimeSample(candidate, authorities = {}) {
   };
 }
 
+function mergeVndbAdmissionsIntoFixture(source, admissions) {
+  if (admissions === null || admissions.works.length === 0) return { source, admissionCount: 0 };
+  const merged = JSON.parse(JSON.stringify(source));
+  // The backend indexes are position-bound to the 6,799-work core export.
+  // Admissions are merged in memory, so discard those stale indexes and let
+  // the runtime build its own query state for the expanded presentation pool.
+  merged.indexes = null;
+  const existingWorkIds = new Set(merged.works.map(work => work.workId));
+  const companies = new Map(merged.companies.map(company => [company.companyId, company]));
+  for (const item of admissions.works) {
+    if (existingWorkIds.has(item.workId)) throw new TypeError(`VNDB admission overlaps catalog work ${item.workId}`);
+    existingWorkIds.add(item.workId);
+    const companyId = item.companyId || `vndb-${item.vndbId}`;
+    if (!companies.has(companyId)) {
+      const company = { companyId, name: `未收录会社 (${companyId})`, aliases: [] };
+      merged.companies.push(company);
+      companies.set(companyId, company);
+    }
+    merged.works.push({
+      workId: item.workId,
+      title: item.title,
+      furigana: item.furigana,
+      releaseDate: item.releaseDate || '1900-01-01',
+      companyId,
+      median: item.median,
+      voteCount: item.voteCount,
+      filterIds: [],
+      genreIds: [],
+      platformId: 'platform-pc',
+      workGroupId: null,
+      isNukige: false,
+      thumbnail: item.thumbnail,
+      preview: item.preview
+    });
+  }
+  return { source: merged, admissionCount: admissions.works.length };
+}
+
 async function fetchJson(url, label) {
   const response = await fetch(url, { cache: 'default' });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
@@ -636,7 +678,10 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null) {
+function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null, projectEntityRuntime = null) {
+  const detailVm = projectEntityRuntime?.adaptWorkDetail?.(work.workId, work) ?? work;
+  elements.detailsDialog.dataset.projectEntitySource = detailVm.source ?? 'legacy';
+  elements.detailsDialog.dataset.mediaClearanceStatus = work.mediaProjection?.clearanceStatus ?? 'legacy-fallback';
   elements.detailsTitle.textContent = work.title;
   elements.detailsBrand.replaceChildren();
   const brandButton = document.createElement('button');
@@ -766,7 +811,9 @@ async function initialize() {
     enrichmentSource,
     companyProfileSource,
     presentationFamiliesSource,
-    vndbRatingsSource
+    vndbRatingsSource,
+    vndbAdmissionsSource,
+    mediaClearanceBridgeSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -779,11 +826,28 @@ async function initialize() {
     fetchOptionalJsonWithSha256(DATA_URLS.presentationFamilies, 'presentation families sidecar'),
     RUNTIME_FEATURES.vndbRatingsV1.enabled
       ? fetchOptionalJsonWithSha256(DATA_URLS.vndbRatings, 'VNDB ratings sidecar')
+      : Promise.resolve(null),
+    fetchOptionalJsonWithSha256(DATA_URLS.vndbAdmissions, 'VNDB admissions sidecar'),
+    RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance
+      ? fetchOptionalJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge')
       : Promise.resolve(null)
   ]));
-  const sampleSource = catalogSource.value;
-  const backendIndexes = backendIndexesSource.value;
-  const assetsManifest = assetsManifestSource.value;
+  let admissions = null;
+  try {
+    if (vndbAdmissionsSource !== null) {
+      admissions = prepareVndbAdmissionsSidecar(vndbAdmissionsSource.value, {
+        catalogSnapshotId: catalogSource.value.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: catalogSource.value.works.map(work => work.workId)
+      });
+    }
+  } catch (error) {
+    console.warn('VNDB admissions sidecar rejected; continuing without admitted works', error);
+  }
+  const mergedAdmissions = mergeVndbAdmissionsIntoFixture(catalogSource.value, admissions);
+  const sampleSource = mergedAdmissions.source;
+  const backendIndexes = admissions === null ? backendIndexesSource.value : null;
+  const assetsManifest = admissions === null ? assetsManifestSource.value : null;
   const filterAuthority = filterAuthoritySource.value;
   const workGroupAuthority = workGroupAuthoritySource.value;
   const reviewQueue = sampleSource.schemaVersion === 'egs-tier-full-v1'
@@ -795,7 +859,7 @@ async function initialize() {
     filterAuthority,
     workGroupAuthority,
     reviewQueue,
-    sourceHashes: {
+      sourceHashes: admissions === null ? {
       indexes: backendIndexesSource.sha256,
       assetsManifest: assetsManifestSource.sha256,
       filterAuthority: filterAuthoritySource.sha256,
@@ -803,7 +867,7 @@ async function initialize() {
       ...(sampleSource.schemaVersion === 'egs-tier-full-v1'
         ? {}
         : { reviewQueue: reviewQueueSource.sha256 })
-    }
+      } : null
   }));
   let enrichment = null;
   if (enrichmentSource !== null) {
@@ -811,8 +875,8 @@ async function initialize() {
       enrichment = prepareEnrichmentSidecar(enrichmentSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        workIds: new Set(sample.works.map(work => work.workId)),
-        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+        workIds: new Set(catalogSource.value.works.map(work => work.workId)),
+        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
       });
     } catch (error) {
       console.warn('alias enrichment sidecar rejected; continuing without aliases', error);
@@ -822,6 +886,23 @@ async function initialize() {
   const workPinyinById = enrichment?.workPinyinById ?? null;
   const workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
   const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
+  let projectEntityRuntime = null;
+  if (mediaClearanceBridgeSource !== null) {
+    try {
+      if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
+        throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
+      }
+      projectEntityRuntime = await createProjectEntityRuntime({
+        bridge: mediaClearanceBridgeSource.value,
+        catalog: { ...catalogSource.value, catalogSha256: catalogSource.sha256 },
+        dataRevision: DATA_REVISION,
+        cryptoRef: crypto
+      });
+      console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
+    } catch (error) {
+      console.warn('G1 media clearance bridge rejected; retaining legacy media fallback', error);
+    }
+  }
   let vndbRatings = null;
   if (vndbRatingsSource !== null) {
     try {
@@ -832,13 +913,16 @@ async function initialize() {
       vndbRatings = prepareVndbRatingsSidecar(vndbRatingsSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        workIds: sample.works.map(work => work.workId)
+        workIds: catalogSource.value.works.map(work => work.workId)
       });
     } catch (error) {
       console.warn('VNDB ratings sidecar rejected; continuing with EGS-only ratings', error);
     }
   }
-  const ratedDisplayWorks = displayWorks.map(work => projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId));
+  const ratedDisplayWorks = displayWorks.map(work => {
+    const rated = projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId);
+    return projectEntityRuntime === null ? rated : applyProjectedMediaToWork(rated, projectEntityRuntime.selectedMediaByWorkId);
+  });
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   let presentationFamilies = null;
   if (presentationFamiliesSource !== null) {
@@ -849,7 +933,7 @@ async function initialize() {
       presentationFamilies = preparePresentationFamiliesSidecar(presentationFamiliesSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        workIds: sample.works.map(work => work.workId)
+        workIds: catalogSource.value.works.map(work => work.workId)
       });
     } catch (error) {
       console.warn('presentation families sidecar rejected; continuing with edition-level catalog', error);
@@ -878,7 +962,7 @@ async function initialize() {
       companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
-        companyIds: new Set(sample.brands.map(brand => brand.brandId))
+        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
       });
     } catch (error) {
       console.warn('company profile sidecar rejected; continuing without avatars', error);
@@ -1026,7 +1110,7 @@ async function initialize() {
       const replacement = await mediaStore.urlForReplacement(work.workId);
       if (replacement !== null) return replacement;
     }
-    return resolveAssetUrl(work.coverPath, assetBase);
+    return resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase);
   }
 
   async function resolveCoverUrls(works) {
@@ -1041,6 +1125,9 @@ async function initialize() {
     if (mediaStore !== null) {
       const replacement = await mediaStore.urlForReplacement(work.workId);
       if (replacement !== null) return replacement;
+    }
+    if (typeof work.projectedPreviewPath === 'string' && work.projectedPreviewPath.length > 0) {
+      return resolveAssetUrl(work.projectedPreviewPath, assetBase);
     }
     if (typeof work.previewPath === 'string' && work.previewPath.length > 0) {
       return resolveAssetUrl(work.previewPath, assetBase);
@@ -2410,7 +2497,7 @@ async function initialize() {
     currentWorkDetailId = work.workId;
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
-    showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime);
     renderDetailsVersions(work);
     const loadCredits = async () => {
       try {
@@ -2420,8 +2507,18 @@ async function initialize() {
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
         ) return;
-        if (credits === null) workDetailCreditsView.clear();
-        else workDetailCreditsView.renderWork(credits);
+        if (credits === null) {
+          workDetailCreditsView.clear();
+          elements.detailsCredits.dataset.projectEntityPeople = '0';
+          elements.detailsCredits.dataset.projectEntityCharacters = '0';
+        } else {
+          workDetailCreditsView.renderWork(credits);
+          const personCharacter = projectEntityRuntime?.projectCredits?.(credits);
+          if (personCharacter !== undefined) {
+            elements.detailsCredits.dataset.projectEntityPeople = String(personCharacter.statistics.confirmedPersonCount);
+            elements.detailsCredits.dataset.projectEntityCharacters = String(personCharacter.statistics.confirmedCharacterCount);
+          }
+        }
       } catch (error) {
         if (
           request !== workDetailCreditsRequest
