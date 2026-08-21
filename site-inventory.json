@@ -65367,6 +65367,11 @@
       "sha256": "a6aa4c25bd6d74f725dbd645f491a3c6dcb73f22f8e625669ff266f540eb1320"
     },
     {
+      "bytes": 11435893,
+      "path": "data/egs-tier-g1-media-clearance-v1.json",
+      "sha256": "32a6002c602456d0a7184b93b53e6b5c3b5a7c0e6f4b4211bb3e89e774c53779"
+    },
+    {
       "bytes": 22640,
       "path": "data/egs-tier-vndb-admissions-v1.json",
       "sha256": "28600b464208f0d4dd70c1f6df1ee1455adecaf9de6027ecfec993b37d001011"
@@ -67567,9 +67572,39 @@
       "sha256": "7e0642742866c1cea615dc0e08af41aa51860b43677042bc11bd4781d0e491be"
     },
     {
-      "bytes": 14473,
+      "bytes": 1691,
+      "path": "lib/project-entity-consumer-contract.test.mjs",
+      "sha256": "9ff2df3210d013afe014c55ab75144d49acdd9dfb2492ff524b5d01f12776e96"
+    },
+    {
+      "bytes": 7658,
+      "path": "lib/project-entity-consumer-media.test.mjs",
+      "sha256": "6669b88ec0b7d7812a9b22c407e95d3da5a244a2d62a8fbf6f24d056ec3fc533"
+    },
+    {
+      "bytes": 4308,
+      "path": "lib/project-entity-consumer-person-character.test.mjs",
+      "sha256": "470df064c66b1674305fb885898695eee5a0f5cc48c3455f6a54fb9803e2842d"
+    },
+    {
+      "bytes": 6042,
+      "path": "lib/project-entity-consumer-work-detail.test.mjs",
+      "sha256": "bc10736732a59d5f34bbc237c632925105a6d2c097a7a323002adf3175f4dc5f"
+    },
+    {
+      "bytes": 60499,
       "path": "lib/project-entity-consumer.js",
-      "sha256": "2089b5150d8fdc6491a5eebef6ebc6705374a9dcb1ef1f89751d5bfc8b6ddd83"
+      "sha256": "bad312cb778255d950b5f6fe5927bfa84f672fbfdca9fe059a73c51eab4ef647"
+    },
+    {
+      "bytes": 6451,
+      "path": "lib/project-entity-runtime.js",
+      "sha256": "c7369025464c062e2f6f4a70e2d7959c5d14ec67c18894c169d31cb33946120f"
+    },
+    {
+      "bytes": 1564,
+      "path": "lib/project-entity-runtime.test.mjs",
+      "sha256": "98b49d38662786f73e53017aac4eefaf8d669161d7bcb0608bdec15deaa92334"
     },
     {
       "bytes": 12616,
@@ -67592,9 +67627,9 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
-      "bytes": 2156,
+      "bytes": 2427,
       "path": "lib/runtime-config.js",
-      "sha256": "3771f5091d8fe60d7f765d78004cc4b78394910d3a7b66cb1830d87cfb997c16"
+      "sha256": "dfb374ef4f09b85839544baa84b366e2adaa50603ee463c5b7227075ddd89ac0"
     },
     {
       "bytes": 16261,
@@ -67667,9 +67702,9 @@
       "sha256": "dfcfeb307dc4f7c3ffed1f7747cb1c232ab018fd0c09780bae17963633501d2a"
     },
     {
-      "bytes": 8989,
+      "bytes": 9546,
       "path": "lib/work-detail-credits.js",
-      "sha256": "11b86fe8f0dc64cda2a28b16d1bd902c3d19ebf6c050b5bb3994673240d0cdda"
+      "sha256": "79b5bb7d39d99e60649c7f3df593ce1ef9ec6b8852213e9bfc6f220d0627136e"
     },
     {
       "bytes": 36,
@@ -67677,9 +67712,9 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 124117,
+      "bytes": 126556,
       "path": "main.js",
-      "sha256": "0288ec0128416bf0bef87afa1a4f6ae2074f1b4061e92be325de317832fb3e4b"
+      "sha256": "377b0e8d4ea5105c33302c2cc792012a54d7157c76da07f0d0725b8880ac0b65"
     },
     {
       "bytes": 143729,
@@ -67740,7 +67775,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 507516015,
-    "files": 13547
+    "bytes": 519028915,
+    "files": 13554
   }
 }

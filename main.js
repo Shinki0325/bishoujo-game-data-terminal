@@ -39,14 +39,17 @@ import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
+import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import {
   configuredAssetBase,
   DATA_URLS,
   PRESENTATION_FAMILIES_SIDECAR_SHA256,
   RUNTIME_FEATURES,
   PREVIEW_MANIFEST_PATH,
-  RUNTIME_DATA_CACHE_MODE
-} from './lib/runtime-config.js?v=0d403ea363e0324094f6e09cd4a63a9d279267c0a87881d1100e3405dfc1f793';
+  RUNTIME_DATA_CACHE_MODE,
+  MEDIA_CLEARANCE_BRIDGE_SHA256,
+  DATA_REVISION
+} from './lib/runtime-config.js?v=79540595efb9eb768898f26c8a1b72224bb918f52d3ff6622fed75757bfa38ca';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -675,7 +678,10 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null) {
+function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null, projectEntityRuntime = null) {
+  const detailVm = projectEntityRuntime?.adaptWorkDetail?.(work.workId, work) ?? work;
+  elements.detailsDialog.dataset.projectEntitySource = detailVm.source ?? 'legacy';
+  elements.detailsDialog.dataset.mediaClearanceStatus = work.mediaProjection?.clearanceStatus ?? 'legacy-fallback';
   elements.detailsTitle.textContent = work.title;
   elements.detailsBrand.replaceChildren();
   const brandButton = document.createElement('button');
@@ -806,7 +812,8 @@ async function initialize() {
     companyProfileSource,
     presentationFamiliesSource,
     vndbRatingsSource,
-    vndbAdmissionsSource
+    vndbAdmissionsSource,
+    mediaClearanceBridgeSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -820,7 +827,10 @@ async function initialize() {
     RUNTIME_FEATURES.vndbRatingsV1.enabled
       ? fetchOptionalJsonWithSha256(DATA_URLS.vndbRatings, 'VNDB ratings sidecar')
       : Promise.resolve(null),
-    fetchOptionalJsonWithSha256(DATA_URLS.vndbAdmissions, 'VNDB admissions sidecar')
+    fetchOptionalJsonWithSha256(DATA_URLS.vndbAdmissions, 'VNDB admissions sidecar'),
+    RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance
+      ? fetchOptionalJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge')
+      : Promise.resolve(null)
   ]));
   let admissions = null;
   try {
@@ -876,6 +886,23 @@ async function initialize() {
   const workPinyinById = enrichment?.workPinyinById ?? null;
   const workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
   const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
+  let projectEntityRuntime = null;
+  if (mediaClearanceBridgeSource !== null) {
+    try {
+      if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
+        throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
+      }
+      projectEntityRuntime = await createProjectEntityRuntime({
+        bridge: mediaClearanceBridgeSource.value,
+        catalog: { ...catalogSource.value, catalogSha256: catalogSource.sha256 },
+        dataRevision: DATA_REVISION,
+        cryptoRef: crypto
+      });
+      console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
+    } catch (error) {
+      console.warn('G1 media clearance bridge rejected; retaining legacy media fallback', error);
+    }
+  }
   let vndbRatings = null;
   if (vndbRatingsSource !== null) {
     try {
@@ -892,7 +919,10 @@ async function initialize() {
       console.warn('VNDB ratings sidecar rejected; continuing with EGS-only ratings', error);
     }
   }
-  const ratedDisplayWorks = displayWorks.map(work => projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId));
+  const ratedDisplayWorks = displayWorks.map(work => {
+    const rated = projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId);
+    return projectEntityRuntime === null ? rated : applyProjectedMediaToWork(rated, projectEntityRuntime.selectedMediaByWorkId);
+  });
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   let presentationFamilies = null;
   if (presentationFamiliesSource !== null) {
@@ -1080,7 +1110,7 @@ async function initialize() {
       const replacement = await mediaStore.urlForReplacement(work.workId);
       if (replacement !== null) return replacement;
     }
-    return resolveAssetUrl(work.coverPath, assetBase);
+    return resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase);
   }
 
   async function resolveCoverUrls(works) {
@@ -1095,6 +1125,9 @@ async function initialize() {
     if (mediaStore !== null) {
       const replacement = await mediaStore.urlForReplacement(work.workId);
       if (replacement !== null) return replacement;
+    }
+    if (typeof work.projectedPreviewPath === 'string' && work.projectedPreviewPath.length > 0) {
+      return resolveAssetUrl(work.projectedPreviewPath, assetBase);
     }
     if (typeof work.previewPath === 'string' && work.previewPath.length > 0) {
       return resolveAssetUrl(work.previewPath, assetBase);
@@ -2464,7 +2497,7 @@ async function initialize() {
     currentWorkDetailId = work.workId;
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
-    showDetails(work, filterById, workAliasesById, openCompanyDirectory);
+    showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime);
     renderDetailsVersions(work);
     const loadCredits = async () => {
       try {
@@ -2474,8 +2507,18 @@ async function initialize() {
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
         ) return;
-        if (credits === null) workDetailCreditsView.clear();
-        else workDetailCreditsView.renderWork(credits);
+        if (credits === null) {
+          workDetailCreditsView.clear();
+          elements.detailsCredits.dataset.projectEntityPeople = '0';
+          elements.detailsCredits.dataset.projectEntityCharacters = '0';
+        } else {
+          workDetailCreditsView.renderWork(credits);
+          const personCharacter = projectEntityRuntime?.projectCredits?.(credits);
+          if (personCharacter !== undefined) {
+            elements.detailsCredits.dataset.projectEntityPeople = String(personCharacter.statistics.confirmedPersonCount);
+            elements.detailsCredits.dataset.projectEntityCharacters = String(personCharacter.statistics.confirmedCharacterCount);
+          }
+        }
       } catch (error) {
         if (
           request !== workDetailCreditsRequest
