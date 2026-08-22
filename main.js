@@ -49,7 +49,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=e09074733209b0b92021bb63243ec8bf920161a16d6d5e8b3738026935f325cd';
+} from './lib/runtime-config.js?v=425d08ccbc8d90aa2a872dcc6793df6d2752c71e3cae1df4f7e2a1df093e54ef';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -1550,7 +1550,8 @@ async function initialize() {
       selectedCompanyIds: companyRanking.inspect().selectedSet,
       selectionMode: companySelectionMode,
       imageUrlForCompany: company => companyImageUrl(company, assetBase),
-      imageUrlForWork: work => resolveAssetUrl(work.coverPath, assetBase)
+      // Match the backend-selected media used by the work library and ranking.
+      imageUrlForWork: work => resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase)
     });
   }
 

@@ -74342,9 +74342,9 @@
       "sha256": "128a775694052fbd09396678636fec9285c09b204005bffa186b365373a7381d"
     },
     {
-      "bytes": 115078,
+      "bytes": 115077,
       "path": "data/work-details/v1/index.json",
-      "sha256": "5e2e46a4f34b07319a8bf36166a4560c0640ee9c2f44657e48dc12c51f42f559"
+      "sha256": "cc548f88cb09494e1851eda26a2115f34c7b824cb4a88315c228797e3987b744"
     },
     {
       "bytes": 103622,
@@ -75742,9 +75742,9 @@
       "sha256": "5d1ab4d1d28da19343c28f18563473b6ffd2bdfe862b975ddfae104005977a73"
     },
     {
-      "bytes": 15524,
+      "bytes": 14940,
       "path": "data/work-details/v1/shards/279.json",
-      "sha256": "7b2976d2f4a42b13b9ae738ebaf2b5c8019884c30aa471565ea4b5b408432549"
+      "sha256": "7be799fb14033edb7cdcf3fb5caaec2fece8156b40945156d69fb30a413d7471"
     },
     {
       "bytes": 30907,
@@ -76407,9 +76407,9 @@
       "sha256": "28634b5376917261287aad1d35593ed04e7f7f157d2d932282b6be18967831cf"
     },
     {
-      "bytes": 4182,
+      "bytes": 4383,
       "path": "lib/company-directory.js",
-      "sha256": "db4b5f96cbcb63d04af188cfaf0e7588cbc3381f28266c528d6dbcf667fb6173"
+      "sha256": "72a227a8c4c1bb2ac48d01b64c2e3a91c8a885b9f829dc0c1209d719a8c4f158"
     },
     {
       "bytes": 4421,
@@ -76584,7 +76584,7 @@
     {
       "bytes": 2488,
       "path": "lib/runtime-config.js",
-      "sha256": "e376cbb15fcfa8a78c3170e00ce3a6c745559b5bea727607136860feba21349c"
+      "sha256": "6673722273d0e629b4f5d42271ddbe66c75e52c499dc2c97944522480cc725ec"
     },
     {
       "bytes": 16261,
@@ -76667,9 +76667,9 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 126652,
+      "bytes": 126763,
       "path": "main.js",
-      "sha256": "442e7f73478d01befcbe22dc2e6dfd38409d5033ea0b4fceb2e2c4c48893c0f9"
+      "sha256": "23b333e0db948f696e42cd7fea9da19e7a30c726ef61c6feb21c6ab209738abf"
     },
     {
       "bytes": 143729,
@@ -76730,7 +76730,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 573948159,
+    "bytes": 573947886,
     "files": 15345
   }
 }
