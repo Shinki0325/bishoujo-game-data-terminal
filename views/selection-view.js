@@ -232,21 +232,7 @@ export function createSelectionCard(documentRef, work, {
     appendTextElement(documentRef, versionBadge, 'span', 'selection-card-version-count', work.presentationMemberCount);
   }
 
-  const details = documentRef.createElement('button');
-  details.type = 'button';
-  details.className = 'selection-card-info selection-card-details icon-button';
-  details.dataset.controlType = 'details';
-  details.setAttribute('aria-label', card.getAttribute('aria-label'));
-  details.title = card.getAttribute('aria-label');
-  details.textContent = 'i';
-  details.addEventListener('click', event => {
-    event.stopPropagation();
-    if (!isCardActive()) return;
-    if (shouldToggleFromCardSurface()) onToggle(work, !selected);
-    else onOpenDetails(work);
-  });
-
-  card.append(cover, ...(versionBadge === null ? [] : [versionBadge]), ...(checkbox === null ? [overlay, details] : [checkbox, overlay, details]));
+  card.append(cover, ...(versionBadge === null ? [] : [versionBadge]), ...(checkbox === null ? [overlay] : [checkbox, overlay]));
   if (selected && !selectionEnabled) {
     const marker = documentRef.createElement('span');
     marker.className = 'selection-card-selected-mark';
@@ -325,6 +311,25 @@ export function createSelectionView({
   let selectionModeActive = defaultSelectionMode;
   let selectionModeEpoch = 0;
 
+  function scrollTarget() {
+    return documentRef.scrollingElement ?? root;
+  }
+
+  function capturePageScroll() {
+    const target = scrollTarget();
+    return {
+      top: Number.isFinite(target?.scrollTop) ? target.scrollTop : 0,
+      left: Number.isFinite(target?.scrollLeft) ? target.scrollLeft : 0
+    };
+  }
+
+  function restorePageScroll(position) {
+    const target = scrollTarget();
+    if (target === null || typeof target !== 'object') return;
+    target.scrollTop = Number.isFinite(position?.top) ? position.top : 0;
+    target.scrollLeft = Number.isFinite(position?.left) ? position.left : 0;
+  }
+
   const titleCommit = createDebouncedCommit(titleQuery => {
     onFilterChange({ titleQuery });
   });
@@ -388,7 +393,7 @@ export function createSelectionView({
     const previousIndex = pageIndex;
     pageIndex = Math.max(0, Math.min(nextIndex, pages.length - 1));
     clearPageError();
-    if (scroll && pageIndex !== previousIndex) root.scrollTop = 0;
+    if (scroll && pageIndex !== previousIndex) restorePageScroll({ top: 0, left: 0 });
     renderLatest();
     if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
   }
@@ -539,13 +544,12 @@ export function createSelectionView({
     },
 
     captureScroll() {
-      return { top: root.scrollTop, left: root.scrollLeft };
+      return capturePageScroll();
     },
 
     restoreScroll(position) {
       if (position === null || typeof position !== 'object') return;
-      root.scrollTop = Number.isFinite(position.top) ? position.top : 0;
-      root.scrollLeft = Number.isFinite(position.left) ? position.left : 0;
+      restorePageScroll(position);
     },
 
     getPageNumber() {

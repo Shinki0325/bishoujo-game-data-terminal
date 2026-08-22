@@ -856,17 +856,17 @@ h3 {
 .selection-view {
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - var(--header-height));
-  min-height: 0;
+  height: auto;
+  min-height: calc(100dvh - var(--header-height));
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
 }
 
 .mobile-selection-view {
   min-width: 0;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
 }
 
@@ -913,8 +913,7 @@ h3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   padding: 6px;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overflow: visible;
 }
 
 .mobile-selection-grid .selection-card {
@@ -1752,18 +1751,16 @@ input[type="range"] {
 .catalog-results {
   min-width: 0;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: visible;
   background: var(--surface);
-  overscroll-behavior: contain;
 }
 
 .results-toolbar {
   position: sticky;
-  top: 0;
+  top: var(--header-height);
   z-index: 20;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -1852,8 +1849,8 @@ input[type="range"] {
 }
 
 .selection-context-bar {
-  position: sticky;
-  top: 50px;
+  position: static;
+  top: auto;
   z-index: 19;
   display: flex;
   align-items: center;
@@ -2156,25 +2153,10 @@ input[type="range"] {
   border-radius: inherit;
 }
 
-.selection-card-info:focus-visible,
 .selection-card-cover:focus-visible,
 .ranking-card-cover:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -3px;
-}
-
-.selection-card-info {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 5;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-  border-radius: inherit;
 }
 
 .selection-card-version-badge {
@@ -3910,7 +3892,6 @@ dialog::backdrop {
   #cleanup-menu-button,
   #display-menu-button,
   #file-menu-button,
-  .selection-card-info,
   .media-crop-actions button,
   .tier-add-button {
     min-width: var(--touch-target);
@@ -4486,18 +4467,6 @@ textarea:hover {
 .selection-card-company,
 .selection-card-stats {
   color: #9eb0ba;
-}
-
-.selection-card-info {
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  color: #ffffff;
-  background: rgb(15 23 29 / 68%);
-  border: 1px solid rgb(255 255 255 / 40%);
-  border-radius: 50%;
-  box-shadow: 0 2px 7px rgb(0 0 0 / 20%);
 }
 
 .selection-card-selected-mark,
@@ -5269,11 +5238,6 @@ dialog::backdrop {
 :root[data-theme="light"] .selection-card-company,
 :root[data-theme="light"] .selection-card-stats { color: #d7e3e7; }
 
-:root[data-theme="light"] .selection-card-info {
-  color: #ffffff;
-  background: rgb(20 34 42 / 68%);
-}
-
 :root[data-theme="light"] .company-directory-card { background: #edf2f3; }
 
 :root[data-theme="light"] .company-directory-detail,
@@ -5768,7 +5732,7 @@ dialog::backdrop {
   /* One sticky wrapper keeps variable-height headings and their controls together. */
   .results-toolbar {
     position: sticky;
-    top: 0;
+    top: var(--header-height);
     z-index: 15;
     background: var(--bg);
   }
@@ -6584,7 +6548,7 @@ dialog::backdrop {
 
   .results-toolbar {
     position: sticky;
-    top: 0;
+    top: var(--header-height);
   }
 
   .results-heading,
