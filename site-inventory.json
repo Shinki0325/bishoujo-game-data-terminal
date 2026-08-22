@@ -76367,9 +76367,14 @@
       "sha256": "3cdbe9349148fb58a96b66ff0db44b15b9c3de91790405f80f1bb2b0ee6003b4"
     },
     {
-      "bytes": 46337,
+      "bytes": 46318,
+      "path": "index.20260823-immutable-entry-v1.html",
+      "sha256": "49a61b9dc80b1a6b1723b89c53fc290d6aa7813c2bfd112c3f27f095af02bfc2"
+    },
+    {
+      "bytes": 46318,
       "path": "index.html",
-      "sha256": "e13f55ca5bd48d74fb2e550fbfed6a2e29b1ba84ed4058527c971b776f5901d4"
+      "sha256": "49a61b9dc80b1a6b1723b89c53fc290d6aa7813c2bfd112c3f27f095af02bfc2"
     },
     {
       "bytes": 5495,
@@ -76683,8 +76688,18 @@
     },
     {
       "bytes": 128180,
+      "path": "main.20260823-immutable-entry-v1.js",
+      "sha256": "d46f0817e0ca250d8219dad8570bac780ff5cab489487d8aadbacdf5bf7b9652"
+    },
+    {
+      "bytes": 128180,
       "path": "main.js",
       "sha256": "d46f0817e0ca250d8219dad8570bac780ff5cab489487d8aadbacdf5bf7b9652"
+    },
+    {
+      "bytes": 143051,
+      "path": "styles.20260823-immutable-entry-v1.css",
+      "sha256": "1fa747fbba0e746f71846c7b86b8474be28f25768e31dd28a6bc92ebeb6c88a2"
     },
     {
       "bytes": 143051,
@@ -76745,7 +76760,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 576896658,
-    "files": 15348
+    "bytes": 577214188,
+    "files": 15351
   }
 }
