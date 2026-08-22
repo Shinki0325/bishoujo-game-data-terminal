@@ -2399,12 +2399,10 @@ input[type="range"] {
   --ranking-card-size-scaled: calc(var(--ranking-card-size) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-card));
   --ranking-row-height-scaled: calc(var(--ranking-row-height) * var(--ranking-ui-scale-overall) * var(--ranking-ui-scale-rail));
   min-width: 0;
-  height: calc(100dvh - var(--header-height));
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  height: auto;
+  min-height: calc(100dvh - var(--header-height));
+  overflow: visible;
   background: var(--surface);
-  overscroll-behavior: contain;
 }
 
 .ranking-page-heading {
@@ -2448,7 +2446,7 @@ input[type="range"] {
 
 .ranking-toolbar {
   position: sticky;
-  top: 0;
+  top: var(--header-height);
   z-index: 30;
   width: 100%;
   height: 54px;
@@ -2620,6 +2618,9 @@ body.is-ranking-immersive .ranking-view {
   inset: 0;
   z-index: 60;
   height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: #111821;
 }
 
@@ -4094,8 +4095,9 @@ dialog::backdrop {
   }
 
   .ranking-view {
-    height: calc(100dvh - var(--header-height));
-    min-height: 0;
+    height: auto;
+    min-height: calc(100dvh - var(--header-height));
+    overflow: visible;
   }
 
   .ranking-page-heading {
@@ -4111,7 +4113,7 @@ dialog::backdrop {
 
   .ranking-toolbar {
     position: sticky;
-    top: var(--safe-top);
+    top: calc(var(--header-height) + var(--safe-top));
     height: 54px;
     min-height: 54px;
     align-items: center;
@@ -5466,6 +5468,7 @@ dialog::backdrop {
   .ranking-view {
     min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
     height: auto;
+    overflow: visible;
     padding-bottom: var(--mobile-ranking-dock-height);
     background: var(--surface-strong);
   }
@@ -5590,14 +5593,13 @@ dialog::backdrop {
   body.is-ranking-immersive .mode-switch { display: none; }
 }
 
-/* Final mobile geometry authority. Workspace-local sticky regions start at
-   the top of their own scroll container; the global header is a sibling and
-   must not be counted a second time. */
+/* Final mobile geometry authority. Workspace content now uses document scroll,
+   so sticky workspace headings must remain below the global header. */
 @media (max-width: 899px) {
   .results-toolbar,
   .company-directory-header,
   .ranking-page-heading {
-    top: 0;
+    top: var(--header-height);
   }
 
   .results-heading,
@@ -5615,6 +5617,7 @@ dialog::backdrop {
 
   .selection-view,
   .catalog-results,
+  .ranking-view,
   .company-view {
     overflow: visible;
   }
@@ -5625,15 +5628,12 @@ dialog::backdrop {
   }
 }
 
-/* Last-in-file mobile geometry overrides. The shell header is a sibling of
-   each workspace, so workspace-local sticky regions must start at 0 within
-   their own scroll container; using --header-height here creates a phantom
-   header-sized gap and makes nested sticky children drift apart. */
+/* Keep the final mobile layer aligned with the document-scrolling shell. */
 @media (max-width: 899px) {
   .results-toolbar,
   .company-directory-header,
   .ranking-page-heading {
-    top: 0;
+    top: var(--header-height);
   }
 
   .results-heading,
@@ -5650,6 +5650,7 @@ dialog::backdrop {
 
   .selection-view,
   .catalog-results,
+  .ranking-view,
   .company-view {
     overflow: visible;
   }
@@ -5812,12 +5813,13 @@ dialog::backdrop {
   .ranking-view {
     min-height: calc(100dvh - var(--header-height) - var(--mobile-nav-height));
     height: auto;
+    overflow: visible;
     padding-bottom: var(--mobile-ranking-dock-height);
   }
 
   .ranking-page-heading {
     position: sticky;
-    top: 0;
+    top: var(--header-height);
     z-index: 16;
     display: flex;
     align-items: center;

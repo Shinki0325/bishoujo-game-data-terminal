@@ -385,6 +385,25 @@ export function createRankingView({
   let suppressedTouchClickTimer = null;
   const touchDragHoldDelayMs = 220;
 
+  function pageScrollTarget() {
+    return immersive ? root : documentRef.scrollingElement ?? root;
+  }
+
+  function capturePageScroll() {
+    const target = pageScrollTarget();
+    return {
+      top: Number.isFinite(target?.scrollTop) ? target.scrollTop : 0,
+      left: Number.isFinite(target?.scrollLeft) ? target.scrollLeft : 0
+    };
+  }
+
+  function restorePageScroll(position) {
+    const target = pageScrollTarget();
+    if (target === null || typeof target !== 'object') return;
+    target.scrollTop = Number.isFinite(position?.top) ? position.top : 0;
+    target.scrollLeft = Number.isFinite(position?.left) ? position.left : 0;
+  }
+
   const scheduleHold = typeof viewWindow.setTimeout === 'function'
     ? (callback, delay) => viewWindow.setTimeout(callback, delay)
     : (callback, delay) => globalThis.setTimeout(callback, delay);
@@ -1005,8 +1024,12 @@ export function createRankingView({
           else shouldContinue = true;
         }
       }
-      if (autoScrollRoot && typeof root.getBoundingClientRect === 'function') {
-        const rect = root.getBoundingClientRect();
+      if (autoScrollRoot) {
+        const target = pageScrollTarget();
+        const viewportHeight = Number(viewWindow.innerHeight);
+        const rect = target === root && typeof root.getBoundingClientRect === 'function'
+          ? root.getBoundingClientRect()
+          : { top: 0, bottom: Number.isFinite(viewportHeight) && viewportHeight > 0 ? viewportHeight : 390 };
         const velocity = edgeScrollVelocity({
           pointerX: autoScrollPointerY,
           left: rect.top,
@@ -1017,10 +1040,10 @@ export function createRankingView({
         if (velocity === 0) {
           autoScrollRoot = false;
         } else {
-          const before = Number(root.scrollTop);
-          root.scrollTop = before + velocity;
-          const after = Number(root.scrollTop);
-          const maximum = Number(root.scrollHeight) - Number(root.clientHeight);
+          const before = Number(target?.scrollTop);
+          target.scrollTop = before + velocity;
+          const after = Number(target?.scrollTop);
+          const maximum = Number(target?.scrollHeight) - Number(target?.clientHeight);
           const reachedBoundary = !Number.isFinite(before)
             || !Number.isFinite(after)
             || after === before
@@ -1760,8 +1783,7 @@ export function createRankingView({
 
     captureScroll() {
       return {
-        top: root.scrollTop,
-        left: root.scrollLeft,
+        ...capturePageScroll(),
         tiers: Object.fromEntries(
           [...tierTracks].map(([tierId, track]) => [tierId, track.scrollLeft])
         ),
@@ -1771,8 +1793,7 @@ export function createRankingView({
 
     restoreScroll(position) {
       if (position === null || typeof position !== 'object') return;
-      root.scrollTop = Number.isFinite(position.top) ? position.top : 0;
-      root.scrollLeft = Number.isFinite(position.left) ? position.left : 0;
+      restorePageScroll(position);
       for (const [tierId, track] of tierTracks) {
         const value = position.tiers?.[tierId];
         track.scrollLeft = Number.isFinite(value) ? value : 0;
