@@ -24622,6 +24622,11 @@
       "sha256": "ad0b444567c0731c8393a62c2b6d1ad7960aa443f3009dea51ba4525acd2abca"
     },
     {
+      "bytes": 21828,
+      "path": "assets/covers/ad/ad1c8ab0c4709624eaefd7559b4713705688a8ef6f369a8d84390d4384f6b9da.webp",
+      "sha256": "ad1c8ab0c4709624eaefd7559b4713705688a8ef6f369a8d84390d4384f6b9da"
+    },
+    {
       "bytes": 8722,
       "path": "assets/covers/ad/ad2223a9d4707cc624b1d047848435a80fe8991f1b3a2a742567c42dd1a6f68c.webp",
       "sha256": "ad2223a9d4707cc624b1d047848435a80fe8991f1b3a2a742567c42dd1a6f68c"
@@ -45145,6 +45150,11 @@
       "bytes": 34042,
       "path": "assets/previews/3b/3b4e362728b6b01c5255525a6a200ffebb7d506b81e658402ac364f2e5798f2c.webp",
       "sha256": "3b4e362728b6b01c5255525a6a200ffebb7d506b81e658402ac364f2e5798f2c"
+    },
+    {
+      "bytes": 47922,
+      "path": "assets/previews/3b/3b6272acab164e4b6e352b687bce8f827234cdf9447b2da9b22b0e79ebceebf3.webp",
+      "sha256": "3b6272acab164e4b6e352b687bce8f827234cdf9447b2da9b22b0e79ebceebf3"
     },
     {
       "bytes": 60410,
@@ -74277,9 +74287,9 @@
       "sha256": "12996fb38b21dfad4d6a1b5430bac38c46a53d1424e03b083aea69ff34410ff7"
     },
     {
-      "bytes": 4852600,
+      "bytes": 4853271,
       "path": "data/assets-manifest.json",
-      "sha256": "e2231435243fc401338a077dcfc11d8a6fce993e7c44b200d9cbdb4ca20ed307"
+      "sha256": "76325ca64f6dfea369d26c61b574c9bce4b9ba5ee35a31df3a12961fbdd55e0c"
     },
     {
       "bytes": 7215818,
@@ -74312,9 +74322,14 @@
       "sha256": "7d89963f1ab8b9d266a11f43dd2e030ebd38fb94ee2b86f6d5943e2853400173"
     },
     {
-      "bytes": 389793,
+      "bytes": 388161,
       "path": "data/egs-tier-vndb-admissions-v1.json",
-      "sha256": "89cc65137bb9e0a3ca978945a4f02af3bc4d78533118c1d30bcbeb9a9a093e97"
+      "sha256": "453b2ba6628670bd33be1b6f95df9d966d0f910ab05df6635e0e5329dd829eef"
+    },
+    {
+      "bytes": 1174054,
+      "path": "data/egs-tier-vndb-ratings-v1.json",
+      "sha256": "7175461fd149ab02eec529fc6566f12ff891fc4d80bb1af0a5f67edd198dc489"
     },
     {
       "bytes": 9881,
@@ -76567,9 +76582,9 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
-      "bytes": 2427,
+      "bytes": 2488,
       "path": "lib/runtime-config.js",
-      "sha256": "05932703ac1cc190b9fb0c2c01b0e991d1cf0798ca207dd652f1d746c209c128"
+      "sha256": "e376cbb15fcfa8a78c3170e00ce3a6c745559b5bea727607136860feba21349c"
     },
     {
       "bytes": 16261,
@@ -76654,7 +76669,7 @@
     {
       "bytes": 126556,
       "path": "main.js",
-      "sha256": "a4072f8d40e9b386222fcd66f328371c9315ae581d3d2ac97a7dd33e830d688b"
+      "sha256": "7b4eaa664441622d04be44a45f537e44eb9a537107acfb8075f09680f848cacd"
     },
     {
       "bytes": 143729,
@@ -76715,7 +76730,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 572703199,
-    "files": 15342
+    "bytes": 573946103,
+    "files": 15345
   }
 }
