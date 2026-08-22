@@ -74298,6 +74298,11 @@
     },
     {
       "bytes": 2940540,
+      "path": "data/egs-tier-authority-fanout-v1.20260823-immutable-fanout-v1.json",
+      "sha256": "e20ac604080af4760783610eb0a075d4e23436c63440fdff654f27a93d5d8dcd"
+    },
+    {
+      "bytes": 2940540,
       "path": "data/egs-tier-authority-fanout-v1.json",
       "sha256": "e20ac604080af4760783610eb0a075d4e23436c63440fdff654f27a93d5d8dcd"
     },
@@ -76372,9 +76377,14 @@
       "sha256": "49a61b9dc80b1a6b1723b89c53fc290d6aa7813c2bfd112c3f27f095af02bfc2"
     },
     {
-      "bytes": 46318,
+      "bytes": 46321,
+      "path": "index.20260823-immutable-fanout-v1.html",
+      "sha256": "ed12a8a37e1672694f80097846d5071169f2672f9fd8bfc97c9242d4d694150c"
+    },
+    {
+      "bytes": 46321,
       "path": "index.html",
-      "sha256": "49a61b9dc80b1a6b1723b89c53fc290d6aa7813c2bfd112c3f27f095af02bfc2"
+      "sha256": "ed12a8a37e1672694f80097846d5071169f2672f9fd8bfc97c9242d4d694150c"
     },
     {
       "bytes": 5495,
@@ -76602,6 +76612,11 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
+      "bytes": 2810,
+      "path": "lib/runtime-config.20260823-immutable-fanout-v1.js",
+      "sha256": "0b0c98ef7f2d0bbb54cc28fcaf4b98e0578170f2bc5557503d3407326d4bc982"
+    },
+    {
       "bytes": 2693,
       "path": "lib/runtime-config.js",
       "sha256": "eb5be744eb6aeb92d7d52e91550dfac6b90db723bb66a59296215f40d70cc0f8"
@@ -76692,6 +76707,11 @@
       "sha256": "d46f0817e0ca250d8219dad8570bac780ff5cab489487d8aadbacdf5bf7b9652"
     },
     {
+      "bytes": 128346,
+      "path": "main.20260823-immutable-fanout-v1.js",
+      "sha256": "457ed90bc144c9e8d0ccbe4e1398c92f1dd205942974c27fde1520b9f7feaa7d"
+    },
+    {
       "bytes": 128180,
       "path": "main.js",
       "sha256": "d46f0817e0ca250d8219dad8570bac780ff5cab489487d8aadbacdf5bf7b9652"
@@ -76699,6 +76719,11 @@
     {
       "bytes": 143051,
       "path": "styles.20260823-immutable-entry-v1.css",
+      "sha256": "1fa747fbba0e746f71846c7b86b8474be28f25768e31dd28a6bc92ebeb6c88a2"
+    },
+    {
+      "bytes": 143051,
+      "path": "styles.20260823-immutable-fanout-v1.css",
       "sha256": "1fa747fbba0e746f71846c7b86b8474be28f25768e31dd28a6bc92ebeb6c88a2"
     },
     {
@@ -76760,7 +76785,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 577214188,
-    "files": 15351
+    "bytes": 580475259,
+    "files": 15356
   }
 }
