@@ -74297,6 +74297,11 @@
       "sha256": "ce3fd57ef6678c9590da5039d22caaf8eca2cce15631bcf3c8bbaa8484295bf3"
     },
     {
+      "bytes": 2940540,
+      "path": "data/egs-tier-authority-fanout-v1.json",
+      "sha256": "e20ac604080af4760783610eb0a075d4e23436c63440fdff654f27a93d5d8dcd"
+    },
+    {
       "bytes": 64012,
       "path": "data/egs-tier-full-company-profile-v1-inventory.json",
       "sha256": "0001d138b83b598e553d94fdefbd83bc2a63967dba7803b88e480c883f0ab007"
@@ -74327,9 +74332,9 @@
       "sha256": "453b2ba6628670bd33be1b6f95df9d966d0f910ab05df6635e0e5329dd829eef"
     },
     {
-      "bytes": 1174054,
+      "bytes": 1174052,
       "path": "data/egs-tier-vndb-ratings-v1.json",
-      "sha256": "7175461fd149ab02eec529fc6566f12ff891fc4d80bb1af0a5f67edd198dc489"
+      "sha256": "439c56ff5838590bc2cdfa7b17d59b86034e8c0c42a1f9e0075e7f333fe1715f"
     },
     {
       "bytes": 9881,
@@ -76387,6 +76392,16 @@
       "sha256": "7f87ff5e7d45104f6dcab2a7b2884c4ea5836366e0cfc616f836b4fa1f39ef6e"
     },
     {
+      "bytes": 5036,
+      "path": "lib/authority-fanout.js",
+      "sha256": "7b7373205a9be5504ef04a3c48d50e4530e0550ebbb5154dfacd79ea73dfdcdd"
+    },
+    {
+      "bytes": 1468,
+      "path": "lib/authority-fanout.test.mjs",
+      "sha256": "799ceafcce21665721157e11ff695cece1a82f0a24d3619ab60ae80bda85d441"
+    },
+    {
       "bytes": 19305,
       "path": "lib/backend-beta-fixture.js",
       "sha256": "d409231160259ff1b39d3aac50e7eb06fa08ccd984397bb0ea68e309dddeae0b"
@@ -76582,9 +76597,9 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
-      "bytes": 2488,
+      "bytes": 2693,
       "path": "lib/runtime-config.js",
-      "sha256": "6673722273d0e629b4f5d42271ddbe66c75e52c499dc2c97944522480cc725ec"
+      "sha256": "eb5be744eb6aeb92d7d52e91550dfac6b90db723bb66a59296215f40d70cc0f8"
     },
     {
       "bytes": 16261,
@@ -76667,9 +76682,9 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 126763,
+      "bytes": 128180,
       "path": "main.js",
-      "sha256": "23b333e0db948f696e42cd7fea9da19e7a30c726ef61c6feb21c6ab209738abf"
+      "sha256": "d46f0817e0ca250d8219dad8570bac780ff5cab489487d8aadbacdf5bf7b9652"
     },
     {
       "bytes": 143729,
@@ -76730,7 +76745,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 573947886,
-    "files": 15345
+    "bytes": 576896550,
+    "files": 15348
   }
 }

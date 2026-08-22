@@ -40,6 +40,7 @@ import { createImmersiveController, createRankingPresentation } from './lib/rank
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
+import { applyAuthorityFanoutMediaToWork, prepareAuthorityFanoutProjection } from './lib/authority-fanout.js';
 import {
   configuredAssetBase,
   DATA_URLS,
@@ -49,7 +50,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=425d08ccbc8d90aa2a872dcc6793df6d2752c71e3cae1df4f7e2a1df093e54ef';
+} from './lib/runtime-config.js?v=809f6a2a67bfad36c25eb2315d98e40bd4a7a7223d4fbee37af13a3155c8a9f2';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -815,7 +816,8 @@ async function initialize() {
     presentationFamiliesSource,
     vndbRatingsSource,
     vndbAdmissionsSource,
-    mediaClearanceBridgeSource
+    mediaClearanceBridgeSource,
+    authorityFanoutSource
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchJsonWithSha256(DATA_URLS.catalog, 'catalog'),
     fetchJsonWithSha256(DATA_URLS.indexes, 'Backend indexes'),
@@ -832,6 +834,9 @@ async function initialize() {
     fetchOptionalJsonWithSha256(DATA_URLS.vndbAdmissions, 'VNDB admissions sidecar'),
     RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance
       ? fetchOptionalJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge')
+      : Promise.resolve(null),
+    RUNTIME_FEATURES.authorityFanoutV1.enabled
+      ? fetchOptionalJsonWithSha256(DATA_URLS.authorityFanout, 'authority fanout projection')
       : Promise.resolve(null)
   ]));
   let admissions = null;
@@ -921,9 +926,28 @@ async function initialize() {
       console.warn('VNDB ratings sidecar rejected; continuing with EGS-only ratings', error);
     }
   }
+  let authorityFanout = null;
+  if (authorityFanoutSource !== null) {
+    try {
+      const config = RUNTIME_FEATURES.authorityFanoutV1;
+      if (typeof config.sha256 !== 'string' || authorityFanoutSource.sha256 !== config.sha256) {
+        throw new TypeError('authority fanout projection hash does not match the runtime pin');
+      }
+      authorityFanout = prepareAuthorityFanoutProjection(authorityFanoutSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        workIds: catalogSource.value.works.map(work => work.workId),
+        ratingsSha256: RUNTIME_FEATURES.vndbRatingsV1.sha256
+      });
+      console.info('authority fanout projection applied', { selectedWorkCount: authorityFanout.selectedMediaByWorkId.size });
+    } catch (error) {
+      console.warn('authority fanout projection rejected; retaining clearance bridge selection', error);
+    }
+  }
   const ratedDisplayWorks = displayWorks.map(work => {
     const rated = projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId);
-    return projectEntityRuntime === null ? rated : applyProjectedMediaToWork(rated, projectEntityRuntime.selectedMediaByWorkId);
+    const clearanceProjected = projectEntityRuntime === null ? rated : applyProjectedMediaToWork(rated, projectEntityRuntime.selectedMediaByWorkId);
+    return authorityFanout === null ? clearanceProjected : applyAuthorityFanoutMediaToWork(clearanceProjected, authorityFanout.selectedMediaByWorkId);
   });
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   let presentationFamilies = null;
