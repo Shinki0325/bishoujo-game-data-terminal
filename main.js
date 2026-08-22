@@ -696,7 +696,9 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
   elements.detailsRelease.textContent = work.releaseDate || '未记录';
   const egsRating = document.createElement('span');
   egsRating.className = 'details-rating-line';
-  egsRating.textContent = `EGS ${work.median} / ${work.voteCount} 票`;
+  egsRating.textContent = Number.isFinite(work.median) && Number.isInteger(work.voteCount)
+    ? `EGS ${work.median} / ${work.voteCount} 票`
+    : 'EGS 暂无评分';
   if (work.vndbRating === undefined) {
     elements.detailsScore.replaceChildren(egsRating);
   } else {

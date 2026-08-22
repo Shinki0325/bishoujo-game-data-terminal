@@ -10,6 +10,11 @@ const DEBOUNCE_MS = 150;
 const SELECTION_WINDOW_TARGET = 100;
 const SELECTION_WINDOW_MIN = 60;
 
+function egsRatingText(work) {
+  if (!Number.isFinite(work.median) || !Number.isInteger(work.voteCount)) return 'EGS 暂无评分';
+  return `EGS ${work.median} / ${work.voteCount} 票`;
+}
+
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
 }
@@ -202,17 +207,19 @@ export function createSelectionCard(documentRef, work, {
   if (view === 'full') {
     appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
   }
-  if (work.vndbRating !== undefined) {
+  if (work.vndbRating !== undefined || work.median === null || work.voteCount === null) {
     const ratings = documentRef.createElement('div');
     ratings.className = 'selection-card-rating-lines';
-    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', `EGS ${work.median} / ${work.voteCount} 票`);
-    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
+    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', egsRatingText(work));
+    if (work.vndbRating !== undefined) {
+      appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
+    }
     overlay.append(ratings);
   } else if (view === 'full') {
     const stats = documentRef.createElement('p');
     stats.className = 'selection-card-stats';
-    appendTextElement(documentRef, stats, 'span', 'selection-card-median', work.median);
-    appendTextElement(documentRef, stats, 'span', 'selection-card-votes', work.voteCount);
+    appendTextElement(documentRef, stats, 'span', 'selection-card-median', work.median ?? '暂无评分');
+    appendTextElement(documentRef, stats, 'span', 'selection-card-votes', work.voteCount ?? '暂无');
     overlay.append(stats);
   }
 
