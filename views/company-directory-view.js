@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
+import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
 
@@ -234,13 +235,17 @@ export function createCompanyDirectoryView({
       item.className = 'company-directory-work';
       const cover = documentRef.createElement('span');
       cover.className = 'company-directory-work-cover';
-      const imageUrl = typeof imageUrlForWork === 'function' ? imageUrlForWork(work) : null;
+      const imageSource = typeof imageUrlForWork === 'function' ? imageUrlForWork(work) : null;
+      const imageUrl = typeof imageSource === 'string' ? imageSource : imageSource?.thumbnailUrl ?? null;
       if (imageUrl) {
         const image = documentRef.createElement('img');
         image.alt = '';
         image.loading = 'lazy';
         image.decoding = 'async';
-        image.src = imageUrl;
+        applyAdaptiveImageSource(image, {
+          thumbnailUrl: imageUrl,
+          previewUrl: typeof imageSource === 'string' ? null : imageSource?.previewUrl ?? null
+        });
         image.addEventListener('error', () => image.remove(), { once: true });
         cover.append(image);
       }

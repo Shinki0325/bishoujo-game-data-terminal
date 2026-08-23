@@ -1,5 +1,6 @@
 import { edgeScrollVelocity, insertionIndexFromPoint } from '../lib/drag.js';
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
+import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
@@ -151,7 +152,8 @@ export function createRankingCard(documentRef, work, callbacks) {
     shouldSuppressMediaClick = () => false,
     isCardActivationEnabled = () => true,
     assetBase,
-    coverUrl = null
+    coverUrl = null,
+    previewUrl = null
   } = callbacks;
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
@@ -177,7 +179,7 @@ export function createRankingCard(documentRef, work, callbacks) {
   const image = documentRef.createElement('img');
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
     if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    image.src = coverUrl;
+    applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl });
   } else {
     try {
       applyImageAsset(image, work, assetBase);
@@ -1706,7 +1708,8 @@ export function createRankingView({
         const { row, track } = createTierRow(tier);
         const cards = tier.works.map(item => createCard(documentRef, item, {
           ...callbacks,
-          coverUrl: coverUrls?.get?.(item.workId) ?? null
+          coverUrl: coverUrls?.get?.(item.workId)?.thumbnailUrl ?? null,
+          previewUrl: coverUrls?.get?.(item.workId)?.previewUrl ?? null
         }));
         for (const card of cards) applyCardPresentation(card);
         track.replaceChildren(...cards);
@@ -1727,7 +1730,8 @@ export function createRankingView({
       const candidates = model.candidateWorks.map(item => {
         const card = createCard(documentRef, item, {
           ...callbacks,
-          coverUrl: coverUrls?.get?.(item.workId) ?? null
+          coverUrl: coverUrls?.get?.(item.workId)?.thumbnailUrl ?? null,
+          previewUrl: coverUrls?.get?.(item.workId)?.previewUrl ?? null
         });
         const remove = documentRef.createElement('button');
         remove.type = 'button';

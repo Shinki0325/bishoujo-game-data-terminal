@@ -1,4 +1,5 @@
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
+import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
 
@@ -112,6 +113,7 @@ export function createSelectionCard(documentRef, work, {
   onOpenDetails,
   assetBase,
   coverUrl = null,
+  previewUrl = null,
   selectionEnabled = true,
   isSelectionEnabled = () => Boolean(selectionEnabled),
   selectionHotspots = false,
@@ -148,7 +150,7 @@ export function createSelectionCard(documentRef, work, {
   const image = documentRef.createElement('img');
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
     if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    image.src = coverUrl;
+    applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl });
   } else {
     try {
       applyImageAsset(image, work, assetBase);
@@ -454,7 +456,8 @@ export function createSelectionView({
         selectionHotspots: cardSurfaceSelection && Boolean(model.selectionMode),
         isCardActive: () => selectionModeEpoch === renderedSelectionEpoch,
         onOpenDetails,
-        coverUrl: latestCoverUrls?.get?.(work.workId) ?? null,
+        coverUrl: latestCoverUrls?.get?.(work.workId)?.thumbnailUrl ?? null,
+        previewUrl: latestCoverUrls?.get?.(work.workId)?.previewUrl ?? null,
         assetBase
       }));
       releaseGridImages(elements.grid);

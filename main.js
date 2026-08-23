@@ -41,6 +41,7 @@ import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import { applyAuthorityFanoutMediaToWork, prepareAuthorityFanoutProjection } from './lib/authority-fanout.js';
+import { canUseHighDensityPreview, applyAdaptiveImageSource } from './lib/adaptive-image-source.js';
 import {
   configuredAssetBase,
   DATA_URLS,
@@ -704,17 +705,17 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
   elements.detailsCover.onclick = () => {
     void detailMedia?.open?.(work);
   };
-  const coverUrlRequest = detailMedia?.coverUrl?.(work);
+  const coverUrlRequest = detailMedia?.coverSources?.(work);
   if (coverUrlRequest !== undefined) {
-    void coverUrlRequest.then(url => {
+    void coverUrlRequest.then(({ thumbnailUrl, previewUrl }) => {
       if (elements.detailsCover.dataset.coverToken !== coverToken) return;
-      elements.detailsCoverImage.src = url;
+      applyAdaptiveImageSource(elements.detailsCoverImage, { thumbnailUrl, previewUrl });
       elements.detailsCoverImage.alt = `${work.title} 作品图片`;
       elements.detailsCoverImage.hidden = false;
       elements.detailsCover.disabled = false;
     }).catch(() => {
       if (elements.detailsCover.dataset.coverToken !== coverToken) return;
-      elements.detailsCoverImage.src = detailMedia.fallbackUrl;
+      applyAdaptiveImageSource(elements.detailsCoverImage, { thumbnailUrl: detailMedia.fallbackUrl });
       elements.detailsCoverImage.alt = `${work.title} 图片不可用`;
       elements.detailsCoverImage.hidden = false;
     });
@@ -821,6 +822,10 @@ async function initialize() {
   });
   const startupMetrics = createStartupMetrics();
   const assetBase = configuredAssetBase();
+  const highDensityPreviewsEnabled = canUseHighDensityPreview({
+    devicePixelRatio: window.devicePixelRatio,
+    connection: navigator.connection
+  });
   const previewMedia = createPreviewMediaResolver({
     assetBase,
     fetchJson: () => fetchJson(
@@ -1164,8 +1169,17 @@ async function initialize() {
     return resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase);
   }
 
+  async function coverSourcesForWork(work) {
+    const thumbnailUrl = await coverUrlForWork(work);
+    if (!highDensityPreviewsEnabled || thumbnailUrl.startsWith('blob:')) {
+      return Object.freeze({ thumbnailUrl, previewUrl: null });
+    }
+    const previewUrl = await previewUrlForWork(work);
+    return Object.freeze({ thumbnailUrl, previewUrl: previewUrl === thumbnailUrl ? null : previewUrl });
+  }
+
   async function resolveCoverUrls(works) {
-    const entries = await Promise.all(works.map(async work => [work.workId, await coverUrlForWork(work)]));
+    const entries = await Promise.all(works.map(async work => [work.workId, await coverSourcesForWork(work)]));
     return new Map(entries);
   }
 
@@ -1603,7 +1617,12 @@ async function initialize() {
       selectionMode: companySelectionMode,
       imageUrlForCompany: company => companyImageUrl(company, assetBase),
       // Match the backend-selected media used by the work library and ranking.
-      imageUrlForWork: work => resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase)
+      imageUrlForWork: work => Object.freeze({
+        thumbnailUrl: resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase),
+        previewUrl: highDensityPreviewsEnabled && typeof work.projectedPreviewPath === 'string'
+          ? resolveAssetUrl(work.projectedPreviewPath, assetBase)
+          : null
+      })
     });
   }
 
@@ -2553,7 +2572,7 @@ async function initialize() {
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
     showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime, {
-      coverUrl: coverUrlForWork,
+      coverSources: coverSourcesForWork,
       fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
       open: detailWork => openMediaPreview(detailWork, { immersive: true }).catch(error => {
         announce('图片预览加载失败。', 'error');
