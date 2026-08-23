@@ -51,7 +51,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=703b8741f1ee70bf395955d54a1628d4ee01adbdc1fb2a4a8084c591dc77cbea';
+} from './lib/runtime-config.js?v=71d50b1e9cda5ed81621632ed53d1fee44dc8f41ea2a96c2099da04cf3123c86';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
