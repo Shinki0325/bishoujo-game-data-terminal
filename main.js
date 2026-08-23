@@ -244,10 +244,11 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   detailsVersionShelf: requiredElement('details-version-shelf'),
   detailsVersionCurrent: requiredElement('details-version-current'),
   detailsVersionList: requiredElement('details-version-list'),
+  detailsCover: requiredElement('details-cover'),
+  detailsCoverImage: requiredElement('details-cover-image'),
   detailsBrand: requiredElement('details-brand'),
   detailsRelease: requiredElement('details-release'),
   detailsScore: requiredElement('details-score'),
-  detailsAliasRow: requiredElement('details-alias-row'),
   detailsAliases: requiredElement('details-aliases'),
   detailsTags: requiredElement('details-tags'),
   detailsCredits: requiredElement('details-credits'),
@@ -679,7 +680,7 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null, projectEntityRuntime = null) {
+function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null, projectEntityRuntime = null, detailMedia = null) {
   const detailVm = projectEntityRuntime?.adaptWorkDetail?.(work.workId, work) ?? work;
   elements.detailsDialog.dataset.projectEntitySource = detailVm.source ?? 'legacy';
   elements.detailsDialog.dataset.mediaClearanceStatus = work.mediaProjection?.clearanceStatus ?? 'legacy-fallback';
@@ -692,8 +693,32 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
   brandButton.addEventListener('click', () => onOpenCompany?.(work.brandId));
   elements.detailsBrand.append(brandButton);
   const aliases = workAliasesById?.get?.(work.workId) ?? [];
-  elements.detailsAliasRow.hidden = aliases.length === 0;
+  elements.detailsAliases.hidden = aliases.length === 0;
   elements.detailsAliases.textContent = aliases.join(' / ');
+  const coverToken = `${work.workId}:${Date.now()}`;
+  elements.detailsCover.dataset.coverToken = coverToken;
+  elements.detailsCover.disabled = true;
+  elements.detailsCoverImage.hidden = true;
+  elements.detailsCoverImage.alt = '';
+  elements.detailsCoverImage.removeAttribute('src');
+  elements.detailsCover.onclick = () => {
+    void detailMedia?.open?.(work);
+  };
+  const coverUrlRequest = detailMedia?.coverUrl?.(work);
+  if (coverUrlRequest !== undefined) {
+    void coverUrlRequest.then(url => {
+      if (elements.detailsCover.dataset.coverToken !== coverToken) return;
+      elements.detailsCoverImage.src = url;
+      elements.detailsCoverImage.alt = `${work.title} 作品图片`;
+      elements.detailsCoverImage.hidden = false;
+      elements.detailsCover.disabled = false;
+    }).catch(() => {
+      if (elements.detailsCover.dataset.coverToken !== coverToken) return;
+      elements.detailsCoverImage.src = detailMedia.fallbackUrl;
+      elements.detailsCoverImage.alt = `${work.title} 图片不可用`;
+      elements.detailsCoverImage.hidden = false;
+    });
+  }
   elements.detailsRelease.textContent = work.releaseDate || '未记录';
   const egsRating = document.createElement('span');
   egsRating.className = 'details-rating-line';
@@ -1222,7 +1247,7 @@ async function initialize() {
     image: elements.mediaPreviewImage,
     resolveUrl: previewUrlForWork,
     async reveal(work, isCurrent) {
-      const isImmersive = document.body.classList.contains('is-ranking-immersive');
+      const isImmersive = document.body.classList.contains('is-ranking-immersive') || work.mediaPreviewImmersive === true;
       const hasReplacement = !isImmersive
         && work.localMediaKind !== 'custom'
         && mediaStore !== null
@@ -1242,8 +1267,11 @@ async function initialize() {
     }
   });
 
-  function openMediaPreview(work) {
-    return previewLoader.open(work);
+  function openMediaPreview(work, { immersive = document.body.classList.contains('is-ranking-immersive') } = {}) {
+    const previewWork = immersive && !document.body.classList.contains('is-ranking-immersive')
+      ? { ...work, mediaPreviewImmersive: true }
+      : work;
+    return previewLoader.open(previewWork);
   }
 
   elements.mediaPreview.addEventListener('close', () => {
@@ -2524,7 +2552,14 @@ async function initialize() {
     currentWorkDetailId = work.workId;
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
-    showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime);
+    showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime, {
+      coverUrl: coverUrlForWork,
+      fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
+      open: detailWork => openMediaPreview(detailWork, { immersive: true }).catch(error => {
+        announce('图片预览加载失败。', 'error');
+        console.error(error);
+      })
+    });
     renderDetailsVersions(work);
     const loadCredits = async () => {
       try {

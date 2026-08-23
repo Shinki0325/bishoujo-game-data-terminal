@@ -3123,6 +3123,10 @@ dialog {
   border: 1px solid var(--border-strong);
 }
 
+#work-details {
+  width: min(900px, calc(100% - 28px));
+}
+
 #ranking-help {
   width: min(720px, calc(100% - 28px));
   overflow: hidden;
@@ -3520,13 +3524,82 @@ dialog::backdrop {
   }
 }
 
+.details-title-block {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.details-title-block h2 { margin: 0; }
+
+.details-aliases {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.details-hero {
+  display: grid;
+  grid-template-columns: 192px minmax(0, 1fr);
+  min-width: 0;
+  padding: 0 !important;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.details-hero-main { min-width: 0; display: grid; align-content: start; }
+
+.details-cover {
+  position: relative;
+  min-height: 244px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text-on-strong);
+  background: var(--surface-strong);
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.details-cover:not(:disabled):hover .details-cover-hint,
+.details-cover:not(:disabled):focus-visible .details-cover-hint {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.details-cover:disabled { cursor: wait; opacity: 1; }
+
+.details-cover img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.details-cover-hint {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 8px 10px;
+  color: #f4fbfc;
+  font-size: 12px;
+  text-align: center;
+  background: rgb(7 14 18 / 78%);
+  opacity: 0;
+  transform: translateY(100%);
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
 .details-metadata {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-content: start;
   margin: 0;
-  background: var(--border);
-  border-bottom: 1px solid var(--border);
 }
 
 .details-heading-actions { display: flex; align-items: center; gap: 7px; }
@@ -3566,7 +3639,7 @@ dialog::backdrop {
     gap: 8px;
   }
 
-  #work-details .dialog-heading h2 { grid-column: 1; grid-row: 1; }
+  #work-details .details-title-block { grid-column: 1; grid-row: 1; }
   #work-details .details-heading-actions { display: contents; }
   #work-details .details-heading-actions form { grid-column: 2; grid-row: 1; }
 
@@ -3581,9 +3654,12 @@ dialog::backdrop {
 
 .details-metadata div {
   min-width: 0;
-  padding: 12px 14px;
-  background: var(--surface);
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border);
 }
+
+.details-metadata-company { border-right: 1px solid var(--border); }
+.details-metadata-score { grid-column: 1 / -1; border-bottom: 0 !important; }
 
 .details-metadata dt {
   color: var(--text-muted);
@@ -3591,9 +3667,11 @@ dialog::backdrop {
 }
 
 .details-metadata dd {
-  margin: 3px 0 0;
+  margin: 5px 0 0;
   overflow-wrap: anywhere;
 }
+
+.details-metadata-score dd { display: grid; gap: 4px; font-size: 17px; }
 
 #work-details > section {
   padding: 14px;
@@ -3602,6 +3680,14 @@ dialog::backdrop {
 #work-details > .details-tags-section {
   border-bottom: 1px solid var(--border);
 }
+
+.details-hero-main .details-tags-section {
+  min-width: 0;
+  padding: 13px 18px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.details-hero-main .details-tags-section h3 { margin-bottom: 0; }
 
 .details-tags {
   display: flex;
@@ -4207,9 +4293,11 @@ dialog::backdrop {
     padding: 10px 8px;
   }
 
-  .details-metadata {
-    grid-template-columns: 1fr;
-  }
+  .details-hero { grid-template-columns: 142px minmax(0, 1fr); }
+  .details-cover { min-height: 208px; }
+  .details-metadata { grid-template-columns: 1fr; }
+  .details-metadata div { padding: 11px 13px; border-right: 0; }
+  .details-metadata-score { grid-column: auto; }
 
   .details-cast-list li {
     grid-template-columns: 1fr;
@@ -4218,6 +4306,10 @@ dialog::backdrop {
 }
 
 @media (max-width: 640px) {
+  .details-hero { grid-template-columns: 1fr; }
+  .details-cover { height: 216px; min-height: 216px; max-height: 216px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .details-cover img { object-fit: contain; }
+  .details-hero-main .details-tags-section { padding: 13px; }
   #sticker-editor {
     width: calc(100% - 16px);
     max-height: calc(100dvh - 16px);

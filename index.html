@@ -14,7 +14,7 @@
         // Keep the dark default when preference storage is unavailable.
       }
     </script>
-    <link rel="stylesheet" href="./styles.20260823-backend-image-selection-sync-v1.css">
+    <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
     <header class="tool-header">
@@ -766,7 +766,10 @@
 
     <dialog id="work-details" aria-labelledby="details-title">
       <div class="dialog-heading">
-        <h2 id="details-title">作品详情</h2>
+        <div class="details-title-block">
+          <h2 id="details-title">作品详情</h2>
+          <p id="details-aliases" class="details-aliases" hidden></p>
+        </div>
         <div class="details-heading-actions">
           <button id="details-version-toggle" class="details-version-toggle" type="button" aria-expanded="false" hidden></button>
           <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button></form>
@@ -776,27 +779,31 @@
         <p id="details-version-current" class="details-version-current"></p>
         <div id="details-version-list" class="details-version-list"></div>
       </section>
-      <dl class="details-metadata">
-        <div>
-          <dt>会社</dt>
-          <dd id="details-brand"></dd>
+      <section class="details-hero" aria-label="作品概要">
+        <button id="details-cover" class="details-cover" type="button" aria-label="放大作品图片" disabled>
+          <img id="details-cover-image" alt="" hidden>
+          <span class="details-cover-hint" aria-hidden="true">点击放大</span>
+        </button>
+        <div class="details-hero-main">
+          <dl class="details-metadata">
+            <div class="details-metadata-company">
+              <dt>会社</dt>
+              <dd id="details-brand"></dd>
+            </div>
+            <div class="details-metadata-release">
+              <dt>发售日</dt>
+              <dd id="details-release"></dd>
+            </div>
+            <div class="details-metadata-score">
+              <dt>评分</dt>
+              <dd id="details-score"></dd>
+            </div>
+          </dl>
+          <section class="details-tags-section" aria-labelledby="details-tags-title">
+            <h3 id="details-tags-title">标签</h3>
+            <ul id="details-tags" class="details-tags"></ul>
+          </section>
         </div>
-        <div>
-          <dt>发售日</dt>
-          <dd id="details-release"></dd>
-        </div>
-        <div>
-          <dt>评分</dt>
-          <dd id="details-score"></dd>
-        </div>
-        <div id="details-alias-row" hidden>
-          <dt>别名</dt>
-          <dd id="details-aliases"></dd>
-        </div>
-      </dl>
-      <section class="details-tags-section" aria-labelledby="details-tags-title">
-        <h3 id="details-tags-title">标签</h3>
-        <ul id="details-tags" class="details-tags"></ul>
       </section>
       <section id="details-credits" class="details-credits" aria-label="作品制作资料" hidden>
         <p id="details-credits-status" class="details-credits-status" role="status" hidden></p>
@@ -805,6 +812,6 @@
       </section>
     </dialog>
 
-    <script type="module" src="./main.20260823-backend-image-selection-sync-v1.js"></script>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>
