@@ -14,7 +14,7 @@ import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
 import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
 import { prepareVndbRatingsSidecar } from './lib/vndb-ratings.js';
 import { prepareVndbAdmissionsSidecar } from './lib/vndb-admissions.js';
-import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js';
+import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js?v=20260823-work-detail-overview-versions-v1';
 import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
@@ -62,7 +62,7 @@ import {
 } from './lib/attribute-filters.js';
 import { createFilterView } from './views/filter-view.js';
 import { buildRankingModel, createRankingCard, createRankingView } from './views/ranking-view.js';
-import { createSelectionView, selectionInitialWorks } from './views/selection-view.js';
+import { createSelectionView, selectionInitialWorks } from './views/selection-view.js?v=20260823-work-detail-overview-versions-v1';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
 import { createCompanyRanking } from './lib/company-ranking.js';

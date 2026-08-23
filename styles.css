@@ -2109,7 +2109,7 @@ input[type="range"] {
 .company-directory-card-selected-mark {
   position: absolute;
   top: 8px;
-  right: 8px;
+  left: 8px;
   z-index: 5;
   padding: 3px 6px;
   color: #ffffff;
@@ -2119,6 +2119,8 @@ input[type="range"] {
   font-weight: 750;
   pointer-events: none;
 }
+
+.company-directory-card-selected-mark { right: 8px; left: auto; }
 
 .selection-card-missing-image,
 .ranking-card-missing-image {
@@ -2161,8 +2163,8 @@ input[type="range"] {
 
 .selection-card-version-badge {
   position: absolute;
-  top: 6px;
-  right: 38px;
+  top: 8px;
+  right: 8px;
   z-index: 4;
   display: inline-flex;
   align-items: center;
@@ -3544,7 +3546,8 @@ dialog::backdrop {
 
 .details-hero {
   display: grid;
-  grid-template-columns: 192px minmax(0, 1fr);
+  grid-template-columns: clamp(236px, 24vw, 278px) minmax(0, 1fr);
+  align-items: start;
   min-width: 0;
   padding: 0 !important;
   background: var(--surface);
@@ -3555,7 +3558,8 @@ dialog::backdrop {
 
 .details-cover {
   position: relative;
-  min-height: 244px;
+  aspect-ratio: 1;
+  min-height: 0;
   padding: 0;
   overflow: hidden;
   color: var(--text-on-strong);
@@ -3597,7 +3601,7 @@ dialog::backdrop {
 
 .details-metadata {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.76fr) minmax(230px, 1.24fr);
   align-content: start;
   margin: 0;
 }
@@ -3654,12 +3658,12 @@ dialog::backdrop {
 
 .details-metadata div {
   min-width: 0;
-  padding: 15px 18px;
-  border-bottom: 1px solid var(--border);
+  min-height: 108px;
+  padding: 12px 16px;
+  border-right: 1px solid var(--border);
 }
 
-.details-metadata-company { border-right: 1px solid var(--border); }
-.details-metadata-score { grid-column: 1 / -1; border-bottom: 0 !important; }
+.details-metadata-score { border-right: 0 !important; }
 
 .details-metadata dt {
   color: var(--text-muted);
@@ -3671,7 +3675,7 @@ dialog::backdrop {
   overflow-wrap: anywhere;
 }
 
-.details-metadata-score dd { display: grid; gap: 4px; font-size: 17px; }
+.details-metadata-score dd { display: grid; gap: 3px; font-size: 16px; line-height: 1.35; }
 
 #work-details > section {
   padding: 14px;
@@ -3683,7 +3687,7 @@ dialog::backdrop {
 
 .details-hero-main .details-tags-section {
   min-width: 0;
-  padding: 13px 18px 16px;
+  padding: 10px 16px 12px;
   border-top: 1px solid var(--border);
 }
 
@@ -3695,7 +3699,7 @@ dialog::backdrop {
   flex-wrap: wrap;
   gap: 6px;
   padding: 0;
-  margin: 9px 0 0;
+  margin: 7px 0 0;
   list-style: none;
 }
 
@@ -4293,11 +4297,13 @@ dialog::backdrop {
     padding: 10px 8px;
   }
 
-  .details-hero { grid-template-columns: 142px minmax(0, 1fr); }
-  .details-cover { min-height: 208px; }
-  .details-metadata { grid-template-columns: 1fr; }
-  .details-metadata div { padding: 11px 13px; border-right: 0; }
-  .details-metadata-score { grid-column: auto; }
+  .details-hero { grid-template-columns: 174px minmax(0, 1fr); }
+  .details-cover { min-height: 0; }
+  .details-metadata { grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); }
+  .details-metadata div { min-height: 84px; padding: 10px 12px; }
+  .details-metadata-company { border-right: 1px solid var(--border); }
+  .details-metadata-release { border-right: 0; }
+  .details-metadata-score { grid-column: 1 / -1; min-height: 0; border-top: 1px solid var(--border); }
 
   .details-cast-list li {
     grid-template-columns: 1fr;
@@ -4307,8 +4313,9 @@ dialog::backdrop {
 
 @media (max-width: 640px) {
   .details-hero { grid-template-columns: 1fr; }
-  .details-cover { height: 216px; min-height: 216px; max-height: 216px; border-right: 0; border-bottom: 1px solid var(--border); }
-  .details-cover img { object-fit: contain; }
+  .details-cover { width: min(100%, 258px); min-height: 0; justify-self: center; border-right: 0; border-bottom: 1px solid var(--border); }
+  .details-cover img { object-fit: cover; }
+  .details-metadata { grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); }
   .details-hero-main .details-tags-section { padding: 13px; }
   #sticker-editor {
     width: calc(100% - 16px);
