@@ -2,7 +2,7 @@ import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
-import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js';
+import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-card-display-controls-v3';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
