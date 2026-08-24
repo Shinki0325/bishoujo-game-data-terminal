@@ -78118,8 +78118,23 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-bangumi-ratings-v1.json",
+      "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.json",
       "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
+    },
+    {
+      "bytes": 1380753,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260824-bangumi-ratings-v1.json",
+      "sha256": "97111d297d1613e67a5a4801d05538783ea0d3cf7e9dc7d1920a99f9ebac1d27"
+    },
+    {
+      "bytes": 1380753,
+      "path": "data/egs-tier-bangumi-ratings-v1.json",
+      "sha256": "97111d297d1613e67a5a4801d05538783ea0d3cf7e9dc7d1920a99f9ebac1d27"
     },
     {
       "bytes": 64012,
@@ -80227,9 +80242,14 @@
       "sha256": "f9bcf11e6b4532d62bbe1f6a18b48270b2f7e65199773f7c0354dd268ebf1af5"
     },
     {
-      "bytes": 46917,
+      "bytes": 46893,
+      "path": "index.20260824-bangumi-ratings-v1.html",
+      "sha256": "9f934710af25aecffc8f5088a7deccdad1718fa64ad8c167e1cc2b3779328455"
+    },
+    {
+      "bytes": 46893,
       "path": "index.html",
-      "sha256": "001e30fffab096833bae32c081bb86b5db3ed2aeada353379c3041dc281b1836"
+      "sha256": "9f934710af25aecffc8f5088a7deccdad1718fa64ad8c167e1cc2b3779328455"
     },
     {
       "bytes": 5495,
@@ -80270,6 +80290,21 @@
       "bytes": 19305,
       "path": "lib/backend-beta-fixture.js",
       "sha256": "d409231160259ff1b39d3aac50e7eb06fa08ccd984397bb0ea68e309dddeae0b"
+    },
+    {
+      "bytes": 978,
+      "path": "lib/bangumi-rating-view.js",
+      "sha256": "159f27b2e31a02514ec154fcace0766573e66ce1d97f0c45abfb5bf801b5089e"
+    },
+    {
+      "bytes": 7067,
+      "path": "lib/bangumi-ratings.js",
+      "sha256": "47d91ea50b3f84aa2d71a04f2237fd990fa81bf57e27803e6c66cc6abe88c86c"
+    },
+    {
+      "bytes": 2090,
+      "path": "lib/bangumi-ratings.test.mjs",
+      "sha256": "4754ab9d0b5aec1fdaf4bb588ce8fa22ab32e557cb6e0eaa7284a69b7188d3f7"
     },
     {
       "bytes": 11990,
@@ -80477,9 +80512,14 @@
       "sha256": "0b0c98ef7f2d0bbb54cc28fcaf4b98e0578170f2bc5557503d3407326d4bc982"
     },
     {
-      "bytes": 2693,
+      "bytes": 2981,
+      "path": "lib/runtime-config.20260824-bangumi-ratings-v1.js",
+      "sha256": "be0dc3ae8bd1f6b9ed0d967c5f90fa58d01691780d8b7a0d946930c481fea2e3"
+    },
+    {
+      "bytes": 2981,
       "path": "lib/runtime-config.js",
-      "sha256": "8588894e8ba8bb5bdbe6fe229e3f896d5d4862a4b332d42ba4da781eed725714"
+      "sha256": "be0dc3ae8bd1f6b9ed0d967c5f90fa58d01691780d8b7a0d946930c481fea2e3"
     },
     {
       "bytes": 16261,
@@ -80602,9 +80642,14 @@
       "sha256": "09d24e989ba3183d8a25371c4c848c9a932964cc4ea5ec2fbb3d1a2fb8481230"
     },
     {
-      "bytes": 131035,
+      "bytes": 133041,
+      "path": "main.20260824-bangumi-ratings-v1.js",
+      "sha256": "b9e0f5931a57ca2222be012e766010a385d055a830cef613d54e03d9a42e92f7"
+    },
+    {
+      "bytes": 133013,
       "path": "main.js",
-      "sha256": "a114c505cc3376bd3f53e052f5e2cea530997369ca97ca69018c00f30619d0fa"
+      "sha256": "5230426933e034d40eca9a136c220f3afc1cdedd4753f24cf90250ce8e99fa33"
     },
     {
       "bytes": 145397,
@@ -80647,9 +80692,14 @@
       "sha256": "7d08dac379a5d841d80b0cd1fc769da4cbcd333b2e19249286995ee0f7e8196b"
     },
     {
-      "bytes": 145784,
+      "bytes": 146011,
+      "path": "styles.20260824-bangumi-ratings-v1.css",
+      "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
+    },
+    {
+      "bytes": 146011,
       "path": "styles.css",
-      "sha256": "4a8baf776912b2249d569a1a7cab98025fa4faa41d60cd673e604f80e68482c5"
+      "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
     },
     {
       "bytes": 15115,
@@ -80705,7 +80755,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 626070809,
-    "files": 16140
+    "bytes": 632115296,
+    "files": 16150
   }
 }
