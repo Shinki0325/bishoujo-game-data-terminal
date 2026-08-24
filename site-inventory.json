@@ -78128,6 +78128,21 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.json",
+      "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
+    },
+    {
+      "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-family-plan-2487-binding-v1.json",
+      "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
+    },
+    {
+      "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-vndb-voice-credit-reconciliation-v1.json",
+      "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.json",
       "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
     },
@@ -78142,9 +78157,24 @@
       "sha256": "97111d297d1613e67a5a4801d05538783ea0d3cf7e9dc7d1920a99f9ebac1d27"
     },
     {
-      "bytes": 1425567,
+      "bytes": 1425646,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.json",
+      "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
+    },
+    {
+      "bytes": 1425907,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260824-family-plan-2487-binding-v1.json",
+      "sha256": "d181d75a5ca6d6959f9d2f0b85d63904d6ca6ddced3106ad241c6b3ad5db288a"
+    },
+    {
+      "bytes": 1425646,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260824-vndb-voice-credit-reconciliation-v1.json",
+      "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
+    },
+    {
+      "bytes": 1425907,
       "path": "data/egs-tier-bangumi-ratings-v1.json",
-      "sha256": "70d2dd430ea4c30a186d0584583b350c759908a2f276d3bcefbdde48ded25e6e"
+      "sha256": "d181d75a5ca6d6959f9d2f0b85d63904d6ca6ddced3106ad241c6b3ad5db288a"
     },
     {
       "bytes": 64012,
@@ -78162,9 +78192,9 @@
       "sha256": "be2ba418eadece4bf9b76f8da4146e8696605e1f380e768e4d4c33c83f073bf1"
     },
     {
-      "bytes": 196174,
+      "bytes": 196417,
       "path": "data/egs-tier-full-presentation-families-v1.json",
-      "sha256": "2ee5e0a5bfbc3f5966bfafae0794c3998b81ee4fc35af2fa2fbb815f39caed09"
+      "sha256": "21bb172fff5aa488815245c293dab15d28328d9f823921b40faea14b61c1364a"
     },
     {
       "bytes": 11435893,
@@ -78177,9 +78207,9 @@
       "sha256": "adf9f9d7431694a5ba25ecc1da41b9e1b44dacdbf59421f18b3be6506f196bb3"
     },
     {
-      "bytes": 1174347,
+      "bytes": 1174381,
       "path": "data/egs-tier-vndb-ratings-v1.json",
-      "sha256": "0869a938c7ff16a86b8e153403fc6bf47f475af3dcf02dba303cd47b4d067d2c"
+      "sha256": "3b0f0c0d51a10e17454a0b857c5792289690dcbe03815aeeac75098861df2e5f"
     },
     {
       "bytes": 9881,
@@ -78192,9 +78222,9 @@
       "sha256": "128a775694052fbd09396678636fec9285c09b204005bffa186b365373a7381d"
     },
     {
-      "bytes": 115077,
+      "bytes": 115180,
       "path": "data/work-details/v1/index.json",
-      "sha256": "18d0683c60dbf764d8cd997116a6989e3d4a0488958b28e832433e49f1856e31"
+      "sha256": "8f658b56a8032873501834e900facab1d636abb8f783db2e26bb72a56b0fe9f7"
     },
     {
       "bytes": 103622,
@@ -78452,9 +78482,9 @@
       "sha256": "a294a575abfcc232d12522102d6fb62a0375793599c6d7bca805ee9cbf5d87d6"
     },
     {
-      "bytes": 117012,
+      "bytes": 117142,
       "path": "data/work-details/v1/shards/051.json",
-      "sha256": "c562c83acf06a7a25ebb611f05510e27f2229667b0cad34acb991fbfe1d04fc6"
+      "sha256": "88d4d295c63546942d65f73ee0a6b04ec609299e44c968de875630140fbcad19"
     },
     {
       "bytes": 10772,
@@ -78682,9 +78712,9 @@
       "sha256": "a4495cd9764665c9f22023ef162b642551462012842b0a67a6f64061123460ae"
     },
     {
-      "bytes": 67037,
+      "bytes": 66947,
       "path": "data/work-details/v1/shards/097.json",
-      "sha256": "337d4e5322be8e66e1e212eddb7209ea1bea711a7a421b10075de6043a32dfdb"
+      "sha256": "66d697ac7ac3b15bf4dedff47a0e014e637dec2192daf6c23a426e42a776b455"
     },
     {
       "bytes": 39131,
@@ -80262,9 +80292,24 @@
       "sha256": "9f934710af25aecffc8f5088a7deccdad1718fa64ad8c167e1cc2b3779328455"
     },
     {
-      "bytes": 46947,
+      "bytes": 46950,
+      "path": "index.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.html",
+      "sha256": "47436536a9af275ea6b6257abd7e3a79cca4a9e5776fe45078fd80c911c363fd"
+    },
+    {
+      "bytes": 46920,
+      "path": "index.20260824-family-plan-2487-binding-v1.html",
+      "sha256": "b90efe105e9fecb3984ed58d03d2f16e6a280ba8e061349650fe1c1a885f31e6"
+    },
+    {
+      "bytes": 46944,
+      "path": "index.20260824-vndb-voice-credit-reconciliation-v1.html",
+      "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
+    },
+    {
+      "bytes": 46920,
       "path": "index.html",
-      "sha256": "0459fe8b9062a2efd648cb7a3989bfcd67a8567bfd97c28ba4e81bd40dd84dcc"
+      "sha256": "b90efe105e9fecb3984ed58d03d2f16e6a280ba8e061349650fe1c1a885f31e6"
     },
     {
       "bytes": 5495,
@@ -80537,9 +80582,24 @@
       "sha256": "be0dc3ae8bd1f6b9ed0d967c5f90fa58d01691780d8b7a0d946930c481fea2e3"
     },
     {
-      "bytes": 2999,
+      "bytes": 3000,
+      "path": "lib/runtime-config.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.js",
+      "sha256": "166c8e0bd79d2246841479e5f0c88b650fad6b9b549262be19ce7f01e6280837"
+    },
+    {
+      "bytes": 2990,
+      "path": "lib/runtime-config.20260824-family-plan-2487-binding-v1.js",
+      "sha256": "47dc30a9db41adba9cda8fa14734cd9a31deb93b8970518855c22d9f705cd028"
+    },
+    {
+      "bytes": 2998,
+      "path": "lib/runtime-config.20260824-vndb-voice-credit-reconciliation-v1.js",
+      "sha256": "73635d53e8f6e458479dea04642487682f32c3db8442e7533828e6336f7e9c09"
+    },
+    {
+      "bytes": 2990,
       "path": "lib/runtime-config.js",
-      "sha256": "a9ed70316205a705b32550ed7b801a30e6296ed9b60300e4baf3e0d0f6a4b59f"
+      "sha256": "47dc30a9db41adba9cda8fa14734cd9a31deb93b8970518855c22d9f705cd028"
     },
     {
       "bytes": 16261,
@@ -80672,9 +80732,24 @@
       "sha256": "b9e0f5931a57ca2222be012e766010a385d055a830cef613d54e03d9a42e92f7"
     },
     {
-      "bytes": 133490,
+      "bytes": 133550,
+      "path": "main.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.js",
+      "sha256": "d2d8055d3c86e0f4590e7f7105c6816f27870c6cd18bad957674dbf2a27d1e48"
+    },
+    {
+      "bytes": 133540,
+      "path": "main.20260824-family-plan-2487-binding-v1.js",
+      "sha256": "e6007a7d1520447ed149c44a2f9e0662d9f0d86fce2a6493c47165470e9922c4"
+    },
+    {
+      "bytes": 133548,
+      "path": "main.20260824-vndb-voice-credit-reconciliation-v1.js",
+      "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
+    },
+    {
+      "bytes": 133503,
       "path": "main.js",
-      "sha256": "f964a2766dc46c7b87ae85f7bed2b7aa1844a5be4419b773e200dff81274260e"
+      "sha256": "2b088c512dfad0e5ec9120a66fc67b5bd9d8538dc034951f7fbc3f25b674852a"
     },
     {
       "bytes": 145397,
@@ -80724,6 +80799,21 @@
     {
       "bytes": 146011,
       "path": "styles.20260824-bangumi-ratings-v1.css",
+      "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
+    },
+    {
+      "bytes": 146011,
+      "path": "styles.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.css",
+      "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
+    },
+    {
+      "bytes": 146011,
+      "path": "styles.20260824-family-plan-2487-binding-v1.css",
+      "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
+    },
+    {
+      "bytes": 146011,
+      "path": "styles.20260824-vndb-voice-credit-reconciliation-v1.css",
       "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
     },
     {
@@ -80785,7 +80875,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 636858786,
-    "files": 16156
+    "bytes": 650949548,
+    "files": 16174
   }
 }

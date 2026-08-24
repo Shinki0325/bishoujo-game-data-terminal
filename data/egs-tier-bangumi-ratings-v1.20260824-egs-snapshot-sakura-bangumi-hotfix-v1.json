@@ -1,18 +1,18 @@
 {
-  "bindingAuthoritySha256": "6199158bf20d50d355b7932fc5982993d2270b51c6c59f5f4c721cfc4280ba5c",
+  "bindingAuthoritySha256": "768e0214a782f531edf688d2b681dc37e5fc0b42792e38fa53846f8685a14f81",
   "bindingCounts": {
     "ambiguousMultiSubject": 37,
     "catalogWorks": 6799,
-    "confirmedSameWork": 5285,
+    "confirmedSameWork": 5284,
     "distinctConfirmedSubjects": 5004,
     "noBangumiPair": 972,
-    "noVndbBinding": 505
+    "noVndbBinding": 506
   },
-  "generatedAt": "2026-08-24T00:00:00Z",
+  "generatedAt": "2026-08-24T05:50:33.658457Z",
   "mappingPolicy": "Current EGS-to-VNDB binding followed by a unique TuiHub VNDB-to-Bangumi pair, with catalog-and-connector-bound audited corrections for proven singleton errors and separately audited unique EGS-link multi-subject selections; all remaining ambiguity fails closed; relation is same-work, never exact-edition.",
   "ratingStatusCounts": {
     "mapped-no-rating": 207,
-    "mapped-rated": 5078,
+    "mapped-rated": 5077,
     "snapshot-unavailable": 0
   },
   "schemaVersion": "egs-tier-bangumi-ratings-v1",
@@ -6863,16 +6863,6 @@
       "score": 7.1,
       "vndbId": "v6317",
       "voteCount": 11
-    },
-    {
-      "bangumiSubjectId": "4347",
-      "egsWorkId": "2487",
-      "ratingStatus": "mapped-rated",
-      "relation": "same-work",
-      "retrievedAt": "2026-08-24T03:45:50.174100+00:00",
-      "score": 8.3,
-      "vndbId": "v155",
-      "voteCount": 2265
     },
     {
       "bangumiSubjectId": "128207",
@@ -34639,7 +34629,7 @@
       "egsWorkId": "18018",
       "ratingStatus": "mapped-rated",
       "relation": "same-work",
-      "retrievedAt": "2026-08-24T03:48:28.795691+00:00",
+      "retrievedAt": "2026-08-24T04:54:28.525367+00:00",
       "score": 7.8,
       "vndbId": "v11856",
       "voteCount": 2072
@@ -42339,7 +42329,7 @@
       "egsWorkId": "23571",
       "ratingStatus": "mapped-rated",
       "relation": "same-work",
-      "retrievedAt": "2026-08-24T03:48:28.795691+00:00",
+      "retrievedAt": "2026-08-24T04:54:28.525367+00:00",
       "score": 7.8,
       "vndbId": "v11856",
       "voteCount": 2072

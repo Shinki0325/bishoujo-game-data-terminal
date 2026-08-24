@@ -53,7 +53,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=c012f74968c521262fce55250efff9113718e95db31768cb08b7068f3ff39bfa';
+} from './lib/runtime-config.20260824-vndb-voice-credit-reconciliation-v1.js?v=c36b9e23086fb4ce6ca6dd1e5f662d8d02ac7868e6c5b0f5f106ec52387048a0';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';

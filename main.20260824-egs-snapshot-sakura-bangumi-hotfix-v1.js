@@ -53,7 +53,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=c012f74968c521262fce55250efff9113718e95db31768cb08b7068f3ff39bfa';
+} from './lib/runtime-config.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.js?v=1db37096584dfbf72653a79431c0a98ddfe8a5bf3cc03532ee13706f1b26305b';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js';
 import { createStartupMetrics } from './lib/startup-metrics.js';
