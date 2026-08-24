@@ -2,11 +2,16 @@ import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
-import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-card-display-controls-v3';
+import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
-const FILTER_SORT_KEYS = new Set(['voteCount', 'median', 'title', 'brandName', 'releaseDate']);
+const FILTER_SORT_KEYS = new Set([
+  'voteCount', 'median',
+  'vndbScore', 'vndbVoteCount',
+  'bangumiScore', 'bangumiVoteCount',
+  'title', 'brandName', 'releaseDate'
+]);
 const FILTER_SORT_DIRECTIONS = new Set(['asc', 'desc']);
 const DEBOUNCE_MS = 150;
 const SELECTION_WINDOW_TARGET = 100;
