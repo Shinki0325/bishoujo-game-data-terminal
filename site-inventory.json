@@ -78153,6 +78153,11 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-mobile-single-score-card-v2.json",
+      "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.20260824-vndb-voice-credit-reconciliation-v1.json",
       "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
     },
@@ -80337,6 +80342,11 @@
       "sha256": "621ce4cfaa49ee694f4489e31e05d963163f1617d25072cc56b1c72b7f749057"
     },
     {
+      "bytes": 48547,
+      "path": "index.20260824-mobile-single-score-card-v2.html",
+      "sha256": "47162df86ff41a90346aa3c9e189914684d9864b248c61c6f6c2df09ccdc7dd4"
+    },
+    {
       "bytes": 48484,
       "path": "index.20260824-selection-card-display-controls-v1.html",
       "sha256": "b7b690891733437030be0fb0767fb68c91cab8a99ddc855a4f76b79847a48860"
@@ -80369,7 +80379,7 @@
     {
       "bytes": 48547,
       "path": "index.html",
-      "sha256": "47162df86ff41a90346aa3c9e189914684d9864b248c61c6f6c2df09ccdc7dd4"
+      "sha256": "eed2c278e53c6d95cd75e801ac56b7b83864963a80b684813586511f89caba1d"
     },
     {
       "bytes": 5495,
@@ -80677,6 +80687,11 @@
       "sha256": "264b6392f7b1560e7e664ab2fd51ee3602a2fd2b05dde5a13549a4639c9745bb"
     },
     {
+      "bytes": 3358,
+      "path": "lib/runtime-config.20260824-mobile-single-score-card-v2.js",
+      "sha256": "264b6392f7b1560e7e664ab2fd51ee3602a2fd2b05dde5a13549a4639c9745bb"
+    },
+    {
       "bytes": 2998,
       "path": "lib/runtime-config.20260824-vndb-voice-credit-reconciliation-v1.js",
       "sha256": "73635d53e8f6e458479dea04642487682f32c3db8442e7533828e6336f7e9c09"
@@ -80847,6 +80862,11 @@
       "sha256": "f1b0c5615acc54e7881ce9350bc7d59e0727d85b1c735073b2448f6e1c65cfee"
     },
     {
+      "bytes": 139329,
+      "path": "main.20260824-mobile-single-score-card-v2.js",
+      "sha256": "ef64d76924c0e6cad301d9df451818beae3494c8fd052e1ac53921469f961bd9"
+    },
+    {
       "bytes": 136438,
       "path": "main.20260824-selection-card-display-controls-v1.js",
       "sha256": "eadcd4955ae34d653b43ba8b4ce305fe110d67c25158b8bc0df14b7ce62fe1a4"
@@ -80879,7 +80899,7 @@
     {
       "bytes": 139320,
       "path": "main.js",
-      "sha256": "8518572aaa7ac065986aa0e4a24ad9f7cb3eb9f221f68d5122b4eeb1659b97ac"
+      "sha256": "c2be0d01b99098303c6d410adafb0db5d863d961981dcf9faf8096ba6cce808d"
     },
     {
       "bytes": 145397,
@@ -80954,6 +80974,11 @@
     {
       "bytes": 148336,
       "path": "styles.20260824-mobile-single-score-card-v1.css",
+      "sha256": "57ca39810f5f4ffd27a0b5f200bb4770b717ca1bd7402863959041ee36590918"
+    },
+    {
+      "bytes": 148336,
+      "path": "styles.20260824-mobile-single-score-card-v2.css",
       "sha256": "57ca39810f5f4ffd27a0b5f200bb4770b717ca1bd7402863959041ee36590918"
     },
     {
@@ -81045,7 +81070,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 662596330,
-    "files": 16208
+    "bytes": 665877351,
+    "files": 16213
   }
 }
