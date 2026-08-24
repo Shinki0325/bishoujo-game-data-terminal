@@ -358,6 +358,7 @@
               <button id="cleanup-menu-button" type="button" aria-expanded="false" aria-controls="cleanup-menu">更多 ▾</button>
               <div id="cleanup-menu" class="toolbar-menu" hidden>
                 <strong class="toolbar-menu-section-title">数据</strong>
+                <button id="bangumi-import-open" type="button">从 Bangumi 导入</button>
                 <button id="import-state" type="button">导入 JSON</button>
                 <button id="export-state" type="button">导出 JSON</button>
                 <strong class="toolbar-menu-section-title">清理</strong>
@@ -444,6 +445,7 @@
             </section>
             <section>
               <h3>文件</h3>
+              <button id="mobile-bangumi-import-open" type="button">从 Bangumi 导入</button>
               <button id="mobile-ranking-import" type="button">导入 JSON</button>
               <button id="mobile-ranking-export" type="button">导出 JSON</button>
               <button id="mobile-ranking-export-png" type="button">导出 PNG</button>
@@ -572,6 +574,59 @@
         <button id="share-import-cancel" class="action-secondary" type="button">取消</button>
         <button id="share-import-append" class="action-primary" type="button">追加到候选池</button>
         <button id="share-import-replace" class="action-primary" type="button">替换候选池</button>
+      </div>
+    </dialog>
+
+    <dialog id="bangumi-public-import-dialog" class="bangumi-public-import-dialog" aria-labelledby="bangumi-public-import-title">
+      <div class="dialog-heading">
+        <div>
+          <h2 id="bangumi-public-import-title">从 Bangumi 导入公开收藏</h2>
+          <p class="bangumi-import-eyebrow">读取公开游戏收藏 · 严格匹配 · 追加候选池</p>
+        </div>
+        <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭 Bangumi 导入">×</button></form>
+      </div>
+      <div class="bangumi-import-body">
+        <ol class="bangumi-import-steps" aria-label="导入步骤">
+          <li class="is-active">读取公开收藏</li>
+          <li>确认匹配结果</li>
+          <li>追加候选池</li>
+        </ol>
+        <form id="bangumi-public-import-form" class="bangumi-import-form">
+          <label for="bangumi-public-user-input">Bangumi 用户名、UID 或个人主页链接</label>
+          <div class="bangumi-import-input-row">
+            <input id="bangumi-public-user-input" type="text" autocomplete="off" spellcheck="false" placeholder="例如 shinkisakura" maxlength="128" required>
+            <button id="bangumi-public-fetch" class="action-primary" type="submit">读取公开收藏</button>
+          </div>
+          <p class="bangumi-import-note">只读取 Bangumi 公开的游戏收藏；不会请求登录权限，也不会改动已有排榜。</p>
+        </form>
+        <p id="bangumi-public-import-status" class="bangumi-import-status" role="status" aria-live="polite" hidden></p>
+        <section id="bangumi-public-import-results" class="bangumi-import-results" hidden aria-labelledby="bangumi-public-import-results-title">
+          <div class="bangumi-import-result-heading">
+            <div>
+              <h3 id="bangumi-public-import-results-title">确认导入结果</h3>
+              <p>仅展示现有 confirmed Bangumi 绑定可严格对应的作品。</p>
+            </div>
+            <output id="bangumi-public-import-capacity" class="bangumi-import-capacity">候选池剩余 0</output>
+          </div>
+          <div class="bangumi-import-metrics" aria-label="匹配统计">
+            <div><strong id="bangumi-public-total">0</strong><span>公开游戏</span></div>
+            <div><strong id="bangumi-public-matched-subjects">0</strong><span>严格匹配条目</span></div>
+            <div><strong id="bangumi-public-mapped-works">0</strong><span>可映射作品</span></div>
+            <div><strong id="bangumi-public-unmatched">0</strong><span>未匹配条目</span></div>
+          </div>
+          <div id="bangumi-public-import-list" class="bangumi-import-list" aria-live="polite"></div>
+          <details id="bangumi-public-import-unmatched" class="bangumi-import-unmatched">
+            <summary>查看未匹配的 Bangumi 条目（<output id="bangumi-public-unmatched-count">0</output>）</summary>
+            <ul id="bangumi-public-unmatched-list"></ul>
+          </details>
+        </section>
+      </div>
+      <div class="dialog-actions bangumi-import-actions">
+        <p id="bangumi-public-import-selection-status" class="bangumi-import-selection-status" aria-live="polite">读取后可选择要追加的作品。</p>
+        <div>
+          <button id="bangumi-public-import-cancel" class="action-secondary" type="button">取消</button>
+          <button id="bangumi-public-import-append" class="action-primary" type="button" disabled>追加到候选池</button>
+        </div>
       </div>
     </dialog>
 

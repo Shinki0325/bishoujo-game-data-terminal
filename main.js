@@ -80,6 +80,12 @@ import {
   parseSelectionShare
 } from './lib/share-selection.js';
 import { planSharedSelectionImport } from './lib/share-import.js';
+import {
+  BangumiPublicImportError,
+  collectionTypeLabel,
+  fetchBangumiPublicGameCollections,
+  planBangumiPublicImport
+} from './lib/bangumi-public-import.js?v=20260824-bangumi-public-import-v1';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
@@ -116,6 +122,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileSelectedPreview: requiredElement('mobile-selected-preview'),
   mobileShareSelection: requiredElement('mobile-share-selection'),
   mobileClearSelection: requiredElement('mobile-clear-selection'),
+  mobileBangumiImportOpen: requiredElement('mobile-bangumi-import-open'),
   mobileHelpButton: requiredElement('mobile-help-button'),
   mobileHelpDialog: requiredElement('mobile-help-dialog'),
   mobileHelpDismiss: requiredElement('mobile-help-dismiss'),
@@ -131,6 +138,25 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   shareImportAppend: requiredElement('share-import-append'),
   shareImportReplace: requiredElement('share-import-replace'),
   shareImportCancel: requiredElement('share-import-cancel'),
+  bangumiImportOpen: requiredElement('bangumi-import-open'),
+  bangumiPublicImportDialog: requiredElement('bangumi-public-import-dialog'),
+  bangumiPublicImportForm: requiredElement('bangumi-public-import-form'),
+  bangumiPublicUserInput: requiredElement('bangumi-public-user-input'),
+  bangumiPublicFetch: requiredElement('bangumi-public-fetch'),
+  bangumiPublicImportStatus: requiredElement('bangumi-public-import-status'),
+  bangumiPublicImportResults: requiredElement('bangumi-public-import-results'),
+  bangumiPublicImportCapacity: requiredElement('bangumi-public-import-capacity'),
+  bangumiPublicTotal: requiredElement('bangumi-public-total'),
+  bangumiPublicMatchedSubjects: requiredElement('bangumi-public-matched-subjects'),
+  bangumiPublicMappedWorks: requiredElement('bangumi-public-mapped-works'),
+  bangumiPublicUnmatched: requiredElement('bangumi-public-unmatched'),
+  bangumiPublicImportList: requiredElement('bangumi-public-import-list'),
+  bangumiPublicImportUnmatched: requiredElement('bangumi-public-import-unmatched'),
+  bangumiPublicUnmatchedCount: requiredElement('bangumi-public-unmatched-count'),
+  bangumiPublicUnmatchedList: requiredElement('bangumi-public-unmatched-list'),
+  bangumiPublicImportSelectionStatus: requiredElement('bangumi-public-import-selection-status'),
+  bangumiPublicImportCancel: requiredElement('bangumi-public-import-cancel'),
+  bangumiPublicImportAppend: requiredElement('bangumi-public-import-append'),
   modeSelection: requiredElement('mode-selection'),
   modeRanking: requiredElement('mode-ranking'),
   modeCompany: requiredElement('mode-company'),
@@ -1039,6 +1065,11 @@ async function initialize() {
       console.warn('Bangumi ratings sidecar rejected; continuing without Bangumi ratings', error);
     }
   }
+  // The import flow intentionally consumes only the already-validated, confirmed
+  // relation rows. It never derives a match from a title or a loose VNDB relation.
+  const confirmedBangumiImportBindings = bangumiRatings === null
+    ? null
+    : bangumiRatingsSource.value.works;
   if (bangumiCanonicalAliasFallbackSource !== null) {
     try {
       const config = RUNTIME_FEATURES.bangumiCanonicalAliasFallbackV1;
@@ -2377,6 +2408,15 @@ async function initialize() {
     elements.modeRanking.disabled = importBusy;
     elements.selectionModeToggle.disabled = importBusy;
     elements.cardViewToggle.disabled = importBusy;
+    elements.bangumiImportOpen.disabled = importBusy || confirmedBangumiImportBindings === null;
+    elements.mobileBangumiImportOpen.disabled = importBusy || confirmedBangumiImportBindings === null;
+    elements.bangumiPublicFetch.disabled = importBusy || bangumiPublicImportAbort !== null;
+    elements.bangumiPublicUserInput.disabled = importBusy || bangumiPublicImportAbort !== null;
+    if (pendingBangumiPublicImport === null) {
+      elements.bangumiPublicImportAppend.disabled = true;
+    } else {
+      syncBangumiPublicImportSelection();
+    }
     for (const [, input] of selectionCardDisplayInputs) input.disabled = importBusy;
     elements.companySelectionModeToggle.disabled = importBusy;
     elements.selectionModeToggle.setAttribute('aria-pressed', String(selectionMode));
@@ -2436,6 +2476,10 @@ async function initialize() {
         elements.modeRanking,
         elements.selectionModeToggle,
         elements.cardViewToggle,
+        elements.bangumiImportOpen,
+        elements.mobileBangumiImportOpen,
+        elements.bangumiPublicFetch,
+        elements.bangumiPublicImportAppend,
         ...selectionCardDisplayInputs.map(([, input]) => input),
         elements.companySelectionModeToggle,
         elements.undoEdit,
@@ -2633,6 +2677,9 @@ async function initialize() {
   });
 
   let pendingShareImport = null;
+  let pendingBangumiPublicImport = null;
+  let bangumiPublicImportRequest = 0;
+  let bangumiPublicImportAbort = null;
 
   function closeDialog(dialog) {
     if (typeof dialog.close === 'function') dialog.close();
@@ -2642,6 +2689,184 @@ async function initialize() {
   function showDialog(dialog) {
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.open = true;
+  }
+
+  function setBangumiPublicImportStatus(message, { error = false } = {}) {
+    elements.bangumiPublicImportStatus.hidden = message.length === 0;
+    elements.bangumiPublicImportStatus.textContent = message;
+    elements.bangumiPublicImportStatus.classList.toggle('is-error', error);
+  }
+
+  function selectedBangumiImportWorkIds() {
+    return Array.from(elements.bangumiPublicImportList.querySelectorAll('input[data-work-id]:checked:not(:disabled)'))
+      .map(input => input.dataset.workId)
+      .filter(workId => typeof workId === 'string' && workId.length > 0);
+  }
+
+  function syncBangumiPublicImportSelection() {
+    if (pendingBangumiPublicImport === null) return;
+    const selectedWorkIds = selectedBangumiImportWorkIds();
+    const currentCount = controller.inspectState().selectedWorkIds.length;
+    const availableSlots = Math.max(0, USER_WORK_LIMIT - currentCount);
+    const overCapacity = selectedWorkIds.length > availableSlots;
+    elements.bangumiPublicImportCapacity.textContent = `候选池剩余 ${availableSlots}`;
+    elements.bangumiPublicImportAppend.disabled = importBusy || selectedWorkIds.length === 0 || overCapacity;
+    if (overCapacity) {
+      elements.bangumiPublicImportSelectionStatus.textContent = `已勾选 ${selectedWorkIds.length} 部，但候选池只剩 ${availableSlots} 个位置。请取消部分作品后再追加。`;
+      return;
+    }
+    elements.bangumiPublicImportSelectionStatus.textContent = selectedWorkIds.length === 0
+      ? '请选择至少一部尚未在候选池中的作品。'
+      : `将追加 ${selectedWorkIds.length} 部作品；已有候选和已排档位不会改变。`;
+  }
+
+  function resetBangumiPublicImportDialog({ keepInput = true } = {}) {
+    pendingBangumiPublicImport = null;
+    elements.bangumiPublicImportResults.hidden = true;
+    elements.bangumiPublicImportList.replaceChildren();
+    elements.bangumiPublicUnmatchedList.replaceChildren();
+    elements.bangumiPublicImportUnmatched.hidden = true;
+    elements.bangumiPublicTotal.textContent = '0';
+    elements.bangumiPublicMatchedSubjects.textContent = '0';
+    elements.bangumiPublicMappedWorks.textContent = '0';
+    elements.bangumiPublicUnmatched.textContent = '0';
+    elements.bangumiPublicUnmatchedCount.textContent = '0';
+    elements.bangumiPublicImportCapacity.textContent = `候选池剩余 ${Math.max(0, USER_WORK_LIMIT - controller.inspectState().selectedWorkIds.length)}`;
+    elements.bangumiPublicImportAppend.disabled = true;
+    elements.bangumiPublicImportSelectionStatus.textContent = '读取后可选择要追加的作品。';
+    elements.bangumiPublicFetch.disabled = false;
+    elements.bangumiPublicUserInput.disabled = false;
+    setBangumiPublicImportStatus('');
+    if (!keepInput) elements.bangumiPublicUserInput.value = '';
+  }
+
+  function closeBangumiPublicImportDialog() {
+    bangumiPublicImportRequest += 1;
+    bangumiPublicImportAbort?.abort();
+    bangumiPublicImportAbort = null;
+    closeDialog(elements.bangumiPublicImportDialog);
+    resetBangumiPublicImportDialog();
+  }
+
+  function createBangumiImportItem({ collection, workId, alreadySelected, checked }) {
+    const row = document.createElement('label');
+    row.className = 'bangumi-import-item';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.workId = workId;
+    checkbox.checked = checked || alreadySelected;
+    checkbox.disabled = alreadySelected;
+    checkbox.setAttribute('aria-label', `${worksById.get(workId)?.title ?? workId} ${alreadySelected ? '已在候选池' : '选择导入'}`);
+    checkbox.addEventListener('change', syncBangumiPublicImportSelection);
+
+    const copy = document.createElement('span');
+    copy.className = 'bangumi-import-item-copy';
+    const title = document.createElement('strong');
+    title.className = 'bangumi-import-item-title';
+    title.textContent = worksById.get(workId)?.title ?? `EGS #${workId}`;
+    const meta = document.createElement('span');
+    meta.className = 'bangumi-import-item-meta';
+    const details = [`Bangumi #${collection.subjectId}`, collectionTypeLabel(collection.collectionType)];
+    if (collection.personalRate !== null) details.push(`个人评分 ${collection.personalRate}`);
+    if (collection.workIds.length > 1) details.push(`同作映射 ${collection.workIds.length} 部`);
+    meta.textContent = details.join(' · ');
+    copy.append(title, meta);
+
+    const status = document.createElement('span');
+    status.className = 'bangumi-import-item-status';
+    status.textContent = alreadySelected ? '已在候选池' : '严格匹配';
+    if (alreadySelected) status.classList.add('is-existing');
+    row.append(checkbox, copy, status);
+    return row;
+  }
+
+  function renderBangumiPublicImportPlan(plan, reportedTotal) {
+    const fragment = document.createDocumentFragment();
+    const renderedWorkIds = new Set();
+    let selectedCount = 0;
+    for (const collection of plan.matched) {
+      for (const workId of collection.workIds) {
+        if (renderedWorkIds.has(workId)) continue;
+        renderedWorkIds.add(workId);
+        const alreadySelected = collection.alreadySelectedWorkIds.includes(workId);
+        const checked = !alreadySelected && selectedCount < plan.availableSlots;
+        if (checked) selectedCount += 1;
+        fragment.append(createBangumiImportItem({ collection, workId, alreadySelected, checked }));
+      }
+    }
+    elements.bangumiPublicImportList.replaceChildren(fragment);
+    const unmatched = document.createDocumentFragment();
+    for (const collection of plan.unmatched) {
+      const item = document.createElement('li');
+      item.textContent = `${collection.title}（Bangumi #${collection.subjectId}）`;
+      unmatched.append(item);
+    }
+    elements.bangumiPublicUnmatchedList.replaceChildren(unmatched);
+    elements.bangumiPublicImportUnmatched.hidden = plan.unmatched.length === 0;
+    elements.bangumiPublicTotal.textContent = String(reportedTotal);
+    elements.bangumiPublicMatchedSubjects.textContent = String(plan.matchedSubjectCount);
+    elements.bangumiPublicMappedWorks.textContent = String(plan.mappedWorkCount);
+    elements.bangumiPublicUnmatched.textContent = String(plan.unmatchedSubjectCount);
+    elements.bangumiPublicUnmatchedCount.textContent = String(plan.unmatchedSubjectCount);
+    elements.bangumiPublicImportResults.hidden = false;
+    syncBangumiPublicImportSelection();
+  }
+
+  async function readBangumiPublicCollections() {
+    if (confirmedBangumiImportBindings === null) {
+      setBangumiPublicImportStatus('当前版本未加载已确认的 Bangumi 映射，无法安全导入。', { error: true });
+      return;
+    }
+    const request = ++bangumiPublicImportRequest;
+    bangumiPublicImportAbort?.abort();
+    const abortController = new AbortController();
+    bangumiPublicImportAbort = abortController;
+    pendingBangumiPublicImport = null;
+    elements.bangumiPublicImportResults.hidden = true;
+    elements.bangumiPublicImportAppend.disabled = true;
+    elements.bangumiPublicFetch.disabled = true;
+    elements.bangumiPublicUserInput.disabled = true;
+    setBangumiPublicImportStatus('正在读取 Bangumi 公开游戏收藏…');
+    try {
+      const result = await fetchBangumiPublicGameCollections({
+        userIdentifier: elements.bangumiPublicUserInput.value,
+        signal: abortController.signal
+      });
+      if (request !== bangumiPublicImportRequest) return;
+      const plan = planBangumiPublicImport({
+        collections: result.collections,
+        confirmedBindings: confirmedBangumiImportBindings,
+        currentSelectedWorkIds: controller.inspectState().selectedWorkIds,
+        workLimit: USER_WORK_LIMIT
+      });
+      pendingBangumiPublicImport = plan;
+      renderBangumiPublicImportPlan(plan, result.reportedTotal);
+      setBangumiPublicImportStatus(
+        `已读取 ${result.reportedTotal} 条公开游戏收藏；其中 ${plan.matchedSubjectCount} 条可按现有 confirmed 映射导入。`
+      );
+    } catch (error) {
+      if (request !== bangumiPublicImportRequest || error?.name === 'AbortError') return;
+      const message = error instanceof BangumiPublicImportError
+        ? error.message
+        : '读取 Bangumi 公开收藏失败，请稍后重试。';
+      setBangumiPublicImportStatus(message, { error: true });
+    } finally {
+      if (request === bangumiPublicImportRequest) {
+        bangumiPublicImportAbort = null;
+        elements.bangumiPublicFetch.disabled = false;
+        elements.bangumiPublicUserInput.disabled = false;
+      }
+    }
+  }
+
+  function openBangumiPublicImportDialog() {
+    if (importBusy) return false;
+    closeToolbarMenus();
+    if (elements.mobileRankingMenu.open) closeDialog(elements.mobileRankingMenu);
+    resetBangumiPublicImportDialog();
+    showDialog(elements.bangumiPublicImportDialog);
+    window.setTimeout(() => elements.bangumiPublicUserInput.focus(), 0);
+    return true;
   }
 
   function clearShareHash() {
@@ -2916,6 +3141,42 @@ async function initialize() {
     closeDialog(elements.shareImportDialog);
     clearShareHash();
     resetShareImportDialog();
+  });
+  elements.bangumiImportOpen.addEventListener('click', () => openBangumiPublicImportDialog());
+  elements.mobileBangumiImportOpen.addEventListener('click', () => openBangumiPublicImportDialog());
+  elements.bangumiPublicImportForm.addEventListener('submit', event => {
+    event.preventDefault();
+    void readBangumiPublicCollections();
+  });
+  elements.bangumiPublicImportCancel.addEventListener('click', () => closeBangumiPublicImportDialog());
+  elements.bangumiPublicImportDialog.addEventListener('close', () => {
+    bangumiPublicImportRequest += 1;
+    bangumiPublicImportAbort?.abort();
+    bangumiPublicImportAbort = null;
+    resetBangumiPublicImportDialog();
+  });
+  elements.bangumiPublicImportAppend.addEventListener('click', () => {
+    if (pendingBangumiPublicImport === null) return;
+    const workIds = selectedBangumiImportWorkIds();
+    const availableSlots = Math.max(0, USER_WORK_LIMIT - controller.inspectState().selectedWorkIds.length);
+    if (workIds.length === 0 || workIds.length > availableSlots) {
+      syncBangumiPublicImportSelection();
+      return;
+    }
+    try {
+      const changed = runStateChange(() => controller.selectWorks(workIds));
+      if (!changed) {
+        setBangumiPublicImportStatus('这些作品已经在候选池中，未修改当前排榜。', { error: true });
+        return;
+      }
+      closeBangumiPublicImportDialog();
+      announce(`已将 ${workIds.length} 部作品追加到候选池。`, 'success');
+    } catch (error) {
+      setBangumiPublicImportStatus(
+        error instanceof Error ? error.message : '追加候选池失败，当前排榜未修改。',
+        { error: true }
+      );
+    }
   });
   elements.mobileHelpDismiss.addEventListener('click', () => {
     try {
