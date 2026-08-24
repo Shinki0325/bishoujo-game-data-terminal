@@ -80322,14 +80322,19 @@
       "sha256": "caab58f813127a33df255307e5dd2f1e8e5e94ce6100cc18c2c7af7861cfb22f"
     },
     {
+      "bytes": 48487,
+      "path": "index.20260824-source-weighted-rating-sort-v1.html",
+      "sha256": "522de52137c9ebe96a0704599f53660dcea768768d3c3899ca1c0f74433b0ebd"
+    },
+    {
       "bytes": 46944,
       "path": "index.20260824-vndb-voice-credit-reconciliation-v1.html",
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 48466,
+      "bytes": 48487,
       "path": "index.html",
-      "sha256": "caab58f813127a33df255307e5dd2f1e8e5e94ce6100cc18c2c7af7861cfb22f"
+      "sha256": "522de52137c9ebe96a0704599f53660dcea768768d3c3899ca1c0f74433b0ebd"
     },
     {
       "bytes": 5495,
@@ -80577,6 +80582,11 @@
       "sha256": "662a6d9182d1afd4d2be4eba92c386545382d63c87b3492e338f8f1013dd5092"
     },
     {
+      "bytes": 1317,
+      "path": "lib/rating-sort.js",
+      "sha256": "3e397afc6aa895e2c1816546d983a20a93e2696c2ec4de79ba84ca890f7543fc"
+    },
+    {
       "bytes": 2693,
       "path": "lib/runtime-config.20260823-backend-image-selection-sync-v1.js",
       "sha256": "b59d242aefbc113f8e96d4438d940150f88b6d41e937b6310540e6d505aaa035"
@@ -80787,14 +80797,19 @@
       "sha256": "5a588cc8e56f07055a8ba2b864435ca0ddcaa2757370a9f89c77f93b1e717bc9"
     },
     {
+      "bytes": 136692,
+      "path": "main.20260824-source-weighted-rating-sort-v1.js",
+      "sha256": "dfbcc9c811ceeddca90682a8a27bdd8848d4dd28edec55cc91ea696b790e687e"
+    },
+    {
       "bytes": 133548,
       "path": "main.20260824-vndb-voice-credit-reconciliation-v1.js",
       "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
     },
     {
-      "bytes": 136033,
+      "bytes": 136655,
       "path": "main.js",
-      "sha256": "8b7866ae293aab20761e62e0db1db9de4558269c0e477b110a3cbc9594a538c5"
+      "sha256": "2d3e1f4237303548ceb7256d9b96a6e3a99c075146b00b1e69e16a682979c909"
     },
     {
       "bytes": 145397,
@@ -80877,6 +80892,11 @@
       "sha256": "d991fc626f0d4190c8f8d52423bd405b960abc4489158265f3ceac45d0a18d99"
     },
     {
+      "bytes": 147284,
+      "path": "styles.20260824-source-weighted-rating-sort-v1.css",
+      "sha256": "d991fc626f0d4190c8f8d52423bd405b960abc4489158265f3ceac45d0a18d99"
+    },
+    {
       "bytes": 146011,
       "path": "styles.20260824-vndb-voice-credit-reconciliation-v1.css",
       "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
@@ -80940,7 +80960,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 652286591,
-    "files": 16187
+    "bytes": 652621014,
+    "files": 16191
   }
 }
