@@ -8,6 +8,7 @@ const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
 const FILTER_SORT_KEYS = new Set([
   'voteCount', 'median',
+  'egsScore',
   'vndbScore', 'vndbVoteCount',
   'bangumiScore', 'bangumiVoteCount',
   'title', 'brandName', 'releaseDate'
