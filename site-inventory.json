@@ -80307,14 +80307,19 @@
       "sha256": "b7b690891733437030be0fb0767fb68c91cab8a99ddc855a4f76b79847a48860"
     },
     {
+      "bytes": 48193,
+      "path": "index.20260824-selection-card-display-controls-v2.html",
+      "sha256": "014d54bb85f98cf3ea22d1394d28b12aea4912f770b3cba7540787c84339ba69"
+    },
+    {
       "bytes": 46944,
       "path": "index.20260824-vndb-voice-credit-reconciliation-v1.html",
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 48484,
+      "bytes": 48193,
       "path": "index.html",
-      "sha256": "b7b690891733437030be0fb0767fb68c91cab8a99ddc855a4f76b79847a48860"
+      "sha256": "014d54bb85f98cf3ea22d1394d28b12aea4912f770b3cba7540787c84339ba69"
     },
     {
       "bytes": 5495,
@@ -80607,9 +80612,9 @@
       "sha256": "9c6e91901326ea0a7a7a17700d1bcaee62af59c62e5f91c4111dfffa6fa5b077"
     },
     {
-      "bytes": 1940,
+      "bytes": 1961,
       "path": "lib/selection-card-presentation.js",
-      "sha256": "eb86f6d6e7503c10aff38d14f4a1423f3c661fe97a5de381047d70b7144af5a0"
+      "sha256": "a9a240b5e895f1933780f4790e30db1d1117fe2f332d5e9a7f97f6dc89dda5f1"
     },
     {
       "bytes": 16261,
@@ -80757,14 +80762,19 @@
       "sha256": "eadcd4955ae34d653b43ba8b4ce305fe110d67c25158b8bc0df14b7ce62fe1a4"
     },
     {
+      "bytes": 135428,
+      "path": "main.20260824-selection-card-display-controls-v2.js",
+      "sha256": "81ecc20ef94e556a9a66b9058a0095a30d24cc507556ccb90af76c0b160241a3"
+    },
+    {
       "bytes": 133548,
       "path": "main.20260824-vndb-voice-credit-reconciliation-v1.js",
       "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
     },
     {
-      "bytes": 136401,
+      "bytes": 135391,
       "path": "main.js",
-      "sha256": "12c9e058733bbe841f069ecb743f1603df14ddeb37a291c30afdf2c56f765070"
+      "sha256": "2bbb20c8596b395682d698c460028f231e2eb669b5eeedb612e14057bbba6b62"
     },
     {
       "bytes": 145397,
@@ -80832,14 +80842,19 @@
       "sha256": "c8264766fdee2127775d3b2c79f771d030be28f579b5f58730e0e5f4fc28a241"
     },
     {
+      "bytes": 147284,
+      "path": "styles.20260824-selection-card-display-controls-v2.css",
+      "sha256": "d991fc626f0d4190c8f8d52423bd405b960abc4489158265f3ceac45d0a18d99"
+    },
+    {
       "bytes": 146011,
       "path": "styles.20260824-vndb-voice-credit-reconciliation-v1.css",
       "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
     },
     {
-      "bytes": 147996,
+      "bytes": 147284,
       "path": "styles.css",
-      "sha256": "c8264766fdee2127775d3b2c79f771d030be28f579b5f58730e0e5f4fc28a241"
+      "sha256": "d991fc626f0d4190c8f8d52423bd405b960abc4489158265f3ceac45d0a18d99"
     },
     {
       "bytes": 15115,
@@ -80872,9 +80887,9 @@
       "sha256": "3476910e0df8baa72ef5ff9b7565fe5eb7ee0a8609aa94a9ae882a8284e75ee5"
     },
     {
-      "bytes": 24418,
+      "bytes": 24344,
       "path": "views/selection-view.js",
-      "sha256": "f4b31665445c21390ce762bffc9aa899b0a3de4abd3b0d649763635d2e215939"
+      "sha256": "254701b5c6e9399694748c5a8b0f11fac4c628a360e277832c3514d4e1cc5709"
     },
     {
       "bytes": 20169,
@@ -80895,7 +80910,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 651291788,
-    "files": 16178
+    "bytes": 651620627,
+    "files": 16181
   }
 }

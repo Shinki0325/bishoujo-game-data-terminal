@@ -220,9 +220,9 @@ export function createSelectionCard(documentRef, work, {
   overlay.className = 'selection-card-overlay';
   if (cardDisplay.showTitle) {
     appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
-    if (view === 'full' && typeof work.brandName === 'string' && work.brandName.length > 0) {
-      appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
-    }
+  }
+  if (cardDisplay.showCompany && typeof work.brandName === 'string' && work.brandName.length > 0) {
+    appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
   }
   if (cardDisplay.showEgs || (cardDisplay.showVndb && work.vndbRating !== undefined) || (cardDisplay.showBangumi && work.bangumiRating !== undefined)) {
     const ratings = documentRef.createElement('div');
@@ -293,7 +293,6 @@ export function createSelectionView({
   onToggleCurrentResults,
   onToggleSelectedOnly,
   onOpenDetails,
-  onCardViewChange,
   onFilterChange,
   onPageChange = () => {},
   assetBase,
@@ -331,7 +330,6 @@ export function createSelectionView({
   assertFunction(onToggleCurrentResults, 'onToggleCurrentResults');
   assertFunction(onToggleSelectedOnly, 'onToggleSelectedOnly');
   assertFunction(onOpenDetails, 'onOpenDetails');
-  assertFunction(onCardViewChange, 'onCardViewChange');
   assertFunction(onFilterChange, 'onFilterChange');
   assertFunction(onPageChange, 'onPageChange');
   let renderedWorkKey = '';
