@@ -2234,23 +2234,112 @@ input[type="range"] {
 }
 
 .selection-card-rating-lines {
-  display: grid;
-  gap: 2px;
-  min-height: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 0;
   margin-top: 3px;
-  overflow: hidden;
 }
 
 .selection-card-rating-line {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px 4px;
   overflow: hidden;
-  color: #d9e0e3;
-  font-size: 10px;
-  line-height: 12px;
+  color: #e5eff2;
+  background: rgb(127 164 174 / 24%);
+  border: 1px solid rgb(209 232 237 / 17%);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .selection-card-vndb-rating { color: #a9d8e8; }
+.selection-card-bangumi-rating { color: #b9e3d3; }
+
+.selection-card-year {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 3;
+  padding: 2px 5px;
+  color: #edf7f8;
+  background: rgb(7 12 16 / 78%);
+  border: 1px solid rgb(216 238 242 / 22%);
+  border-radius: 3px;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 11px;
+  pointer-events: none;
+}
+
+.selection-card.has-selection-card-year .selection-card-overlay { padding-right: 43px; }
+
+.selection-card-display-menu {
+  width: 224px;
+  padding: 9px;
+}
+
+.selection-card-layout-options,
+.selection-card-display-options {
+  display: grid;
+  gap: 5px;
+}
+
+.selection-card-layout-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+.selection-card-layout-options button {
+  min-height: 30px;
+  padding: 4px 6px;
+  color: #c6d2d8;
+  background: #18242d;
+  border-color: #2b3b46;
+}
+
+.selection-card-layout-options button[aria-pressed="true"] {
+  color: #e9faff;
+  background: #173a45;
+  border-color: #2f8da2;
+}
+
+.selection-card-display-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.selection-card-display-options label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 3px 4px;
+  color: #c6d2d8;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.selection-card-display-options input { margin: 0; accent-color: var(--accent); }
+
+:root[data-theme="light"] .selection-card-layout-options button {
+  color: #31434b;
+  background: #f6fafb;
+  border-color: #c5d4d9;
+}
+
+:root[data-theme="light"] .selection-card-layout-options button[aria-pressed="true"] {
+  color: #075d71;
+  background: #e0f1f4;
+  border-color: #6eb7c5;
+}
+
+:root[data-theme="light"] .selection-card-display-options label { color: #31434b; }
 
 .details-rating-line,
 .details-rating-snapshot {

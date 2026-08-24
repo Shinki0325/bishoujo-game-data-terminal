@@ -39,6 +39,7 @@ import { createRankingHelp } from './lib/ranking-help.js';
 import { createGuideController } from './lib/guide-controller.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
+import { createSelectionCardPresentation } from './lib/selection-card-presentation.js';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
@@ -170,6 +171,15 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   selectionContextCount: requiredElement('selection-context-count'),
   clearSelectedWorks: requiredElement('clear-selected-works'),
   startWorkRanking: requiredElement('start-work-ranking'),
+  cardViewToggle: requiredElement('card-view-toggle'),
+  selectionCardDisplayMenu: requiredElement('selection-card-display-menu'),
+  selectionCardViewFull: requiredElement('selection-card-view-full'),
+  selectionCardViewCompact: requiredElement('selection-card-view-compact'),
+  selectionCardShowTitle: requiredElement('selection-card-show-title'),
+  selectionCardShowEgs: requiredElement('selection-card-show-egs'),
+  selectionCardShowVndb: requiredElement('selection-card-show-vndb'),
+  selectionCardShowBangumi: requiredElement('selection-card-show-bangumi'),
+  selectionCardShowYear: requiredElement('selection-card-show-year'),
   filterToggle: requiredElement('filter-toggle'),
   filterBackdrop: requiredElement('filter-backdrop'),
   filterDrawer: requiredElement('filter-drawer'),
@@ -2015,6 +2025,10 @@ async function initialize() {
     read: key => window.localStorage.getItem(key),
     write: (key, value) => window.localStorage.setItem(key, value)
   });
+  const selectionCardPresentation = createSelectionCardPresentation({
+    read: key => window.localStorage.getItem(key),
+    write: (key, value) => window.localStorage.setItem(key, value)
+  });
   // Company ranking shares the work ranking presentation state; only ranking data is separate.
   const companyPresentation = presentation;
   const help = createRankingHelp({
@@ -2070,6 +2084,7 @@ async function initialize() {
   });
 
   const toolbarMenus = [
+    { button: elements.cardViewToggle, menu: elements.selectionCardDisplayMenu },
     { button: elements.cleanupMenuButton, menu: elements.cleanupMenu },
     { button: elements.displayMenuButton, menu: elements.displayMenu },
     { button: elements.fileMenuButton, menu: elements.fileMenu }
@@ -2204,6 +2219,19 @@ async function initialize() {
   rankingView.setShowCounts(presentation.inspect().showCounts);
   rankingView.setShowTitles(presentation.inspect().showTitles);
   rankingView.setAnnotations(presentation.inspect().annotations);
+  const selectionCardDisplayInputs = [
+    ['showTitle', elements.selectionCardShowTitle],
+    ['showEgs', elements.selectionCardShowEgs],
+    ['showVndb', elements.selectionCardShowVndb],
+    ['showBangumi', elements.selectionCardShowBangumi],
+    ['showYear', elements.selectionCardShowYear]
+  ];
+  function syncSelectionCardDisplay() {
+    const display = selectionCardPresentation.inspect();
+    for (const [key, input] of selectionCardDisplayInputs) input.checked = display[key];
+    selectionView.setCardDisplay(display);
+  }
+  syncSelectionCardDisplay();
 
   function captureWorkspaceScroll() {
     if (renderedWorkspaceMode === 'selection') {
@@ -2265,6 +2293,10 @@ async function initialize() {
     elements.modeSelection.disabled = importBusy;
     elements.modeRanking.disabled = importBusy;
     elements.selectionModeToggle.disabled = importBusy;
+    elements.cardViewToggle.disabled = importBusy;
+    elements.selectionCardViewFull.disabled = importBusy;
+    elements.selectionCardViewCompact.disabled = importBusy;
+    for (const [, input] of selectionCardDisplayInputs) input.disabled = importBusy;
     elements.companySelectionModeToggle.disabled = importBusy;
     elements.selectionModeToggle.setAttribute('aria-pressed', String(selectionMode));
     elements.selectionModeToggle.textContent = selectionMode ? '退出选择' : '选择';
@@ -2322,6 +2354,10 @@ async function initialize() {
         elements.modeSelection,
         elements.modeRanking,
         elements.selectionModeToggle,
+        elements.cardViewToggle,
+        elements.selectionCardViewFull,
+        elements.selectionCardViewCompact,
+        ...selectionCardDisplayInputs.map(([, input]) => input),
         elements.companySelectionModeToggle,
         elements.undoEdit,
         elements.redoEdit,
@@ -2442,6 +2478,8 @@ async function initialize() {
         filterState: model.state.filterState,
         selectionMode
       }, await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks)));
+      elements.selectionCardViewFull.setAttribute('aria-pressed', String(model.state.selectionCardView === 'full'));
+      elements.selectionCardViewCompact.setAttribute('aria-pressed', String(model.state.selectionCardView === 'compact'));
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (nextFilterKey !== renderedFilterKey) {
@@ -2935,6 +2973,20 @@ async function initialize() {
   elements.rankingShowTitles.addEventListener('change', () => {
     const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
     rankingView.setShowTitles(activePresentation.setShowTitles(elements.rankingShowTitles.checked));
+  });
+  for (const [key, input] of selectionCardDisplayInputs) {
+    input.addEventListener('change', () => {
+      selectionCardPresentation.setDisplay({ [key]: input.checked });
+      syncSelectionCardDisplay();
+    });
+  }
+  elements.selectionCardViewFull.addEventListener('click', () => {
+    if (lastRenderedModel?.state.selectionCardView === 'full') return;
+    void runStateChange(() => controller.setSelectionCardView('full'));
+  });
+  elements.selectionCardViewCompact.addEventListener('click', () => {
+    if (lastRenderedModel?.state.selectionCardView === 'compact') return;
+    void runStateChange(() => controller.setSelectionCardView('compact'));
   });
   elements.mobileRankingUndo.addEventListener('click', () => elements.undoEdit.click());
   elements.mobileRankingRedo.addEventListener('click', () => elements.redoEdit.click());

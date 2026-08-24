@@ -286,7 +286,24 @@
                 <span id="sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-down-a-z" aria-hidden="true"></span>
                 <span id="sort-direction-label" class="sort-direction-label">降序</span>
               </button>
-              <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">显示</button>
+              <div class="toolbar-menu-shell selection-card-display-shell">
+                <button id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-expanded="false" aria-controls="selection-card-display-menu">卡片显示 ▾</button>
+                <div id="selection-card-display-menu" class="toolbar-menu selection-card-display-menu" hidden>
+                  <strong class="toolbar-menu-section-title">卡片布局</strong>
+                  <div class="selection-card-layout-options" role="group" aria-label="卡片布局">
+                    <button id="selection-card-view-full" type="button" aria-pressed="true">完整</button>
+                    <button id="selection-card-view-compact" type="button" aria-pressed="false">简约</button>
+                  </div>
+                  <strong class="toolbar-menu-section-title">显示内容</strong>
+                  <div class="selection-card-display-options">
+                    <label for="selection-card-show-title"><input id="selection-card-show-title" type="checkbox">作品名称</label>
+                    <label for="selection-card-show-egs"><input id="selection-card-show-egs" type="checkbox">EGS 分数</label>
+                    <label for="selection-card-show-vndb"><input id="selection-card-show-vndb" type="checkbox">VNDB 分数</label>
+                    <label for="selection-card-show-bangumi"><input id="selection-card-show-bangumi" type="checkbox">BGM 分数</label>
+                    <label for="selection-card-show-year"><input id="selection-card-show-year" type="checkbox">年份</label>
+                  </div>
+                </div>
+              </div>
             </div>
             <div id="selection-context-bar" class="selection-context-bar" hidden>
               <div class="selection-context-summary"><strong>已选作品</strong><output id="selection-context-count">0</output></div>

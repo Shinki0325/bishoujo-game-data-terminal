@@ -2,6 +2,7 @@ import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
+import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
@@ -13,7 +14,17 @@ const SELECTION_WINDOW_MIN = 60;
 
 function egsRatingText(work) {
   if (!Number.isFinite(work.median) || !Number.isInteger(work.voteCount)) return 'EGS 暂无评分';
-  return `EGS ${work.median} / ${work.voteCount} 票`;
+  return `EGS ${work.median}`;
+}
+
+function releaseYear(work) {
+  const match = /^(\d{4})/u.exec(String(work.releaseDate ?? ''));
+  return match === null ? null : match[1];
+}
+
+function bangumiRatingText(rating) {
+  if (rating === null || typeof rating !== 'object') return null;
+  return `BGM ${rating.detailScore ?? '暂无评分'}`;
 }
 
 function assertFunction(value, name) {
@@ -114,6 +125,7 @@ export function createSelectionCard(documentRef, work, {
   assetBase,
   coverUrl = null,
   previewUrl = null,
+  display = DEFAULT_SELECTION_CARD_DISPLAY,
   selectionEnabled = true,
   isSelectionEnabled = () => Boolean(selectionEnabled),
   selectionHotspots = false,
@@ -131,6 +143,7 @@ export function createSelectionCard(documentRef, work, {
   assertFunction(isSelectionEnabled, 'isSelectionEnabled');
   assertFunction(isCardActive, 'isCardActive');
   const shouldToggleFromCardSurface = () => selectionHotspots && isSelectionEnabled();
+  const cardDisplay = normalizeSelectionCardDisplay(display);
 
   const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
     ? work.displayTitle
@@ -205,25 +218,28 @@ export function createSelectionCard(documentRef, work, {
 
   const overlay = documentRef.createElement('div');
   overlay.className = 'selection-card-overlay';
-  appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
-  if (view === 'full') {
-    appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
+  if (cardDisplay.showTitle) {
+    appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
+    if (view === 'full' && typeof work.brandName === 'string' && work.brandName.length > 0) {
+      appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
+    }
   }
-  if (work.vndbRating !== undefined || work.median === null || work.voteCount === null) {
+  if (cardDisplay.showEgs || (cardDisplay.showVndb && work.vndbRating !== undefined) || (cardDisplay.showBangumi && work.bangumiRating !== undefined)) {
     const ratings = documentRef.createElement('div');
     ratings.className = 'selection-card-rating-lines';
-    appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', egsRatingText(work));
-    if (work.vndbRating !== undefined) {
+    if (cardDisplay.showEgs) {
+      appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', egsRatingText(work));
+    }
+    if (cardDisplay.showVndb && work.vndbRating !== undefined) {
       appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
     }
+    if (cardDisplay.showBangumi && work.bangumiRating !== undefined) {
+      const text = bangumiRatingText(work.bangumiRating);
+      if (text !== null) appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-bangumi-rating', text);
+    }
     overlay.append(ratings);
-  } else if (view === 'full') {
-    const stats = documentRef.createElement('p');
-    stats.className = 'selection-card-stats';
-    appendTextElement(documentRef, stats, 'span', 'selection-card-median', work.median ?? '暂无评分');
-    appendTextElement(documentRef, stats, 'span', 'selection-card-votes', work.voteCount ?? '暂无');
-    overlay.append(stats);
   }
+  const hasOverlayContent = overlay.children.length > 0;
 
   let versionBadge = null;
   if (Number.isInteger(work.presentationMemberCount) && work.presentationMemberCount > 1) {
@@ -234,7 +250,20 @@ export function createSelectionCard(documentRef, work, {
     appendTextElement(documentRef, versionBadge, 'span', 'selection-card-version-count', work.presentationMemberCount);
   }
 
-  card.append(cover, ...(versionBadge === null ? [] : [versionBadge]), ...(checkbox === null ? [overlay] : [checkbox, overlay]));
+  const year = cardDisplay.showYear ? releaseYear(work) : null;
+  const yearBadge = year === null ? null : documentRef.createElement('span');
+  if (yearBadge !== null) {
+    yearBadge.className = 'selection-card-year';
+    yearBadge.textContent = year;
+  }
+  card.classList.toggle('has-selection-card-year', yearBadge !== null);
+  card.append(
+    cover,
+    ...(versionBadge === null ? [] : [versionBadge]),
+    ...(checkbox === null ? [] : [checkbox]),
+    ...(hasOverlayContent ? [overlay] : []),
+    ...(yearBadge === null ? [] : [yearBadge])
+  );
   if (selected && !selectionEnabled) {
     const marker = documentRef.createElement('span');
     marker.className = 'selection-card-selected-mark';
@@ -309,6 +338,7 @@ export function createSelectionView({
   let pageIndex = 0;
   let latestModel = null;
   let latestCoverUrls = null;
+  let cardDisplay = DEFAULT_SELECTION_CARD_DISPLAY;
   const defaultSelectionMode = true;
   let selectionModeActive = defaultSelectionMode;
   let selectionModeEpoch = 0;
@@ -353,11 +383,6 @@ export function createSelectionView({
     if (latestModel === null) return;
     titleCommit.flush();
     onToggleSelectedOnly(!Boolean(latestModel.filterState.selectedOnly));
-  });
-  elements.cardViewToggle.addEventListener('click', () => {
-    if (latestModel === null) return;
-    titleCommit.flush();
-    onCardViewChange(latestModel.view === 'full' ? 'compact' : 'full');
   });
   elements.sortDirectionToggle.addEventListener('click', () => {
     if (latestModel === null) return;
@@ -458,6 +483,7 @@ export function createSelectionView({
         onOpenDetails,
         coverUrl: latestCoverUrls?.get?.(work.workId)?.thumbnailUrl ?? null,
         previewUrl: latestCoverUrls?.get?.(work.workId)?.previewUrl ?? null,
+        display: cardDisplay,
         assetBase
       }));
       releaseGridImages(elements.grid);
@@ -500,8 +526,6 @@ export function createSelectionView({
       elements.selectAllResults.textContent = allState === 'all' ? '取消全选' : '全选';
       elements.selectedWorksToggle.setAttribute('aria-pressed', String(Boolean(model.filterState.selectedOnly)));
       elements.selectedWorksToggle.textContent = `已选作品 ${model.selectedWorkIds.length}`;
-      elements.cardViewToggle.setAttribute('aria-pressed', String(model.view === 'compact'));
-      elements.cardViewToggle.textContent = `卡片显示：${model.view === 'full' ? '完整' : '简约'}`;
       if (!titleCommit.pending()) elements.title.value = model.filterState.titleQuery;
       elements.sortKey.value = model.filterState.sortKey;
       const ascending = model.filterState.sortDirection === 'asc';
@@ -520,6 +544,11 @@ export function createSelectionView({
       const nextActive = Boolean(active);
       if (selectionModeActive !== nextActive) selectionModeEpoch += 1;
       selectionModeActive = nextActive;
+    },
+
+    setCardDisplay(nextDisplay) {
+      cardDisplay = normalizeSelectionCardDisplay(nextDisplay);
+      renderLatest();
     },
 
     render(model, coverUrls = null) {
