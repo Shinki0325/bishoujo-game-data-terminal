@@ -56,7 +56,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=00bbd70a5ca4638fe787997f2e374fe65cc5e0f59d68ffa5be8b1cb29e107f51';
+} from './lib/runtime-config.20260824-bangumi-title-date-751-v1.js?v=00bbd70a5ca4638fe787997f2e374fe65cc5e0f59d68ffa5be8b1cb29e107f51';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
