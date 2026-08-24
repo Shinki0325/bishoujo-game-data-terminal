@@ -78118,6 +78118,11 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-bangumi-canonical-alias-fallback-v1.json",
+      "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.20260824-bangumi-disambiguation-alias-sync-v1.json",
       "sha256": "319338fae4310dc48cef0042e27fcad9c831a7aaeba02d16a3fe25d4491c1c89"
     },
@@ -78145,6 +78150,11 @@
       "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.json",
       "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 125314,
+      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260824-bangumi-namecn-v1.json",
+      "sha256": "b9c8cef176cb5b071904773c81b37c5426530284ac5ea465f3f8945394976322"
     },
     {
       "bytes": 1425567,
@@ -80282,6 +80292,11 @@
       "sha256": "f9bcf11e6b4532d62bbe1f6a18b48270b2f7e65199773f7c0354dd268ebf1af5"
     },
     {
+      "bytes": 48502,
+      "path": "index.20260824-bangumi-canonical-alias-fallback-v1.html",
+      "sha256": "c9a1faa320a9befb199d0c291769c4a3fbe8f22b9f80bbe9701cab740c172381"
+    },
+    {
       "bytes": 46947,
       "path": "index.20260824-bangumi-disambiguation-alias-sync-v1.html",
       "sha256": "0459fe8b9062a2efd648cb7a3989bfcd67a8567bfd97c28ba4e81bd40dd84dcc"
@@ -80332,9 +80347,9 @@
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 48487,
+      "bytes": 48502,
       "path": "index.html",
-      "sha256": "522de52137c9ebe96a0704599f53660dcea768768d3c3899ca1c0f74433b0ebd"
+      "sha256": "c9a1faa320a9befb199d0c291769c4a3fbe8f22b9f80bbe9701cab740c172381"
     },
     {
       "bytes": 5495,
@@ -80375,6 +80390,11 @@
       "bytes": 19305,
       "path": "lib/backend-beta-fixture.js",
       "sha256": "d409231160259ff1b39d3aac50e7eb06fa08ccd984397bb0ea68e309dddeae0b"
+    },
+    {
+      "bytes": 4126,
+      "path": "lib/bangumi-canonical-alias-fallback.js",
+      "sha256": "7230f58c6fd32d6678a13068cd2c51b8aaac1eb7397268c189756ffc6e5c72da"
     },
     {
       "bytes": 1074,
@@ -80602,6 +80622,11 @@
       "sha256": "0b0c98ef7f2d0bbb54cc28fcaf4b98e0578170f2bc5557503d3407326d4bc982"
     },
     {
+      "bytes": 3358,
+      "path": "lib/runtime-config.20260824-bangumi-canonical-alias-fallback-v1.js",
+      "sha256": "264b6392f7b1560e7e664ab2fd51ee3602a2fd2b05dde5a13549a4639c9745bb"
+    },
+    {
       "bytes": 2999,
       "path": "lib/runtime-config.20260824-bangumi-disambiguation-alias-sync-v1.js",
       "sha256": "a9ed70316205a705b32550ed7b801a30e6296ed9b60300e4baf3e0d0f6a4b59f"
@@ -80627,9 +80652,9 @@
       "sha256": "73635d53e8f6e458479dea04642487682f32c3db8442e7533828e6336f7e9c09"
     },
     {
-      "bytes": 2990,
+      "bytes": 3358,
       "path": "lib/runtime-config.js",
-      "sha256": "9c6e91901326ea0a7a7a17700d1bcaee62af59c62e5f91c4111dfffa6fa5b077"
+      "sha256": "264b6392f7b1560e7e664ab2fd51ee3602a2fd2b05dde5a13549a4639c9745bb"
     },
     {
       "bytes": 1990,
@@ -80757,6 +80782,11 @@
       "sha256": "09d24e989ba3183d8a25371c4c848c9a932964cc4ea5ec2fbb3d1a2fb8481230"
     },
     {
+      "bytes": 138859,
+      "path": "main.20260824-bangumi-canonical-alias-fallback-v1.js",
+      "sha256": "b8b4180af7c768ab99cfbfc599d4c09d7f88a6f2fb8aacfdeb6590df73fd295d"
+    },
+    {
       "bytes": 133536,
       "path": "main.20260824-bangumi-disambiguation-alias-sync-v1.js",
       "sha256": "d0aa5e05baed65265b7f513be72bbdb9285d57f5fdef50a3f5b21ecbfa58c23d"
@@ -80807,9 +80837,9 @@
       "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
     },
     {
-      "bytes": 136655,
+      "bytes": 138834,
       "path": "main.js",
-      "sha256": "2d3e1f4237303548ceb7256d9b96a6e3a99c075146b00b1e69e16a682979c909"
+      "sha256": "cb09b117aec943c1117736b81640b49671b0c82ffb5d97f9c29da7e6f2112b03"
     },
     {
       "bytes": 145397,
@@ -80850,6 +80880,11 @@
       "bytes": 145780,
       "path": "styles.20260823-work-detail-overview-versions-v1.css",
       "sha256": "7d08dac379a5d841d80b0cd1fc769da4cbcd333b2e19249286995ee0f7e8196b"
+    },
+    {
+      "bytes": 147284,
+      "path": "styles.20260824-bangumi-canonical-alias-fallback-v1.css",
+      "sha256": "d991fc626f0d4190c8f8d52423bd405b960abc4489158265f3ceac45d0a18d99"
     },
     {
       "bytes": 146011,
@@ -80960,7 +80995,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 652621014,
-    "files": 16191
+    "bytes": 656032470,
+    "files": 16198
   }
 }
