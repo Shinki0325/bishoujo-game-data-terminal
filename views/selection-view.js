@@ -17,6 +17,8 @@ const FILTER_SORT_DIRECTIONS = new Set(['asc', 'desc']);
 const DEBOUNCE_MS = 150;
 const SELECTION_WINDOW_TARGET = 100;
 const SELECTION_WINDOW_MIN = 60;
+const VNDB_SORT_KEYS = new Set(['vndbScore', 'vndbVoteCount']);
+const BANGUMI_SORT_KEYS = new Set(['bangumiScore', 'bangumiVoteCount']);
 
 function egsRatingText(work) {
   if (!Number.isFinite(work.median) || !Number.isInteger(work.voteCount)) return 'EGS 暂无评分';
@@ -31,6 +33,22 @@ function releaseYear(work) {
 function bangumiRatingText(rating) {
   if (rating === null || typeof rating !== 'object') return null;
   return `BGM ${rating.detailScore ?? '暂无评分'}`;
+}
+
+export function mobileCardRating(work, sortKey = 'median') {
+  if (VNDB_SORT_KEYS.has(sortKey)) {
+    return Object.freeze({
+      source: 'vndb',
+      text: work.vndbRating?.cardText ?? 'VNDB 暂无评分'
+    });
+  }
+  if (BANGUMI_SORT_KEYS.has(sortKey)) {
+    return Object.freeze({
+      source: 'bangumi',
+      text: bangumiRatingText(work.bangumiRating) ?? 'BGM 暂无评分'
+    });
+  }
+  return Object.freeze({ source: 'egs', text: egsRatingText(work) });
 }
 
 function assertFunction(value, name) {
@@ -132,6 +150,7 @@ export function createSelectionCard(documentRef, work, {
   coverUrl = null,
   previewUrl = null,
   display = DEFAULT_SELECTION_CARD_DISPLAY,
+  mobileSortKey = 'median',
   selectionEnabled = true,
   isSelectionEnabled = () => Boolean(selectionEnabled),
   selectionHotspots = false,
@@ -262,12 +281,19 @@ export function createSelectionCard(documentRef, work, {
     yearBadge.className = 'selection-card-year';
     yearBadge.textContent = year;
   }
+  const mobileRating = mobileCardRating(work, mobileSortKey);
+  const mobileRatingBadge = documentRef.createElement('span');
+  mobileRatingBadge.className = 'selection-card-mobile-rating';
+  mobileRatingBadge.dataset.source = mobileRating.source;
+  mobileRatingBadge.textContent = mobileRating.text;
+  mobileRatingBadge.setAttribute('aria-label', `当前排序来源评分：${mobileRating.text}`);
   card.classList.toggle('has-selection-card-year', yearBadge !== null);
   card.append(
     cover,
     ...(versionBadge === null ? [] : [versionBadge]),
     ...(checkbox === null ? [] : [checkbox]),
     ...(hasOverlayContent ? [overlay] : []),
+    mobileRatingBadge,
     ...(yearBadge === null ? [] : [yearBadge])
   );
   if (selected && !selectionEnabled) {
@@ -488,6 +514,7 @@ export function createSelectionView({
         coverUrl: latestCoverUrls?.get?.(work.workId)?.thumbnailUrl ?? null,
         previewUrl: latestCoverUrls?.get?.(work.workId)?.previewUrl ?? null,
         display: cardDisplay,
+        mobileSortKey: model.filterState?.sortKey,
         assetBase
       }));
       releaseGridImages(elements.grid);
