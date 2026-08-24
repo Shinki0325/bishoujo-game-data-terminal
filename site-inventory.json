@@ -78148,6 +78148,11 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
+      "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.20260824-egs-composite-rating-sort-v1.json",
       "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
     },
@@ -78197,9 +78202,14 @@
       "sha256": "6f887bd18d36dbc53a24b459aedd141b48082ef52a84819d39a06cf4c3d70598"
     },
     {
-      "bytes": 208044,
+      "bytes": 207902,
+      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
+      "sha256": "76948b8fcd5a9889b31fa57cb38b0d191b02b2e76e62222a7db561448ed57609"
+    },
+    {
+      "bytes": 207902,
       "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.json",
-      "sha256": "01c1566cb1696fca1ef6608f09ec36b13901d4e423edf2a9b13645a35be01484"
+      "sha256": "76948b8fcd5a9889b31fa57cb38b0d191b02b2e76e62222a7db561448ed57609"
     },
     {
       "bytes": 1644679,
@@ -78222,6 +78232,11 @@
       "sha256": "e7c9bd4f0f911d9b51e18a8b1f591af7499de7b0a4a73e4c7bf58f9de60d1a63"
     },
     {
+      "bytes": 1651795,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
+      "sha256": "ad6da03ec2f929519e6e34f37c5460d7f8356cad36a0fa3f47e93d8fadd9316e"
+    },
+    {
       "bytes": 1425646,
       "path": "data/egs-tier-bangumi-ratings-v1.20260824-egs-snapshot-sakura-bangumi-hotfix-v1.json",
       "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
@@ -78237,9 +78252,9 @@
       "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
     },
     {
-      "bytes": 1644679,
+      "bytes": 1651795,
       "path": "data/egs-tier-bangumi-ratings-v1.json",
-      "sha256": "0d6c74d78a18d64d1bfc48715d3983f1e056c3959ef16683e2645b81642b0d6c"
+      "sha256": "ad6da03ec2f929519e6e34f37c5460d7f8356cad36a0fa3f47e93d8fadd9316e"
     },
     {
       "bytes": 64012,
@@ -78257,9 +78272,9 @@
       "sha256": "be2ba418eadece4bf9b76f8da4146e8696605e1f380e768e4d4c33c83f073bf1"
     },
     {
-      "bytes": 196417,
+      "bytes": 223083,
       "path": "data/egs-tier-full-presentation-families-v1.json",
-      "sha256": "21bb172fff5aa488815245c293dab15d28328d9f823921b40faea14b61c1364a"
+      "sha256": "395eefa12807238ff07a43a05ab2c42f665797f189d59c609bdd796649f17497"
     },
     {
       "bytes": 11435893,
@@ -80377,6 +80392,11 @@
       "sha256": "a7e8e67d6ab23502666eaf63f3100d99a0ac0c06301881820ee6294e289cdfbd"
     },
     {
+      "bytes": 52306,
+      "path": "index.20260824-confirmed-review-direct-vndb-family-v1.html",
+      "sha256": "605f38f685c3b777575cdecbab79de0631c84e49e427cd2cab02ccdcf76ddbbf"
+    },
+    {
       "bytes": 48550,
       "path": "index.20260824-egs-composite-rating-sort-v1.html",
       "sha256": "621ce4cfaa49ee694f4489e31e05d963163f1617d25072cc56b1c72b7f749057"
@@ -80432,9 +80452,9 @@
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 52288,
+      "bytes": 52306,
       "path": "index.html",
-      "sha256": "15c549da1235e8e00338fe733bd6d6b4ccd06295c77fc64a39272389af2a56fa"
+      "sha256": "605f38f685c3b777575cdecbab79de0631c84e49e427cd2cab02ccdcf76ddbbf"
     },
     {
       "bytes": 5495,
@@ -80742,6 +80762,11 @@
       "sha256": "0a9a1ac43d46ac3c0950d8118076c1c93ed50bb12ee4d37a2a91403dc7df888d"
     },
     {
+      "bytes": 3390,
+      "path": "lib/runtime-config.20260824-confirmed-review-direct-vndb-family-v1.js",
+      "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
+    },
+    {
       "bytes": 3358,
       "path": "lib/runtime-config.20260824-egs-composite-rating-sort-v1.js",
       "sha256": "264b6392f7b1560e7e664ab2fd51ee3602a2fd2b05dde5a13549a4639c9745bb"
@@ -80772,9 +80797,9 @@
       "sha256": "73635d53e8f6e458479dea04642487682f32c3db8442e7533828e6336f7e9c09"
     },
     {
-      "bytes": 3378,
+      "bytes": 3390,
       "path": "lib/runtime-config.js",
-      "sha256": "3d0da597168c8614a839f9f504f5a4dc2cebf01a099563753f9a23fd0276d7ff"
+      "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
     },
     {
       "bytes": 1990,
@@ -80932,6 +80957,11 @@
       "sha256": "aba585152183977cc1e6bfe72dd6f49829d7d67984e9eb632c7d7252dcbeda43"
     },
     {
+      "bytes": 152820,
+      "path": "main.20260824-confirmed-review-direct-vndb-family-v1.js",
+      "sha256": "e7ebc7c147e4e41de4b7618222093ea4bb778653ce0a49bbc82dee3ddbe9ccc0"
+    },
+    {
       "bytes": 139331,
       "path": "main.20260824-egs-composite-rating-sort-v1.js",
       "sha256": "6c39bc9a583dd0c31f6f83c73f068f8b1ee3679cffec3e025b3bd07c68498094"
@@ -80989,7 +81019,7 @@
     {
       "bytes": 152772,
       "path": "main.js",
-      "sha256": "6a65ba46a3c43471347ea65345d35ff4e87208e507fa2d6b3c482b0e94289cd7"
+      "sha256": "04ae61020ad07f6aa536684cc91ed7a4c80ad3c15061ca27e1e49ad8a56eca7d"
     },
     {
       "bytes": 145397,
@@ -81059,6 +81089,11 @@
     {
       "bytes": 154422,
       "path": "styles.20260824-bangumi-title-date-751-v1.css",
+      "sha256": "de70a0a014f43090ffa81bc3f675e89ca26715ca88da6a3b6f49359b9ce17d67"
+    },
+    {
+      "bytes": 154422,
+      "path": "styles.20260824-confirmed-review-direct-vndb-family-v1.css",
       "sha256": "de70a0a014f43090ffa81bc3f675e89ca26715ca88da6a3b6f49359b9ce17d67"
     },
     {
@@ -81175,7 +81210,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 679937890,
-    "files": 16234
+    "bytes": 685135646,
+    "files": 16241
   }
 }
