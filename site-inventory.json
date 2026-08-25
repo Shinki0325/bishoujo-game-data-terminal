@@ -80472,9 +80472,14 @@
       "sha256": "47220ac6fe433081954a39f75b075b97075a8da1eb72514fdd94de6cbc4fe61c"
     },
     {
-      "bytes": 52480,
+      "bytes": 52442,
+      "path": "index.20260825-default-excluded-nukige-tag-v1.html",
+      "sha256": "102763744a980385f26abd7750873712ff397f757848d66c9895f2488f33eef5"
+    },
+    {
+      "bytes": 52442,
       "path": "index.html",
-      "sha256": "47220ac6fe433081954a39f75b075b97075a8da1eb72514fdd94de6cbc4fe61c"
+      "sha256": "102763744a980385f26abd7750873712ff397f757848d66c9895f2488f33eef5"
     },
     {
       "bytes": 5495,
@@ -80485,6 +80490,11 @@
       "bytes": 781,
       "path": "lib/adaptive-image-source.js",
       "sha256": "dc9d936608a6f8a9f5d8658e649be623c52f2765c3778f8644dc26bed398e3e6"
+    },
+    {
+      "bytes": 22709,
+      "path": "lib/app-controller.20260825-default-excluded-nukige-tag-v1.js",
+      "sha256": "4d5c8c2b0eed96e3e341d5567c0faeaa96e5e29527211e00d007e30398d33a8d"
     },
     {
       "bytes": 22706,
@@ -80857,9 +80867,9 @@
       "sha256": "1181f7e348e7f1f8383012243e03919cc499e796bbe16aca83d6fa5fe37f036c"
     },
     {
-      "bytes": 56733,
+      "bytes": 57751,
       "path": "lib/state.js",
-      "sha256": "c4493f9a783411fc0c8d73aac4c51c35ce93ecc215838d215986cc6d4fb6bd28"
+      "sha256": "309a0d9ed7488e527b6a66888573bb50203ba6d0606ba420bdb40c3ef7dd0d0f"
     },
     {
       "bytes": 5395,
@@ -81055,6 +81065,11 @@
       "bytes": 154602,
       "path": "main.20260825-cross-source-admissions-bangumi-title-variants-v1.js",
       "sha256": "e592c8f85fe3c73fdff724c2f99369dcef523d375f5782118a4ced9c3ea41af4"
+    },
+    {
+      "bytes": 154606,
+      "path": "main.20260825-default-excluded-nukige-tag-v1.js",
+      "sha256": "b6baadce94e12ddddaab3b5b2eab4e35aa1d4118f827d6b9b3a1cc05121f0889"
     },
     {
       "bytes": 154543,
@@ -81260,7 +81275,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 691483544,
-    "files": 16251
+    "bytes": 691714281,
+    "files": 16254
   }
 }
