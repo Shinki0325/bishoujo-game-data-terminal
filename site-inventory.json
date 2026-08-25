@@ -78183,6 +78183,11 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260825-cross-source-admissions-bangumi-title-variants-v1.json",
+      "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.json",
       "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
     },
@@ -78202,9 +78207,14 @@
       "sha256": "6f887bd18d36dbc53a24b459aedd141b48082ef52a84819d39a06cf4c3d70598"
     },
     {
-      "bytes": 207902,
+      "bytes": 213252,
       "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
-      "sha256": "76948b8fcd5a9889b31fa57cb38b0d191b02b2e76e62222a7db561448ed57609"
+      "sha256": "a1708de23534cd5b6e1e442a4a423f73abee8854c2d7767aef9980f7aea33770"
+    },
+    {
+      "bytes": 213252,
+      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260825-cross-source-admissions-bangumi-title-variants-v1.json",
+      "sha256": "a1708de23534cd5b6e1e442a4a423f73abee8854c2d7767aef9980f7aea33770"
     },
     {
       "bytes": 207902,
@@ -78232,9 +78242,9 @@
       "sha256": "e7c9bd4f0f911d9b51e18a8b1f591af7499de7b0a4a73e4c7bf58f9de60d1a63"
     },
     {
-      "bytes": 1651795,
+      "bytes": 1796289,
       "path": "data/egs-tier-bangumi-ratings-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
-      "sha256": "ad6da03ec2f929519e6e34f37c5460d7f8356cad36a0fa3f47e93d8fadd9316e"
+      "sha256": "5723547e4c71489a681211811439cbcedf22a40cc323a482b65214db0d90cd0c"
     },
     {
       "bytes": 1425646,
@@ -78250,6 +78260,11 @@
       "bytes": 1425646,
       "path": "data/egs-tier-bangumi-ratings-v1.20260824-vndb-voice-credit-reconciliation-v1.json",
       "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
+    },
+    {
+      "bytes": 1796289,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260825-cross-source-admissions-bangumi-title-variants-v1.json",
+      "sha256": "5723547e4c71489a681211811439cbcedf22a40cc323a482b65214db0d90cd0c"
     },
     {
       "bytes": 1651795,
@@ -78287,9 +78302,9 @@
       "sha256": "adf9f9d7431694a5ba25ecc1da41b9e1b44dacdbf59421f18b3be6506f196bb3"
     },
     {
-      "bytes": 1174381,
+      "bytes": 1736048,
       "path": "data/egs-tier-vndb-ratings-v1.json",
-      "sha256": "3b0f0c0d51a10e17454a0b857c5792289690dcbe03815aeeac75098861df2e5f"
+      "sha256": "c25d8a94d5a3fcc17a5716a929a46f3c8b13ebdb8637b39794a39334e58fc899"
     },
     {
       "bytes": 9881,
@@ -80452,9 +80467,14 @@
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 52474,
+      "bytes": 52480,
+      "path": "index.20260825-cross-source-admissions-bangumi-title-variants-v1.html",
+      "sha256": "47220ac6fe433081954a39f75b075b97075a8da1eb72514fdd94de6cbc4fe61c"
+    },
+    {
+      "bytes": 52480,
       "path": "index.html",
-      "sha256": "35a4ead0113bc06fb51247fa9b7e04332192bdc776d96152fc08bcfa2f6fda0e"
+      "sha256": "47220ac6fe433081954a39f75b075b97075a8da1eb72514fdd94de6cbc4fe61c"
     },
     {
       "bytes": 5495,
@@ -80577,9 +80597,9 @@
       "sha256": "584a76d8da76b1c833d328953f0838ffaf87bfa2c192f6e69cbd6e540cbae6e9"
     },
     {
-      "bytes": 24187,
+      "bytes": 24596,
       "path": "lib/filter-engine.js",
-      "sha256": "966da8417b0a5d77c2de0f15636d88c09a89a85fbe97ff8161b1782aafafe7f1"
+      "sha256": "0856f2580adb0e05ee7d040af64cae7e13bc7864ff0dfda9a4ebb49dd0b0bfde"
     },
     {
       "bytes": 6885,
@@ -80692,9 +80712,9 @@
       "sha256": "98b49d38662786f73e53017aac4eefaf8d669161d7bcb0608bdec15deaa92334"
     },
     {
-      "bytes": 13844,
+      "bytes": 13962,
       "path": "lib/query-index.js",
-      "sha256": "4c94aae0353660589db8aea5daea4386995a84f1973b5e5b49b59892d84b84f7"
+      "sha256": "441433499584bf7000baefef4f117f1fef5155036e0d41c339b4d3bda0d84592"
     },
     {
       "bytes": 872,
@@ -80802,9 +80822,14 @@
       "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
     },
     {
-      "bytes": 3390,
+      "bytes": 3412,
+      "path": "lib/runtime-config.20260825-cross-source-admissions-bangumi-title-variants-v1.js",
+      "sha256": "e8e6d67fa7dcc1b8d219831800e3fb8be22752106080f8a69353efc044da019b"
+    },
+    {
+      "bytes": 3412,
       "path": "lib/runtime-config.js",
-      "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
+      "sha256": "e8e6d67fa7dcc1b8d219831800e3fb8be22752106080f8a69353efc044da019b"
     },
     {
       "bytes": 1990,
@@ -81027,9 +81052,14 @@
       "sha256": "75bd9670c5d2f4adb9d1fb9053219645163e0c9acf114916af5a05131167819b"
     },
     {
-      "bytes": 154282,
+      "bytes": 154602,
+      "path": "main.20260825-cross-source-admissions-bangumi-title-variants-v1.js",
+      "sha256": "e592c8f85fe3c73fdff724c2f99369dcef523d375f5782118a4ced9c3ea41af4"
+    },
+    {
+      "bytes": 154543,
       "path": "main.js",
-      "sha256": "d34dd0b8208605088ef2208a057fd521fd26ed582533acc65128e71e5fb841b0"
+      "sha256": "54e05b7f72c17e2f25b268b477feee38595fe4859511158b439e3d32f9a93cb4"
     },
     {
       "bytes": 145397,
@@ -81168,6 +81198,11 @@
     },
     {
       "bytes": 155408,
+      "path": "styles.20260825-cross-source-admissions-bangumi-title-variants-v1.css",
+      "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
+    },
+    {
+      "bytes": 155408,
       "path": "styles.css",
       "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
     },
@@ -81225,7 +81260,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 685454323,
-    "files": 16244
+    "bytes": 691483544,
+    "files": 16251
   }
 }
