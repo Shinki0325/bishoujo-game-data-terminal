@@ -56,7 +56,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=740314609e181a5f5709971ccf78b7969edd161a69e2383b0bafdba35a4225b2';
+} from './lib/runtime-config.20260825-bangumi-external-correction-16-v1.js?v=740314609e181a5f5709971ccf78b7969edd161a69e2383b0bafdba35a4225b2';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
