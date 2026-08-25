@@ -56,7 +56,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   DATA_REVISION
-} from './lib/runtime-config.js?v=d7f0d333a796761cccf77a0a4272d2ddd12d79c3dc7ed7ac6d765aeaef40fb92';
+} from './lib/runtime-config.20260825-authority-fanout-immutable-v1.js?v=d7f0d333a796761cccf77a0a4272d2ddd12d79c3dc7ed7ac6d765aeaef40fb92';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';

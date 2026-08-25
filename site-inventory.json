@@ -78183,6 +78183,11 @@
     },
     {
       "bytes": 2941451,
+      "path": "data/egs-tier-authority-fanout-v1.20260825-authority-fanout-immutable-v1.json",
+      "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
+    },
+    {
+      "bytes": 2941451,
       "path": "data/egs-tier-authority-fanout-v1.20260825-bangumi-external-correction-16-v1.json",
       "sha256": "e0f41054b7ff944cd063f0361faf1fb2aacb7ce6a6e5e34d89d7c8b98ba0217a"
     },
@@ -78215,6 +78220,11 @@
       "bytes": 213252,
       "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260824-confirmed-review-direct-vndb-family-v1.json",
       "sha256": "a1708de23534cd5b6e1e442a4a423f73abee8854c2d7767aef9980f7aea33770"
+    },
+    {
+      "bytes": 207902,
+      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260825-authority-fanout-immutable-v1.json",
+      "sha256": "76948b8fcd5a9889b31fa57cb38b0d191b02b2e76e62222a7db561448ed57609"
     },
     {
       "bytes": 213029,
@@ -78270,6 +78280,11 @@
       "bytes": 1425646,
       "path": "data/egs-tier-bangumi-ratings-v1.20260824-vndb-voice-credit-reconciliation-v1.json",
       "sha256": "35511b0e3ee5543a1440db851e461791cfddad6d6413bbd126bf758067fb9f8a"
+    },
+    {
+      "bytes": 1651795,
+      "path": "data/egs-tier-bangumi-ratings-v1.20260825-authority-fanout-immutable-v1.json",
+      "sha256": "ad6da03ec2f929519e6e34f37c5460d7f8356cad36a0fa3f47e93d8fadd9316e"
     },
     {
       "bytes": 1796298,
@@ -80482,6 +80497,11 @@
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
+      "bytes": 52420,
+      "path": "index.20260825-authority-fanout-immutable-v1.html",
+      "sha256": "0cb6a63dd3b8b0333c802b200ec5d27f3e3c19c55c5e9075dcc46fa273d78c0d"
+    },
+    {
       "bytes": 52432,
       "path": "index.20260825-bangumi-external-correction-16-v1.html",
       "sha256": "3592788a6441382bb5bcfcbe098317a5306d7523d45fc69c8d09c0cbb3bb21e9"
@@ -80497,9 +80517,9 @@
       "sha256": "102763744a980385f26abd7750873712ff397f757848d66c9895f2488f33eef5"
     },
     {
-      "bytes": 52432,
+      "bytes": 52420,
       "path": "index.html",
-      "sha256": "3592788a6441382bb5bcfcbe098317a5306d7523d45fc69c8d09c0cbb3bb21e9"
+      "sha256": "0cb6a63dd3b8b0333c802b200ec5d27f3e3c19c55c5e9075dcc46fa273d78c0d"
     },
     {
       "bytes": 5495,
@@ -80847,6 +80867,11 @@
       "sha256": "73635d53e8f6e458479dea04642487682f32c3db8442e7533828e6336f7e9c09"
     },
     {
+      "bytes": 3471,
+      "path": "lib/runtime-config.20260825-authority-fanout-immutable-v1.js",
+      "sha256": "27fcd278f159527c94c322b56a46fa15963af4c98e55b12c7c448dd35ee74dad"
+    },
+    {
       "bytes": 3380,
       "path": "lib/runtime-config.20260825-bangumi-external-correction-16-v1.js",
       "sha256": "2ccc76f8cb88c474fcc9e7fdf958e480e81d3b3f6b3293d64e1be004e17ebb72"
@@ -80862,9 +80887,9 @@
       "sha256": "e8e6d67fa7dcc1b8d219831800e3fb8be22752106080f8a69353efc044da019b"
     },
     {
-      "bytes": 3380,
+      "bytes": 3471,
       "path": "lib/runtime-config.js",
-      "sha256": "2ccc76f8cb88c474fcc9e7fdf958e480e81d3b3f6b3293d64e1be004e17ebb72"
+      "sha256": "27fcd278f159527c94c322b56a46fa15963af4c98e55b12c7c448dd35ee74dad"
     },
     {
       "bytes": 1990,
@@ -81082,6 +81107,11 @@
       "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
     },
     {
+      "bytes": 154582,
+      "path": "main.20260825-authority-fanout-immutable-v1.js",
+      "sha256": "8182dc314882b67a1734dc39c02cb31355b2608fa3187283c76e36ee2e563b87"
+    },
+    {
       "bytes": 154586,
       "path": "main.20260825-bangumi-external-correction-16-v1.js",
       "sha256": "c39a7da26df9977a9f565c1bc97011dd67430649669db42602986fae6458a312"
@@ -81104,7 +81134,7 @@
     {
       "bytes": 154543,
       "path": "main.js",
-      "sha256": "e5558cf652b7a7f552c8d1ed55c4d44e8d7526419828251002eaac1e69f1f627"
+      "sha256": "b80820586a56717cd8cd5e349ca82c3883205d3f7bb4c70e1f76a36bcabcec39"
     },
     {
       "bytes": 145397,
@@ -81238,6 +81268,11 @@
     },
     {
       "bytes": 155408,
+      "path": "styles.20260825-authority-fanout-immutable-v1.css",
+      "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
+    },
+    {
+      "bytes": 155408,
       "path": "styles.20260825-bangumi-external-correction-16-v1.css",
       "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
     },
@@ -81310,7 +81345,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 697030823,
-    "files": 16261
+    "bytes": 702197931,
+    "files": 16268
   }
 }
