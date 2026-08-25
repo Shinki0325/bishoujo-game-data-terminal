@@ -80452,9 +80452,9 @@
       "sha256": "7cde75bc2444b815f39f8d414733d0e8540596bf3b8426f1d4afffc310f3d81c"
     },
     {
-      "bytes": 52306,
+      "bytes": 52474,
       "path": "index.html",
-      "sha256": "605f38f685c3b777575cdecbab79de0631c84e49e427cd2cab02ccdcf76ddbbf"
+      "sha256": "35a4ead0113bc06fb51247fa9b7e04332192bdc776d96152fc08bcfa2f6fda0e"
     },
     {
       "bytes": 5495,
@@ -80502,9 +80502,9 @@
       "sha256": "7230f58c6fd32d6678a13068cd2c51b8aaac1eb7397268c189756ffc6e5c72da"
     },
     {
-      "bytes": 10888,
+      "bytes": 13764,
       "path": "lib/bangumi-public-import.js",
-      "sha256": "09c78eb9cfb813d98bd0162d28d9c27bf98d8c862a29845bf0108c1e0da014f6"
+      "sha256": "a18461b67c33c241559ac0403f5ebf605432d7489892f579c4510e03f49bf55d"
     },
     {
       "bytes": 1074,
@@ -80798,6 +80798,11 @@
     },
     {
       "bytes": 3390,
+      "path": "lib/runtime-config.20260825-bangumi-family-default-mobile-details-scroll-v1.js",
+      "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
+    },
+    {
+      "bytes": 3390,
       "path": "lib/runtime-config.js",
       "sha256": "c2299e220fa3a9a52be7fcf209fda5f259f28bb594bc16b6bff75ab5a101b6b6"
     },
@@ -81017,9 +81022,14 @@
       "sha256": "76ff0778996754cf7b25e2cf449a88d641d020d46dbea27ecdfd3395eb6a7cae"
     },
     {
-      "bytes": 152772,
+      "bytes": 154339,
+      "path": "main.20260825-bangumi-family-default-mobile-details-scroll-v1.js",
+      "sha256": "75bd9670c5d2f4adb9d1fb9053219645163e0c9acf114916af5a05131167819b"
+    },
+    {
+      "bytes": 154282,
       "path": "main.js",
-      "sha256": "04ae61020ad07f6aa536684cc91ed7a4c80ad3c15061ca27e1e49ad8a56eca7d"
+      "sha256": "d34dd0b8208605088ef2208a057fd521fd26ed582533acc65128e71e5fb841b0"
     },
     {
       "bytes": 145397,
@@ -81152,9 +81162,14 @@
       "sha256": "7fc3c44537290415c44e35dff765cf3fecc8244c5c0b2047631cff8795d54bf1"
     },
     {
-      "bytes": 154422,
+      "bytes": 155408,
+      "path": "styles.20260825-bangumi-family-default-mobile-details-scroll-v1.css",
+      "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
+    },
+    {
+      "bytes": 155408,
       "path": "styles.css",
-      "sha256": "de70a0a014f43090ffa81bc3f675e89ca26715ca88da6a3b6f49359b9ce17d67"
+      "sha256": "f0c6b95341c5a6e6c0d676ddf53158fc6a0b4e2db2f20ffd64b05f253c60390a"
     },
     {
       "bytes": 15115,
@@ -81210,7 +81225,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 685135646,
-    "files": 16241
+    "bytes": 685454323,
+    "files": 16244
   }
 }

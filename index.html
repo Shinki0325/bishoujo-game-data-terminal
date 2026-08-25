@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20260824-confirmed-review-direct-vndb-family-v1">
+<html lang="zh-CN" data-app-revision="20260825-bangumi-family-default-mobile-details-scroll-v1">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
         // Keep the dark default when preference storage is unavailable.
       }
     </script>
-    <link rel="stylesheet" href="./styles.20260824-confirmed-review-direct-vndb-family-v1.css">
+    <link rel="stylesheet" href="./styles.20260825-bangumi-family-default-mobile-details-scroll-v1.css">
   </head>
   <body>
     <header class="tool-header">
@@ -604,14 +604,14 @@
           <div class="bangumi-import-result-heading">
             <div>
               <h3 id="bangumi-public-import-results-title">确认导入结果</h3>
-              <p>仅展示现有 confirmed Bangumi 绑定可严格对应的作品。</p>
+              <p>默认仅勾选主作品；同一展示家族的其他版本可按需展开选择。</p>
             </div>
             <output id="bangumi-public-import-capacity" class="bangumi-import-capacity">候选池剩余 0</output>
           </div>
           <div class="bangumi-import-metrics" aria-label="匹配统计">
             <div><strong id="bangumi-public-total">0</strong><span>公开游戏</span></div>
             <div><strong id="bangumi-public-matched-subjects">0</strong><span>严格匹配条目</span></div>
-            <div><strong id="bangumi-public-mapped-works">0</strong><span>可映射作品</span></div>
+            <div><strong id="bangumi-public-mapped-works">0</strong><span>默认导入主作品</span></div>
             <div><strong id="bangumi-public-unmatched">0</strong><span>未匹配条目</span></div>
           </div>
           <div id="bangumi-public-import-list" class="bangumi-import-list" aria-live="polite"></div>
@@ -848,43 +848,45 @@
           <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button></form>
         </div>
       </div>
-      <section id="details-version-shelf" class="details-version-shelf" aria-label="公开版本" hidden>
-        <p id="details-version-current" class="details-version-current"></p>
-        <div id="details-version-list" class="details-version-list"></div>
-      </section>
-      <section class="details-hero" aria-label="作品概要">
-        <button id="details-cover" class="details-cover" type="button" aria-label="放大作品图片" disabled>
-          <img id="details-cover-image" alt="" hidden>
-          <span class="details-cover-hint" aria-hidden="true">点击放大</span>
-        </button>
-        <div class="details-hero-main">
-          <dl class="details-metadata">
-            <div class="details-metadata-company">
-              <dt>会社</dt>
-              <dd id="details-brand"></dd>
-            </div>
-            <div class="details-metadata-release">
-              <dt>发售日</dt>
-              <dd id="details-release"></dd>
-            </div>
-            <div class="details-metadata-score">
-              <dt>评分</dt>
-              <dd id="details-score"></dd>
-            </div>
-          </dl>
-          <section class="details-tags-section" aria-labelledby="details-tags-title">
-            <h3 id="details-tags-title">标签</h3>
-            <ul id="details-tags" class="details-tags"></ul>
-          </section>
-        </div>
-      </section>
-      <section id="details-credits" class="details-credits" aria-label="作品制作资料" hidden>
-        <p id="details-credits-status" class="details-credits-status" role="status" hidden></p>
-        <nav id="details-credits-tabs" class="details-credits-tabs" role="tablist" aria-label="作品资料类别" hidden></nav>
-        <div id="details-credits-content" class="details-credits-content"></div>
-      </section>
+      <div class="details-scroll">
+        <section id="details-version-shelf" class="details-version-shelf" aria-label="公开版本" hidden>
+          <p id="details-version-current" class="details-version-current"></p>
+          <div id="details-version-list" class="details-version-list"></div>
+        </section>
+        <section class="details-hero" aria-label="作品概要">
+          <button id="details-cover" class="details-cover" type="button" aria-label="放大作品图片" disabled>
+            <img id="details-cover-image" alt="" hidden>
+            <span class="details-cover-hint" aria-hidden="true">点击放大</span>
+          </button>
+          <div class="details-hero-main">
+            <dl class="details-metadata">
+              <div class="details-metadata-company">
+                <dt>会社</dt>
+                <dd id="details-brand"></dd>
+              </div>
+              <div class="details-metadata-release">
+                <dt>发售日</dt>
+                <dd id="details-release"></dd>
+              </div>
+              <div class="details-metadata-score">
+                <dt>评分</dt>
+                <dd id="details-score"></dd>
+              </div>
+            </dl>
+            <section class="details-tags-section" aria-labelledby="details-tags-title">
+              <h3 id="details-tags-title">标签</h3>
+              <ul id="details-tags" class="details-tags"></ul>
+            </section>
+          </div>
+        </section>
+        <section id="details-credits" class="details-credits" aria-label="作品制作资料" hidden>
+          <p id="details-credits-status" class="details-credits-status" role="status" hidden></p>
+          <nav id="details-credits-tabs" class="details-credits-tabs" role="tablist" aria-label="作品资料类别" hidden></nav>
+          <div id="details-credits-content" class="details-credits-content"></div>
+        </section>
+      </div>
     </dialog>
 
-    <script type="module" src="./main.20260824-confirmed-review-direct-vndb-family-v1.js"></script>
+    <script type="module" src="./main.20260825-bangumi-family-default-mobile-details-scroll-v1.js"></script>
   </body>
 </html>
