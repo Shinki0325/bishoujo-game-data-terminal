@@ -80582,9 +80582,9 @@
       "sha256": "f4debd5cf9f8b631c1032393d14312d05e07d59fe586bd49c2b360f29f6baa99"
     },
     {
-      "bytes": 52504,
+      "bytes": 1970,
       "path": "index.html",
-      "sha256": "f4debd5cf9f8b631c1032393d14312d05e07d59fe586bd49c2b360f29f6baa99"
+      "sha256": "d42cd65391e5b1377c7b0e316f2f6f01d7422d3d92a9367c55c032fea7126ef0"
     },
     {
       "bytes": 5495,
@@ -81230,6 +81230,11 @@
       "bytes": 155963,
       "path": "main.js",
       "sha256": "63744f11b4fc797c5c7aaeefc7a2f0e85d7d8c5fd351d9d0ef3b26250cabab45"
+    },
+    {
+      "bytes": 255,
+      "path": "release-head.json",
+      "sha256": "ba136d35468c9801877febbc8a7d49d846deab37ae4818300bab4f05226c8800"
     },
     {
       "bytes": 49039,
@@ -83925,7 +83930,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 767209165,
-    "files": 16784
+    "bytes": 767158886,
+    "files": 16785
   }
 }
