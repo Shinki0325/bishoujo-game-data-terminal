@@ -1,6 +1,6 @@
 {
-  "closureSha256": "903ac1e883302172feb1e19141e2bc696a0174edc7cb770abb3e2adfdda1a708",
-  "entry": "releases/20260826-runtime-data-fail-closed-v1/index.html",
-  "releaseId": "20260826-runtime-data-fail-closed-v1",
+  "closureSha256": "aa88611d928ba90dec332a5646fe9b51e9269de39eb117a2948816b6aba2c45e",
+  "entry": "releases/20260826-cover-assets-v2-runtime-v6/index.html",
+  "releaseId": "20260826-cover-assets-v2-runtime-v6",
   "schemaVersion": "egs-tier-release-head-v1"
 }
