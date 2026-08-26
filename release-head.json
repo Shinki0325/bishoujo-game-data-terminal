@@ -1,6 +1,6 @@
 {
-  "closureSha256": "f79cb38738d618d88df4954129d7bcc88e9a591463d4027e3d97e5e12a280f52",
-  "entry": "releases/20260826-bangumi-public-bindings-v1/index.html",
-  "releaseId": "20260826-bangumi-public-bindings-v1",
+  "closureSha256": "e03ca1532b5fa6c5b7271f9b9d834965f45953d69993853f215bdfb5eb20d706",
+  "entry": "releases/20260826-admissions-staged-startup-v2/index.html",
+  "releaseId": "20260826-admissions-staged-startup-v2",
   "schemaVersion": "egs-tier-release-head-v1"
 }
