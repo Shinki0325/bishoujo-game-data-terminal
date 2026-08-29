@@ -1,6 +1,6 @@
 {
-  "closureSha256": "1d8732cef0279059fb517b7b57eed2f25186339ba4403e9d7b1b6005049db30b",
-  "entry": "releases/20260827-cover-assets-v2-company-avatar-path-hotfix-v8/index.html",
-  "releaseId": "20260827-cover-assets-v2-company-avatar-path-hotfix-v8",
+  "closureSha256": "f5ef850f8211328d04007eba71465123c47b304b353de3d3d0794b4c8cd3fb28",
+  "entry": "releases/20260830-detail-compare-ui-v1/index.html",
+  "releaseId": "20260830-detail-compare-ui-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
