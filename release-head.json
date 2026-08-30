@@ -1,6 +1,6 @@
 {
-  "closureSha256": "89bdf6e85b95b4aad355f7487c8c362a2c11f6f5d994a785a2f846c309ac23e3",
-  "entry": "releases/20260830-light-comparison-ui-v2/index.html",
-  "releaseId": "20260830-light-comparison-ui-v2",
+  "closureSha256": "47a455bcf6e13ac61104dfcaffe3b8a5ebdaabc931f55e8b026fce730685d442",
+  "entry": "releases/20260830-interaction-performance-v1/index.html",
+  "releaseId": "20260830-interaction-performance-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
