@@ -67,6 +67,7 @@ import {
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
+import { createInteractionMetrics } from './lib/interaction-metrics.js';
 import { appendTier } from './lib/tier-config.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
@@ -1001,6 +1002,7 @@ async function initialize() {
     renderThemeToggle();
   });
   const startupMetrics = createStartupMetrics();
+  const interactionMetrics = createInteractionMetrics();
   const assetBase = configuredAssetBase();
   const highDensityPreviewsEnabled = canUseHighDensityPreview({
     devicePixelRatio: window.devicePixelRatio,
@@ -1356,6 +1358,7 @@ async function initialize() {
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   let mediaStore = null;
   const replacementMetadataCache = new Map();
+  const coverSourceCache = new Map();
   let customWorks = [];
   await startupMetrics.measureAsync('local-media-hydration', async () => {
     try {
@@ -1412,6 +1415,7 @@ async function initialize() {
   let rankingWorkspaceVisible = false;
   let renderedFilterKey = null;
   let lastRenderedModel = null;
+  let renderGeneration = 0;
   let replacementWork = null;
   let companyDirectoryOpen = false;
   let rankingSubject = 'work';
@@ -1985,7 +1989,14 @@ async function initialize() {
     companyGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
   }
 
-  function openCompanyDirectory(companyId = null, { push = true } = {}) {
+  function openCompanyDirectory(companyId = null, { push = true, interaction = null } = {}) {
+    const activeInteraction = interaction ?? (push ? interactionMetrics.begin('company-directory') : null);
+    interactionMetrics.stage(activeInteraction, 'debounce-complete');
+    interactionMetrics.stage(activeInteraction, 'worker-return');
+    interactionMetrics.stage(activeInteraction, 'controller-ready');
+    interactionMetrics.stage(activeInteraction, 'presentation-ready');
+    interactionMetrics.stage(activeInteraction, 'model-ready');
+    interactionMetrics.stage(activeInteraction, 'media-ready');
     // Disable stale work-card handlers before the asynchronous workspace refresh.
     setWorkSelectionMode(false);
     companyDirectoryOpen = true;
@@ -1994,6 +2005,8 @@ async function initialize() {
     if (elements.detailsDialog.open) elements.detailsDialog.close();
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
     renderCompanyDirectory();
+    interactionMetrics.stage(activeInteraction, 'dom-updated');
+    interactionMetrics.completeAfterFrame(activeInteraction);
     showCompanyDirectoryHelpOnce();
     if (push) pushUiLocation();
   }
@@ -2028,8 +2041,9 @@ async function initialize() {
     return request;
   }
 
-  function invalidateReplacement(workId) {
+  function invalidateMedia(workId) {
     replacementMetadataCache.delete(workId);
+    coverSourceCache.delete(workId);
   }
 
   async function coverUrlForWork(work) {
@@ -2041,13 +2055,36 @@ async function initialize() {
     return resolveAssetUrl(authorityThumbnailPathForWork(work), assetBase);
   }
 
-  async function coverSourcesForWork(work) {
+  async function prepareCoverSourcesForWork(work) {
     const thumbnailUrl = await coverUrlForWork(work);
     if (!highDensityPreviewsEnabled || thumbnailUrl.startsWith('blob:')) {
       return Object.freeze({ thumbnailUrl, previewUrl: null });
     }
     const previewUrl = await previewUrlForWork(work);
     return Object.freeze({ thumbnailUrl, previewUrl: previewUrl === thumbnailUrl ? null : previewUrl });
+  }
+
+  function coverSourceKey(work) {
+    return JSON.stringify([
+      authorityThumbnailPathForWork(work),
+      work.projectedPreviewPath ?? null,
+      work.previewPath ?? null,
+      work.coverPath ?? null,
+      work.localMediaKind ?? null,
+      highDensityPreviewsEnabled
+    ]);
+  }
+
+  function coverSourcesForWork(work) {
+    const key = coverSourceKey(work);
+    const cached = coverSourceCache.get(work.workId);
+    if (cached?.key === key) return cached.request;
+    const request = prepareCoverSourcesForWork(work).catch(error => {
+      if (coverSourceCache.get(work.workId)?.request === request) coverSourceCache.delete(work.workId);
+      throw error;
+    });
+    coverSourceCache.set(work.workId, Object.freeze({ key, request }));
+    return request;
   }
 
   async function resolveCoverUrls(works) {
@@ -2118,7 +2155,7 @@ async function initialize() {
     },
     onRestore: work => {
       void mediaStore.deleteReplacement(work.workId).then(() => {
-        invalidateReplacement(work.workId);
+        invalidateMedia(work.workId);
         return render();
       }).then(() => {
         previewActions.closeMenu();
@@ -2376,7 +2413,6 @@ async function initialize() {
       if (edited.document.layers.length === 0) {
         if (publicOriginal) {
           await mediaStore.clearStickerEdit({ kind: 'replacement', workId: work.workId, restorePublic: true });
-          invalidateReplacement(work.workId);
         } else if (editable?.metadata?.stickerDocument) {
           await mediaStore.clearStickerEdit({ ...identity, restorePublic: false });
         }
@@ -2392,8 +2428,8 @@ async function initialize() {
           ...(!custom ? { authorityThumbnailPath: authorityThumbnailPathForWork(work) } : {}),
           ...(publicOriginal ? { stickerSource: 'public' } : {})
         });
-        if (!custom) invalidateReplacement(work.workId);
       }
+      invalidateMedia(work.workId);
       previewLoader.cancel();
       if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
       else elements.mediaPreview.open = false;
@@ -2425,13 +2461,15 @@ async function initialize() {
       await mediaStore.deleteCustom(id).catch(cleanupError => console.error(cleanupError));
       throw error;
     }
+    invalidateMedia(id);
     await render();
   }
 
-  function commitTitleQuery(titleQuery) {
+  function commitTitleQuery(titleQuery, interaction = null) {
     const previous = String(controller.inspectState().filterState.titleQuery ?? '');
     const next = String(titleQuery ?? '');
-    const result = runStateChange(() => controller.setFilterState({ titleQuery: next }));
+    interactionMetrics.stage(interaction, 'debounce-complete');
+    const result = runStateChange(() => controller.setFilterState({ titleQuery: next }), [], interaction);
     if (previous.trim() !== next.trim()) {
       if (previous.trim().length === 0 && next.trim().length > 0) pushUiLocation();
       else replaceUiLocation();
@@ -2440,12 +2478,13 @@ async function initialize() {
   }
 
   function clearTitleQuery() {
+    const interaction = interactionMetrics.begin('clear-search');
     selectionView?.cancelPendingTitleQuery?.();
     elements.titleSearchClear.hidden = true;
     elements.mobileTitleSearchClear.hidden = true;
     elements.titleSearch.value = '';
     elements.mobileTitleSearch.value = '';
-    return commitTitleQuery('');
+    return commitTitleQuery('', interaction);
   }
 
   const selectionView = createSelectionView({
@@ -2479,11 +2518,18 @@ async function initialize() {
     isComparedWork(work) {
       return compareWorkIds.includes(String(work?.workId ?? ''));
     },
-    onFilterChange(patch) {
-      if (Object.hasOwn(patch, 'titleQuery')) return commitTitleQuery(patch.titleQuery);
-      const result = runStateChange(() => controller.setFilterState(patch));
+    onFilterChange(patch, interaction = null) {
+      const activeInteraction = interaction ?? interactionMetrics.begin(
+        Object.hasOwn(patch, 'titleQuery') ? 'title-search' : 'filter'
+      );
+      if (Object.hasOwn(patch, 'titleQuery')) return commitTitleQuery(patch.titleQuery, activeInteraction);
+      interactionMetrics.stage(activeInteraction, 'debounce-complete');
+      const result = runStateChange(() => controller.setFilterState(patch), [], activeInteraction);
       replaceUiLocation();
       return result;
+    },
+    onInteractionStart(kind) {
+      return interactionMetrics.begin(kind);
     },
     onPageChange() {
       replaceUiLocation();
@@ -3065,7 +3111,7 @@ async function initialize() {
           authorityThumbnailPath: authorityThumbnailPathForWork(work)
         });
       }
-      invalidateReplacement(work.workId);
+      invalidateMedia(work.workId);
       await render();
     },
     onError(error) {
@@ -3283,14 +3329,15 @@ async function initialize() {
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
   }
 
-  function runStateChange(change, visibleBrands = []) {
+  function runStateChange(change, visibleBrands = [], interaction = null) {
     if (importBusy) return false;
     const result = change();
-    void render(visibleBrands);
+    void render(visibleBrands, interaction);
     return result;
   }
 
-  async function render(visibleBrands = []) {
+  async function render(visibleBrands = [], interaction = null) {
+    const generation = ++renderGeneration;
     captureWorkspaceScroll();
     const state = controller.inspectState();
     let outcome;
@@ -3303,19 +3350,26 @@ async function initialize() {
         companyLimit: 24
       });
     } catch (error) {
+      interactionMetrics.cancel(interaction, 'worker-error');
       announce('筛选计算失败，可继续调整条件重试。', 'error');
       console.error(error);
       return false;
     }
-    if (outcome.status === 'stale') return false;
+    if (outcome.status === 'stale') {
+      interactionMetrics.cancel(interaction, 'stale-query');
+      return false;
+    }
+    if (generation !== renderGeneration) {
+      interactionMetrics.cancel(interaction, 'superseded-render');
+      return false;
+    }
+    interactionMetrics.stage(interaction, 'worker-return');
     const model = controller.inspect(outcome.workIds);
+    interactionMetrics.stage(interaction, 'controller-ready');
     const ranking = model.state.workspaceMode === 'ranking';
     const companyState = ranking && rankingSubject === 'company' ? companyRanking.inspect() : null;
     const activePresentation = companyState === null ? presentation : companyPresentation;
     let rankingModel = null;
-    elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
-    elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
-    elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
     // Keep the filtered result distinct from the full catalog size. This is
     // especially important on mobile, where the compact header used to make
     // 3788 look like the total number of works.
@@ -3325,20 +3379,43 @@ async function initialize() {
       : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
         sortKey: model.state.filterState.sortKey,
         sortDirection: model.state.filterState.sortDirection,
-        workById: worksById
+        workById: worksById,
+        presorted: true
       });
+    interactionMetrics.stage(interaction, 'presentation-ready');
     const catalogTotal = presentationFamilies === null
       ? sample.works.length
       : sample.works.length - presentationFamilies.memberCount + presentationFamilies.familyCount;
+    if (ranking) {
+      rankingModel = rankingSubject === 'company'
+        ? buildCompanyRankingModel()
+        : buildRankingModel(model.state, worksById, candidateTitleQuery);
+    }
+    interactionMetrics.stage(interaction, 'model-ready');
+    let renderCoverUrls = null;
+    if (!companyDirectoryOpen && ranking && rankingSubject === 'work') {
+      renderCoverUrls = await resolveCoverUrls([
+        ...rankingModel.candidateWorks,
+        ...rankingModel.tiers.flatMap(tier => tier.works)
+      ]);
+    } else if (!companyDirectoryOpen && !ranking) {
+      renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks));
+    }
+    if (generation !== renderGeneration) {
+      interactionMetrics.cancel(interaction, 'superseded-media');
+      return false;
+    }
+    interactionMetrics.stage(interaction, 'media-ready');
+    elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
+    elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
+    elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
     elements.filterResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
     elements.catalogResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
     renderWorkspace(model);
     if (companyDirectoryOpen) {
       renderCompanyDirectory();
+      interactionMetrics.stage(interaction, 'dom-updated');
     } else if (ranking) {
-      rankingModel = rankingSubject === 'company'
-        ? buildCompanyRankingModel()
-        : buildRankingModel(model.state, worksById, candidateTitleQuery);
       elements.rankingShowCounts.checked = activePresentation.inspect().showCounts;
       elements.rankingShowTitles.checked = activePresentation.inspect().showTitles;
       rankingView.setShowCounts(activePresentation.inspect().showCounts);
@@ -3353,11 +3430,9 @@ async function initialize() {
       setMobileRankingCandidatesOpen(document.body.classList.contains('is-mobile-ranking-candidates-open'));
       elements.rankingCandidateSearch.closest('.search-field').hidden = isCompanyRanking;
       elements.rankingCandidateSearch.placeholder = '搜索候选标题';
-      rankingView.render(rankingModel, rankingSubject === 'work' ? await resolveCoverUrls([
-        ...rankingModel.candidateWorks,
-        ...rankingModel.tiers.flatMap(tier => tier.works)
-      ]) : null);
+      rankingView.render(rankingModel, renderCoverUrls);
       rankingView.setMobileDragEnabled(true);
+      interactionMetrics.stage(interaction, 'dom-updated');
     } else {
       selectionView.render({
         works: visiblePresentationWorks,
@@ -3371,7 +3446,8 @@ async function initialize() {
         selectionMode: selectionMode && !compareMode,
         compareMode,
         comparedWorkIds: compareWorkIds
-    }, await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks)));
+      }, renderCoverUrls);
+      interactionMetrics.stage(interaction, 'dom-updated');
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (nextFilterKey !== renderedFilterKey) {
@@ -3400,6 +3476,7 @@ async function initialize() {
     }
     else cancelRankingPreload();
     showMobileHelpOnce();
+    interactionMetrics.completeAfterFrame(interaction);
     return true;
   }
 
@@ -3413,9 +3490,13 @@ async function initialize() {
       return counts;
     }, Object.create(null)),
     onFilterChange(nextFilterState) {
-      return runStateChange(() => controller.setFilterState(nextFilterState));
+      const interaction = interactionMetrics.begin('filter');
+      interactionMetrics.stage(interaction, 'debounce-complete');
+      return runStateChange(() => controller.setFilterState(nextFilterState), [], interaction);
     },
     onAttributeSelectionChange(groupId, selectedIds) {
+      const interaction = interactionMetrics.begin('filter');
+      interactionMetrics.stage(interaction, 'debounce-complete');
       return runStateChange(() => {
         const current = controller.inspectState().filterState.attributeSelections;
         return controller.setFilterState({
@@ -3424,10 +3505,12 @@ async function initialize() {
             [groupId]: [...selectedIds]
           }
         });
-      });
+      }, [], interaction);
     },
     onRequestCounts(_filterState, visibleBrands) {
-      void render(visibleBrands);
+      const interaction = interactionMetrics.begin('filter-counts');
+      interactionMetrics.stage(interaction, 'debounce-complete');
+      void render(visibleBrands, interaction);
     }
   });
   // Keep the shared filter drawer outside desktop mode roots so mobile can hide
@@ -4040,6 +4123,7 @@ async function initialize() {
     return result;
   });
   elements.modeCompany.addEventListener('click', () => {
+    const interaction = interactionMetrics.begin('company-directory');
     closeMobileRankingCandidates();
     closeToolbarMenus();
     compareMode = false;
@@ -4050,7 +4134,7 @@ async function initialize() {
         window.setTimeout(open, 0);
         return;
       }
-      openCompanyDirectory();
+      openCompanyDirectory(null, { interaction });
     };
     open();
   });

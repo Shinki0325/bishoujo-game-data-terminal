@@ -1,6 +1,7 @@
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { createActionIcon } from '../lib/action-icons.js';
+import { reconcileKeyedChildren } from '../lib/keyed-dom.js';
 import { setListState } from '../lib/list-state.js';
 import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
 
@@ -160,6 +161,7 @@ export function createSelectionCard(documentRef, work, {
   mobileSortKey = 'median',
   selectionEnabled = true,
   isSelectionEnabled = () => Boolean(selectionEnabled),
+  isSelected = () => Boolean(selected),
   selectionHotspots = false,
   isCardActive = () => true,
   onCompare = null,
@@ -177,6 +179,7 @@ export function createSelectionCard(documentRef, work, {
   assertFunction(onToggle, 'onToggle');
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(isSelectionEnabled, 'isSelectionEnabled');
+  assertFunction(isSelected, 'isSelected');
   assertFunction(isCardActive, 'isCardActive');
   assertFunction(isCompared, 'isCompared');
   const shouldToggleFromCardSurface = () => selectionHotspots && isSelectionEnabled();
@@ -202,7 +205,7 @@ export function createSelectionCard(documentRef, work, {
       onCompare(work, !currentCompared());
       return;
     }
-    if (isSelectionEnabled()) onToggle(work, !selected);
+    if (isSelectionEnabled()) onToggle(work, !isSelected());
     else onOpenDetails(work);
   });
 
@@ -238,7 +241,7 @@ export function createSelectionCard(documentRef, work, {
       onCompare(work, !currentCompared());
       return;
     }
-    if (shouldToggleFromCardSurface()) onToggle(work, !selected);
+    if (shouldToggleFromCardSurface()) onToggle(work, !isSelected());
     else onOpenDetails(work);
   });
   cover.append(image);
@@ -255,11 +258,11 @@ export function createSelectionCard(documentRef, work, {
   checkbox.addEventListener('change', event => {
       event.stopPropagation();
       if (!isCardActive()) {
-        checkbox.checked = Boolean(selected);
+        checkbox.checked = Boolean(isSelected());
         return;
       }
       if (isSelectionEnabled()) onToggle(work, checkbox.checked);
-      else checkbox.checked = Boolean(selected);
+      else checkbox.checked = Boolean(isSelected());
     });
     checkbox.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
@@ -347,6 +350,82 @@ export function createSelectionCard(documentRef, work, {
   return card;
 }
 
+function cardStructureKey(work, {
+  view,
+  selectionEnabled,
+  compareMode,
+  display,
+  coverUrl,
+  previewUrl
+}) {
+  return JSON.stringify([
+    view,
+    Boolean(selectionEnabled),
+    Boolean(compareMode),
+    display,
+    coverUrl,
+    previewUrl,
+    work.workId,
+    work.displayTitle,
+    work.title,
+    work.brandName,
+    work.releaseDate,
+    work.median,
+    work.voteCount,
+    work.presentationMemberCount,
+    work.vndbRating?.cardText,
+    work.bangumiRating?.detailScore
+  ]);
+}
+
+function syncSelectionCard(documentRef, card, work, {
+  view,
+  selected,
+  selectionEnabled,
+  compared,
+  compareMode,
+  mobileSortKey
+}) {
+  card.classList.toggle('selection-card-full', view === 'full');
+  card.classList.toggle('selection-card-compact', view === 'compact');
+  card.classList.toggle('is-compare-mode', Boolean(compareMode));
+  card.classList.toggle('is-selected', Boolean(selected));
+  card.classList.toggle('is-selectable', Boolean(selectionEnabled));
+
+  const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
+    ? work.displayTitle
+    : work.title;
+  const checkbox = card.querySelector?.('.selection-card-checkbox') ?? null;
+  if (checkbox !== null) {
+    checkbox.checked = Boolean(selected);
+    checkbox.setAttribute('aria-label', `${selected ? '取消选择' : '选择'} ${displayTitle}`);
+  }
+  const compareButton = card.querySelector?.('.selection-card-compare') ?? null;
+  if (compareButton !== null) {
+    compareButton.classList.toggle('is-compared', Boolean(compared));
+    compareButton.textContent = compared ? '已加入比较' : '加入比较';
+    compareButton.setAttribute('aria-pressed', String(Boolean(compared)));
+    compareButton.setAttribute('aria-label', `${compared ? '移出' : '加入'}比较：${displayTitle}`);
+  }
+  const mobileRating = mobileCardRating(work, mobileSortKey);
+  const mobileRatingBadge = card.querySelector?.('.selection-card-mobile-rating') ?? null;
+  if (mobileRatingBadge !== null) {
+    mobileRatingBadge.dataset.source = mobileRating.source;
+    mobileRatingBadge.textContent = mobileRating.text;
+    mobileRatingBadge.setAttribute('aria-label', `当前排序来源评分：${mobileRating.text}`);
+  }
+  const existingMarker = card.querySelector?.('.selection-card-selected-mark') ?? null;
+  if (selected && !selectionEnabled && existingMarker === null) {
+    const marker = documentRef.createElement('span');
+    marker.className = 'selection-card-selected-mark';
+    marker.textContent = '已选';
+    marker.setAttribute('aria-label', '已选');
+    card.append(marker);
+  } else if ((!selected || selectionEnabled) && existingMarker !== null) {
+    existingMarker.remove();
+  }
+}
+
 export function syncSelectAllCheckbox(checkbox, selectAllState) {
   if (checkbox === null || typeof checkbox !== 'object') {
     throw new TypeError('checkbox must be an object');
@@ -369,6 +448,7 @@ export function createSelectionView({
   onCompareWork = () => {},
   isComparedWork = () => false,
   onFilterChange,
+  onInteractionStart = () => null,
   onPageChange = () => {},
   assetBase,
   cardSurfaceSelection = false
@@ -408,6 +488,7 @@ export function createSelectionView({
   assertFunction(onCompareWork, 'onCompareWork');
   assertFunction(isComparedWork, 'isComparedWork');
   assertFunction(onFilterChange, 'onFilterChange');
+  assertFunction(onInteractionStart, 'onInteractionStart');
   assertFunction(onPageChange, 'onPageChange');
   let renderedWorkKey = '';
   let pageIndex = 0;
@@ -417,6 +498,10 @@ export function createSelectionView({
   const defaultSelectionMode = true;
   let selectionModeActive = defaultSelectionMode;
   let selectionModeEpoch = 0;
+  let activeVisibleWorkIds = new Set();
+  let latestWorksById = new Map();
+  let latestSelectedWorkIds = new Set();
+  let cardCache = new Map();
 
   function scrollTarget() {
     return documentRef.scrollingElement ?? root;
@@ -437,8 +522,8 @@ export function createSelectionView({
     target.scrollLeft = Number.isFinite(position?.left) ? position.left : 0;
   }
 
-  const titleCommit = createDebouncedCommit(titleQuery => {
-    onFilterChange({ titleQuery });
+  const titleCommit = createDebouncedCommit((titleQuery, interaction) => {
+    onFilterChange({ titleQuery }, interaction);
   });
 
   elements.selectCurrentPage.addEventListener('click', () => {
@@ -461,17 +546,19 @@ export function createSelectionView({
   });
   elements.sortDirectionToggle.addEventListener('click', () => {
     if (latestModel === null) return;
+    const interaction = onInteractionStart('sort-direction');
     titleCommit.flush();
-    onFilterChange({ sortDirection: latestModel.filterState.sortDirection === 'asc' ? 'desc' : 'asc' });
+    onFilterChange({ sortDirection: latestModel.filterState.sortDirection === 'asc' ? 'desc' : 'asc' }, interaction);
   });
   elements.sortKey.addEventListener('change', () => {
     const sortKey = elements.sortKey.value;
     if (!FILTER_SORT_KEYS.has(sortKey)) return;
+    const interaction = onInteractionStart('sort-key');
     titleCommit.flush();
-    onFilterChange({ sortKey });
+    onFilterChange({ sortKey }, interaction);
   });
   elements.title.addEventListener('input', () => {
-    titleCommit(elements.title.value);
+    titleCommit(elements.title.value, onInteractionStart('title-search'));
   });
 
   function showPageError(message = '请输入有效的页码') {
@@ -523,9 +610,6 @@ export function createSelectionView({
   function renderLatest() {
     const model = latestModel;
     if (model === null) return;
-      // Every card render invalidates handlers retained by a previous page or
-      // filter result before the new DOM is installed.
-      selectionModeEpoch += 1;
       const activeElement = documentRef.activeElement;
       const activeCard = activeElement?.parentElement;
       const focusTarget = activeCard?.dataset?.workId && activeElement?.dataset?.controlType
@@ -539,35 +623,92 @@ export function createSelectionView({
       pageIndex = Math.min(pageIndex, pages.length - 1);
       const page = pages[pageIndex];
       const visibleWorks = model.works.slice(page.start, page.end);
+      activeVisibleWorkIds = new Set(visibleWorks.map(work => work.workId));
+      latestWorksById = new Map(visibleWorks.map(work => [work.workId, work]));
+      latestSelectedWorkIds = selected;
       setListState({
         status: elements.listState,
         state: model.works.length === 0 ? 'empty' : 'ready',
         message: '没有匹配的作品。'
       });
-      const renderedSelectionEpoch = selectionModeEpoch;
-      const cards = visibleWorks.map(work => createSelectionCard(documentRef, work, {
-        view: model.view,
-        selected: selected.has(work.workId),
-        selectionEnabled: Boolean(model.selectionMode),
-        isSelectionEnabled: () => selectionModeActive && selectionModeEpoch === renderedSelectionEpoch,
-        onToggle: (...args) => {
-          if (selectionModeActive && selectionModeEpoch === renderedSelectionEpoch) onToggleWork(...args);
-        },
-        selectionHotspots: cardSurfaceSelection && Boolean(model.selectionMode),
-        isCardActive: () => selectionModeEpoch === renderedSelectionEpoch,
-        onOpenDetails,
-        onCompare: model.compareMode ? onCompareWork : null,
-        compared: latestModel.comparedWorkIds?.includes?.(work.workId) ?? false,
-        isCompared: () => isComparedWork(work),
-        compareMode: Boolean(model.compareMode),
-        coverUrl: latestCoverUrls?.get?.(work.workId)?.thumbnailUrl ?? null,
-        previewUrl: latestCoverUrls?.get?.(work.workId)?.previewUrl ?? null,
-        display: cardDisplay,
-        mobileSortKey: model.filterState?.sortKey,
-        assetBase
-      }));
-      releaseGridImages(elements.grid);
-      elements.grid.replaceChildren(...cards);
+      const nextCardCache = new Map();
+      const cards = visibleWorks.map(work => {
+        const workId = work.workId;
+        const coverUrl = latestCoverUrls?.get?.(workId)?.thumbnailUrl ?? null;
+        const previewUrl = latestCoverUrls?.get?.(workId)?.previewUrl ?? null;
+        const structureKey = cardStructureKey(work, {
+          view: model.view,
+          selectionEnabled: Boolean(model.selectionMode),
+          compareMode: Boolean(model.compareMode),
+          display: cardDisplay,
+          coverUrl,
+          previewUrl
+        });
+        let entry = cardCache.get(workId);
+        if (entry === undefined || entry.structureKey !== structureKey || entry.epoch !== selectionModeEpoch) {
+          entry?.deactivate();
+          let active = true;
+          const cardEpoch = selectionModeEpoch;
+          const currentWork = () => latestWorksById.get(workId) ?? null;
+          const card = createSelectionCard(documentRef, work, {
+            view: model.view,
+            selected: selected.has(workId),
+            selectionEnabled: Boolean(model.selectionMode),
+            isSelectionEnabled: () => active && cardEpoch === selectionModeEpoch && selectionModeActive && activeVisibleWorkIds.has(workId),
+            isSelected: () => latestSelectedWorkIds.has(workId),
+            onToggle: (_renderedWork, nextSelected) => {
+              const liveWork = currentWork();
+              if (active && cardEpoch === selectionModeEpoch && liveWork !== null && selectionModeActive && activeVisibleWorkIds.has(workId)) {
+                onToggleWork(liveWork, nextSelected);
+              }
+            },
+            selectionHotspots: cardSurfaceSelection && Boolean(model.selectionMode),
+            isCardActive: () => active && cardEpoch === selectionModeEpoch && activeVisibleWorkIds.has(workId),
+            onOpenDetails: () => {
+              const liveWork = currentWork();
+              if (active && liveWork !== null && activeVisibleWorkIds.has(workId)) onOpenDetails(liveWork);
+            },
+            onCompare: model.compareMode ? (_renderedWork, include) => {
+              const liveWork = currentWork();
+              if (active && liveWork !== null && activeVisibleWorkIds.has(workId)) onCompareWork(liveWork, include);
+            } : null,
+            compared: latestModel.comparedWorkIds?.includes?.(workId) ?? false,
+            isCompared: () => {
+              const liveWork = currentWork();
+              return liveWork !== null && isComparedWork(liveWork);
+            },
+            compareMode: Boolean(model.compareMode),
+            coverUrl,
+            previewUrl,
+            display: cardDisplay,
+            mobileSortKey: model.filterState?.sortKey,
+            assetBase
+          });
+          entry = {
+            card,
+            epoch: cardEpoch,
+            structureKey,
+            deactivate() { active = false; }
+          };
+        }
+        syncSelectionCard(documentRef, entry.card, work, {
+          view: model.view,
+          selected: selected.has(workId),
+          selectionEnabled: Boolean(model.selectionMode),
+          compared: latestModel.comparedWorkIds?.includes?.(workId) ?? false,
+          compareMode: Boolean(model.compareMode),
+          mobileSortKey: model.filterState?.sortKey
+        });
+        nextCardCache.set(workId, entry);
+        return entry.card;
+      });
+      for (const [workId, entry] of cardCache) {
+        if (nextCardCache.get(workId) === entry) continue;
+        entry.deactivate();
+        releaseGridImages(entry.card);
+      }
+      reconcileKeyedChildren(elements.grid, cards);
+      cardCache = nextCardCache;
       if (focusTarget !== null) {
         const focusedCard = cards.find(card => card.dataset.workId === focusTarget.workId);
         const focusedControl = Array.from(focusedCard?.children ?? []).find(
