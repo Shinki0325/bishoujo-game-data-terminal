@@ -1,6 +1,6 @@
 {
-  "closureSha256": "f5ef850f8211328d04007eba71465123c47b304b353de3d3d0794b4c8cd3fb28",
-  "entry": "releases/20260830-detail-compare-ui-v1/index.html",
-  "releaseId": "20260830-detail-compare-ui-v1",
+  "closureSha256": "89bdf6e85b95b4aad355f7487c8c362a2c11f6f5d994a785a2f846c309ac23e3",
+  "entry": "releases/20260830-light-comparison-ui-v2/index.html",
+  "releaseId": "20260830-light-comparison-ui-v2",
   "schemaVersion": "egs-tier-release-head-v1"
 }
