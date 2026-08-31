@@ -1,6 +1,6 @@
 {
-  "closureSha256": "0e8963dbfe5a6ad30af3131361e028dcf8834d0bf50331284e5845d65ca2a641",
-  "entry": "releases/20260831-telemetry-detail-views-v1/index.html",
-  "releaseId": "20260831-telemetry-detail-views-v1",
+  "closureSha256": "a692b13db0f948d6569ae19c7021c7b5f7a449d3978cfb07f585a4687a654046",
+  "entry": "releases/20260831-telemetry-detail-height-v1/index.html",
+  "releaseId": "20260831-telemetry-detail-height-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
