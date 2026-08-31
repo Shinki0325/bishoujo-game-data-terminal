@@ -62,12 +62,15 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
-  DATA_REVISION
+  DATA_REVISION,
+  TELEMETRY_ENDPOINT,
+  TELEMETRY_RELEASE_ID
 } from './lib/runtime-config.js?v=b161066f4eee410d9aa33b0cf05e237d81cb63a28e39c934d4ba1cbf3402226e';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
 import { createInteractionMetrics } from './lib/interaction-metrics.js';
+import { createTelemetryClient } from './lib/telemetry-client.js';
 import { appendTier } from './lib/tier-config.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
@@ -1473,6 +1476,7 @@ async function initialize() {
   const compareCreditsLoaded = new Set();
   let detailsVersionShelfExpanded = false;
   let workDetailCreditsRequest = 0;
+  const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
   let applyingUiLocation = false;
   let locationScrollTimer = null;
   const workDetailCreditsView = createWorkDetailCreditsView({
@@ -2032,6 +2036,7 @@ async function initialize() {
     setWorkSelectionMode(false);
     companyDirectoryOpen = true;
     selectedCompanyId = companyId;
+    if (companyId !== null && companyId !== undefined) telemetry.recordCompanyOpen(companyId);
     currentWorkDetailId = null;
     if (elements.detailsDialog.open) elements.detailsDialog.close();
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
@@ -3870,6 +3875,7 @@ async function initialize() {
         : null;
     }
     currentWorkDetailId = work.workId;
+    telemetry.recordWorkOpen(work.workId);
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
     showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime, {
