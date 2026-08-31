@@ -1,5 +1,5 @@
 {
-  "closureSha256": "242b19db8e21b751416611bc6c6498111679c2bc2777fce7f11b530e356a0f4d",
+  "closureSha256": "669dfaed3bf3683b082b53d67eecf0b84da8c5cb2bd62fa4ae950feabb9fe2f7",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -2344,7 +2344,7 @@
     {
       "bytes": 3980,
       "path": "lib/runtime-config.js",
-      "sha256": "18ae3c450d526185d6c5770741b4aefe89f8fe4f8cb19fb3f533bfde59c9ac7a"
+      "sha256": "4a230f31a686b3cf5c2358d609027445ca8cc7f6ef92c1b64f6a88cbeb276340"
     },
     {
       "bytes": 1990,
@@ -2487,7 +2487,7 @@
       "sha256": "cfc6115b6152911f545ab912368c269b1cd2e1dc09c3a0567ade2f07772df29d"
     }
   ],
-  "releaseId": "20260831-telemetry-v2",
+  "releaseId": "20260831-telemetry-v3",
   "runtimeDataRevision": "b161066f4eee410d9aa33b0cf05e237d81cb63a28e39c934d4ba1cbf3402226e",
   "schemaVersion": "egs-tier-immutable-release-closure-v1",
   "staticFiles": [
@@ -2504,7 +2504,7 @@
     {
       "bytes": 59799,
       "path": "index.html",
-      "sha256": "402ed1dec50beeb40e03ce0266df4f3647acb58259564179d606dc871fd4730c"
+      "sha256": "4704dce5b18d3a78e77424a6681fb346fbcd0cea543ff5763dcab638d63ce3e3"
     },
     {
       "bytes": 212272,
