@@ -1,6 +1,6 @@
 {
-  "closureSha256": "cc69d82156f20cb7bb087ee79e43f4254192e40580eb208f004f5e68275bc771",
-  "entry": "releases/20260831-compact-work-route-v1/index.html",
-  "releaseId": "20260831-compact-work-route-v1",
+  "closureSha256": "4c573f595f199c86ece2c05a4d4ac7057189b9ba172e895643eb0e8a84e34998",
+  "entry": "releases/20260831-site-welcome-v1/index.html",
+  "releaseId": "20260831-site-welcome-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }

@@ -170,6 +170,11 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   modeRanking: requiredElement('mode-ranking'),
   modeCompany: requiredElement('mode-company'),
   themeToggle: requiredElement('theme-toggle'),
+  siteInfoButton: requiredElement('site-info-button'),
+  siteWelcomeDialog: requiredElement('site-welcome-dialog'),
+  siteWelcomeStart: requiredElement('site-welcome-start'),
+  siteWelcomeWorkCount: requiredElement('site-welcome-work-count'),
+  siteWelcomeCompanyCount: requiredElement('site-welcome-company-count'),
   selectionView: requiredElement('selection-view'),
   rankingView: requiredElement('ranking-view'),
   rankingSubjectWork: requiredElement('ranking-subject-work'),
@@ -1001,6 +1006,32 @@ async function initialize() {
     applyTheme(document, activeTheme);
     renderThemeToggle();
   });
+  const SITE_WELCOME_STORAGE_KEY = 'egs-tier-terminal:site-welcome-v1';
+  const markSiteWelcomeSeen = () => {
+    try {
+      themeStorage?.setItem(SITE_WELCOME_STORAGE_KEY, 'seen');
+    } catch {
+      // A blocked preference store should not prevent the dialog from closing.
+    }
+  };
+  const hasSeenSiteWelcome = () => {
+    try {
+      return themeStorage?.getItem(SITE_WELCOME_STORAGE_KEY) === 'seen';
+    } catch {
+      return false;
+    }
+  };
+  const openSiteWelcome = ({ force = false, workCount = 7264, companyCount = 1364 } = {}) => {
+    if (!force && hasSeenSiteWelcome()) return false;
+    elements.siteWelcomeWorkCount.textContent = Number(workCount).toLocaleString('en-US');
+    elements.siteWelcomeCompanyCount.textContent = Number(companyCount).toLocaleString('en-US');
+    if (typeof elements.siteWelcomeDialog.showModal === 'function') elements.siteWelcomeDialog.showModal();
+    else elements.siteWelcomeDialog.open = true;
+    return true;
+  };
+  elements.siteInfoButton.addEventListener('click', () => openSiteWelcome({ force: true }));
+  elements.siteWelcomeStart.addEventListener('click', () => elements.siteWelcomeDialog.close());
+  elements.siteWelcomeDialog.addEventListener('close', markSiteWelcomeSeen);
   const startupMetrics = createStartupMetrics();
   const interactionMetrics = createInteractionMetrics();
   const assetBase = configuredAssetBase();
@@ -4490,7 +4521,13 @@ async function initialize() {
     const restored = await applyUiLocation();
     if (!restored) await render();
   });
-  openShareImportDialog();
+  const shareImportOpened = openShareImportDialog();
+  if (!shareImportOpened) {
+    openSiteWelcome({
+      workCount: populationContract.runtime.workIds.length,
+      companyCount: companyDirectory.companies.length
+    });
+  }
 }
 
 if (typeof document !== 'undefined') {
