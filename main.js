@@ -47,6 +47,7 @@ import { createWeightedRatingSort } from './lib/rating-sort.js?v=20260824-source
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
+import { prepareCharacterImageMap } from './lib/character-image-map.js';
 import {
   applyAuthorityFanoutMediaToWork,
   prepareAuthorityFanoutMediaProjection,
@@ -61,6 +62,8 @@ import {
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
+  CHARACTER_IMAGE_MAP_SHA256,
+  CHARACTER_IMAGE_ASSET_BASE,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
   TELEMETRY_ENDPOINT,
@@ -1067,7 +1070,8 @@ async function initialize() {
     bangumiRatingsSource,
     bangumiCanonicalAliasFallbackSource,
     mediaClearanceBridgeSource,
-    authorityFanoutSource
+    authorityFanoutSource,
+    characterImageMapSource
     ]
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
     fetchStagedRuntimeCoreSources({
@@ -1100,6 +1104,10 @@ async function initialize() {
         : Promise.resolve(null),
       RUNTIME_FEATURES.authorityFanoutV1.enabled
         ? fetchJsonWithSha256(DATA_URLS.authorityFanout, 'authority fanout projection')
+        : Promise.resolve(null),
+      RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.characterImages
+        ? fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射')
+          .catch(error => { console.warn('character image map unavailable; keeping character images disabled', error); return null; })
         : Promise.resolve(null)
     ])
   ]));
@@ -1175,10 +1183,25 @@ async function initialize() {
       if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
         throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
       }
+      let characterImageMap = null;
+      if (characterImageMapSource !== null) {
+        try {
+          if (characterImageMapSource.sha256 !== CHARACTER_IMAGE_MAP_SHA256) {
+            throw new TypeError('character image map hash does not match the runtime pin');
+          }
+          characterImageMap = prepareCharacterImageMap(characterImageMapSource.value, {
+            snapshotId: 'terminal-wiki-character-public-v2-2026-09-01'
+          });
+        } catch (error) {
+          console.warn('character image map rejected; keeping character images disabled', error);
+        }
+      }
       projectEntityRuntime = await createProjectEntityRuntime({
         bridge: mediaClearanceBridgeSource.value,
         catalog: { ...catalogSource.value, catalogSha256: catalogSource.sha256 },
         dataRevision: DATA_REVISION,
+        characterImageMap,
+        characterAssetBase: CHARACTER_IMAGE_ASSET_BASE,
         cryptoRef: crypto
       });
       console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
@@ -3959,11 +3982,16 @@ async function initialize() {
           elements.detailsCredits.dataset.projectEntityPeople = '0';
           elements.detailsCredits.dataset.projectEntityCharacters = '0';
         } else {
-          workDetailCreditsView.renderWork(credits);
-          const personCharacter = projectEntityRuntime?.projectCredits?.(credits);
+          const scopedCredits = work.isCrossSourceAdmission === true
+            ? { ...credits, cast: credits.cast.map(entry => ({ ...entry, sourceScope: 'admission' })) }
+            : credits;
+          const personCharacter = projectEntityRuntime?.projectCredits?.(scopedCredits);
           if (personCharacter !== undefined) {
+            workDetailCreditsView.renderWork(personCharacter.credits);
             elements.detailsCredits.dataset.projectEntityPeople = String(personCharacter.statistics.confirmedPersonCount);
             elements.detailsCredits.dataset.projectEntityCharacters = String(personCharacter.statistics.confirmedCharacterCount);
+          } else {
+            workDetailCreditsView.renderWork(credits);
           }
         }
       } catch (error) {

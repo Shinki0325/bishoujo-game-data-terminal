@@ -4392,10 +4392,37 @@ dialog::backdrop {
 .details-cast-list li {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
   gap: 12px;
   padding: 8px 10px;
   background: var(--surface);
+}
+
+.details-cast-portrait {
+  position: relative;
+  width: 72px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-muted) 80%, var(--surface));
+  color: var(--text-muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+.details-cast-portrait img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.details-cast-portrait[data-state="error"] {
+  border-color: color-mix(in srgb, #b85c5c 55%, var(--border));
+  color: #b85c5c;
 }
 
 .details-cast-character {
@@ -4403,6 +4430,14 @@ dialog::backdrop {
   display: flex;
   align-items: baseline;
   gap: 7px;
+}
+
+.details-cast-identity {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .details-cast-character strong,
@@ -4414,6 +4449,17 @@ dialog::backdrop {
 .details-cast-character small,
 .details-cast-actors {
   color: var(--text-muted);
+}
+
+.details-cast-scope {
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, #b28a45 38%, var(--border));
+  border-radius: 3px;
+  background: color-mix(in srgb, #e6c982 18%, var(--surface));
+  color: color-mix(in srgb, #956e26 82%, var(--text));
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
 }
 
 .details-song + .details-song {
@@ -4839,7 +4885,17 @@ dialog::backdrop {
 
   .details-cast-list li {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: 6px;
+  }
+
+  .details-cast-portrait {
+    width: 72px;
+    height: 88px;
+  }
+
+  .details-cast-character,
+  .details-cast-actors {
+    padding-left: 2px;
   }
 }
 

@@ -135,19 +135,45 @@ function castPane(documentRef, cast) {
   list.className = 'details-cast-list';
   for (const entry of orderedCast(cast)) {
     const item = documentRef.createElement('li');
+    if (entry?.scopeLabel) item.dataset.scope = 'admission';
+    const portrait = documentRef.createElement('div');
+    portrait.className = 'details-cast-portrait';
+    const placeholder = documentRef.createElement('span');
+    placeholder.className = 'details-cast-placeholder';
+    placeholder.textContent = '暂无图片';
+    portrait.append(placeholder);
+    if (entry?.image?.url) {
+      const image = documentRef.createElement('img');
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.src = entry.image.url;
+      image.addEventListener('load', () => { portrait.dataset.state = 'loaded'; placeholder.hidden = true; });
+      image.addEventListener('error', () => { portrait.dataset.state = 'error'; image.remove(); placeholder.hidden = false; placeholder.textContent = '图片加载失败'; });
+      portrait.append(image);
+    }
     const character = documentRef.createElement('span');
     character.className = 'details-cast-character';
+    const identity = documentRef.createElement('span');
+    identity.className = 'details-cast-identity';
     const name = documentRef.createElement('strong');
     name.textContent = entry.characterName;
-    character.append(name);
+    identity.append(name);
     if (typeof entry.role === 'string') {
       const role = documentRef.createElement('small');
       role.textContent = castRoleLabel(entry.role);
-      character.append(role);
+      identity.append(role);
     }
+    if (entry?.scopeLabel) {
+      const scope = documentRef.createElement('em');
+      scope.className = 'details-cast-scope';
+      scope.textContent = entry.scopeLabel;
+      identity.append(scope);
+    }
+    character.append(identity);
     const actors = people(documentRef, entry.actors);
     actors.classList.add('details-cast-actors');
-    item.append(character, actors);
+    item.append(portrait, character, actors);
     list.append(item);
   }
   return list;
