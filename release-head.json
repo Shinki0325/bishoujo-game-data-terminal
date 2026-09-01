@@ -1,6 +1,6 @@
 {
-  "closureSha256": "1be67903ea6bfc7f46a3191f6ceda050d31d0690a262714b7fc8a3da086f814a",
-  "entry": "releases/20260901-search-alias-family-boundary-v1/index.html",
-  "releaseId": "20260901-search-alias-family-boundary-v1",
+  "closureSha256": "dd66e1f34816769da29443daa7d1eb465e80068e8fd6050c289e5a7afe244dd4",
+  "entry": "releases/20260901-company-alias-search-v1/index.html",
+  "releaseId": "20260901-company-alias-search-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
