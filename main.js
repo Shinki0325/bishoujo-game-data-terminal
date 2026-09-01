@@ -1,4 +1,5 @@
 import {
+  installExternalCoverImageRecovery,
   resolveAssetUrl,
   validateRelativeAssetPath
 } from './lib/asset-url.js';
@@ -4625,6 +4626,7 @@ async function initialize() {
 }
 
 if (typeof document !== 'undefined') {
+  installExternalCoverImageRecovery(document);
   initialize().catch(error => {
     showStartupFailure(error);
     console.error(error);
