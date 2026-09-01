@@ -63,6 +63,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   CHARACTER_IMAGE_MAP_SHA256,
+  CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
   CHARACTER_IMAGE_ASSET_BASE,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
@@ -1184,7 +1185,7 @@ async function initialize() {
             throw new TypeError('character image map hash does not match the runtime pin');
           }
           return prepareCharacterImageMap(source.value, {
-            snapshotId: 'terminal-wiki-character-public-v2-2026-09-01'
+            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID
           });
         })
         .catch(error => {
