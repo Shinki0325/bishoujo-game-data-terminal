@@ -2710,7 +2710,7 @@ async function initialize() {
       if (mapping?.characterId && !imageByCharacterId.has(mapping.characterId)) imageByCharacterId.set(mapping.characterId, mapping);
       if (mapping?.sourceCharacterId && !imageBySourceCharacterId.has(mapping.sourceCharacterId)) imageBySourceCharacterId.set(mapping.sourceCharacterId, mapping);
     }
-    const nameById = new Map(records.map(person => [person.entityId, person.canonicalName ?? '未命名人物']));
+      const nameById = new Map(records.map(person => [person.entityId, person.displayName ?? person.canonicalName ?? '未命名人物']));
     const workPeople = new Map();
     for (const person of records) {
       for (const credit of person.credits ?? []) {
@@ -2751,6 +2751,7 @@ async function initialize() {
           const aMain = ['main', 'primary', 'メイン'].includes(String(a.characterRole ?? '')) ? 1 : 0;
           const bMain = ['main', 'primary', 'メイン'].includes(String(b.characterRole ?? '')) ? 1 : 0;
           return bMain - aMain
+            || Number(Boolean(b.characterImageUrl)) - Number(Boolean(a.characterImageUrl))
             || (Number(worksById.get(String(b.workId))?.voteCount) || 0) - (Number(worksById.get(String(a.workId))?.voteCount) || 0)
             || String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? ''))
             || String(a.characterName ?? '').localeCompare(String(b.characterName ?? ''), 'zh-Hans');

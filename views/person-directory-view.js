@@ -58,8 +58,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
 
   function renderDetail(person) {
     if (!person || !detailBody) return;
-    detailTitle.textContent = person.canonicalName || '未命名人物';
-    detailMeta.textContent = `${person.sourceRefs?.map(ref => `${ref.source}:${ref.id}`).join(' · ') || '来源 ID 未投影'} · source-only / review`;
+    detailTitle.textContent = person.displayName || person.canonicalName || '未命名人物';
+    detailMeta.textContent = '';
     detailBody.replaceChildren();
     const voiceActor = isVoiceActor(person);
     const layout = node(documentRef, 'div', 'person-detail-layout');
@@ -122,7 +122,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const worksHeading = node(documentRef, 'div', 'person-detail-block-heading');
     worksHeading.append(node(documentRef, 'h3', '', '作品关系'), node(documentRef, 'span', 'person-detail-muted', '按日期倒序')); worksBlock.append(worksHeading);
     const workList = node(documentRef, 'div', 'person-detail-works');
-    for (const credit of (person.credits ?? []).slice(0, 18)) {
+    for (const credit of (person.credits ?? [])) {
       const row = node(documentRef, 'button', 'person-work-row'); row.type = 'button'; row.dataset.workId = credit.workId ?? ''; row.disabled = !credit.workId;
       const thumb = node(documentRef, 'span', 'person-work-thumb');
       const imageSource = typeof imageUrlForWork === 'function' ? imageUrlForWork(credit) : null;
@@ -158,8 +158,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     for (const person of visible) {
       const row = node(documentRef, 'button', 'person-directory-row'); row.type = 'button'; row.dataset.personId = person.entityId;
       const faces = node(documentRef, 'span', 'person-directory-faces');
-      const cell = node(documentRef, 'span', 'person-directory-person'); cell.append(node(documentRef, 'strong', 'person-directory-name', person.canonicalName || '未命名人物'));
-      const sub = node(documentRef, 'span', 'person-directory-sub'); sub.append(node(documentRef, 'span', 'person-id-box', person.sourceRefs?.map(ref => `${ref.source}:${ref.id}`).join(' · ') || '来源 ID 未投影'), node(documentRef, 'span', 'person-directory-counts', `作品 ${person.workCount} · 名义 ${person.nameVariants?.length ?? person.aliases?.length ?? 0}`)); cell.append(sub);
+      const cell = node(documentRef, 'span', 'person-directory-person'); cell.append(node(documentRef, 'strong', 'person-directory-name', person.displayName || person.canonicalName || '未命名人物'));
+      const sub = node(documentRef, 'span', 'person-directory-sub'); sub.append(node(documentRef, 'span', '', `作品 ${person.workCount} · 名义 ${person.nameVariants?.length ?? person.aliases?.length ?? 0}`)); cell.append(sub);
       const primaryRole = roleFilter !== 'all' && Number(person.roles?.[roleFilter] ?? 0) > 0
         ? roleFilter
         : Object.entries(person.roles ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';

@@ -9222,7 +9222,7 @@ dialog::backdrop {
 .person-directory-faces { display:flex; align-items:center; gap:4px; min-width:0; }
 .person-directory-avatar, .person-detail-avatar { display:grid; place-items:center; border:1px solid var(--border-strong); background:var(--surface-muted); color:var(--accent); font-weight:700; }
 .person-directory-avatar { width:38px; height:38px; border-radius:50%; font-size:15px; }
-.person-directory-character-image { width:34px; height:42px; object-fit:cover; object-position:top center; border:1px solid var(--border-strong); border-radius:4px; background:var(--surface-muted); }
+.person-directory-character-image { width:42px; height:42px; object-fit:cover; object-position:top center; border:1px solid var(--border-strong); border-radius:50%; background:var(--surface-muted); }
 .person-directory-person { min-width:0; }
 .person-directory-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .person-directory-sub { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:4px; min-width:0; color:var(--text-muted); font-size:11px; }
@@ -9260,7 +9260,7 @@ dialog::backdrop {
 .person-detail-representative { margin-top:14px; padding:12px; border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border)); border-radius:6px; background:color-mix(in srgb,var(--accent-soft) 38%,var(--surface)); }
 .person-representative-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
 .person-representative-item { min-width:0; display:flex; flex-direction:column; gap:3px; padding:6px; border:1px solid var(--border); border-radius:5px; background:var(--surface); }
-.person-representative-image { display:block; width:100%; height:112px; object-fit:cover; object-position:top center; border-radius:3px; background:var(--surface-muted); }
+.person-representative-image { display:block; width:64px; height:64px; object-fit:cover; object-position:top center; border:1px solid var(--border-strong); border-radius:50%; background:var(--surface-muted); align-self:flex-start; }
 .person-representative-item strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
 .person-detail-block-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
 .person-detail-block-heading h3 { margin:0; font-size:13px; }
