@@ -11,7 +11,7 @@ const ROLE_LABELS = Object.freeze({ 'voice-actor': '声优', voice: '声优', sc
 function roleLabel(role) { return ROLE_LABELS[role] ?? role ?? '未分类'; }
 function personInitial(person) { const name = String(person?.canonicalName ?? '').trim(); return name ? name.slice(0, 1) : '?'; }
 
-export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork, onOpenPerson, imageUrlForWork } = {}) {
+export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSelect, onOpenWork, onOpenPerson, imageUrlForWork } = {}) {
   if (!root) throw new TypeError('person directory root is required');
   const documentRef = root.ownerDocument;
   const search = root.querySelector('#person-directory-search');
@@ -77,18 +77,19 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
       heading.append(node(documentRef, 'h3', '', '代表角色'), node(documentRef, 'span', 'person-detail-muted', '声优专属'));
       representative.append(heading);
       const list = node(documentRef, 'div', 'person-representative-list');
-      const voiceCredits = (person.credits ?? []).filter(credit => credit.creditType === 'character-voiced-by' || credit.roleCode === 'voice-actor').slice(0, 4);
-      for (const credit of voiceCredits) {
+      const characters = Array.isArray(person.representativeCharacters) ? person.representativeCharacters : [];
+      for (const character of characters) {
         const item = node(documentRef, 'div', 'person-representative-item');
-        item.append(node(documentRef, 'strong', '', credit.characterName || (credit.characterId ? `角色 ${credit.characterId}` : '未命名角色')),
-          node(documentRef, 'span', 'person-detail-muted', credit.title === '未解析作品' ? '作品关系待解析' : credit.title));
+        const image = character.imageUrl ? node(documentRef, 'img', 'person-representative-image') : null;
+        if (image) { image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer'; image.addEventListener('error', () => { image.hidden = true; }, { once: true }); item.append(image); }
+        item.append(node(documentRef, 'strong', '', character.name || '未命名角色'), node(documentRef, 'span', 'person-detail-muted', character.title || '作品关系待解析'));
         list.append(item);
       }
       if (!list.children.length) list.append(node(documentRef, 'span', 'person-detail-muted', '暂无已确认代表角色'));
-      representative.append(list); content.append(representative);
+      representative.append(list); identity.append(representative);
     }
 
-    const activity = node(documentRef, 'section', 'person-detail-block');
+    const activity = node(documentRef, 'section', 'person-detail-block person-detail-activity-block');
     const activityHeading = node(documentRef, 'div', 'person-detail-block-heading');
     activityHeading.append(node(documentRef, 'h3', '', voiceActor ? '出演频率' : '作品活动'), node(documentRef, 'span', 'person-detail-muted', person.spanLabel ?? '日期未知'));
     activity.append(activityHeading);
@@ -96,7 +97,7 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
     for (const value of person.activity ?? []) { const bar = node(documentRef, 'i', 'person-frequency-bar'); bar.style.height = `${Math.max(8, Number(value) || 0)}%`; bars.append(bar); }
     activity.append(bars); content.append(activity);
 
-    const coBlock = node(documentRef, 'section', 'person-detail-block');
+    const coBlock = node(documentRef, 'section', 'person-detail-block person-detail-co-block');
     const coHeading = node(documentRef, 'div', 'person-detail-block-heading');
     coHeading.append(node(documentRef, 'h3', '', voiceActor ? '共演关系' : '合作关系'), node(documentRef, 'span', 'person-detail-muted', `${person.coActors?.length ?? 0} 位`)); coBlock.append(coHeading);
     const coList = node(documentRef, 'div', 'person-co-list');
@@ -149,7 +150,15 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
       const faces = node(documentRef, 'span', 'person-directory-faces'); faces.append(node(documentRef, 'span', 'person-directory-avatar', personInitial(person)));
       const cell = node(documentRef, 'span', 'person-directory-person'); cell.append(node(documentRef, 'strong', 'person-directory-name', person.canonicalName || '未命名人物'));
       const sub = node(documentRef, 'span', 'person-directory-sub'); sub.append(node(documentRef, 'span', 'person-id-box', person.sourceRefs?.map(ref => `${ref.source}:${ref.id}`).join(' · ') || '来源 ID 未投影'), node(documentRef, 'span', 'person-directory-counts', `作品 ${person.workCount} · 名义 ${person.nameVariants?.length ?? person.aliases?.length ?? 0}`)); cell.append(sub);
-      const primaryRole = Object.entries(person.roles ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
+      const primaryRole = roleFilter !== 'all' && Number(person.roles?.[roleFilter] ?? 0) > 0
+        ? roleFilter
+        : Object.entries(person.roles ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
+      const representative = roleFilter === 'voice-actor' ? (person.representativeCharacters ?? []).slice(0, 3) : [];
+      for (const character of representative) {
+        const image = character.imageUrl ? node(documentRef, 'img', 'person-directory-character-image') : node(documentRef, 'span', 'person-directory-avatar', personInitial(person));
+        if (image.tagName === 'IMG') { image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer'; image.addEventListener('error', () => { image.replaceWith(node(documentRef, 'span', 'person-directory-avatar', personInitial(person))); }, { once: true }); }
+        row.querySelector('.person-directory-faces')?.append(image);
+      }
       const activity = node(documentRef, 'span', 'person-directory-activity'); for (const value of person.activity ?? []) { const bar = node(documentRef, 'i'); bar.style.height = `${Math.max(8, Number(value) || 0)}%`; activity.append(bar); }
       row.append(faces, cell, node(documentRef, 'span', 'person-directory-role', roleLabel(primaryRole)), activity, node(documentRef, 'span', 'person-directory-span', person.spanLabel ?? '日期未知'));
       row.addEventListener('click', () => { selectedId = person.entityId; renderDetail(person); onSelect?.(person.entityId); showDialog(); }); list.append(row);
@@ -160,12 +169,13 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
   previous?.addEventListener('click', () => { pageIndex = Math.max(0, pageIndex - 1); render(); });
   next?.addEventListener('click', () => { pageIndex += 1; render(); });
   close?.addEventListener('click', () => onSelect?.(null));
-  roleTabs.forEach(tab => tab.addEventListener('click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { item.classList.toggle('is-active', item === tab); item.setAttribute('aria-selected', String(item === tab)); }); pageIndex = 0; render(); }));
+  roleTabs.forEach(tab => tab.addEventListener('click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { item.classList.toggle('is-active', item === tab); item.setAttribute('aria-selected', String(item === tab)); }); pageIndex = 0; render(); onRoleChange?.(roleFilter); }));
 
   return Object.freeze({
     render({ persons = [], selectedPersonId = null } = {}) { model = Array.isArray(persons) ? persons : []; selectedId = selectedPersonId; render(); if (selectedId) { const person = model.find(item => item.entityId === selectedId); if (person) { renderDetail(person); showDialog(); } } },
     setPersons(persons) { model = Array.isArray(persons) ? persons : []; pageIndex = 0; render(); },
     setSelected(personId) { selectedId = personId; const person = model.find(item => item.entityId === personId); if (person) { renderDetail(person); showDialog(); } },
+    setRoleFilter(role = 'all') { roleFilter = roleTabs.some(tab => tab.dataset.personRole === role) ? role : 'all'; roleTabs.forEach(tab => { const active = tab.dataset.personRole === roleFilter; tab.classList.toggle('is-active', active); tab.setAttribute('aria-selected', String(active)); }); pageIndex = 0; render(); },
     filter(query = '') { const needle = String(query).trim().toLocaleLowerCase(); return model.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name)].join(' ').toLocaleLowerCase().includes(needle)); },
     getPageNumber() { return pageIndex + 1; }
   });

@@ -1526,6 +1526,7 @@ async function initialize() {
   let personDirectoryOpen = false;
   let personDirectoryView;
   let personRuntimeState = null;
+  let personRole = 'all';
   let personQuery = '';
   let selectedPersonId = null;
   let rankingSubject = 'work';
@@ -2696,8 +2697,14 @@ async function initialize() {
   elements.titleSearchClear.addEventListener('click', clearTitleQuery);
   elements.mobileTitleSearchClear.addEventListener('click', clearTitleQuery);
   let companyDirectoryView;
-  function buildPersonRecords(state) {
+  function buildPersonRecords(state, characterImageMap = null) {
     const records = Array.isArray(state?.records) ? state.records : [];
+    const imageByCharacterId = new Map();
+    const imageBySourceCharacterId = new Map();
+    for (const mapping of characterImageMap?.bySourceCharacterId?.values?.() ?? []) {
+      if (mapping?.characterId && !imageByCharacterId.has(mapping.characterId)) imageByCharacterId.set(mapping.characterId, mapping);
+      if (mapping?.sourceCharacterId && !imageBySourceCharacterId.has(mapping.sourceCharacterId)) imageBySourceCharacterId.set(mapping.sourceCharacterId, mapping);
+    }
     const nameById = new Map(records.map(person => [person.entityId, person.canonicalName ?? '未命名人物']));
     const workPeople = new Map();
     for (const person of records) {
@@ -2710,7 +2717,10 @@ async function initialize() {
     return records.map(person => {
       const credits = [...(person.credits ?? [])].map(credit => ({
         ...credit,
-        displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? credit.title
+        displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? credit.title,
+        characterImageUrl: (imageByCharacterId.get(String(credit.characterId ?? '')) ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId ?? '')))?.assetPath
+          ? new URL((imageByCharacterId.get(String(credit.characterId ?? '')) ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId))).assetPath, CHARACTER_IMAGE_ASSET_BASE).href
+          : null
       })).sort((a, b) => String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? '')) || String(a.title).localeCompare(String(b.title), 'zh-Hans'));
       const years = credits.map(credit => Number(String(credit.releaseDate ?? '').slice(0, 4))).filter(year => Number.isInteger(year) && year > 1900);
       const firstYear = years.length ? Math.min(...years) : null; const lastYear = years.length ? Math.max(...years) : null;
@@ -2728,7 +2738,15 @@ async function initialize() {
       for (const credit of credits) roles[credit.roleCode ?? 'unknown'] = (roles[credit.roleCode ?? 'unknown'] ?? 0) + 1;
       for (const hint of person.roleHints ?? []) if (!roles[hint]) roles[hint] = 1;
       const workKeys = credits.map(credit => credit.workId ?? credit.workEntityId).filter(Boolean);
-      return { ...person, credits, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
+      const representativeCharacters = [];
+      const seenCharacters = new Set();
+      for (const credit of credits) {
+        if (credit.creditType !== 'character-voiced-by' || !credit.characterId || seenCharacters.has(credit.characterId)) continue;
+        seenCharacters.add(credit.characterId);
+        representativeCharacters.push({ characterId: credit.characterId, name: credit.characterName ?? `角色 ${credit.characterId}`, imageUrl: credit.characterImageUrl, workId: credit.workId, title: credit.displayTitle ?? credit.title });
+        if (representativeCharacters.length >= 4) break;
+      }
+      return { ...person, credits, representativeCharacters, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
     }).sort((a, b) => b.workCount - a.workCount || a.canonicalName.localeCompare(b.canonicalName, 'zh-Hans'));
   }
 
@@ -2739,8 +2757,8 @@ async function initialize() {
     // ensurePersonRuntime() still hit renderPersonDirectory() with a Promise
     // and produced an empty/failed directory render.
     if (personRuntimeState === null) {
-      personRuntimeState = await personRuntime.load().then(state => {
-        const result = buildPersonRecords(state);
+      personRuntimeState = await Promise.all([personRuntime.load(), loadCharacterImageMap()]).then(([state, characterImageMap]) => {
+        const result = buildPersonRecords(state, characterImageMap);
         return result;
       });
     }
@@ -2935,6 +2953,10 @@ async function initialize() {
     onSearch(query) {
       personQuery = String(query ?? '');
       renderPersonDirectory();
+      replaceUiLocation();
+    },
+    onRoleChange(role) {
+      personRole = role;
       replaceUiLocation();
     },
     onSelect(personId) {
@@ -4029,7 +4051,7 @@ async function initialize() {
     const state = controller.inspectState();
     if (personDirectoryOpen) {
       if (selectedPersonId !== null) return { page: 'persons', personId: selectedPersonId };
-      return { page: 'persons', query: personQuery, pageNumber: personDirectoryView?.getPageNumber?.() ?? 1 };
+      return { page: 'persons', query: personQuery, role: personRole, pageNumber: personDirectoryView?.getPageNumber?.() ?? 1 };
     }
     if (companyDirectoryOpen) {
       if (selectedCompanyId !== null) return { page: 'companies', companyId: selectedCompanyId };
@@ -4278,9 +4300,11 @@ async function initialize() {
         setWorkSelectionMode(false);
         selectedPersonId = location.personId;
         personQuery = location.query ?? '';
+        personRole = location.role ?? 'all';
         elements.personSearch.value = personQuery;
         await ensurePersonRuntime();
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+        personDirectoryView.setRoleFilter?.(personRole);
         renderPersonDirectory();
         if (location.personId !== null) personDirectoryView.setSelected(location.personId);
         return true;
@@ -4462,6 +4486,7 @@ async function initialize() {
     personDirectoryOpen = false;
     selectedPersonId = null;
     personDirectoryOpen = true;
+    personRole = 'all';
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
@@ -4469,6 +4494,7 @@ async function initialize() {
     const open = async () => {
       try {
         await ensurePersonRuntime();
+        personDirectoryView.setRoleFilter?.(personRole);
         renderPersonDirectory();
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         replaceUiLocation();
