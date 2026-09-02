@@ -9,6 +9,9 @@ function node(documentRef, tag, className = '', text = '') {
 
 const ROLE_LABELS = Object.freeze({ 'voice-actor': '声优', voice: '声优', scenario: '剧本', artwork: '原画', music: '音乐', unknown: '其他' });
 function roleLabel(role) { return ROLE_LABELS[role] ?? role ?? '未分类'; }
+function characterRoleLabel(role) {
+  return ({ main: '主角', primary: '主角', side: '配角', sub: '配角', appears: '登场', 'メイン': '主角', 'サブ': '配角' })[role] ?? null;
+}
 function personInitial(person) { const name = String(person?.canonicalName ?? '').trim(); return name ? name.slice(0, 1) : '?'; }
 function normalizePersonSearch(value) {
   return String(value ?? '')
@@ -61,7 +64,6 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const voiceActor = isVoiceActor(person);
     const layout = node(documentRef, 'div', 'person-detail-layout');
     const identity = node(documentRef, 'aside', 'person-detail-identity');
-    identity.append(node(documentRef, 'div', 'person-detail-avatar', personInitial(person)));
     const roles = node(documentRef, 'div', 'person-detail-role-chips');
     for (const [role, value] of Object.entries(person.roles ?? {})) roles.append(node(documentRef, 'span', 'person-role-chip', `${roleLabel(role)} · ${value}`));
     identity.append(roles, node(documentRef, 'h3', 'person-detail-section-title', '名义'));
@@ -88,7 +90,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         const item = node(documentRef, 'div', 'person-representative-item');
         const image = character.imageUrl ? node(documentRef, 'img', 'person-representative-image') : null;
         if (image) { image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer'; image.addEventListener('error', () => { image.hidden = true; }, { once: true }); item.append(image); }
-        item.append(node(documentRef, 'strong', '', character.name || '未命名角色'), node(documentRef, 'span', 'person-detail-muted', character.title || '作品关系待解析'));
+        const role = characterRoleLabel(character.role);
+        item.append(node(documentRef, 'strong', '', character.name || '未命名角色'), node(documentRef, 'span', 'person-detail-muted', [role, character.title || '作品关系待解析'].filter(Boolean).join(' · ')));
         list.append(item);
       }
       if (!list.children.length) list.append(node(documentRef, 'span', 'person-detail-muted', '暂无已确认代表角色'));
@@ -136,7 +139,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         thumb.textContent = '▧';
       }
       const copy = node(documentRef, 'span', 'person-work-copy');
-      const roleText = credit.creditType === 'character-voiced-by' ? `配音 · ${credit.characterName || (credit.characterId ? `角色 ${credit.characterId}` : '角色待解析')}` : roleLabel(credit.roleCode);
+      const characterRole = credit.creditType === 'character-voiced-by' ? characterRoleLabel(credit.characterRole) : null;
+      const roleText = credit.creditType === 'character-voiced-by' ? `配音 · ${credit.characterName || (credit.characterId ? `角色 ${credit.characterId}` : '角色待解析')}${characterRole ? ` · ${characterRole}` : ''}` : roleLabel(credit.roleCode);
       copy.append(node(documentRef, 'strong', 'person-work-title', credit.displayTitle ?? credit.title ?? '未命名作品'), node(documentRef, 'span', 'person-work-meta', `${roleText} · ${credit.releaseDate ?? '日期未知'}`));
       row.append(thumb, copy); row.addEventListener('click', () => credit.workId && onOpenWork?.(credit.workId)); workList.append(row);
     }
@@ -153,7 +157,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const visible = filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE); empty.hidden = visible.length !== 0;
     for (const person of visible) {
       const row = node(documentRef, 'button', 'person-directory-row'); row.type = 'button'; row.dataset.personId = person.entityId;
-      const faces = node(documentRef, 'span', 'person-directory-faces'); faces.append(node(documentRef, 'span', 'person-directory-avatar', personInitial(person)));
+      const faces = node(documentRef, 'span', 'person-directory-faces');
       const cell = node(documentRef, 'span', 'person-directory-person'); cell.append(node(documentRef, 'strong', 'person-directory-name', person.canonicalName || '未命名人物'));
       const sub = node(documentRef, 'span', 'person-directory-sub'); sub.append(node(documentRef, 'span', 'person-id-box', person.sourceRefs?.map(ref => `${ref.source}:${ref.id}`).join(' · ') || '来源 ID 未投影'), node(documentRef, 'span', 'person-directory-counts', `作品 ${person.workCount} · 名义 ${person.nameVariants?.length ?? person.aliases?.length ?? 0}`)); cell.append(sub);
       const primaryRole = roleFilter !== 'all' && Number(person.roles?.[roleFilter] ?? 0) > 0
@@ -161,8 +165,10 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         : Object.entries(person.roles ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
       const representative = roleFilter === 'voice-actor' ? (person.representativeCharacters ?? []).slice(0, 3) : [];
       for (const character of representative) {
-        const image = character.imageUrl ? node(documentRef, 'img', 'person-directory-character-image') : node(documentRef, 'span', 'person-directory-avatar', personInitial(person));
-        if (image.tagName === 'IMG') { image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer'; image.addEventListener('error', () => { image.replaceWith(node(documentRef, 'span', 'person-directory-avatar', personInitial(person))); }, { once: true }); }
+        if (!character.imageUrl) continue;
+        const image = node(documentRef, 'img', 'person-directory-character-image');
+        image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+        image.addEventListener('error', () => { image.remove(); }, { once: true });
         row.querySelector('.person-directory-faces')?.append(image);
       }
       const activity = node(documentRef, 'span', 'person-directory-activity'); for (const value of person.activity ?? []) { const bar = node(documentRef, 'i'); bar.style.height = `${Math.max(8, Number(value) || 0)}%`; activity.append(bar); }

@@ -70,6 +70,7 @@ import {
   M2_PERSON_ENTITIES_SHA256,
   M2_PERSON_RELATIONS_SHA256,
   M2_PERSON_NAME_VARIANTS_SHA256,
+  M2_PERSON_CHARACTER_ROLES_SHA256,
   M1_PERSON_ONLY_ENTITIES_SHA256,
   M1_PERSON_VOICE_RELATIONS_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
@@ -1248,6 +1249,7 @@ async function initialize() {
       baseRelationsUrl: DATA_URLS.m1PersonVoiceRelations,
       baseRelationsSha256: M1_PERSON_VOICE_RELATIONS_SHA256,
       variantsUrl: DATA_URLS.m2PersonNameVariants,
+      characterRolesUrl: DATA_URLS.m2PersonCharacterRoles,
       catalogWorks: sampleSource.works,
       fetchImpl: fetch,
       cryptoRef: crypto,
@@ -2743,10 +2745,22 @@ async function initialize() {
       const workKeys = credits.map(credit => credit.workId ?? credit.workEntityId).filter(Boolean);
       const representativeCharacters = [];
       const seenCharacters = new Set();
-      for (const credit of credits) {
-        if (credit.creditType !== 'character-voiced-by' || !credit.characterId || seenCharacters.has(credit.characterId)) continue;
+      const voicedCredits = credits
+        .filter(credit => credit.creditType === 'character-voiced-by' && credit.characterId)
+        .sort((a, b) => {
+          const aMain = ['main', 'primary', 'メイン'].includes(String(a.characterRole ?? '')) ? 1 : 0;
+          const bMain = ['main', 'primary', 'メイン'].includes(String(b.characterRole ?? '')) ? 1 : 0;
+          return bMain - aMain
+            || (Number(worksById.get(String(b.workId))?.voteCount) || 0) - (Number(worksById.get(String(a.workId))?.voteCount) || 0)
+            || String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? ''))
+            || String(a.characterName ?? '').localeCompare(String(b.characterName ?? ''), 'zh-Hans');
+        });
+      const hasMainCharacter = voicedCredits.some(credit => ['main', 'primary', 'メイン'].includes(String(credit.characterRole ?? '')));
+      for (const credit of voicedCredits) {
+        if (hasMainCharacter && !['main', 'primary', 'メイン'].includes(String(credit.characterRole ?? ''))) continue;
+        if (seenCharacters.has(credit.characterId)) continue;
         seenCharacters.add(credit.characterId);
-        representativeCharacters.push({ characterId: credit.characterId, name: credit.characterName ?? `角色 ${credit.characterId}`, imageUrl: credit.characterImageUrl, workId: credit.workId, title: credit.displayTitle ?? credit.title });
+        representativeCharacters.push({ characterId: credit.characterId, name: credit.characterName ?? `角色 ${credit.characterId}`, imageUrl: credit.characterImageUrl, workId: credit.workId, title: credit.displayTitle ?? credit.title, role: credit.characterRole });
         if (representativeCharacters.length >= 4) break;
       }
       return { ...person, credits, representativeCharacters, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
