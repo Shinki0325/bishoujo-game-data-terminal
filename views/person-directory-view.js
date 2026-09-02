@@ -110,7 +110,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const coHeading = node(documentRef, 'div', 'person-detail-block-heading');
     coHeading.append(node(documentRef, 'h3', '', voiceActor ? '共演关系' : '合作关系'), node(documentRef, 'span', 'person-detail-muted', `${person.coActors?.length ?? 0} 位`)); coBlock.append(coHeading);
     const coList = node(documentRef, 'div', 'person-co-list');
-    for (const actor of (person.coActors ?? []).slice(0, 8)) {
+    for (const actor of (person.coActors ?? []).slice(0, 5)) {
       const row = node(documentRef, 'button', 'person-co-row'); row.type = 'button'; row.dataset.personId = actor.personId;
       row.append(node(documentRef, 'span', 'person-co-name', actor.name), node(documentRef, 'strong', '', actor.count), node(documentRef, 'span', 'person-detail-muted', '共同作品'));
       row.addEventListener('click', () => onOpenPerson?.(actor.personId)); coList.append(row);
