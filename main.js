@@ -4851,12 +4851,16 @@ async function initialize() {
     }
   });
 
+  let restoredLocation = false;
   await startupMetrics.measureAsync('first-render', async () => {
-    const restored = await applyUiLocation();
-    if (!restored) await render();
+    restoredLocation = await applyUiLocation();
+    if (!restoredLocation) await render();
   });
   const shareImportOpened = openShareImportDialog();
-  if (!shareImportOpened) {
+  // Deep links (persons/companies/work details) must remain immediately
+  // interactive; the first-visit welcome dialog is only useful on the root
+  // workspace and otherwise masks the requested destination.
+  if (!shareImportOpened && !restoredLocation) {
     openSiteWelcome({
       workCount: populationContract.runtime.workIds.length,
       companyCount: companyDirectory.companies.length
