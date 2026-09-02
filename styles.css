@@ -9254,6 +9254,10 @@ dialog::backdrop {
 .person-detail-stat-label { display:block; color:var(--text-muted); font-size:10px; }
 .person-detail-stat-value { display:block; margin-top:3px; font-size:18px; }
 .person-detail-block { margin-top:16px; }
+.person-detail-representative { margin-top:14px; padding:12px; border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border)); border-radius:6px; background:color-mix(in srgb,var(--accent-soft) 38%,var(--surface)); }
+.person-representative-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.person-representative-item { min-width:0; display:flex; flex-direction:column; gap:3px; padding:8px 9px; border:1px solid var(--border); border-radius:5px; background:var(--surface); }
+.person-representative-item strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
 .person-detail-block-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
 .person-detail-block-heading h3 { margin:0; font-size:13px; }
 .person-detail-muted { color:var(--text-muted); font-size:11px; }
@@ -9282,4 +9286,5 @@ dialog::backdrop {
   .person-detail-layout { display:block; overflow-y:auto; }
   .person-detail-identity { border-right:0; border-bottom:1px solid var(--border); }
   .person-detail-content { overflow:visible; }
+  .person-representative-list { grid-template-columns:1fr; }
 }

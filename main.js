@@ -2723,8 +2723,12 @@ async function initialize() {
         for (const peerId of peers ?? []) if (peerId !== person.entityId) coCounts.set(peerId, (coCounts.get(peerId) ?? 0) + 1);
       }
       const coActors = [...coCounts.entries()].map(([personId, count]) => ({ personId, count, name: nameById.get(personId) ?? '未命名人物' })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans')).slice(0, 8);
-      const roles = Object.create(null); for (const credit of credits) roles[credit.roleCode ?? 'unknown'] = (roles[credit.roleCode ?? 'unknown'] ?? 0) + 1;
-      return { ...person, credits, workCount: new Set(credits.map(credit => credit.workId).filter(Boolean)).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
+      const roles = Object.create(null);
+      for (const hint of person.roleHints ?? []) roles[hint] = roles[hint] ?? 0;
+      for (const credit of credits) roles[credit.roleCode ?? 'unknown'] = (roles[credit.roleCode ?? 'unknown'] ?? 0) + 1;
+      for (const hint of person.roleHints ?? []) if (!roles[hint]) roles[hint] = 1;
+      const workKeys = credits.map(credit => credit.workId ?? credit.workEntityId).filter(Boolean);
+      return { ...person, credits, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
     }).sort((a, b) => b.workCount - a.workCount || a.canonicalName.localeCompare(b.canonicalName, 'zh-Hans'));
   }
 

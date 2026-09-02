@@ -7,7 +7,7 @@ function node(documentRef, tag, className = '', text = '') {
   return element;
 }
 
-const ROLE_LABELS = Object.freeze({ 'voice-actor': '声优', scenario: '剧本', artwork: '原画', music: '音乐' });
+const ROLE_LABELS = Object.freeze({ 'voice-actor': '声优', voice: '声优', scenario: '剧本', artwork: '原画', music: '音乐', unknown: '其他' });
 function roleLabel(role) { return ROLE_LABELS[role] ?? role ?? '未分类'; }
 function personInitial(person) { const name = String(person?.canonicalName ?? '').trim(); return name ? name.slice(0, 1) : '?'; }
 
@@ -35,6 +35,16 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
   let roleFilter = 'all';
 
   function filteredModel() { return roleFilter === 'all' ? model : model.filter(person => Number(person.roles?.[roleFilter] ?? 0) > 0); }
+  function isVoiceActor(person) { return Number(person?.roles?.['voice-actor'] ?? person?.roles?.voice ?? 0) > 0; }
+  function renderRoleTabCounts() {
+    for (const tab of roleTabs) {
+      const key = tab.dataset.personRole ?? 'all';
+      const label = tab.dataset.baseLabel ?? tab.textContent.replace(/\s*[0-9,]+\s*$/u, '').trim();
+      tab.dataset.baseLabel = label;
+      const amount = key === 'all' ? model.length : model.filter(person => Number(person.roles?.[key] ?? 0) > 0).length;
+      tab.textContent = `${label} ${new Intl.NumberFormat('zh-CN').format(amount)}`;
+    }
+  }
   function showDialog() { if (typeof dialog?.showModal === 'function' && !dialog.open) dialog.showModal(); else if (dialog) dialog.open = true; }
 
   function renderDetail(person) {
@@ -42,6 +52,7 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
     detailTitle.textContent = person.canonicalName || '未命名人物';
     detailMeta.textContent = `${person.sourceRefs?.map(ref => `${ref.source}:${ref.id}`).join(' · ') || '来源 ID 未投影'} · source-only / review`;
     detailBody.replaceChildren();
+    const voiceActor = isVoiceActor(person);
     const layout = node(documentRef, 'div', 'person-detail-layout');
     const identity = node(documentRef, 'aside', 'person-detail-identity');
     identity.append(node(documentRef, 'div', 'person-detail-avatar', personInitial(person)));
@@ -60,9 +71,26 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
     }
     content.append(stats);
 
+    if (voiceActor) {
+      const representative = node(documentRef, 'section', 'person-detail-block person-detail-representative');
+      const heading = node(documentRef, 'div', 'person-detail-block-heading');
+      heading.append(node(documentRef, 'h3', '', '代表角色'), node(documentRef, 'span', 'person-detail-muted', '声优专属'));
+      representative.append(heading);
+      const list = node(documentRef, 'div', 'person-representative-list');
+      const voiceCredits = (person.credits ?? []).filter(credit => credit.creditType === 'character-voiced-by' || credit.roleCode === 'voice-actor').slice(0, 4);
+      for (const credit of voiceCredits) {
+        const item = node(documentRef, 'div', 'person-representative-item');
+        item.append(node(documentRef, 'strong', '', credit.characterName || (credit.characterId ? `角色 ${credit.characterId}` : '未命名角色')),
+          node(documentRef, 'span', 'person-detail-muted', credit.title === '未解析作品' ? '作品关系待解析' : credit.title));
+        list.append(item);
+      }
+      if (!list.children.length) list.append(node(documentRef, 'span', 'person-detail-muted', '暂无已确认代表角色'));
+      representative.append(list); content.append(representative);
+    }
+
     const activity = node(documentRef, 'section', 'person-detail-block');
     const activityHeading = node(documentRef, 'div', 'person-detail-block-heading');
-    activityHeading.append(node(documentRef, 'h3', '', '出演频率'), node(documentRef, 'span', 'person-detail-muted', person.spanLabel ?? '日期未知'));
+    activityHeading.append(node(documentRef, 'h3', '', voiceActor ? '出演频率' : '作品活动'), node(documentRef, 'span', 'person-detail-muted', person.spanLabel ?? '日期未知'));
     activity.append(activityHeading);
     const bars = node(documentRef, 'div', 'person-frequency');
     for (const value of person.activity ?? []) { const bar = node(documentRef, 'i', 'person-frequency-bar'); bar.style.height = `${Math.max(8, Number(value) || 0)}%`; bars.append(bar); }
@@ -70,7 +98,7 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
 
     const coBlock = node(documentRef, 'section', 'person-detail-block');
     const coHeading = node(documentRef, 'div', 'person-detail-block-heading');
-    coHeading.append(node(documentRef, 'h3', '', '共演关系'), node(documentRef, 'span', 'person-detail-muted', `${person.coActors?.length ?? 0} 位`)); coBlock.append(coHeading);
+    coHeading.append(node(documentRef, 'h3', '', voiceActor ? '共演关系' : '合作关系'), node(documentRef, 'span', 'person-detail-muted', `${person.coActors?.length ?? 0} 位`)); coBlock.append(coHeading);
     const coList = node(documentRef, 'div', 'person-co-list');
     for (const actor of (person.coActors ?? []).slice(0, 8)) {
       const row = node(documentRef, 'button', 'person-co-row'); row.type = 'button'; row.dataset.personId = actor.personId;
@@ -101,7 +129,8 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
         thumb.textContent = '▧';
       }
       const copy = node(documentRef, 'span', 'person-work-copy');
-      copy.append(node(documentRef, 'strong', 'person-work-title', credit.displayTitle ?? credit.title ?? '未命名作品'), node(documentRef, 'span', 'person-work-meta', `${roleLabel(credit.roleCode)} · ${credit.releaseDate ?? '日期未知'}`));
+      const roleText = credit.creditType === 'character-voiced-by' ? `配音 · ${credit.characterName || (credit.characterId ? `角色 ${credit.characterId}` : '角色待解析')}` : roleLabel(credit.roleCode);
+      copy.append(node(documentRef, 'strong', 'person-work-title', credit.displayTitle ?? credit.title ?? '未命名作品'), node(documentRef, 'span', 'person-work-meta', `${roleText} · ${credit.releaseDate ?? '日期未知'}`));
       row.append(thumb, copy); row.addEventListener('click', () => credit.workId && onOpenWork?.(credit.workId)); workList.append(row);
     }
     if (!workList.children.length) workList.append(node(documentRef, 'span', 'person-detail-muted', '暂无可解析作品关系'));
@@ -111,6 +140,7 @@ export function createPersonDirectoryView({ root, onSearch, onSelect, onOpenWork
   function render() {
     filtered = filteredModel();
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)); pageIndex = Math.min(pageIndex, totalPages - 1);
+    renderRoleTabCounts();
     count.textContent = new Intl.NumberFormat('zh-CN').format(filtered.length); page.textContent = String(pageIndex + 1); total.textContent = String(totalPages);
     previous.disabled = pageIndex === 0; next.disabled = pageIndex >= totalPages - 1; list.replaceChildren();
     const visible = filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE); empty.hidden = visible.length !== 0;
