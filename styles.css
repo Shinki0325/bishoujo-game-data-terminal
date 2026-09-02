@@ -9200,5 +9200,86 @@ dialog::backdrop {
   .site-welcome-body { padding: 16px 16px 2px; }
   .site-welcome-lede { font-size: 14px; }
   .site-welcome-actions { padding: 10px 16px 14px; }
-  .site-welcome-actions button { width: 100%; }
+.site-welcome-actions button { width: 100%; }
+}
+
+/* M2 person directory candidate */
+.person-view { padding: 18px 24px 32px; }
+.person-directory-header { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; margin-bottom:16px; }
+.person-directory-heading h2 { margin:0; font-size:22px; }
+.person-directory-summary { margin:5px 0 0; color:var(--text-muted); font-size:11px; letter-spacing:.08em; }
+.person-directory-tools { display:flex; align-items:center; gap:12px; min-width:min(620px,100%); }
+.person-directory-search { flex:1; }
+.person-directory-tabs { display:flex; gap:2px; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.person-directory-tabs button { border:0; background:var(--surface); color:var(--text-muted); padding:8px 11px; font-size:12px; white-space:nowrap; }
+.person-directory-tabs button.is-active { color:var(--accent); background:var(--accent-soft); font-weight:600; }
+.person-directory-layout { min-width:0; }
+.person-directory-panel { border:1px solid var(--border); border-radius:6px; background:var(--surface); overflow:hidden; }
+.person-directory-list-head, .person-directory-row { display:grid; grid-template-columns:112px minmax(0,1fr) 92px 118px 84px; gap:12px; align-items:center; }
+.person-directory-list-head { padding:10px 14px; background:var(--surface-muted); color:var(--text-muted); font-size:11px; }
+.person-directory-row { width:100%; padding:11px 14px; border:0; border-top:1px solid var(--border); background:var(--surface); color:var(--text); text-align:left; }
+.person-directory-row:hover { background:var(--accent-soft); }
+.person-directory-faces { display:flex; align-items:center; }
+.person-directory-avatar, .person-detail-avatar { display:grid; place-items:center; border:1px solid var(--border-strong); background:var(--surface-muted); color:var(--accent); font-weight:700; }
+.person-directory-avatar { width:38px; height:38px; border-radius:50%; font-size:15px; }
+.person-directory-person { min-width:0; }
+.person-directory-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.person-directory-sub { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:4px; min-width:0; color:var(--text-muted); font-size:11px; }
+.person-id-box { max-width:50%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:2px 5px; border:1px solid var(--border); border-radius:4px; background:var(--surface-muted); }
+.person-directory-counts { white-space:nowrap; }
+.person-directory-role { color:var(--accent); font-size:12px; }
+.person-directory-activity, .person-frequency { height:32px; display:flex; align-items:flex-end; gap:2px; border-bottom:1px solid var(--border); }
+.person-directory-activity i, .person-frequency-bar { display:block; flex:1; min-width:3px; background:var(--accent); opacity:.78; }
+.person-directory-span { color:var(--text-muted); font-size:11px; white-space:nowrap; }
+.person-directory-pagination { justify-content:center; padding:12px; border-top:1px solid var(--border); }
+.person-directory-empty, .person-directory-note { color:var(--text-muted); font-size:12px; }
+.person-directory-empty { padding:30px; text-align:center; }
+.person-directory-note { margin:12px 0 0; }
+.person-detail-dialog { width:min(900px,calc(100vw - 36px)); height:min(560px,calc(100dvh - 36px)); padding:0; border:1px solid var(--border-strong); border-radius:8px; background:var(--surface); color:var(--text); overflow:hidden; }
+.person-detail-dialog::backdrop { background:rgba(11,16,20,.62); }
+.person-detail-heading { min-height:62px; }
+.person-detail-heading h2 { margin:0; }
+.person-detail-body { height:calc(100% - 62px); overflow:hidden; }
+.person-detail-layout { display:grid; grid-template-columns:236px minmax(0,1fr); height:100%; min-height:0; }
+.person-detail-identity { min-width:0; padding:18px; border-right:1px solid var(--border); overflow:hidden; }
+.person-detail-avatar { width:72px; height:72px; border-radius:12px; font-size:30px; margin-bottom:14px; }
+.person-detail-role-chips, .person-detail-aliases { display:flex; flex-wrap:wrap; gap:6px; }
+.person-role-chip, .person-alias-chip { padding:4px 7px; border:1px solid var(--border); border-radius:4px; color:var(--text-muted); font-size:11px; }
+.person-role-chip { color:var(--accent); background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,var(--border)); }
+.person-alias-chip.is-main { color:var(--accent); border-color:var(--accent); }
+.person-detail-section-title { margin:20px 0 8px; font-size:12px; }
+.person-detail-content { min-width:0; min-height:0; overflow-y:auto; padding:16px 18px 24px; }
+.person-detail-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+.person-detail-stat { padding:9px 10px; background:var(--surface); }
+.person-detail-stat-label { display:block; color:var(--text-muted); font-size:10px; }
+.person-detail-stat-value { display:block; margin-top:3px; font-size:18px; }
+.person-detail-block { margin-top:16px; }
+.person-detail-block-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
+.person-detail-block-heading h3 { margin:0; font-size:13px; }
+.person-detail-muted { color:var(--text-muted); font-size:11px; }
+.person-frequency { height:62px; }
+.person-co-list, .person-detail-works { border-top:1px solid var(--border); }
+.person-co-row, .person-work-row { width:100%; display:flex; align-items:center; gap:10px; padding:8px 0; border:0; border-bottom:1px solid var(--border); background:transparent; color:var(--text); text-align:left; }
+.person-co-row:hover, .person-work-row:hover:not(:disabled) { background:var(--accent-soft); }
+.person-co-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.person-work-row { gap:10px; }
+.person-work-thumb { flex:none; width:44px; height:32px; display:grid; place-items:center; border:1px solid var(--border); border-radius:3px; background:var(--surface-muted); color:var(--text-muted); }
+.person-work-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.person-work-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.person-work-meta { color:var(--text-muted); font-size:11px; }
+@media (max-width:899px) {
+  .person-view { padding:14px 12px 24px; }
+  .person-directory-header { display:block; }
+  .person-directory-tools { display:block; min-width:0; margin-top:12px; }
+  .person-directory-tabs { margin-top:8px; overflow:auto; }
+  .person-directory-tabs button { flex:1; }
+  .person-directory-list-head { display:none; }
+  .person-directory-row { grid-template-columns:44px minmax(0,1fr) 64px; gap:8px; padding:10px; }
+  .person-directory-row > .person-directory-activity, .person-directory-row > .person-directory-span { display:none; }
+  .person-directory-sub { display:block; }
+  .person-directory-counts { display:block; margin-top:3px; }
+  .person-detail-dialog { inset:12px; width:auto; max-width:none; height:calc(100dvh - 24px); max-height:none; }
+  .person-detail-layout { display:block; overflow-y:auto; }
+  .person-detail-identity { border-right:0; border-bottom:1px solid var(--border); }
+  .person-detail-content { overflow:visible; }
 }

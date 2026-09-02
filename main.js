@@ -66,6 +66,11 @@ import {
   CHARACTER_IMAGE_MAP_SHA256,
   CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
   CHARACTER_IMAGE_ASSET_BASE,
+  M2_PERSON_MANIFEST_SHA256,
+  M2_PERSON_ENTITIES_SHA256,
+  M2_PERSON_RELATIONS_SHA256,
+  M2_PERSON_NAME_VARIANTS_SHA256,
+  M1_PERSON_ONLY_ENTITIES_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
   TELEMETRY_ENDPOINT,
@@ -87,6 +92,8 @@ import { buildRankingModel, createRankingCard, createRankingView } from './views
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js?v=20260824-mobile-single-score-card-v2';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
+import { createPersonDirectoryView } from './views/person-directory-view.js';
+import { createM2PersonRuntime } from './lib/m2-person-runtime.js';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -178,6 +185,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   modeSelection: requiredElement('mode-selection'),
   modeRanking: requiredElement('mode-ranking'),
   modeCompany: requiredElement('mode-company'),
+  modePerson: requiredElement('mode-person'),
   themeToggle: requiredElement('theme-toggle'),
   siteInfoButton: requiredElement('site-info-button'),
   siteWelcomeDialog: requiredElement('site-welcome-dialog'),
@@ -213,6 +221,19 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companyDetailMeta: requiredElement('company-detail-meta'),
   companyDetailWorks: requiredElement('company-detail-works'),
   companyEmpty: requiredElement('company-empty'),
+  personView: requiredElement('person-view'),
+  personDirectoryCount: requiredElement('person-directory-count'),
+  personSearch: requiredElement('person-directory-search'),
+  personList: requiredElement('person-directory-list'),
+  personEmpty: requiredElement('person-directory-empty'),
+  personPagePrevious: requiredElement('person-page-previous'),
+  personPageNext: requiredElement('person-page-next'),
+  personPageNumber: requiredElement('person-page-number'),
+  personPageTotal: requiredElement('person-page-total'),
+  personDetailDialog: requiredElement('person-detail-dialog'),
+  personDetailTitle: requiredElement('person-detail-title'),
+  personDetailMeta: requiredElement('person-detail-meta'),
+  personDetailBody: requiredElement('person-detail-body'),
   selectedCount: requiredElement('selected-count'),
   rankedCount: requiredElement('ranked-count'),
   unrankedCount: requiredElement('global-unranked-count'),
@@ -1004,7 +1025,8 @@ async function initialize() {
   for (const [button, iconName, label] of [
     [elements.modeSelection, 'library', '作品'],
     [elements.modeCompany, 'building', '会社'],
-    [elements.modeRanking, 'ranking', '排榜']
+    [elements.modeRanking, 'ranking', '排榜'],
+    [elements.modePerson, 'person', '人物']
   ]) {
     const icon = createActionIcon(document, iconName);
     icon.classList.add('workspace-tab-icon');
@@ -1213,6 +1235,21 @@ async function initialize() {
     } catch (error) {
       throw new TypeError('G1 media clearance bridge rejected', { cause: error });
     }
+  }
+  let personRuntime = null;
+  if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
+    personRuntime = createM2PersonRuntime({
+      manifestUrl: DATA_URLS.m2PersonManifest,
+      entitiesUrl: DATA_URLS.m2PersonEntities,
+      relationsUrl: DATA_URLS.m2PersonRelations,
+      baseEntitiesUrl: DATA_URLS.m1PersonEntities,
+      baseEntitiesSha256: M1_PERSON_ONLY_ENTITIES_SHA256,
+      variantsUrl: DATA_URLS.m2PersonNameVariants,
+      catalogWorks: sampleSource.works,
+      fetchImpl: fetch,
+      cryptoRef: crypto,
+      cacheMode: RUNTIME_DATA_CACHE_MODE
+    });
   }
   let vndbRatings = null;
   if (vndbRatingsSource !== null) {
@@ -1486,6 +1523,11 @@ async function initialize() {
   let renderGeneration = 0;
   let replacementWork = null;
   let companyDirectoryOpen = false;
+  let personDirectoryOpen = false;
+  let personDirectoryView;
+  let personRuntimeState = null;
+  let personQuery = '';
+  let selectedPersonId = null;
   let rankingSubject = 'work';
   let companyQuery = '';
   let companySort = 'totalVoteCount-desc';
@@ -2109,6 +2151,8 @@ async function initialize() {
     // Disable stale work-card handlers before the asynchronous workspace refresh.
     setWorkSelectionMode(false);
     companyDirectoryOpen = true;
+    personDirectoryOpen = false;
+    selectedPersonId = null;
     selectedCompanyId = companyId;
     if (companyId !== null && companyId !== undefined) telemetry.recordCompanyOpen(companyId);
     currentWorkDetailId = null;
@@ -2652,6 +2696,61 @@ async function initialize() {
   elements.titleSearchClear.addEventListener('click', clearTitleQuery);
   elements.mobileTitleSearchClear.addEventListener('click', clearTitleQuery);
   let companyDirectoryView;
+  function buildPersonRecords(state) {
+    const records = Array.isArray(state?.records) ? state.records : [];
+    const nameById = new Map(records.map(person => [person.entityId, person.canonicalName ?? '未命名人物']));
+    const workPeople = new Map();
+    for (const person of records) {
+      for (const credit of person.credits ?? []) {
+        if (!credit.workId) continue;
+        const bucket = workPeople.get(String(credit.workId)) ?? new Set();
+        bucket.add(person.entityId); workPeople.set(String(credit.workId), bucket);
+      }
+    }
+    return records.map(person => {
+      const credits = [...(person.credits ?? [])].map(credit => ({
+        ...credit,
+        displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? credit.title
+      })).sort((a, b) => String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? '')) || String(a.title).localeCompare(String(b.title), 'zh-Hans'));
+      const years = credits.map(credit => Number(String(credit.releaseDate ?? '').slice(0, 4))).filter(year => Number.isInteger(year) && year > 1900);
+      const firstYear = years.length ? Math.min(...years) : null; const lastYear = years.length ? Math.max(...years) : null;
+      const buckets = Array.from({ length: Math.min(12, Math.max(1, (lastYear ?? firstYear ?? 0) - (firstYear ?? 0) + 1)) }, () => 0);
+      if (firstYear !== null) for (const year of years) buckets[Math.min(buckets.length - 1, Math.floor((year - firstYear) * buckets.length / Math.max(1, lastYear - firstYear + 1)))] += 1;
+      const peak = Math.max(1, ...buckets);
+      const coCounts = new Map();
+      for (const credit of credits) {
+        const peers = workPeople.get(String(credit.workId));
+        for (const peerId of peers ?? []) if (peerId !== person.entityId) coCounts.set(peerId, (coCounts.get(peerId) ?? 0) + 1);
+      }
+      const coActors = [...coCounts.entries()].map(([personId, count]) => ({ personId, count, name: nameById.get(personId) ?? '未命名人物' })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans')).slice(0, 8);
+      const roles = Object.create(null); for (const credit of credits) roles[credit.roleCode ?? 'unknown'] = (roles[credit.roleCode ?? 'unknown'] ?? 0) + 1;
+      return { ...person, credits, workCount: new Set(credits.map(credit => credit.workId).filter(Boolean)).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
+    }).sort((a, b) => b.workCount - a.workCount || a.canonicalName.localeCompare(b.canonicalName, 'zh-Hans'));
+  }
+
+  async function ensurePersonRuntime() {
+    if (!personRuntime) return [];
+    // Keep the public state as the resolved records array.  Previously this
+    // variable held the in-flight Promise, so callers that awaited
+    // ensurePersonRuntime() still hit renderPersonDirectory() with a Promise
+    // and produced an empty/failed directory render.
+    if (personRuntimeState === null) {
+      personRuntimeState = await personRuntime.load().then(state => {
+        const result = buildPersonRecords(state);
+        return result;
+      });
+    }
+    return personRuntimeState;
+  }
+
+  function renderPersonDirectory() {
+    if (!personDirectoryView || !personRuntimeState) return;
+    const needle = personQuery.trim().toLocaleLowerCase();
+    const persons = needle ? personRuntimeState.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name)].join(' ').toLocaleLowerCase().includes(needle)) : personRuntimeState;
+    elements.personDirectoryCount.textContent = new Intl.NumberFormat('zh-CN').format(persons.length);
+    personDirectoryView.render({ persons, selectedPersonId: selectedPersonId ?? null });
+  }
+
   function renderCompanyDirectory() {
     const [sortKey, direction] = companySort.split('-');
     const companies = searchCompanyDirectory(companyDirectory, companyQuery, {
@@ -2820,6 +2919,40 @@ async function initialize() {
     },
     onPageChange() {
       replaceUiLocation();
+    }
+  });
+  personDirectoryView = createPersonDirectoryView({
+    root: elements.personView,
+    imageUrlForWork: credit => {
+      const work = worksById.get(String(credit?.workId ?? ''));
+      const path = work?.projectedThumbnailPath ?? work?.coverPath;
+      return path ? resolveAssetUrl(path, assetBase) : null;
+    },
+    onSearch(query) {
+      personQuery = String(query ?? '');
+      renderPersonDirectory();
+      replaceUiLocation();
+    },
+    onSelect(personId) {
+      selectedPersonId = personId;
+      if (personId === null) {
+        if (elements.personDetailDialog.open) elements.personDetailDialog.close();
+        pushUiLocation();
+      } else pushUiLocation();
+    },
+    onOpenWork(workId) {
+      const work = worksById.get(String(workId));
+      if (!work) return;
+      selectedPersonId = null;
+      personDirectoryOpen = false;
+      if (elements.personDetailDialog.open) elements.personDetailDialog.close();
+      openWorkDetails(work);
+    },
+    onOpenPerson(personId) {
+      selectedPersonId = personId;
+      personDirectoryOpen = true;
+      renderPersonDirectory();
+      pushUiLocation();
     }
   });
   elements.companyHasImage.addEventListener('change', () => {
@@ -3265,15 +3398,35 @@ async function initialize() {
   }
 
   function renderWorkspace(model) {
+    if (personDirectoryOpen) {
+      rankingWorkspaceVisible = false;
+      closeMobileRankingCandidates();
+      elements.modeSelection.setAttribute('aria-selected', 'false');
+      elements.modeRanking.setAttribute('aria-selected', 'false');
+      elements.modeCompany.setAttribute('aria-selected', 'false');
+      elements.modePerson.setAttribute('aria-selected', 'true');
+      elements.modeSelection.tabIndex = -1;
+      elements.modeRanking.tabIndex = -1;
+      elements.modeCompany.tabIndex = -1;
+      elements.modePerson.tabIndex = 0;
+      elements.selectionView.hidden = true;
+      elements.rankingView.hidden = true;
+      elements.mobileSelectionView.hidden = true;
+      elements.companyView.hidden = true;
+      elements.personView.hidden = false;
+      return;
+    }
     if (companyDirectoryOpen) {
       rankingWorkspaceVisible = false;
       closeMobileRankingCandidates();
       elements.modeSelection.setAttribute('aria-selected', 'false');
       elements.modeRanking.setAttribute('aria-selected', 'false');
       elements.modeCompany.setAttribute('aria-selected', 'true');
+      elements.modePerson.setAttribute('aria-selected', 'false');
       elements.modeSelection.tabIndex = -1;
       elements.modeRanking.tabIndex = -1;
       elements.modeCompany.tabIndex = 0;
+      elements.modePerson.tabIndex = -1;
       elements.selectionView.hidden = true;
       elements.rankingView.hidden = true;
       elements.mobileSelectionView.hidden = true;
@@ -3291,12 +3444,15 @@ async function initialize() {
     elements.modeSelection.setAttribute('aria-selected', String(!ranking));
     elements.modeRanking.setAttribute('aria-selected', String(ranking));
     elements.modeCompany.setAttribute('aria-selected', 'false');
+    elements.modePerson.setAttribute('aria-selected', 'false');
     elements.modeSelection.tabIndex = ranking ? -1 : 0;
     elements.modeRanking.tabIndex = ranking ? 0 : -1;
     elements.modeCompany.tabIndex = -1;
+    elements.modePerson.tabIndex = -1;
     elements.selectionView.hidden = ranking;
     elements.rankingView.hidden = !ranking;
     elements.companyView.hidden = true;
+    elements.personView.hidden = true;
     elements.mobileSelectionView.hidden = true;
   }
 
@@ -3318,6 +3474,7 @@ async function initialize() {
       };
     elements.modeSelection.disabled = importBusy;
     elements.modeRanking.disabled = importBusy;
+    elements.modePerson.disabled = importBusy || personRuntime === null;
     elements.selectionModeToggle.disabled = importBusy || compareMode;
     elements.compareModeToggle.disabled = importBusy || companyDirectoryOpen || model.state.workspaceMode === 'ranking';
     elements.browseModeToggle.disabled = importBusy || companyDirectoryOpen || model.state.workspaceMode === 'ranking';
@@ -3522,7 +3679,10 @@ async function initialize() {
     elements.filterResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
     elements.catalogResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
     renderWorkspace(model);
-    if (companyDirectoryOpen) {
+    if (personDirectoryOpen) {
+      renderPersonDirectory();
+      interactionMetrics.stage(interaction, 'dom-updated');
+    } else if (companyDirectoryOpen) {
       renderCompanyDirectory();
       interactionMetrics.stage(interaction, 'dom-updated');
     } else if (ranking) {
@@ -3863,6 +4023,10 @@ async function initialize() {
 
   function currentUiLocation() {
     const state = controller.inspectState();
+    if (personDirectoryOpen) {
+      if (selectedPersonId !== null) return { page: 'persons', personId: selectedPersonId };
+      return { page: 'persons', query: personQuery, pageNumber: personDirectoryView?.getPageNumber?.() ?? 1 };
+    }
     if (companyDirectoryOpen) {
       if (selectedCompanyId !== null) return { page: 'companies', companyId: selectedCompanyId };
       return {
@@ -4104,7 +4268,22 @@ async function initialize() {
         if (location.companyId === null) companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
         return true;
       }
+      if (location.page === 'persons') {
+        companyDirectoryOpen = false;
+        personDirectoryOpen = true;
+        setWorkSelectionMode(false);
+        selectedPersonId = location.personId;
+        personQuery = location.query ?? '';
+        elements.personSearch.value = personQuery;
+        await ensurePersonRuntime();
+        renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+        renderPersonDirectory();
+        if (location.personId !== null) personDirectoryView.setSelected(location.personId);
+        return true;
+      }
       companyDirectoryOpen = false;
+      personDirectoryOpen = false;
+      selectedPersonId = null;
       setWorkSelectionMode(false);
       rankingSubject = 'work';
       const [sortKey, sortDirection] = location.sort.split('-');
@@ -4233,6 +4412,8 @@ async function initialize() {
   elements.modeSelection.addEventListener('click', () => {
     closeMobileRankingCandidates();
     companyDirectoryOpen = false;
+    personDirectoryOpen = false;
+    selectedPersonId = null;
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
@@ -4244,6 +4425,8 @@ async function initialize() {
   });
   elements.modeRanking.addEventListener('click', () => {
     companyDirectoryOpen = false;
+    personDirectoryOpen = false;
+    selectedPersonId = null;
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
@@ -4266,6 +4449,32 @@ async function initialize() {
       openCompanyDirectory(null, { interaction });
     };
     open();
+  });
+  elements.modePerson.addEventListener('click', () => {
+    const interaction = interactionMetrics.begin('person-directory');
+    closeMobileRankingCandidates();
+    closeToolbarMenus();
+    companyDirectoryOpen = false;
+    personDirectoryOpen = false;
+    selectedPersonId = null;
+    personDirectoryOpen = true;
+    compareMode = false;
+    setWorkSelectionMode(false);
+    companySelectionMode = false;
+    selectedPersonId = null;
+    const open = async () => {
+      try {
+        await ensurePersonRuntime();
+        renderPersonDirectory();
+        renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+        replaceUiLocation();
+        interactionMetrics.stage(interaction, 'person-ready');
+      } catch (error) {
+        announce('人物目录加载失败，请稍后重试。', 'error');
+        console.error(error);
+      }
+    };
+    void open();
   });
   elements.companyBack.addEventListener('click', () => {
     companyDirectoryOpen = false;
