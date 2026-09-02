@@ -71,6 +71,7 @@ import {
   M2_PERSON_RELATIONS_SHA256,
   M2_PERSON_NAME_VARIANTS_SHA256,
   M1_PERSON_ONLY_ENTITIES_SHA256,
+  M1_PERSON_VOICE_RELATIONS_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
   TELEMETRY_ENDPOINT,
@@ -1244,6 +1245,8 @@ async function initialize() {
       relationsUrl: DATA_URLS.m2PersonRelations,
       baseEntitiesUrl: DATA_URLS.m1PersonEntities,
       baseEntitiesSha256: M1_PERSON_ONLY_ENTITIES_SHA256,
+      baseRelationsUrl: DATA_URLS.m1PersonVoiceRelations,
+      baseRelationsSha256: M1_PERSON_VOICE_RELATIONS_SHA256,
       variantsUrl: DATA_URLS.m2PersonNameVariants,
       catalogWorks: sampleSource.works,
       fetchImpl: fetch,
@@ -2767,8 +2770,17 @@ async function initialize() {
 
   function renderPersonDirectory() {
     if (!personDirectoryView || !personRuntimeState) return;
-    const needle = personQuery.trim().toLocaleLowerCase();
-    const persons = needle ? personRuntimeState.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name)].join(' ').toLocaleLowerCase().includes(needle)) : personRuntimeState;
+    // Person names come from multiple sources (for example VNDB uses
+    // "田口 宏子" while EGS uses "田口宏子").  Keep the source records
+    // separate, but make directory search tolerant of spacing, punctuation,
+    // and full-width typography so an unspaced query cannot accidentally
+    // select only the sparse same-name EGS record.
+    const normalizePersonSearch = value => String(value ?? '')
+      .normalize('NFKC')
+      .toLocaleLowerCase('ja')
+      .replace(/[\p{P}\p{S}\s]+/gu, '');
+    const needle = normalizePersonSearch(personQuery);
+    const persons = needle ? personRuntimeState.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name), ...(person.nameVariants ?? []).map(item => item.latin)].some(value => normalizePersonSearch(value).includes(needle))) : personRuntimeState;
     elements.personDirectoryCount.textContent = new Intl.NumberFormat('zh-CN').format(persons.length);
     personDirectoryView.render({ persons, selectedPersonId: selectedPersonId ?? null });
   }

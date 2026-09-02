@@ -10,6 +10,12 @@ function node(documentRef, tag, className = '', text = '') {
 const ROLE_LABELS = Object.freeze({ 'voice-actor': '声优', voice: '声优', scenario: '剧本', artwork: '原画', music: '音乐', unknown: '其他' });
 function roleLabel(role) { return ROLE_LABELS[role] ?? role ?? '未分类'; }
 function personInitial(person) { const name = String(person?.canonicalName ?? '').trim(); return name ? name.slice(0, 1) : '?'; }
+function normalizePersonSearch(value) {
+  return String(value ?? '')
+    .normalize('NFKC')
+    .toLocaleLowerCase('ja')
+    .replace(/[\p{P}\p{S}\s]+/gu, '');
+}
 
 export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSelect, onOpenWork, onOpenPerson, imageUrlForWork } = {}) {
   if (!root) throw new TypeError('person directory root is required');
@@ -176,7 +182,12 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     setPersons(persons) { model = Array.isArray(persons) ? persons : []; pageIndex = 0; render(); },
     setSelected(personId) { selectedId = personId; const person = model.find(item => item.entityId === personId); if (person) { renderDetail(person); showDialog(); } },
     setRoleFilter(role = 'all') { roleFilter = roleTabs.some(tab => tab.dataset.personRole === role) ? role : 'all'; roleTabs.forEach(tab => { const active = tab.dataset.personRole === roleFilter; tab.classList.toggle('is-active', active); tab.setAttribute('aria-selected', String(active)); }); pageIndex = 0; render(); },
-    filter(query = '') { const needle = String(query).trim().toLocaleLowerCase(); return model.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name)].join(' ').toLocaleLowerCase().includes(needle)); },
+    filter(query = '') {
+      const needle = normalizePersonSearch(query);
+      if (!needle) return model;
+      return model.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name), ...(person.nameVariants ?? []).map(item => item.latin)]
+        .some(value => normalizePersonSearch(value).includes(needle)));
+    },
     getPageNumber() { return pageIndex + 1; }
   });
 }
