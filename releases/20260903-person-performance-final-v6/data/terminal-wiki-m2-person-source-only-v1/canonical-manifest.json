@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "terminal-wiki-m2-person-canonical-manifest-v1",
+  "releaseId": "relv_2026-09-02_terminal-wiki-m2-person-source-only-v1",
+  "publicationStatus": "source-only",
+  "generatedAt": "2026-09-02T13:30:00+08:00",
+  "runtimeScope": {
+    "workCount": 7264,
+    "coreEgsWorkCount": 6799,
+    "vndbAdmissionWorkCount": 465,
+    "admissionCharacterCount": 3023
+  },
+  "upstream": {
+    "m1ReleaseId": "relv_2026-08-31_character-source-only-v1",
+    "m1DataRevision": "4f2d930a6a07cef3cdee8d7e82ab65cd7a9f71cdf239aa6d1850f4aad7749cb1",
+    "m1EntitiesPath": "backend/exports/terminal-wiki-m1-character-source-only-v1/entities.json",
+    "m1EntitiesSha256": "1b27a648a0d028ea0adddc536a3ff35a701b761b397d654897638add212e3454",
+    "m1RelationsPath": "backend/exports/terminal-wiki-m1-character-source-only-v1/relations.json",
+    "m1RelationsSha256": "e303d352a0333e073844ca388e18d9f76f96e583f03daa40eb6c16ea9e64004e",
+    "m1PersonEntityCount": 4060,
+    "m1CharacterVoicedByRelationCount": 45712,
+    "m1WorkHasCharacterRelationCount": 66599
+  },
+  "delta": {
+    "entitiesPath": "entities.json",
+    "entitiesSha256": "791f52cfc84821ba0103cc60ca6c68df2f411851abb5afaf2930de9fa9b3341f",
+    "sourceBindingsPath": "source-bindings.json",
+    "sourceBindingsSha256": "2b0accb0db28caf406a3ff74087c520f4d5a7258ba8e37632cf16e4dfda3b82b",
+    "relationsPath": "relations.json",
+    "relationsSha256": "891b37246d0fafc8780f60f212168c58d809a8854c5b76042f5f40d00248bf64",
+    "summaryPath": "summary.json",
+    "summarySha256": "22202aa62af8a81bc19217c1903ea62293166c5871d2b563c0f2d11310930d49",
+    "newPersonEntityCount": 6633,
+    "newBindingCount": 6756,
+    "newRelationCount": 32286,
+    "newWorkCreditsPersonRelationCount": 32134,
+    "newAdmissionCharacterVoiceRelationCount": 152
+  },
+  "personCoverage": {
+    "canonicalPersonEntityCount": 10693,
+    "observedSourcePersonUnionCount": 13500,
+    "deferredSongOnlySourceIdCount": 2807,
+    "sameNameAutoMerge": false,
+    "conflicts": "review-only",
+    "missingSourceId": "fail-closed"
+  },
+  "m3Input": {
+    "acceptedM2CanonicalManifest": true,
+    "songRelations": "deferred",
+    "songEntityProjectionMayAddDeferredSongOnlyPeople": true
+  },
+  "publicBoundary": {
+    "publicProjection": false,
+    "visibility": "review",
+    "rawLocatorsIncluded": false,
+    "personImages": "deferred"
+  }
+}
