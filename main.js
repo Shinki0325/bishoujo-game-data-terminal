@@ -79,7 +79,7 @@ import {
   TELEMETRY_ENDPOINT,
   TELEMETRY_PUBLIC_STATS_ENDPOINT,
   TELEMETRY_RELEASE_ID
-} from './lib/runtime-config.js?v=20260903-person-performance-shards-v1';
+} from './lib/runtime-config.js?v=8aef1ab0bda145067a63eeeb9f46cc76de9a3d96678691b593527bb64803bd22';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
