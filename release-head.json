@@ -1,6 +1,6 @@
 {
-  "closureSha256": "ee1af4de15f19a043c9949f5ffea3c8df25a4597bbdc8c471e18efeb66ef061f",
-  "entry": "releases/20260903-person-performance-v1/index.html",
-  "releaseId": "20260903-person-performance-v1",
+  "closureSha256": "c695509776b14f5bdf35a52c90ea0328353a175b406a48fe25f262b84099c535",
+  "entry": "releases/20260903-person-performance-hotfix-v2/index.html",
+  "releaseId": "20260903-person-performance-hotfix-v2",
   "schemaVersion": "egs-tier-release-head-v1"
 }
