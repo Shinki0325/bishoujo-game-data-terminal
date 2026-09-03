@@ -83062,9 +83062,9 @@
       "sha256": "5ec5501f3338d809eefa3b08471f4661bf7f6cbbe939d361ddef4497c907fc4f"
     },
     {
-      "bytes": 231330,
+      "bytes": 231357,
       "path": "main.js",
-      "sha256": "06abcf3c100d359b0b6ecb1bb68b5ea03f33d57c9f1ee70f1f9188c799fbbf60"
+      "sha256": "c7868386d62733b6a77f78d43839e9a86bf2716542921529ec408de46edd69c7"
     },
     {
       "bytes": 249,
@@ -150605,7 +150605,7 @@
   "publicationStatus": "release-candidate",
   "schemaVersion": "egs-tier-standalone-site-inventory-v2",
   "totals": {
-    "bytes": 2345359099,
+    "bytes": 2345359126,
     "files": 30120
   }
 }
