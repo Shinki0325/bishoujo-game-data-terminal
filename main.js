@@ -79,7 +79,7 @@ import {
   TELEMETRY_ENDPOINT,
   TELEMETRY_PUBLIC_STATS_ENDPOINT,
   TELEMETRY_RELEASE_ID
-} from './lib/runtime-config.js?v=8aef1ab0bda145067a63eeeb9f46cc76de9a3d96678691b593527bb64803bd22';
+} from './lib/runtime-config.js?v=20260903-person-performance-shards-v1';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -95,8 +95,9 @@ import { buildRankingModel, createRankingCard, createRankingView } from './views
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js?v=20260824-mobile-single-score-card-v2';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
-import { createPersonDirectoryView } from './views/person-directory-view.js';
-import { createM2PersonRuntime } from './lib/m2-person-runtime.js';
+import { createPersonDirectoryView } from './views/person-directory-view.js?v=20260903-person-role-model-v5';
+import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260903-person-role-model-v1';
+import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260903-person-performance-candidate-v2';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -1240,7 +1241,17 @@ async function initialize() {
     }
   }
   let personRuntime = null;
+  let personPerformanceRuntime = null;
   if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
+    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true) {
+      personPerformanceRuntime = createM2PersonPerformanceRuntime({
+        manifestUrl: DATA_URLS.m2PersonPerformanceManifest,
+        indexUrl: DATA_URLS.m2PersonPerformanceIndex,
+        fetchImpl: fetch,
+        cryptoRef: crypto,
+        cacheMode: RUNTIME_DATA_CACHE_MODE
+      });
+    }
     personRuntime = createM2PersonRuntime({
       manifestUrl: DATA_URLS.m2PersonManifest,
       entitiesUrl: DATA_URLS.m2PersonEntities,
@@ -1532,8 +1543,12 @@ async function initialize() {
   let replacementWork = null;
   let companyDirectoryOpen = false;
   let personDirectoryOpen = false;
+  let personDetailReturnId = null;
   let personDirectoryView;
   let personRuntimeState = null;
+  let personRuntimeSourceState = null;
+  let personImageHydrationPromise = null;
+  const personDetailCache = new Map();
   let personRole = 'all';
   let personQuery = '';
   let selectedPersonId = null;
@@ -2707,6 +2722,10 @@ async function initialize() {
   let companyDirectoryView;
   function buildPersonRecords(state, characterImageMap = null) {
     const records = Array.isArray(state?.records) ? state.records : [];
+    const normalizePersonSearch = value => String(value ?? '')
+      .normalize('NFKC')
+      .toLocaleLowerCase('ja')
+      .replace(/[\p{P}\p{S}\s]+/gu, '');
     const imageByCharacterId = new Map();
     const imageBySourceCharacterId = new Map();
     for (const mapping of characterImageMap?.bySourceCharacterId?.values?.() ?? []) {
@@ -2722,32 +2741,148 @@ async function initialize() {
         bucket.add(person.entityId); workPeople.set(String(credit.workId), bucket);
       }
     }
+    const companyNameById = new Map(companyDirectory.companies.map(company => [String(company.companyId), company.brandName]));
     return records.map(person => {
-      const credits = [...(person.credits ?? [])].map(credit => ({
+      const credits = [...(person.credits ?? [])].map(credit => {
+        const work = worksById.get(String(credit.workId ?? ''));
+        const characterImage = imageByCharacterId.get(String(credit.characterId ?? ''))
+          ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId ?? ''));
+        return {
         ...credit,
         displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? credit.title,
-        characterImageUrl: (imageByCharacterId.get(String(credit.characterId ?? '')) ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId ?? '')))?.assetPath
-          ? new URL((imageByCharacterId.get(String(credit.characterId ?? '')) ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId))).assetPath, CHARACTER_IMAGE_ASSET_BASE).href
+        releaseDate: credit.releaseDate ?? work?.releaseDate ?? '',
+        bangumiScore: Number.isFinite(work?.bangumiScore) ? work.bangumiScore : null,
+        bangumiVoteCount: Number.isSafeInteger(work?.bangumiVoteCount) ? work.bangumiVoteCount : null,
+        characterImageUrl: characterImage?.assetPath
+          ? `${CHARACTER_IMAGE_ASSET_BASE}${characterImage.assetPath}`
           : null
-      })).sort((a, b) => String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? '')) || String(a.title).localeCompare(String(b.title), 'zh-Hans'));
+        };
+      }).sort((a, b) => String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? '')) || String(a.title).localeCompare(String(b.title), 'zh-Hans'));
       const years = credits.map(credit => Number(String(credit.releaseDate ?? '').slice(0, 4))).filter(year => Number.isInteger(year) && year > 1900);
       const firstYear = years.length ? Math.min(...years) : null; const lastYear = years.length ? Math.max(...years) : null;
-      const buckets = Array.from({ length: Math.min(12, Math.max(1, (lastYear ?? firstYear ?? 0) - (firstYear ?? 0) + 1)) }, () => 0);
-      if (firstYear !== null) for (const year of years) buckets[Math.min(buckets.length - 1, Math.floor((year - firstYear) * buckets.length / Math.max(1, lastYear - firstYear + 1)))] += 1;
-      const peak = Math.max(1, ...buckets);
-      const coCounts = new Map();
+      const activityYears = firstYear === null || lastYear === null
+        ? []
+        : Array.from({ length: lastYear - firstYear + 1 }, (_, index) => ({ year: firstYear + index, count: 0 }));
+      if (firstYear !== null) for (const year of years) activityYears[year - firstYear].count += 1;
+      const activityPeak = Math.max(1, ...activityYears.map(item => item.count));
+      const buckets = Array.from({ length: Math.min(12, Math.max(1, activityYears.length)) }, () => 0);
+      activityYears.forEach((item, index) => {
+        const bucketIndex = Math.min(buckets.length - 1, Math.floor(index * buckets.length / Math.max(1, activityYears.length)));
+        buckets[bucketIndex] += item.count;
+      });
+      const bucketPeak = Math.max(1, ...buckets);
+      const workIds = [...new Set(credits.map(credit => String(credit.workId ?? '')).filter(Boolean))];
+      // These two lists are only visible after opening a detail dialog. Keep
+      // their exact derivation, but defer the peer/company traversal until it
+      // is requested so activating the 10k-person directory stays cheap.
+      let coActors = null;
+      let coCompanies = null;
+      const getCoActors = () => {
+        if (coActors !== null) return coActors;
+        const coCounts = new Map();
+        for (const workId of workIds) {
+          const peers = workPeople.get(workId);
+          for (const peerId of peers ?? []) if (peerId !== person.entityId) coCounts.set(peerId, (coCounts.get(peerId) ?? 0) + 1);
+        }
+        coActors = [...coCounts.entries()]
+          .map(([personId, count]) => ({ personId, count, name: nameById.get(personId) ?? '未命名人物' }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans'))
+          .slice(0, 8);
+        return coActors;
+      };
+      const getCoCompanies = () => {
+        if (coCompanies !== null) return coCompanies;
+        const companyWorks = new Map();
+        for (const workId of workIds) {
+          const work = worksById.get(workId);
+          const companyId = String(work?.brandId ?? work?.companyId ?? '');
+          if (!companyId) continue;
+          const bucket = companyWorks.get(companyId) ?? new Set();
+          bucket.add(workId);
+          companyWorks.set(companyId, bucket);
+        }
+        coCompanies = [...companyWorks.entries()]
+          .map(([companyId, companyWorkIds]) => ({ companyId, count: companyWorkIds.size, name: companyNameById.get(companyId) ?? '未收录会社' }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans'))
+          .slice(0, 5);
+        return coCompanies;
+      };
+      // Count one work once per function. A single source work may list the
+      // same person repeatedly (or under two duplicate credit rows); counting
+      // raw rows makes the directory tabs unstable and can promote a minor
+      // secondary function to the primary one.
+      const roleWorkKeys = new Map();
       for (const credit of credits) {
-        const peers = workPeople.get(String(credit.workId));
-        for (const peerId of peers ?? []) if (peerId !== person.entityId) coCounts.set(peerId, (coCounts.get(peerId) ?? 0) + 1);
+        const role = credit.creditType === 'character-voiced-by' ? 'voice-actor' : String(credit.roleCode ?? 'unknown');
+        const workKey = String(credit.workId ?? credit.workEntityId ?? credit.relationId ?? '');
+        const keys = roleWorkKeys.get(role) ?? new Set();
+        keys.add(workKey); roleWorkKeys.set(role, keys);
       }
-      const coActors = [...coCounts.entries()].map(([personId, count]) => ({ personId, count, name: nameById.get(personId) ?? '未命名人物' })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans')).slice(0, 8);
       const roles = Object.create(null);
-      for (const hint of person.roleHints ?? []) roles[hint] = roles[hint] ?? 0;
-      for (const credit of credits) roles[credit.roleCode ?? 'unknown'] = (roles[credit.roleCode ?? 'unknown'] ?? 0) + 1;
+      for (const [role, keys] of roleWorkKeys) roles[role] = keys.size;
       for (const hint of person.roleHints ?? []) if (!roles[hint]) roles[hint] = 1;
+      const roleOrder = ['voice-actor', 'scenario', 'artwork', 'music', 'unknown'];
+      const primaryRole = roleOrder
+        .filter(role => role !== 'unknown' || Object.keys(roles).length === 0)
+        .sort((left, right) => (roles[right] ?? 0) - (roles[left] ?? 0) || roleOrder.indexOf(left) - roleOrder.indexOf(right))[0] ?? 'unknown';
+      const variantNames = [
+        ...(Array.isArray(person.nameVariants) ? person.nameVariants.map(item => item?.name) : []),
+        ...(Array.isArray(person.aliases) ? person.aliases : [])
+      ].filter(name => typeof name === 'string' && name.trim());
+      const nameVariantCount = new Set(variantNames.map(name => name.normalize('NFKC').trim())).size;
       const workKeys = credits.map(credit => credit.workId ?? credit.workEntityId).filter(Boolean);
+      // Non-voice staff use their highest-vote credited works as the identity
+      // panel's representative works. Resolve against the catalog first so
+      // unresolved source-only credits cannot surface as guessed cards.
+      const representativeWorkById = new Map();
+      for (const credit of credits) {
+        const workId = String(credit.workId ?? credit.workEntityId ?? '');
+        if (!workId || representativeWorkById.has(workId)) continue;
+        const work = worksById.get(workId);
+        if (!work) continue;
+        const thumbnailPath = work.projectedThumbnailPath ?? work.coverPath;
+        representativeWorkById.set(workId, {
+          workId,
+          title: workDisplayTitlesById?.get?.(workId) ?? credit.displayTitle ?? work.title ?? credit.title ?? `作品 ${workId}`,
+          releaseDate: work.releaseDate ?? credit.releaseDate ?? '',
+          median: Number.isFinite(work.median) ? work.median : null,
+          voteCount: Number.isSafeInteger(work.voteCount) ? work.voteCount : null,
+          bangumiScore: Number.isFinite(work.bangumiScore) ? work.bangumiScore : null,
+          bangumiVoteCount: Number.isSafeInteger(work.bangumiVoteCount) ? work.bangumiVoteCount : null,
+          imageUrl: thumbnailPath ? resolveAssetUrl(thumbnailPath, assetBase) : null
+        });
+      }
+      const representativeWorks = [...representativeWorkById.values()]
+        .sort((a, b) => {
+          const aRated = Number.isSafeInteger(a.bangumiVoteCount);
+          const bRated = Number.isSafeInteger(b.bangumiVoteCount);
+          return Number(bRated) - Number(aRated)
+            || (b.bangumiVoteCount ?? -1) - (a.bangumiVoteCount ?? -1)
+            || a.workId.localeCompare(b.workId, 'en')
+            || a.title.localeCompare(b.title, 'zh-Hans');
+        })
+        .slice(0, 3);
       const representativeCharacters = [];
       const seenCharacters = new Set();
+      const seenSeriesCharacters = new Set();
+      const seenRepresentativeNames = new Set();
+      const normalizeRepresentativeCharacterName = value => String(value ?? '')
+        .normalize('NFKC')
+        .toLocaleLowerCase('ja')
+        .replace(/[\p{P}\p{S}\s]+/gu, '');
+      const representativeSeriesKey = credit => {
+        const workId = String(credit.workId ?? '');
+        const family = presentationFamilies?.familyForWork?.(workId) ?? null;
+        // Some related entries (for example the different Muv-Luv games)
+        // are separate VNDB families but share a stable title prefix. Use
+        // that prefix only for representative-display de-duplication; the
+        // underlying work/character relations remain untouched.
+        // Prefer the family title when available so a family member and a
+        // related standalone entry resolve to the same prefix.
+        const title = String(family?.title ?? credit.displayTitle ?? credit.title ?? '').normalize('NFKC').trim();
+        const prefix = title.match(/^[^\s~～\-—:：([{【「『]+/u)?.[0] ?? '';
+        return normalizeRepresentativeCharacterName(prefix) || family?.presentationWorkId || workId;
+      };
       const voicedCredits = credits
         .filter(credit => credit.creditType === 'character-voiced-by' && credit.characterId)
         .sort((a, b) => {
@@ -2755,7 +2890,7 @@ async function initialize() {
           const bMain = ['main', 'primary', 'メイン'].includes(String(b.characterRole ?? '')) ? 1 : 0;
           return bMain - aMain
             || Number(Boolean(b.characterImageUrl)) - Number(Boolean(a.characterImageUrl))
-            || (Number(worksById.get(String(b.workId))?.voteCount) || 0) - (Number(worksById.get(String(a.workId))?.voteCount) || 0)
+            || (Number(worksById.get(String(b.workId))?.bangumiVoteCount) || 0) - (Number(worksById.get(String(a.workId))?.bangumiVoteCount) || 0)
             || String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? ''))
             || String(a.characterName ?? '').localeCompare(String(b.characterName ?? ''), 'zh-Hans');
         });
@@ -2763,11 +2898,27 @@ async function initialize() {
       for (const credit of voicedCredits) {
         if (hasMainCharacter && !['main', 'primary', 'メイン'].includes(String(credit.characterRole ?? ''))) continue;
         if (seenCharacters.has(credit.characterId)) continue;
+        const seriesKey = representativeSeriesKey(credit);
+        const characterKey = normalizeRepresentativeCharacterName(credit.characterName || credit.characterId);
+        const seriesCharacterKey = `${seriesKey}:${characterKey}`;
+        // Source systems may assign different character IDs to the same
+        // named character across related entries. Representative cards are a
+        // compact display, so keep the first (already best-ranked) instance
+        // of an exact normalized name as well as the series-scoped key.
+        if (seenRepresentativeNames.has(characterKey) || seenSeriesCharacters.has(seriesCharacterKey)) continue;
         seenCharacters.add(credit.characterId);
+        seenRepresentativeNames.add(characterKey);
+        seenSeriesCharacters.add(seriesCharacterKey);
         representativeCharacters.push({ characterId: credit.characterId, name: credit.characterName ?? `角色 ${credit.characterId}`, imageUrl: credit.characterImageUrl, workId: credit.workId, title: credit.displayTitle ?? credit.title, role: credit.characterRole });
         if (representativeCharacters.length >= 4) break;
       }
-      return { ...person, credits, representativeCharacters, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / peak * 100)), coActors };
+      const searchValues = [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item?.name), ...(person.nameVariants ?? []).map(item => item?.latin)];
+      const searchKey = searchValues
+        .filter(value => typeof value === 'string' && value.trim())
+        .map(value => normalizePersonSearch(value))
+        .filter(Boolean)
+        .join(' ');
+      return { ...person, searchKey, credits, representativeWorks, representativeCharacters, workCount: new Set(workKeys).size, totalCredits: credits.length, roles, primaryRole, nameVariantCount, firstYear, lastYear, spanLabel: firstYear && lastYear ? `${firstYear}–${lastYear}` : '日期未知', activity: buckets.map(value => Math.round(value / bucketPeak * 100)), activityYears: activityYears.map(item => ({ ...item, percent: Math.round(item.count / activityPeak * 100) })), coActors, coCompanies, getCoActors, getCoCompanies };
     }).sort((a, b) => b.workCount - a.workCount || a.canonicalName.localeCompare(b.canonicalName, 'zh-Hans'));
   }
 
@@ -2778,16 +2929,54 @@ async function initialize() {
     // ensurePersonRuntime() still hit renderPersonDirectory() with a Promise
     // and produced an empty/failed directory render.
     if (personRuntimeState === null) {
-      personRuntimeState = await Promise.all([personRuntime.load(), loadCharacterImageMap()]).then(([state, characterImageMap]) => {
-        const result = buildPersonRecords(state, characterImageMap);
-        return result;
-      });
+      if (personPerformanceRuntime !== null) {
+        const directory = await personPerformanceRuntime.loadDirectory();
+        personRuntimeState = directory.records;
+        return personRuntimeState;
+      }
+      // Stage 1: make the directory usable as soon as the person graph is
+      // ready. The 16MB character-image map is hydrated in the background so
+      // image decoding never blocks the first interactive render.
+      personRuntimeSourceState = await personRuntime.load();
+      personRuntimeState = buildPersonRecords(personRuntimeSourceState, null);
+      if (new URLSearchParams(window.location.search).has('dumpPersonIndex')) {
+        globalThis.__EGS_PERSON_INDEX_EXPORT__ = personRuntimeState.map(person => ({
+          ...person,
+          coActors: person.getCoActors?.() ?? person.coActors ?? [],
+          coCompanies: person.getCoCompanies?.() ?? person.coCompanies ?? []
+        }));
+      }
+      // Stage 2: hydrate character images once, then rebuild only the derived
+      // presentation records. Keep the settled source state so failures leave
+      // the already-usable text directory intact.
+      if (personImageHydrationPromise === null) {
+        personImageHydrationPromise = loadCharacterImageMap().then(characterImageMap => {
+          if (!characterImageMap || !personRuntimeSourceState) return;
+          personRuntimeState = buildPersonRecords(personRuntimeSourceState, characterImageMap);
+          if (personDirectoryOpen) {
+            renderPersonDirectory();
+            renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+            if (selectedPersonId !== null) personDirectoryView?.setSelected?.(selectedPersonId);
+          }
+        }).catch(() => undefined);
+      }
     }
     return personRuntimeState;
   }
 
   function renderPersonDirectory() {
-    if (!personDirectoryView || !personRuntimeState) return;
+    if (!personDirectoryView) return;
+    const loading = document.querySelector('#person-directory-loading');
+    if (!personRuntimeState) {
+      elements.personView.setAttribute('aria-busy', 'true');
+      if (loading) loading.hidden = false;
+      elements.personDirectoryCount.textContent = '加载中…';
+      elements.personList.replaceChildren();
+      elements.personEmpty.hidden = true;
+      return;
+    }
+    elements.personView.setAttribute('aria-busy', 'false');
+    if (loading) loading.hidden = true;
     // Person names come from multiple sources (for example VNDB uses
     // "田口 宏子" while EGS uses "田口宏子").  Keep the source records
     // separate, but make directory search tolerant of spacing, punctuation,
@@ -2798,7 +2987,9 @@ async function initialize() {
       .toLocaleLowerCase('ja')
       .replace(/[\p{P}\p{S}\s]+/gu, '');
     const needle = normalizePersonSearch(personQuery);
-    const persons = needle ? personRuntimeState.filter(person => [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name), ...(person.nameVariants ?? []).map(item => item.latin)].some(value => normalizePersonSearch(value).includes(needle))) : personRuntimeState;
+    const persons = needle
+      ? personRuntimeState.filter(person => (person.searchKey ?? [person.canonicalName, ...(person.aliases ?? []), ...(person.nameVariants ?? []).map(item => item.name), ...(person.nameVariants ?? []).map(item => item.latin)].map(normalizePersonSearch).join(' ')).includes(needle))
+      : personRuntimeState;
     elements.personDirectoryCount.textContent = new Intl.NumberFormat('zh-CN').format(persons.length);
     personDirectoryView.render({ persons, selectedPersonId: selectedPersonId ?? null });
   }
@@ -2989,9 +3180,36 @@ async function initialize() {
       personRole = role;
       replaceUiLocation();
     },
+    async onLoadPerson(personId, summary) {
+      if (personDetailCache.has(personId)) return personDetailCache.get(personId);
+      if (personPerformanceRuntime !== null) {
+        const detail = await personPerformanceRuntime.loadPerson(personId);
+        if (detail) personDetailCache.set(personId, detail);
+        return detail ?? summary;
+      }
+      return summary;
+    },
     onSelect(personId) {
       selectedPersonId = personId;
       if (personId === null) {
+        // A co-actor detail is opened from another person detail. Treat the
+        // close action like returning from a nested detail route instead of
+        // dropping the user at the directory root.
+        if (personDetailReturnId !== null && personDetailReturnId !== undefined) {
+          const returnPersonId = personDetailReturnId;
+          personDetailReturnId = null;
+          selectedPersonId = returnPersonId;
+          renderPersonDirectory();
+          replaceUiLocation();
+          // The close control is a dialog form submit, so the browser closes
+          // the native dialog after the click handler returns. Re-open the
+          // restored parent detail on the next task to avoid ending up with a
+          // rendered-but-hidden detail.
+          window.setTimeout(() => {
+            if (selectedPersonId === returnPersonId) personDirectoryView?.setSelected?.(returnPersonId);
+          }, 0);
+          return;
+        }
         if (elements.personDetailDialog.open) elements.personDetailDialog.close();
         pushUiLocation();
       } else pushUiLocation();
@@ -2999,16 +3217,25 @@ async function initialize() {
     onOpenWork(workId) {
       const work = worksById.get(String(workId));
       if (!work) return;
+      personDetailReturnId = selectedPersonId;
       selectedPersonId = null;
       personDirectoryOpen = false;
       if (elements.personDetailDialog.open) elements.personDetailDialog.close();
       openWorkDetails(work);
     },
     onOpenPerson(personId) {
+      personDetailReturnId = selectedPersonId !== null && selectedPersonId !== personId
+        ? selectedPersonId
+        : null;
       selectedPersonId = personId;
       personDirectoryOpen = true;
       renderPersonDirectory();
       pushUiLocation();
+    },
+    onOpenCompany(companyId) {
+      selectedPersonId = null;
+      if (elements.personDetailDialog.open) elements.personDetailDialog.close();
+      openCompanyDirectory(companyId);
     }
   });
   elements.companyHasImage.addEventListener('change', () => {
@@ -4325,6 +4552,7 @@ async function initialize() {
         return true;
       }
       if (location.page === 'persons') {
+        personDetailReturnId = null;
         companyDirectoryOpen = false;
         personDirectoryOpen = true;
         setWorkSelectionMode(false);
@@ -4332,6 +4560,8 @@ async function initialize() {
         personQuery = location.query ?? '';
         personRole = location.role ?? 'all';
         elements.personSearch.value = personQuery;
+        renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+        renderPersonDirectory();
         await ensurePersonRuntime();
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         personDirectoryView.setRoleFilter?.(personRole);
@@ -4373,7 +4603,18 @@ async function initialize() {
     const returnFocus = detailsReturnFocus;
     detailsReturnFocus = null;
     if (currentWorkDetailId === null || applyingUiLocation) return;
+    const returnPersonId = personDetailReturnId;
+    personDetailReturnId = null;
     currentWorkDetailId = null;
+    if (returnPersonId !== null && returnPersonId !== undefined) {
+      personDirectoryOpen = true;
+      selectedPersonId = returnPersonId;
+      void ensurePersonRuntime().then(() => {
+        renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+        personDirectoryView?.setSelected?.(returnPersonId);
+        replaceUiLocation();
+      });
+    }
     pushUiLocation();
     if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
   });
@@ -4472,6 +4713,7 @@ async function initialize() {
     companyDirectoryOpen = false;
     personDirectoryOpen = false;
     selectedPersonId = null;
+    personDetailReturnId = null;
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
@@ -4485,6 +4727,7 @@ async function initialize() {
     companyDirectoryOpen = false;
     personDirectoryOpen = false;
     selectedPersonId = null;
+    personDetailReturnId = null;
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
@@ -4499,6 +4742,7 @@ async function initialize() {
     compareMode = false;
     setWorkSelectionMode(false);
     companySelectionMode = false;
+    personDetailReturnId = null;
     const open = () => {
       if (lastRenderedModel === null) {
         window.setTimeout(open, 0);
@@ -4515,6 +4759,7 @@ async function initialize() {
     companyDirectoryOpen = false;
     personDirectoryOpen = false;
     selectedPersonId = null;
+    personDetailReturnId = null;
     personDirectoryOpen = true;
     personRole = 'all';
     compareMode = false;
@@ -4522,6 +4767,8 @@ async function initialize() {
     companySelectionMode = false;
     selectedPersonId = null;
     const open = async () => {
+      renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+      renderPersonDirectory();
       try {
         await ensurePersonRuntime();
         personDirectoryView.setRoleFilter?.(personRole);

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20260902-custom-asset-domain-v1">
+<html lang="zh-CN" data-app-revision="20260901-character-images-v13">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="egs-tier-asset-base" content="https://assets.bishojo.date/">
+    <meta name="egs-tier-asset-base" content="https://raw.githubusercontent.com/Shinki0325/bishoujo-game-cover-assets/main/">
     <title>美少女游戏数据终端</title>
     <script>
       try {
@@ -14,7 +14,7 @@
         // Keep the dark default when preference storage is unavailable.
       }
     </script>
-    <link rel="stylesheet" href="./releases/20260902-custom-asset-domain-v1/styles.css">
+    <link rel="stylesheet" href="./styles.css?v=20260903-person-detail-pages-v3">
   </head>
   <body>
     <header class="tool-header">
@@ -47,6 +47,14 @@
           aria-controls="company-view"
           aria-selected="false"
         >会社库</button>
+        <button
+          id="mode-person"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-controls="person-view"
+          aria-selected="false"
+        >人物</button>
       </div>
       <div class="header-actions" aria-label="网站工具">
         <button
@@ -655,7 +663,58 @@
           </section>
         </section>
       </section>
+
+      <section id="person-view" class="person-view" role="tabpanel" aria-labelledby="mode-person" hidden>
+        <header class="person-directory-header">
+          <div class="person-directory-heading">
+            <h2>人物库</h2>
+            <p class="person-directory-summary">PERSON ARCHIVE · <span id="person-directory-count">0</span></p>
+          </div>
+          <div class="person-directory-tools">
+            <label class="search-field person-directory-search" for="person-directory-search">
+              <span class="visually-hidden">搜索人物</span>
+              <input id="person-directory-search" type="search" placeholder="搜索人物名义" autocomplete="off">
+            </label>
+            <div class="person-directory-tabs" role="tablist" aria-label="人物类型">
+              <button id="person-role-all" type="button" role="tab" class="is-active" data-person-role="all" aria-selected="true" aria-pressed="true" aria-controls="person-directory-panel" tabindex="0">总览</button>
+              <button id="person-role-voice-actor" type="button" role="tab" data-person-role="voice-actor" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">声优</button>
+              <button id="person-role-scenario" type="button" role="tab" data-person-role="scenario" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">剧本</button>
+              <button id="person-role-artwork" type="button" role="tab" data-person-role="artwork" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">原画</button>
+              <button id="person-role-music" type="button" role="tab" data-person-role="music" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">音乐</button>
+            </div>
+          </div>
+        </header>
+        <div class="person-directory-layout">
+          <section id="person-directory-panel" class="person-directory-panel" role="tabpanel" aria-label="人物列表" aria-live="polite">
+            <div class="person-directory-list-head" aria-hidden="true">
+              <span>代表角色/作品</span><span>人物</span><span>作品 / 名义</span><span>职能</span><span>活动分布</span><span>跨度</span>
+            </div>
+            <div id="person-directory-list" class="person-directory-list" aria-live="polite"></div>
+            <p id="person-directory-loading" class="person-directory-loading" role="status" hidden>正在加载人物数据…</p>
+            <nav id="person-directory-pagination" class="selection-pagination person-directory-pagination" aria-label="人物目录分页">
+              <button id="person-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+              <span class="selection-page-field"><output id="person-page-number">1</output> / <output id="person-page-total">1</output></span>
+              <button id="person-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+            </nav>
+            <p id="person-directory-empty" class="person-directory-empty" hidden>没有匹配的人物。</p>
+          </section>
+        </div>
+      </section>
     </main>
+
+    <dialog id="person-detail-dialog" class="person-detail-dialog" aria-labelledby="person-detail-title">
+      <div class="dialog-heading person-detail-heading">
+        <div class="person-detail-title-line">
+          <h2 id="person-detail-title">人物详情</h2>
+          <span id="person-detail-primary-role" class="person-detail-primary-role"></span>
+        </div>
+        <p id="person-detail-meta" class="person-detail-header-counts"></p>
+        <form method="dialog"><button id="person-detail-close" class="icon-button" type="submit" aria-label="关闭人物详情">×</button></form>
+      </div>
+      <div id="person-detail-body" class="person-detail-body">
+        <p class="person-directory-empty">选择人物查看详情</p>
+      </div>
+    </dialog>
 
     <dialog id="share-import-dialog" aria-labelledby="share-import-title">
       <div class="dialog-heading">
@@ -923,8 +982,8 @@
           <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
           <button id="sticker-option-pixelate" type="button" data-sticker-kind="pixelate" aria-label="添加马赛克"><span class="sticker-swatch sticker-swatch-pixelate" aria-hidden="true"></span></button>
           <button id="sticker-option-blur" type="button" data-sticker-kind="blur" aria-label="添加模糊"><span class="sticker-swatch sticker-swatch-blur" aria-hidden="true"></span></button>
-          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./releases/20260902-custom-asset-domain-v1/assets/stickers/please-wait-character.webp" alt=""></button>
-          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./releases/20260902-custom-asset-domain-v1/assets/stickers/paper-bag-character.png" alt=""></button>
+          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./releases/20260901-character-images-v13/assets/stickers/please-wait-character.webp" alt=""></button>
+          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./releases/20260901-character-images-v13/assets/stickers/paper-bag-character.png" alt=""></button>
         </div>
       </div>
           <div class="dialog-actions sticker-editor-actions">
@@ -1004,6 +1063,6 @@
       <div id="work-compare-content" class="work-compare-content"></div>
     </dialog>
 
-    <script type="module" src="./releases/20260902-custom-asset-domain-v1/main.js"></script>
+    <script type="module" src="./main.js?v=20260903-person-performance-shards-v2"></script>
   </body>
 </html>
