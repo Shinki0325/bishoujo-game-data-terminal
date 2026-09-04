@@ -49,6 +49,7 @@ import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import { prepareCharacterImageMap } from './lib/character-image-map.js';
+import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
 import {
   applyAuthorityFanoutMediaToWork,
   prepareAuthorityFanoutMediaProjection,
@@ -64,6 +65,7 @@ import {
   RUNTIME_DATA_CACHE_MODE,
   MEDIA_CLEARANCE_BRIDGE_SHA256,
   CHARACTER_IMAGE_MAP_SHA256,
+  CHARACTER_IMAGE_ALIAS_MAP_SHA256,
   CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
   CHARACTER_IMAGE_ASSET_BASE,
   M2_PERSON_MANIFEST_SHA256,
@@ -72,6 +74,7 @@ import {
   M2_PERSON_NAME_VARIANTS_SHA256,
   M2_PERSON_CHARACTER_ROLES_SHA256,
   M2_PERSON_NAME_PREFERENCES_SHA256,
+  M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256,
   M1_PERSON_ONLY_ENTITIES_SHA256,
   M1_PERSON_VOICE_RELATIONS_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
@@ -96,8 +99,8 @@ import { createSelectionView, selectionInitialWorks } from './views/selection-vi
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
 import { createPersonDirectoryView } from './views/person-directory-view.js?v=20260903-person-role-model-v5';
-import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-1-voice-projection-v1';
-import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260904-m2-1-voice-projection-v1';
+import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-identity-character-image-v1';
+import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260904-m2-identity-character-image-v1';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -1206,13 +1209,21 @@ async function initialize() {
       return Promise.resolve(null);
     }
     if (characterImageMapPromise === null) {
-      characterImageMapPromise = fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射')
-        .then(source => {
+      characterImageMapPromise = Promise.all([
+        fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射'),
+        fetchJsonWithSha256(DATA_URLS.characterImageAliasMap, '角色图片别名映射')
+      ])
+        .then(([source, aliasSource]) => {
           if (source.sha256 !== CHARACTER_IMAGE_MAP_SHA256) {
             throw new TypeError('character image map hash does not match the runtime pin');
           }
+          if (aliasSource.sha256 !== CHARACTER_IMAGE_ALIAS_MAP_SHA256) {
+            throw new TypeError('character image alias map hash does not match the runtime pin');
+          }
           return prepareCharacterImageMap(source.value, {
-            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID
+            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
+            aliases: aliasSource.value,
+            sourceMapSha256: source.sha256
           });
         })
         .catch(error => {
@@ -1222,6 +1233,24 @@ async function initialize() {
         });
     }
     return characterImageMapPromise;
+  };
+  let projectIdentityCrosswalkPromise = null;
+  const loadProjectIdentityCrosswalk = () => {
+    if (projectIdentityCrosswalkPromise === null) {
+      projectIdentityCrosswalkPromise = fetchJsonWithSha256(DATA_URLS.m2PersonCrossSourceCrosswalk, '人物角色身份映射')
+        .then(source => {
+          if (source.sha256 !== M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256) {
+            throw new TypeError('project identity crosswalk hash does not match the runtime pin');
+          }
+          return prepareProjectIdentityCrosswalk(source.value);
+        })
+        .catch(error => {
+          console.warn('project identity crosswalk unavailable; keeping source rows separate', error);
+          projectIdentityCrosswalkPromise = null;
+          return null;
+        });
+    }
+    return projectIdentityCrosswalkPromise;
   };
   let projectEntityRuntime = null;
   if (mediaClearanceBridgeSource !== null) {
@@ -1427,6 +1456,16 @@ async function initialize() {
   const sortableSample = { ...sample, works: ratedDisplayWorks };
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   let presentationFamilies = null;
+  // Catalog projection may split a VNDB version family at independent
+  // Bangumi subjects. Person representative works are a compact summary and
+  // keep the raw version-family identity solely for slot de-duplication.
+  const representativeFamilyByWorkId = new Map();
+  for (const family of presentationFamiliesSource?.value?.families ?? []) {
+    if (typeof family?.presentationWorkId !== 'string' || !family.presentationWorkId) continue;
+    for (const workId of family.catalogMemberWorkIds ?? []) {
+      if (typeof workId === 'string' && workId) representativeFamilyByWorkId.set(workId, family.presentationWorkId);
+    }
+  }
   if (presentationFamiliesSource !== null) {
     try {
       if (presentationFamiliesSource.sha256 !== PRESENTATION_FAMILIES_SIDECAR_SHA256) {
@@ -2853,7 +2892,7 @@ async function initialize() {
           imageUrl: thumbnailPath ? resolveAssetUrl(thumbnailPath, assetBase) : null
         });
       }
-      const representativeWorks = [...representativeWorkById.values()]
+      const rankedRepresentativeWorks = [...representativeWorkById.values()]
         .sort((a, b) => {
           const aRated = Number.isSafeInteger(a.bangumiVoteCount);
           const bRated = Number.isSafeInteger(b.bangumiVoteCount);
@@ -2861,8 +2900,18 @@ async function initialize() {
             || (b.bangumiVoteCount ?? -1) - (a.bangumiVoteCount ?? -1)
             || a.workId.localeCompare(b.workId, 'en')
             || a.title.localeCompare(b.title, 'zh-Hans');
-        })
-        .slice(0, 3);
+        });
+      const representativeWorks = [];
+      const seenRepresentativeFamilies = new Set();
+      for (const work of rankedRepresentativeWorks) {
+        const familyId = representativeFamilyByWorkId.get(String(work.workId))
+          ?? presentationFamilies?.familyForWork?.(String(work.workId))?.presentationWorkId;
+        const familyKey = familyId ? `family:${familyId}` : `work:${work.workId}`;
+        if (seenRepresentativeFamilies.has(familyKey)) continue;
+        seenRepresentativeFamilies.add(familyKey);
+        representativeWorks.push(work);
+        if (representativeWorks.length >= 3) break;
+      }
       const representativeCharacters = [];
       const seenCharacters = new Set();
       const seenSeriesCharacters = new Set();
@@ -4451,7 +4500,10 @@ async function initialize() {
           const scopedCredits = work.isCrossSourceAdmission === true
             ? { ...credits, cast: credits.cast.map(entry => ({ ...entry, sourceScope: 'admission' })) }
             : credits;
-          const characterImageMap = await loadCharacterImageMap();
+          const [characterImageMap, projectIdentityCrosswalk] = await Promise.all([
+            loadCharacterImageMap(),
+            loadProjectIdentityCrosswalk()
+          ]);
           if (
             request !== workDetailCreditsRequest
             || currentWorkDetailId !== work.workId
@@ -4460,6 +4512,7 @@ async function initialize() {
           const personCharacter = projectEntityRuntime?.projectCredits?.(scopedCredits, {
             characterImageMap,
             characterAssetBase: CHARACTER_IMAGE_ASSET_BASE,
+            projectIdentityCrosswalk,
           });
           if (personCharacter !== undefined) {
             workDetailCreditsView.renderWork(personCharacter.credits);
