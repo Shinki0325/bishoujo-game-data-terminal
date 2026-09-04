@@ -2,7 +2,7 @@
   "schemaVersion": "terminal-wiki-m2-person-delta-v1",
   "projection": "entities",
   "publicationStatus": "source-only",
-  "generatedAt": "2026-09-02T05:27:41.689465+00:00",
+  "generatedAt": "2026-09-04T16:06:05+08:00",
   "records": [
     {
       "entityId": "per_0007a6f294ed4c9fcef4036e",
@@ -201047,6 +201047,39 @@
       "visibility": "review",
       "preferredNameVariantId": null,
       "createdRevision": "terminal-wiki-m2-person-source-only-20260902"
+    },
+    {
+      "entityId": "per_7a2f8b42016702fd1050e0fd",
+      "entityType": "person",
+      "entityKind": "person",
+      "canonicalName": "鈴木 舞香",
+      "aliases": [
+        "Suzuki Maika"
+      ],
+      "sourceRefs": [
+        {
+          "source": "vndb",
+          "kind": "staff",
+          "id": "s127"
+        }
+      ],
+      "provenance": [
+        {
+          "sourceRef": {
+            "source": "vndb",
+            "kind": "staff",
+            "id": "s127"
+          },
+          "evidenceClass": "official-structured",
+          "snapshotId": "vndb-character-dump-2026-08-17",
+          "observedAt": "2026-08-17T00:00:00+00:00"
+        }
+      ],
+      "confidence": "high",
+      "status": "active",
+      "visibility": "review",
+      "preferredNameVariantId": null,
+      "createdRevision": "terminal-wiki-m2-1-voice-projection-20260904"
     }
   ]
 }

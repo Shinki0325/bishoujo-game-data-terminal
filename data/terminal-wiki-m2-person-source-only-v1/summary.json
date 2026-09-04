@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "terminal-wiki-m2-1-voice-projection-summary-v1",
+  "publicationStatus": "source-only",
+  "generatedAt": "2026-09-04T16:06:05+08:00",
+  "contractLockId": "terminal-wiki-m2-1-voice-projection-20260904-01",
+  "baseCommit": "6e359758e79d91b301585bf5f541830b330ebb29",
+  "egsWorkId": "3007",
+  "vndbEditionId": "v66",
+  "sourceRowCount": 13,
+  "voicedCharacterCount": 11,
+  "unvoicedCharacterIds": [
+    "c3658",
+    "c56183"
+  ],
+  "voiceRelationCount": 13,
+  "newPersonEntityCount": 1,
+  "newSourceBindingCount": 1,
+  "newCharacterRoleCount": 13,
+  "newPersonEntityIds": [
+    "per_7a2f8b42016702fd1050e0fd"
+  ],
+  "newRelationIds": [
+    "rel_af8a9d585dd4f5d07704d936",
+    "rel_1afc6776d871cd015e28b628",
+    "rel_e33df84c53aa40a2a4502080",
+    "rel_a9848a1b7b77ab436a1c1d8b",
+    "rel_96f8df49f6e0b9a4c8e8993a",
+    "rel_29a6852825c5c346a452b978",
+    "rel_a3e8c7234232e6b81d91e32f",
+    "rel_026f34ff53e695fa0343cca0",
+    "rel_bbbb0523c15f3d3bacd251c2",
+    "rel_78dc3be99ab0a9c38af1ea23",
+    "rel_8128f6c88f609e4f45e3511a",
+    "rel_cbaeadb46c3b756c70586e04",
+    "rel_f3d45bb34487518be6dd3a2c"
+  ],
+  "sourceEvidenceSha256": "f394cc895ca64ed538e6bd379017aee857cb67a5d3a767898153b2b64ba310ea"
+}

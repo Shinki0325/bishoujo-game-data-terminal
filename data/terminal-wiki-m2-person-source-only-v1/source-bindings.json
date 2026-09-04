@@ -2,7 +2,7 @@
   "schemaVersion": "terminal-wiki-m2-person-delta-v1",
   "projection": "source-bindings",
   "publicationStatus": "source-only",
-  "generatedAt": "2026-09-02T05:27:41.693011+00:00",
+  "generatedAt": "2026-09-04T16:06:05+08:00",
   "records": [
     {
       "bindingId": "bind_0007a6f294ed4c9fcef4036e",
@@ -101342,6 +101342,21 @@
       "confidence": "medium",
       "evidenceClass": "source-structured",
       "snapshotId": "egs-work-detail-credits-2026-08-18",
+      "supersedesBindingId": null
+    },
+    {
+      "bindingId": "bind_ff79dd99dd24d7fc22ac20d0",
+      "entityId": "per_7a2f8b42016702fd1050e0fd",
+      "sourceRef": {
+        "source": "vndb",
+        "kind": "staff",
+        "id": "s127"
+      },
+      "relation": "exact",
+      "status": "confirmed",
+      "confidence": "high",
+      "evidenceClass": "official-structured",
+      "snapshotId": "vndb-character-dump-2026-08-17",
       "supersedesBindingId": null
     }
   ]

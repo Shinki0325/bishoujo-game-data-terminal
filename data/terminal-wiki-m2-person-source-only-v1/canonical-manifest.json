@@ -1,8 +1,8 @@
 {
   "schemaVersion": "terminal-wiki-m2-person-canonical-manifest-v1",
-  "releaseId": "relv_2026-09-02_terminal-wiki-m2-person-source-only-v1",
+  "releaseId": "relv_2026-09-04_terminal-wiki-m2-1-voice-projection-source-only-v1",
   "publicationStatus": "source-only",
-  "generatedAt": "2026-09-02T13:30:00+08:00",
+  "generatedAt": "2026-09-04T16:06:05+08:00",
   "runtimeScope": {
     "workCount": 7264,
     "coreEgsWorkCount": 6799,
@@ -22,21 +22,22 @@
   },
   "delta": {
     "entitiesPath": "entities.json",
-    "entitiesSha256": "791f52cfc84821ba0103cc60ca6c68df2f411851abb5afaf2930de9fa9b3341f",
+    "entitiesSha256": "0f0b2defa3a001f573334ab8193f3465d08458abb98daef4a4a9c91eba8b62f0",
     "sourceBindingsPath": "source-bindings.json",
-    "sourceBindingsSha256": "2b0accb0db28caf406a3ff74087c520f4d5a7258ba8e37632cf16e4dfda3b82b",
+    "sourceBindingsSha256": "74a75fb86ca96efc2ae4c62fc5ac07f6e2e574b164e88d2ece66c144e4bde1eb",
     "relationsPath": "relations.json",
-    "relationsSha256": "891b37246d0fafc8780f60f212168c58d809a8854c5b76042f5f40d00248bf64",
+    "relationsSha256": "6fe348d0339804305a7694c72505434724effda9824c3183f5238382981eeafe",
     "summaryPath": "summary.json",
-    "summarySha256": "22202aa62af8a81bc19217c1903ea62293166c5871d2b563c0f2d11310930d49",
-    "newPersonEntityCount": 6633,
-    "newBindingCount": 6756,
-    "newRelationCount": 32286,
+    "summarySha256": "7a4f697baa1f553f9b6d365a69867e98ab4babe87738cae372c2df5b608af901",
+    "newPersonEntityCount": 6634,
+    "newBindingCount": 6757,
+    "newRelationCount": 32299,
     "newWorkCreditsPersonRelationCount": 32134,
-    "newAdmissionCharacterVoiceRelationCount": 152
+    "newAdmissionCharacterVoiceRelationCount": 152,
+    "newM21CharacterVoiceRelationCount": 13
   },
   "personCoverage": {
-    "canonicalPersonEntityCount": 10693,
+    "canonicalPersonEntityCount": 10694,
     "observedSourcePersonUnionCount": 13500,
     "deferredSongOnlySourceIdCount": 2807,
     "sameNameAutoMerge": false,
@@ -53,5 +54,19 @@
     "visibility": "review",
     "rawLocatorsIncluded": false,
     "personImages": "deferred"
+  },
+  "m21VoiceProjection": {
+    "contractLockId": "terminal-wiki-m2-1-voice-projection-20260904-01",
+    "sourceSnapshotId": "vndb-character-dump-2026-08-17",
+    "sourceEvidenceSha256": "f394cc895ca64ed538e6bd379017aee857cb67a5d3a767898153b2b64ba310ea",
+    "officialDumpSha256": "43866b313542e060174d9e478a46e368b2eef4c693d29d63faefe69ea4e1aa24",
+    "egsWorkId": "3007",
+    "vndbEditionId": "v66",
+    "voicedCharacterCount": 11,
+    "voiceRelationCount": 13,
+    "unvoicedCharacterIds": [
+      "c3658",
+      "c56183"
+    ]
   }
 }

@@ -79,7 +79,7 @@ import {
   TELEMETRY_ENDPOINT,
   TELEMETRY_PUBLIC_STATS_ENDPOINT,
   TELEMETRY_RELEASE_ID
-} from './lib/runtime-config.js?v=59feb39136a991a722c69a396c968b851a82852738ace30387674dfa7882c7fc';
+} from './lib/runtime-config.js?v=91c62196caecdbdfce2eb1570f648223b1d705e9970a49b56c1c8ea9e6bc861b';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
@@ -96,8 +96,8 @@ import { createSelectionView, selectionInitialWorks } from './views/selection-vi
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
 import { createPersonDirectoryView } from './views/person-directory-view.js?v=20260903-person-role-model-v5';
-import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260903-person-role-model-v1';
-import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260903-person-performance-candidate-v2';
+import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-1-voice-projection-v1';
+import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260904-m2-1-voice-projection-v1';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -1243,7 +1243,8 @@ async function initialize() {
   let personRuntime = null;
   let personPerformanceRuntime = null;
   if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
-    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true) {
+    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
+      && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
       personPerformanceRuntime = createM2PersonPerformanceRuntime({
         manifestUrl: DATA_URLS.m2PersonPerformanceManifest,
         indexUrl: DATA_URLS.m2PersonPerformanceIndex,
@@ -2951,8 +2952,20 @@ async function initialize() {
       // the already-usable text directory intact.
       if (personImageHydrationPromise === null) {
         personImageHydrationPromise = loadCharacterImageMap().then(characterImageMap => {
-          if (!characterImageMap || !personRuntimeSourceState) return;
+          const dumpPersonIndex = new URLSearchParams(window.location.search).has('dumpPersonIndex');
+          if (!characterImageMap || !personRuntimeSourceState) {
+            if (dumpPersonIndex) globalThis.__EGS_PERSON_INDEX_HYDRATED__ = true;
+            return;
+          }
           personRuntimeState = buildPersonRecords(personRuntimeSourceState, characterImageMap);
+          if (dumpPersonIndex) {
+            globalThis.__EGS_PERSON_INDEX_EXPORT__ = personRuntimeState.map(person => ({
+              ...person,
+              coActors: person.getCoActors?.() ?? person.coActors ?? [],
+              coCompanies: person.getCoCompanies?.() ?? person.coCompanies ?? []
+            }));
+            globalThis.__EGS_PERSON_INDEX_HYDRATED__ = true;
+          }
           if (personDirectoryOpen) {
             renderPersonDirectory();
             renderWorkspace(lastRenderedModel ?? controller.inspect([]));
