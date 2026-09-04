@@ -3727,6 +3727,7 @@ async function initialize() {
       elements.rankingView.hidden = true;
       elements.mobileSelectionView.hidden = true;
       elements.companyView.hidden = false;
+      elements.personView.hidden = true;
       return;
     }
     const ranking = model.state.workspaceMode === 'ranking';
