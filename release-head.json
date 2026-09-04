@@ -1,6 +1,6 @@
 {
-  "closureSha256": "d285efcd2fe5517e94f284ae2196e03ff3b0d4522158403b0995bf2605786603",
-  "entry": "releases/20260904-cjk-pinyin-activity-role-label-v2/index.html",
-  "releaseId": "20260904-cjk-pinyin-activity-role-label-v2",
+  "closureSha256": "e10159a80be26a6f74b3a2a25d88c39740a1891a586c6a87f6dd1955e0138286",
+  "entry": "releases/20260905-cjk-pinyin-activity-compact-alias-count-v1/index.html",
+  "releaseId": "20260905-cjk-pinyin-activity-compact-alias-count-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
