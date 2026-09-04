@@ -31,12 +31,13 @@ assert.equal(view.renderWork({
   cast: [
     { characterName: '有图角色', role: 'primary', image: { url: 'https://example.test/char.webp' }, actors: [{ name: '声优甲' }] },
     { characterName: '入池角色', role: 'side', scopeLabel: '入池作品', actors: [] },
+    { characterName: '登场角色', role: 'appears', actors: [] },
   ],
   songs: []
 }), true);
 tabs.children[0].click();
 const rows = content.querySelectorAll('li');
-assert.equal(rows.length, 2);
+assert.equal(rows.length, 3);
 assert.equal(rows[0].querySelector('.details-cast-portrait').children[1].tagName, 'IMG');
 assert.equal(rows[1].dataset.scope, 'admission');
 assert.equal(rows[1].querySelector('.details-cast-scope').textContent, '入池作品');
@@ -48,5 +49,7 @@ assert.equal(rows[0].querySelector('.details-cast-portrait').dataset.state, 'err
 assert.equal(rows[0].querySelector('.details-cast-placeholder').textContent, '图片加载失败');
 assert.equal(rows[0].querySelector('strong').textContent, '有图角色');
 assert.equal(rows[1].querySelector('strong').textContent, '入池角色');
+assert.equal(rows[2].querySelector('strong').textContent, '登场角色');
+assert.equal(rows[2].querySelector('small').textContent, '登场');
 
-console.log('work-detail credits cast visual checks: 8/8');
+console.log('work-detail credits cast visual checks: 11/11');

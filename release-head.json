@@ -1,6 +1,6 @@
 {
-  "closureSha256": "23dc1ed406bdb818ac28ced252573958af5c3ef17324eaf5f1fc751d9391c07b",
-  "entry": "releases/20260904-m2-identity-character-image-v1/index.html",
-  "releaseId": "20260904-m2-identity-character-image-v1",
+  "closureSha256": "d285efcd2fe5517e94f284ae2196e03ff3b0d4522158403b0995bf2605786603",
+  "entry": "releases/20260904-cjk-pinyin-activity-role-label-v2/index.html",
+  "releaseId": "20260904-cjk-pinyin-activity-role-label-v2",
   "schemaVersion": "egs-tier-release-head-v1"
 }
