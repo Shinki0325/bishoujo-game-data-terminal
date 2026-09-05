@@ -29,7 +29,7 @@ const view = createWorkDetailCreditsView({ root, status, tabs, content });
 assert.equal(view.renderWork({
   staff: {},
   cast: [
-    { characterName: '有图角色', role: 'primary', image: { url: 'https://example.test/char.webp' }, actors: [{ name: '声优甲' }] },
+    { characterName: '有图角色', role: 'primary', image: { url: 'https://assets.example.test/char.webp', fallbackUrl: 'https://raw.example.test/char.webp' }, actors: [{ name: '声优甲' }] },
     { characterName: '入池角色', role: 'side', scopeLabel: '入池作品', actors: [] },
     { characterName: '登场角色', role: 'appears', actors: [] },
   ],
@@ -45,6 +45,10 @@ assert.equal(rows[1].querySelector('.details-cast-placeholder').textContent, '�
 
 const image = rows[0].querySelector('img');
 image.dispatch('error');
+assert.equal(image.src, 'https://raw.example.test/char.webp');
+assert.equal(image.dataset.fallbackAttempted, 'true');
+assert.equal(rows[0].querySelector('.details-cast-portrait').dataset.state, undefined);
+image.dispatch('error');
 assert.equal(rows[0].querySelector('.details-cast-portrait').dataset.state, 'error');
 assert.equal(rows[0].querySelector('.details-cast-placeholder').textContent, '图片加载失败');
 assert.equal(rows[0].querySelector('strong').textContent, '有图角色');
@@ -52,4 +56,18 @@ assert.equal(rows[1].querySelector('strong').textContent, '入池角色');
 assert.equal(rows[2].querySelector('strong').textContent, '登场角色');
 assert.equal(rows[2].querySelector('small').textContent, '登场');
 
-console.log('work-detail credits cast visual checks: 11/11');
+assert.equal(view.renderWork({
+  staff: { artwork: [{ name: '原画甲' }] },
+  cast: [{ characterName: '角色甲', actors: [] }],
+  songs: [{ title: '歌曲甲', categories: ['OP'], credits: {} }]
+}), true);
+tabs.children[2].click();
+assert.equal(tabs.children[2].getAttribute('aria-selected'), 'true');
+assert.equal(view.renderWork({
+  staff: { artwork: [{ name: '原画甲' }] },
+  cast: [{ characterName: '角色甲', image: { url: 'https://assets.example.test/a.webp' }, actors: [] }],
+  songs: [{ title: '歌曲甲', categories: ['OP'], credits: {} }]
+}), true);
+assert.equal(tabs.children[2].getAttribute('aria-selected'), 'true');
+
+console.log('work-detail credits cast visual checks: 17/17');

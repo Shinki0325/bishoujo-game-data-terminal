@@ -1,6 +1,6 @@
 {
-  "closureSha256": "e10159a80be26a6f74b3a2a25d88c39740a1891a586c6a87f6dd1955e0138286",
-  "entry": "releases/20260905-cjk-pinyin-activity-compact-alias-count-v1/index.html",
-  "releaseId": "20260905-cjk-pinyin-activity-compact-alias-count-v1",
+  "closureSha256": "b33d97d52da379937abe38c30485ac06f5abd9999ab945a3ab9a2e7141c51442",
+  "entry": "releases/20260905-work-detail-image-shards-v1/index.html",
+  "releaseId": "20260905-work-detail-image-shards-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
