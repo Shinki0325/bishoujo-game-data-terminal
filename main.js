@@ -3139,10 +3139,16 @@ async function initialize() {
     // and produced an empty/failed directory render.
     if (personRuntimeState === null) {
       if (personPerformanceRuntime !== null) {
-        const directory = await personPerformanceRuntime.loadDirectory();
-        personActivityAxis = directory.activityAxis;
-        personRuntimeState = directory.records.map(withCjkPersonSearchKey);
-        return personRuntimeState;
+        try {
+          const directory = await personPerformanceRuntime.loadDirectory();
+          personActivityAxis = directory.activityAxis;
+          personRuntimeState = directory.records.map(withCjkPersonSearchKey);
+          return personRuntimeState;
+        } catch (error) {
+          console.warn('person performance directory unavailable; falling back to the core person directory', error);
+          personPerformanceRuntime = null;
+          personActivityAxis = null;
+        }
       }
       // Stage 1: make the directory usable as soon as the person graph is
       // ready. The 16MB character-image map is hydrated in the background so
@@ -3407,9 +3413,14 @@ async function initialize() {
     async onLoadPerson(personId, summary) {
       if (personDetailCache.has(personId)) return personDetailCache.get(personId);
       if (personPerformanceRuntime !== null) {
-        const detail = await personPerformanceRuntime.loadPerson(personId);
-        if (detail) personDetailCache.set(personId, detail);
-        return detail ?? summary;
+        try {
+          const detail = await personPerformanceRuntime.loadPerson(personId);
+          if (detail) personDetailCache.set(personId, detail);
+          return detail ?? summary;
+        } catch (error) {
+          console.warn('person performance detail unavailable; showing the core person record', error);
+          personPerformanceRuntime = null;
+        }
       }
       return summary;
     },
@@ -5383,7 +5394,17 @@ async function initialize() {
       works: ratedDisplayWorks,
       companyDirectory,
       enrichment: { workAliasesById: workerWorkAliasesById, workPinyinById: workerWorkPinyinById, workDisplayTitlesById },
-      loadPersons: async () => personPerformanceRuntime ? (await personPerformanceRuntime.loadDirectory()).records : []
+      loadPersons: async () => {
+        if (personPerformanceRuntime) {
+          try {
+            return (await personPerformanceRuntime.loadDirectory()).records;
+          } catch (error) {
+            console.warn('person performance search index unavailable; using the core person directory', error);
+            personPerformanceRuntime = null;
+          }
+        }
+        return personRuntimeState ?? [];
+      }
     });
     return globalSearch(query);
   } };
