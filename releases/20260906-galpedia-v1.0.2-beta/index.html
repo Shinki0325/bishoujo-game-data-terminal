@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="zh-CN" data-app-revision="20260906-galpedia-v1.0.2-beta">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="egs-tier-asset-base" content="https://assets.bishojo.date/">
+    <title>少女箱庭 GALPEDIA · 美少女游戏资料库</title>
+    <meta name="description" content="少女箱庭 GALPEDIA：探索美少女游戏作品、会社与人物资料，搜索、比较并制作自己的作品排榜。">
+    <link rel="icon" type="image/png" sizes="32x32" href="./brand/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./brand/apple-touch-icon.png">
+    <script>
+      document.documentElement.classList.add('galpedia');
+      document.documentElement.dataset.home = String(!location.hash || location.hash === '#home');
+      document.documentElement.dataset.theme = 'light';
+      try {
+        const theme = localStorage.getItem('egs-tier-terminal:theme-v1') || 'light';
+        document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+        if (!localStorage.getItem('egs-tier-terminal:theme-v1')) localStorage.setItem('egs-tier-terminal:theme-v1', 'light');
+      } catch {
+        // The home shell keeps a usable session-only light theme without storage.
+      }
+    </script>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./galpedia-theme.css">
+    <link rel="stylesheet" href="./galpedia-home.css">
+    <link rel="stylesheet" href="./galpedia-states.css">
+    <link rel="stylesheet" href="./galpedia-help.css">
+    <link rel="stylesheet" href="./galpedia-controls.css">
+    <link rel="stylesheet" href="./galpedia-keeper.css">
+  </head>
+  <body>
+    <header class="tool-header galpedia-header">
+      <div class="tool-heading">
+        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./brand/logo.png" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
+      </div>
+
+      <div id="workspace-mode" class="mode-switch" role="tablist" aria-label="工作模式">
+        <button data-ui="nav"
+          id="mode-selection"
+          type="button"
+          role="tab"
+          tabindex="0"
+          aria-controls="selection-view"
+          aria-selected="true"
+        >作品库</button>
+        <button data-ui="nav"
+          id="mode-company"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-controls="company-view"
+          aria-selected="false"
+        >会社库</button>
+        <button data-ui="nav"
+          id="mode-person"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-controls="person-view"
+          aria-selected="false"
+        >人物</button>
+        <button data-ui="nav"
+          id="mode-ranking"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-controls="ranking-view"
+          aria-selected="false"
+        >排榜</button>
+      </div>
+      <div class="header-actions" aria-label="网站工具">
+        <button id="global-search-open" class="icon-button" type="button" aria-label="搜索作品、会社和人物" title="搜索">⌕</button>
+        <button
+          id="site-info-button"
+          class="icon-button site-info-button"
+          type="button"
+          aria-label="庭守手册"
+          title="庭守手册"
+        ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 5v15M12 5C8 2 3 3 3 3v15s5-1 9 2c4-3 9-2 9-2V3s-5-1-9 2Z"/></svg><span class="handbook-label">庭守手册</span></button>
+        <button
+          id="theme-toggle"
+          class="icon-button theme-toggle"
+          type="button"
+          aria-label="切换到亮色界面"
+          aria-pressed="false"
+          title="切换到亮色界面"
+        ></button>
+      </div>
+    </header>
+
+    <section id="galpedia-home" class="galpedia-home" aria-labelledby="home-title">
+      <div class="home-hero">
+        <div class="home-copy">
+          <p class="home-eyebrow">BISHOUJO GAME ARCHIVE</p>
+          <h1 id="home-title">美少女游戏<span>资料库</span></h1>
+          <p class="home-statement">少女使时间成为故事，<br>记录让故事继续存在。</p>
+          <p class="home-description">汇集 EGS、VNDB 与 Bangumi 的美少女游戏资料，<br class="desktop-break">连接作品、人物、会社与时代。</p>
+          <form id="home-search-form" class="galpedia-search-form" role="search">
+            <span aria-hidden="true">⌕</span>
+            <input id="home-search-input" type="search" aria-label="搜索作品、会社或人物" placeholder="搜索作品、会社或人物…" autocomplete="off" maxlength="120">
+            <button type="submit" aria-label="开始搜索">搜索 <span aria-hidden="true">↗</span></button>
+          </form>
+          <p class="home-search-hint">支持日文、简体中文、别名与拼音检索</p>
+          <div class="home-actions"><a class="home-primary" href="#works">浏览作品库 <span aria-hidden="true">→</span></a><a class="home-secondary" href="#ranking">开始排榜 <span aria-hidden="true">↗</span></a></div>
+          <dl class="home-stats"><div><dt>作品</dt><dd data-home-count="works">—</dd></div><div><dt>会社</dt><dd data-home-count="companies">—</dd></div><div><dt>人物</dt><dd data-home-count="persons">—</dd></div></dl>
+        </div>
+        <div class="home-portrait"><div class="home-corners" aria-hidden="true"></div><img src="./brand/shiori.png" width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async"><span class="home-portrait-caption">庭守 / 綴木 栞</span></div>
+      </div>
+      <nav class="home-portals" aria-label="探索资料库">
+        <a href="#works"><span class="portal-number">01 / WORKS</span><h2>作品库 <span aria-hidden="true">↗</span></h2><p>浏览作品、对照评分，找到下一段故事。</p></a>
+        <a href="#companies"><span class="portal-number">02 / COMPANIES</span><h2>会社库 <span aria-hidden="true">↗</span></h2><p>从创作品牌出发，梳理作品与沿革。</p></a>
+        <a href="#persons"><span class="portal-number">03 / PEOPLE</span><h2>人物 <span aria-hidden="true">↗</span></h2><p>声优、剧本、原画与音乐，连接幕后的名字。</p></a>
+        <a href="#ranking"><span class="portal-number">04 / TIER LIST</span><h2>排榜 <span aria-hidden="true">↗</span></h2><p>整理个人喜好，制作与分享你的作品榜单。</p></a>
+      </nav>
+      <footer class="home-footer"><span>少女箱庭 <span class="footer-en">GALPEDIA</span></span><span>资料来源 EGS · VNDB · Bangumi <span aria-hidden="true"> / </span> <span id="home-snapshot">公开资料快照</span></span></footer>
+    </section>
+    <p id="galpedia-load-status" class="galpedia-load-status" role="status" hidden></p>
+    <dialog id="galpedia-search-dialog" class="galpedia-search-dialog" aria-labelledby="global-search-title">
+      <div class="global-search-heading"><h2 id="global-search-title">探索资料库</h2><form method="dialog"><button type="submit" class="icon-button" aria-label="关闭搜索">×</button></form></div>
+      <form id="global-search-form" class="galpedia-search-form" role="search"><span aria-hidden="true">⌕</span><input id="global-search-input" type="search" aria-label="搜索全部资料" placeholder="作品、会社、人物…" autocomplete="off" maxlength="120"><button type="submit">搜索</button></form>
+      <p id="global-search-status" role="status">输入名称、别名或拼音，探索作品、会社与人物。</p><div id="global-search-results" class="global-search-results"></div>
+    </dialog>
+
+
+    <main id="workspace" class="workspace" inert>
+      <section id="mobile-selection-view" class="mobile-selection-view" aria-label="移动端选片" hidden>
+        <header class="mobile-selection-header">
+          <div class="mobile-selection-heading">
+            <h1>作品库</h1>
+            <button id="mobile-help-button" class="icon-button" type="button" aria-label="移动端使用说明" title="移动端使用说明">?</button>
+          </div>
+          <div class="mobile-selection-tools">
+            <button id="mobile-company-mode" type="button">会社</button>
+            <div class="search-field search-field-clearable">
+              <label for="mobile-title-search">
+                <span class="visually-hidden">搜索作品标题</span>
+                <input id="mobile-title-search" type="search" placeholder="搜索作品、别名或拼音" autocomplete="off">
+              </label>
+              <button id="mobile-title-search-clear" class="search-clear-button" type="button" aria-label="清除作品搜索" title="清除搜索" hidden>×</button>
+            </div>
+            <button id="mobile-filter-toggle" type="button" aria-label="打开筛选">筛选</button>
+            <button id="mobile-select-mode" type="button" aria-pressed="false">选择</button>
+          </div>
+        </header>
+        <div id="mobile-selection-grid" class="mobile-selection-grid" aria-live="polite"></div>
+        <div id="mobile-selection-status" class="mobile-selection-status" hidden>
+          <span>已选 <output id="mobile-selected-count">0</output></span>
+          <button id="mobile-open-selection-drawer" type="button">查看已选</button>
+        </div>
+        <dialog id="mobile-selection-drawer" class="mobile-selection-drawer" aria-labelledby="mobile-selection-drawer-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-selection-drawer-title">已选作品</h2>
+            <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭已选作品">×</button></form>
+          </div>
+          <div id="mobile-selected-preview" class="mobile-selected-preview"></div>
+          <div class="dialog-actions gp-dialog-footer">
+            <button id="mobile-clear-selection" class="action-danger" type="button">清空已选</button>
+            <button id="mobile-share-selection" class="action-primary" type="button">生成分享链接</button>
+          </div>
+        </dialog>
+        <dialog id="mobile-share-warning" aria-labelledby="mobile-share-warning-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-share-warning-title">打开分享选片</h2>
+          </div>
+          <div class="dialog-body"><p>这个分享链接用于在当前设备或其他设备继续排榜。</p></div>
+          <div class="dialog-actions gp-dialog-footer">
+            <button id="mobile-share-warning-dismiss" class="action-primary" type="button">知道了</button>
+          </div>
+        </dialog>
+      </section>
+      <section id="selection-view" class="selection-view" role="tabpanel" aria-labelledby="mode-selection" hidden>
+        <button
+          id="filter-backdrop"
+          class="filter-backdrop"
+          type="button"
+          aria-label="关闭筛选"
+          tabindex="-1"
+          hidden
+        ></button>
+
+        <aside
+          id="filter-drawer"
+          class="filter-drawer"
+          inert
+          role="dialog"
+          aria-modal="true"
+          aria-label="作品筛选"
+          aria-hidden="true"
+        >
+          <div class="panel-heading">
+            <h2>筛选</h2>
+            <div class="filter-mode-switch" role="group" aria-label="标签筛选模式">
+              <button data-ui="mode" id="mode-basic" type="button" aria-pressed="true">基础</button>
+              <button data-ui="mode" id="mode-advanced" type="button" aria-pressed="false">公式</button>
+            </div>
+            <div class="filter-heading-actions">
+              <button type="button" class="icon-button" data-help-article="works.filters" aria-label="筛选作品帮助" title="筛选作品帮助">?</button>
+              <button id="filter-close" class="icon-button" type="button" aria-label="关闭筛选" title="关闭筛选">×</button>
+            </div>
+          </div>
+
+          <div class="filter-scroll">
+            <fieldset class="filter-section numeric-filters">
+              <legend>评分与票数</legend>
+              <label for="minimum-score">
+                <span>最低中位评分</span>
+                <input id="minimum-score" type="number" min="0" max="100" step="1" inputmode="decimal">
+              </label>
+              <label for="minimum-votes">
+                <span>最低评分人数</span>
+                <input id="minimum-votes" type="number" min="0" step="1" inputmode="numeric">
+              </label>
+            </fieldset>
+
+            <fieldset class="filter-section year-range-filter">
+              <legend>发行年份</legend>
+              <div class="year-number-inputs">
+                <label for="release-year-start-number">
+                  <span>最早年份</span>
+                  <input id="release-year-start-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
+                </label>
+                <label for="release-year-end-number">
+                  <span>最晚年份</span>
+                  <input id="release-year-end-number" type="number" min="1989" max="2026" step="1" inputmode="numeric">
+                </label>
+              </div>
+              <div
+                id="release-year-slider"
+                class="year-range-slider"
+                data-year-handles="separate"
+                data-year-boundary="none"
+                aria-label="发行年份范围"
+              >
+                <input id="release-year-start" class="year-range-input year-range-start" type="range" min="1989" max="2026" step="1" aria-label="最早发行年份">
+                <input id="release-year-end" class="year-range-input year-range-end" type="range" min="1989" max="2026" step="1" aria-label="最晚发行年份">
+                <span class="year-range-track" aria-hidden="true">
+                  <span id="release-year-range-selection" class="year-range-selection"></span>
+                </span>
+              </div>
+              <output id="release-year-result-preview" aria-live="polite">预计 -- 个结果</output>
+            </fieldset>
+
+            <section id="advanced-panel" class="filter-section formula-filter" hidden>
+              <label for="advanced-expression">筛选公式</label>
+              <div class="formula-input-shell">
+                <textarea
+                  id="advanced-expression"
+                  rows="4"
+                  spellcheck="false"
+                  aria-autocomplete="list"
+                  aria-controls="formula-suggestions"
+                  aria-expanded="false"
+                ></textarea>
+                <div
+                  id="formula-suggestions"
+                  class="formula-suggestions"
+                  role="listbox"
+                  hidden
+                ></div>
+              </div>
+              <p id="advanced-error" role="alert" hidden></p>
+              <button id="format-formula" type="button">格式化</button>
+            </section>
+
+            <section class="filter-section" aria-labelledby="company-filter-title">
+              <h3 id="company-filter-title">会社</h3>
+              <label class="search-field" for="company-search">
+                <span class="visually-hidden">搜索会社</span>
+                <input id="company-search" type="search" placeholder="搜索会社" autocomplete="off">
+              </label>
+              <div id="company-selected" class="company-selected" aria-live="polite"></div>
+              <div id="company-options" class="checkbox-list" role="group" aria-label="会社多选"></div>
+            </section>
+
+            <section
+              id="attribute-filter-region"
+              class="filter-section filter-region filter-region-attributes"
+              data-filter-region="attributes"
+              aria-labelledby="attribute-filter-title"
+            >
+              <h3 id="attribute-filter-title">基础属性</h3>
+              <div id="attribute-selected" class="attribute-selected" aria-live="polite"></div>
+              <div id="attribute-filter-groups" class="filter-groups"></div>
+            </section>
+
+            <section
+              id="content-filter-region"
+              class="filter-section filter-region filter-region-content"
+              data-filter-region="content"
+              aria-labelledby="tag-filter-title"
+            >
+              <h3 id="tag-filter-title">内容标签</h3>
+              <div class="tag-actions" role="group" aria-label="添加方式">
+                <button id="tag-action-and" type="button" aria-pressed="true">全部满足</button>
+                <button id="tag-action-or" type="button" aria-pressed="false">任一满足</button>
+                <button id="tag-action-not" type="button" aria-pressed="false">排除</button>
+              </div>
+              <div id="tag-selected" class="tag-selected" aria-live="polite"></div>
+              <div id="filter-groups" class="filter-groups"></div>
+            </section>
+          </div>
+
+          <div class="filter-footer gp-dialog-footer">
+            <output id="filter-result-count" aria-live="polite">-- / -- 项</output>
+            <button data-ui="primary" id="filter-apply" type="button">应用</button>
+          </div>
+        </aside>
+
+        <section id="catalog-results" class="catalog-results" aria-labelledby="catalog-title">
+          <div class="results-toolbar">
+            <div class="results-heading">
+              <div class="gp-page-heading"><h2 id="catalog-title">作品库</h2><span class="gp-page-total" id="catalog-total-count">加载中…</span></div>
+              <div class="active-filter-state">
+                <output id="active-filter-summary">全部作品</output>
+                <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
+              </div>
+              <span class="results-heading-count" hidden><output id="catalog-result-count" aria-live="polite" aria-atomic="true">加载中…</output></span>
+              <div class="catalog-primary-actions" role="group" aria-label="作品库模式与操作">
+                <div class="catalog-mode-switch" role="group" aria-label="作品库模式">
+                  <button data-ui="mode" id="browse-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="true">浏览作品</button>
+                  <button data-ui="mode" id="selection-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">选择作品</button>
+                  <button data-ui="mode" id="compare-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">比较作品</button>
+                </div>
+                <button data-ui="utility" id="quick-ranking-entry" class="toolbar-button toolbar-button-primary" type="button">选择后排榜</button>
+              </div>
+            </div>
+
+            <div class="catalog-controls">
+              <div class="search-field search-field-clearable catalog-search">
+                <label for="title-search">
+                  <span class="visually-hidden">搜索标题</span>
+                  <input id="title-search" type="search" placeholder="搜索作品、别名或拼音" autocomplete="off">
+                </label>
+                <button id="title-search-clear" class="search-clear-button" type="button" aria-label="清除作品搜索" title="清除搜索" hidden>×</button>
+              </div>
+              <button data-ui="secondary" id="filter-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-controls="filter-drawer" aria-expanded="false">
+                <span class="toolbar-button-icon" data-icon="filter" aria-hidden="true"></span>
+                <span class="gp-filter-label">筛选</span>
+                <span id="filter-applied-count" class="gp-filter-count" hidden></span>
+              </button>
+              <div class="gp-sort-control" role="group" aria-label="作品排序">
+              <label class="select-field" for="sort-key">
+                <span class="visually-hidden">排序</span>
+                <select id="sort-key">
+                  <option value="median">EGS 评分</option>
+                  <option value="voteCount">EGS 评分人数</option>
+                  <option value="egsScore">EGS 综合评分</option>
+                  <option value="vndbScore">VNDB 综合评分</option>
+                  <option value="vndbVoteCount">VNDB 评分人数</option>
+                  <option value="bangumiScore">Bangumi 综合评分</option>
+                  <option value="bangumiVoteCount">Bangumi 评分人数</option>
+                  <option value="title">标题</option>
+                  <option value="brandName">会社</option>
+                  <option value="releaseDate">发行日期</option>
+                </select>
+              </label>
+
+              <button data-ui="utility" id="sort-direction-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false" aria-label="排序：降序，点击切换">
+                <span id="sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-down-a-z" aria-hidden="true"></span>
+                <span id="sort-direction-label" class="sort-direction-label visually-hidden">降序</span>
+              </button>
+              </div>
+              <div class="toolbar-menu-shell selection-card-display-shell">
+                <button data-ui="secondary" id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-label="卡片显示设置" aria-expanded="false" aria-controls="selection-card-display-menu"><span class="gp-display-long">卡片显示 ▾</span><span class="gp-display-short" aria-hidden="true">显示</span></button>
+                <div id="selection-card-display-menu" class="toolbar-menu selection-card-display-menu" hidden>
+                  <strong class="toolbar-menu-section-title">显示内容</strong>
+                  <div class="selection-card-display-options">
+                    <label for="selection-card-show-title"><input id="selection-card-show-title" type="checkbox">作品名称</label>
+                    <label for="selection-card-show-company"><input id="selection-card-show-company" type="checkbox">会社名称</label>
+                    <label for="selection-card-show-egs"><input id="selection-card-show-egs" type="checkbox">EGS 分数</label>
+                    <label for="selection-card-show-vndb"><input id="selection-card-show-vndb" type="checkbox">VNDB 分数</label>
+                    <label for="selection-card-show-bangumi"><input id="selection-card-show-bangumi" type="checkbox">BGM 分数</label>
+                    <label for="selection-card-show-year"><input id="selection-card-show-year" type="checkbox">年份</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="selection-context-bar" class="selection-context-bar gp-selection-bar" data-empty="true" hidden>
+              <div class="selection-context-summary" data-selection-count hidden><strong>已选择</strong><output id="selection-context-count">0</output><span>部作品</span></div>
+              <div class="catalog-selection-actions">
+                <button data-ui="secondary" id="selected-works-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">查看已选</button>
+                <button data-ui="utility" id="select-current-page" class="toolbar-button toolbar-button-neutral" type="button">选择当前页</button>
+                <button data-ui="utility" id="select-all-results" class="toolbar-button toolbar-button-strong" type="button">全选</button>
+                <button data-ui="utility" id="clear-selected-works" class="toolbar-button toolbar-button-neutral" type="button">清除</button>
+                <button data-ui="primary" id="start-work-ranking" class="toolbar-button toolbar-button-primary" type="button">开始作品排榜</button>
+              </div>
+              <p id="selection-capacity-status" class="selection-capacity-status" aria-live="polite" hidden></p>
+            </div>
+            <section id="work-compare-bar" class="work-compare-bar" hidden aria-label="作品比较选择">
+              <div class="work-compare-summary">
+                <span class="work-compare-kicker">作品比较</span>
+                <strong id="work-compare-count">已选 0 部</strong>
+                <span id="work-compare-hint" class="work-compare-hint">选择两部作品开始并列比较</span>
+              </div>
+              <div id="work-compare-items" class="work-compare-items"></div>
+              <div id="keeper-compare-guide" class="keeper-guide-host" hidden></div>
+              <div class="work-compare-actions">
+                <button data-ui="primary" id="work-compare-open" class="toolbar-button toolbar-button-strong" type="button" disabled>查看比较</button>
+                <button data-ui="utility" id="work-compare-clear" class="toolbar-button toolbar-button-neutral" type="button">清空</button>
+              </div>
+            </section>
+          </div>
+
+          <div id="catalog-grid" class="catalog-grid"></div>
+          <p id="catalog-list-state" class="list-state" role="status" hidden></p>
+          <nav id="selection-pagination" class="selection-pagination" aria-label="选片分页">
+            <button data-ui="utility" id="selection-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+            <label class="selection-page-field" for="selection-page-input">
+              <span class="visually-hidden">当前页码</span>
+              <input id="selection-page-input" type="text" inputmode="numeric" autocomplete="off" aria-describedby="selection-page-error">
+              <span class="selection-page-total">/ <output id="selection-page-total">1</output></span>
+            </label>
+            <button data-ui="utility" id="selection-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+            <p id="selection-page-error" class="selection-page-error" role="alert" hidden>请输入有效的页码</p>
+          </nav>
+        </section>
+      </section>
+
+      <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
+        <header class="ranking-page-heading">
+          <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-label="展开候选作品" aria-controls="ranking-candidates" aria-expanded="false"><span id="mobile-ranking-candidates-label">展开候选</span><output id="mobile-ranking-candidate-count">0</output><span class="mobile-ranking-candidates-chevron" aria-hidden="true"></span></button>
+          <div class="ranking-page-title gp-page-heading">
+            <h2>排榜</h2>
+            <span id="ranking-heading-count" class="gp-page-total">加载中…</span>
+            <div class="ranking-subject-tabs" role="group" aria-label="排榜对象">
+              <button data-ui="mode" id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
+              <button data-ui="mode" id="ranking-subject-company" type="button" aria-pressed="false">会社</button>
+            </div>
+          </div>
+          <div class="workspace-counts" aria-label="当前排榜计数">
+            <div class="count-item"><span>已选</span><output id="selected-count">0</output></div>
+            <div class="count-item"><span>已排</span><output id="ranked-count">0</output></div>
+            <div class="count-item"><span>未排</span><output id="global-unranked-count">0</output></div>
+          </div>
+        </header>
+        <div class="ranking-toolbar" aria-label="排榜操作">
+          <div class="edit-actions" role="group" aria-label="排榜编辑操作">
+            <button data-ui="utility" id="undo-edit" class="icon-button" type="button" aria-label="撤销" title="撤销">↶</button>
+            <button data-ui="utility" id="redo-edit" class="icon-button" type="button" aria-label="重做" title="重做">↷</button>
+          </div>
+          <div class="state-actions" role="group" aria-label="排榜视图与输出操作">
+            <div class="toolbar-menu-shell">
+              <button data-ui="utility" id="display-menu-button" type="button" aria-expanded="false" aria-controls="display-menu">显示 ▾</button>
+              <div id="display-menu" class="toolbar-menu" hidden>
+                <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
+                <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
+                <fieldset class="ranking-scale-controls">
+                  <legend>排榜界面大小</legend>
+                  <label for="ranking-scale-overall"><span>总体</span><output id="ranking-scale-overall-output">100%</output></label>
+                  <input id="ranking-scale-overall" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-card"><span>卡片</span><output id="ranking-scale-card-output">100%</output></label>
+                  <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-rail"><span>行高/候选区</span><output id="ranking-scale-rail-output">100%</output></label>
+                  <input id="ranking-scale-rail" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-annotation"><span>图片标注</span><output id="ranking-scale-annotation-output">100%</output></label>
+                  <input id="ranking-scale-annotation" type="range" min="80" max="160" step="5" value="100">
+                  <label for="ranking-scale-tier-name"><span>分级名称</span><output id="ranking-scale-tier-name-output">100%</output></label>
+                  <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
+                  <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认</button>
+                </fieldset>
+              </div>
+            </div>
+            <div class="toolbar-menu-shell">
+              <button data-ui="utility" id="cleanup-menu-button" type="button" aria-label="更多排榜操作" aria-expanded="false" aria-controls="cleanup-menu">更多操作 ▾</button>
+              <div id="cleanup-menu" class="toolbar-menu" hidden>
+                <strong class="toolbar-menu-section-title">数据</strong>
+                <button id="bangumi-import-open" type="button">从 Bangumi 导入</button>
+                <button id="import-state" type="button">导入 JSON</button>
+                <button id="export-state" type="button">导出 JSON</button>
+                <strong class="toolbar-menu-section-title">清理</strong>
+                <button data-ui="danger" id="clear-board" type="button">清空分级</button>
+                <button data-ui="danger" id="clear-candidates" type="button">清空候选</button>
+                <button data-ui="danger" id="clear-annotations" type="button">清空标记</button>
+              </div>
+            </div>
+            <button data-ui="utility"
+              id="ranking-help-button"
+              class="icon-button"
+              type="button"
+              aria-label="打开排榜使用说明"
+              title="打开排榜使用说明"
+            >?</button>
+            <button data-ui="utility"
+              id="ranking-immersive"
+              class="ranking-live-mode"
+              type="button"
+              aria-label="进入直播模式"
+              title="进入直播模式"
+            ><span aria-hidden="true">⛶</span><span>直播模式</span></button>
+            <button data-ui="primary" id="export-png" type="button" aria-label="导出当前排榜图片" title="导出当前排榜图片">导出图片</button>
+          </div>
+        </div>
+
+        <section
+          id="ranking-coachmark"
+          class="ranking-coachmark keeper-guide-host"
+          aria-live="polite"
+          hidden
+        >
+          <button id="ranking-coachmark-help" class="visually-hidden" type="button" tabindex="-1" aria-hidden="true">查看完整说明</button>
+          <button id="ranking-coachmark-dismiss" class="visually-hidden" type="button" tabindex="-1" aria-hidden="true">知道了</button>
+        </section>
+
+        <section id="tier-board" class="tier-board" aria-label="分级板" tabindex="-1"></section>
+
+        <section id="ranking-candidates" class="ranking-candidates" aria-labelledby="ranking-candidates-title">
+          <div class="candidate-toolbar">
+            <h2 id="ranking-candidates-title">候选作品</h2>
+            <label class="search-field" for="ranking-candidate-search">
+              <span class="visually-hidden">搜索候选作品标题</span>
+              <input id="ranking-candidate-search" type="search" placeholder="搜索候选标题" autocomplete="off">
+            </label>
+          </div>
+          <div id="ranking-candidate-grid" class="ranking-candidate-grid" aria-live="polite"></div>
+        </section>
+        <div id="mobile-ranking-dock" class="mobile-ranking-dock" aria-label="移动端排榜操作">
+          <button id="mobile-ranking-undo" type="button" aria-label="撤销">↶</button>
+          <button id="mobile-ranking-redo" type="button" aria-label="重做">↷</button>
+          <button class="mobile-ranking-candidates-legacy" type="button" tabindex="-1" aria-hidden="true">候选</button>
+          <button id="mobile-ranking-more" type="button" aria-haspopup="dialog">更多操作</button>
+        </div>
+        <dialog id="mobile-ranking-menu" class="mobile-ranking-menu" aria-labelledby="mobile-ranking-menu-title">
+          <div class="dialog-heading">
+            <h2 id="mobile-ranking-menu-title">排榜设置</h2>
+            <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭">×</button></form>
+          </div>
+          <div class="mobile-ranking-menu-body">
+            <section>
+              <h3>显示</h3>
+              <label><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
+              <label><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
+            </section>
+            <section>
+              <h3>数据</h3>
+              <button id="mobile-bangumi-import-open" type="button">从 Bangumi 导入</button>
+              <button id="mobile-ranking-import" type="button">导入 JSON</button>
+              <button id="mobile-ranking-export" type="button">导出 JSON</button>
+              <button id="mobile-ranking-export-png" type="button">导出图片</button>
+            </section>
+            <section>
+              <h3>清理</h3>
+              <button id="mobile-ranking-clear-board" type="button">清空分级</button>
+              <button id="mobile-ranking-clear-candidates" type="button">清空候选</button>
+              <button id="mobile-ranking-clear-annotations" type="button">清空标记</button>
+            </section>
+          </div>
+        </dialog>
+      </section>
+      <section id="company-view" class="company-view" role="tabpanel" aria-labelledby="mode-company" hidden>
+        <header class="company-directory-header">
+          <div class="company-directory-heading gp-page-heading">
+            <h2>会社库</h2>
+            <span id="company-directory-total" class="gp-page-total">加载中…</span>
+            <span class="gp-result-summary" role="status" aria-atomic="true">筛选 <span id="company-directory-count">—</span> 家</span>
+          </div>
+          <button data-ui="utility" id="company-ranking-toggle" class="toolbar-button toolbar-button-neutral company-ranking-entry" type="button" aria-expanded="false" hidden>进入排榜 →</button>
+          <div class="company-directory-tools">
+            <div class="search-field company-directory-search gp-local-search">
+            <label for="company-directory-search">
+              <span class="visually-hidden">搜索会社</span>
+              <input id="company-directory-search" type="search" placeholder="搜索会社名称、别名或拼音" autocomplete="off">
+            </label>
+            <button id="company-search-clear" class="icon-button" data-ui="utility" data-clear-input="company-directory-search" type="button" aria-label="清除会社搜索" hidden>×</button>
+            </div>
+            <div class="company-directory-control-group company-directory-filter-controls">
+              <label class="company-image-filter" for="company-has-image">
+                <input id="company-has-image" type="checkbox" checked>
+                <span class="company-image-filter-indicator" aria-hidden="true"></span>
+                <span>仅显示已有会社图片</span>
+              </label>
+              <label class="visually-hidden" for="company-sort">会社排序</label>
+              <span class="company-sort-control gp-sort-control">
+                <select id="company-sort" aria-label="会社排序">
+                  <option value="totalVoteCount">总评分数量</option>
+                  <option value="workCount">作品数量</option>
+                  <option value="averageVoteCount">平均每作评分数量</option>
+                  <option value="releaseYearStart">最早发售</option>
+                  <option value="brandName">名称</option>
+                </select>
+                <button id="company-sort-direction" class="icon-button" data-ui="utility" type="button" aria-pressed="false" aria-label="会社排序：降序，点击切换" title="降序"><span id="company-sort-direction-icon" data-icon="arrow-down-a-z" aria-hidden="true"></span></button>
+              </span>
+            </div>
+            <div class="company-directory-control-group company-directory-action-controls">
+              <button data-ui="utility" id="company-help-button" class="icon-button company-directory-help-button" type="button" aria-label="打开会社目录使用说明" title="打开会社目录使用说明">?</button>
+              <button data-ui="mode" id="company-selection-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="false">选择</button>
+            </div>
+            <button data-ui="utility" id="company-back" class="toolbar-button toolbar-button-neutral" type="button" hidden>← 返回排榜</button>
+          </div>
+        </header>
+        <div id="company-selection-context-bar" class="selection-context-bar gp-selection-bar" data-empty="true" hidden>
+          <div class="selection-context-summary" data-selection-count hidden><strong>已选择</strong><output id="company-selection-context-count">0</output><span>个会社</span></div>
+          <div class="catalog-selection-actions">
+            <button data-ui="utility" id="clear-selected-companies" class="toolbar-button toolbar-button-neutral" type="button">清除</button>
+            <button data-ui="primary" id="start-company-ranking" class="toolbar-button toolbar-button-primary" type="button">开始会社排榜</button>
+          </div>
+        </div>
+        <div class="company-directory-layout">
+          <div>
+            <div id="company-list" class="company-directory-list"></div>
+            <nav id="company-directory-pagination" class="selection-pagination company-directory-pagination" aria-label="会社目录分页">
+              <button data-ui="utility" id="company-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+              <label class="selection-page-field" for="company-page-input">
+                <span class="visually-hidden">当前页码</span>
+                <input id="company-page-input" type="text" inputmode="numeric" autocomplete="off" aria-describedby="company-page-error">
+                <span class="selection-page-total">/ <output id="company-page-total">1</output></span>
+              </label>
+              <button data-ui="utility" id="company-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+              <p id="company-page-error" class="selection-page-error" role="alert" hidden>请输入有效的页码</p>
+            </nav>
+            <p id="company-list-state" class="list-state" role="status" hidden></p>
+            <p id="company-empty" class="company-empty" hidden>没有匹配的会社。</p>
+          </div>
+          <aside id="company-detail" class="company-directory-detail" hidden aria-live="polite">
+            <div class="company-detail-heading">
+              <div id="company-detail-avatar" class="company-detail-avatar"></div>
+              <div>
+                <h2 id="company-detail-title"></h2>
+                <p id="company-detail-meta"></p>
+              </div>
+              <button id="company-detail-close" class="icon-button" type="button" aria-label="关闭会社详情" title="关闭会社详情">×</button>
+            </div>
+            <div class="company-detail-works-heading">
+              <h3>作品</h3>
+              <div class="company-detail-sort-controls gp-sort-control" aria-label="作品排序">
+                <label class="visually-hidden" for="company-detail-sort">作品排序</label>
+                <select id="company-detail-sort">
+                  <option value="releaseDate">年份</option>
+                  <option value="median">评分</option>
+                  <option value="voteCount">评分人数</option>
+                </select>
+                <button data-ui="utility" id="company-detail-sort-direction" class="icon-button company-detail-sort-direction" type="button" aria-pressed="true" aria-label="作品排序：升序，点击切换" title="作品排序：升序，点击切换">
+                  <span id="company-detail-sort-direction-icon" class="toolbar-button-icon" data-icon="arrow-up-a-z" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div id="company-detail-works" class="company-directory-works"></div>
+          </aside>
+        </div>
+        <section id="company-ranking" class="company-ranking" hidden aria-label="会社排榜">
+          <div class="company-ranking-heading">
+            <div>
+              <h2>会社排榜</h2>
+              <p>在目录卡片左上角选择会社，再拖动候选卡片完成排榜。</p>
+            </div>
+            <button id="company-ranking-close" class="toolbar-button toolbar-button-neutral" type="button">收起</button>
+          </div>
+          <div id="company-ranking-board" class="company-ranking-board"></div>
+          <section class="company-ranking-candidate-section" aria-labelledby="company-ranking-candidates-title">
+            <h3 id="company-ranking-candidates-title">候选会社</h3>
+            <div id="company-ranking-candidates" class="company-ranking-candidates"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="person-view" class="person-view" role="tabpanel" aria-labelledby="mode-person" hidden>
+        <header class="person-directory-header">
+          <div class="person-directory-heading gp-page-heading">
+            <h2>人物库</h2>
+            <span id="person-directory-total" class="gp-page-total">加载中…</span>
+            <span class="gp-result-summary" id="person-result-summary" role="status" aria-atomic="true" hidden>筛选 <span id="person-directory-count">—</span> 位</span>
+          </div>
+          <div class="person-directory-tools">
+            <div class="search-field person-directory-search gp-local-search">
+            <label for="person-directory-search">
+              <span class="visually-hidden">搜索人物</span>
+              <input id="person-directory-search" type="search" placeholder="搜索人物名义或拼音" autocomplete="off">
+            </label>
+            <button id="person-search-clear" class="icon-button" data-ui="utility" data-clear-input="person-directory-search" type="button" aria-label="清除人物搜索" hidden>×</button>
+            </div>
+            <div class="person-directory-tabs" role="tablist" aria-label="人物类型">
+              <button data-ui="mode" id="person-role-all" type="button" role="tab" class="is-active" data-person-role="all" aria-selected="true" aria-pressed="true" aria-controls="person-directory-panel" tabindex="0">总览</button>
+              <button data-ui="mode" id="person-role-voice-actor" type="button" role="tab" data-person-role="voice-actor" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">声优</button>
+              <button data-ui="mode" id="person-role-scenario" type="button" role="tab" data-person-role="scenario" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">剧本</button>
+              <button data-ui="mode" id="person-role-artwork" type="button" role="tab" data-person-role="artwork" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">原画</button>
+              <button data-ui="mode" id="person-role-music" type="button" role="tab" data-person-role="music" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">音乐</button>
+            </div>
+          </div>
+        </header>
+        <div class="person-directory-layout">
+          <section id="person-directory-panel" class="person-directory-panel" role="tabpanel" aria-label="人物列表">
+            <div class="person-directory-list-head" aria-hidden="true">
+              <span>代表角色/作品</span><span>人物</span><span>作品 / 名义</span><span>职能</span>
+              <span class="person-directory-activity-heading">
+                <span id="person-directory-activity-heading-label">作品活动</span>
+                <span id="person-directory-activity-axis" class="person-directory-activity-axis"></span>
+              </span>
+              <span>收录范围</span>
+            </div>
+            <div id="person-directory-list" class="person-directory-list"></div>
+            <p id="person-directory-loading" class="person-directory-loading" role="status" hidden>正在加载人物数据…</p>
+            <nav id="person-directory-pagination" class="selection-pagination person-directory-pagination" aria-label="人物目录分页">
+              <button id="person-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
+              <span class="selection-page-field"><output id="person-page-number">1</output> / <output id="person-page-total">1</output></span>
+              <button id="person-page-next" class="toolbar-button toolbar-button-primary" type="button">下一页</button>
+            </nav>
+            <p id="person-directory-empty" class="person-directory-empty" hidden>没有匹配的人物。</p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="person-detail-dialog" class="person-detail-dialog" aria-labelledby="person-detail-title">
+      <div class="dialog-heading person-detail-heading">
+        <div class="person-detail-title-line">
+          <h2 id="person-detail-title">人物详情</h2>
+          <span id="person-detail-primary-role" class="person-detail-primary-role"></span>
+        </div>
+        <p id="person-detail-meta" class="person-detail-header-counts"></p>
+        <form method="dialog"><button id="person-detail-close" class="icon-button" type="submit" aria-label="关闭人物详情">×</button></form>
+      </div>
+      <p id="person-detail-load-status" class="gp-result-summary" role="status" hidden></p>
+      <div id="person-detail-body" class="person-detail-body">
+        <p class="person-directory-empty">选择人物查看详情</p>
+      </div>
+    </dialog>
+
+    <dialog id="share-import-dialog" aria-labelledby="share-import-title">
+      <div class="dialog-heading">
+        <h2 id="share-import-title">导入分享选片</h2>
+      </div>
+      <div class="dialog-body">
+        <p id="share-import-message" role="alert" hidden></p>
+        <p>有效作品：<output id="share-import-count">0</output></p>
+        <p>当前目录中缺失：<output id="share-import-missing">0</output></p>
+      </div>
+      <div class="dialog-actions gp-dialog-footer">
+        <button data-ui="secondary" id="share-import-replace" class="action-secondary" type="button">替换候选池</button>
+        <button data-ui="secondary" id="share-import-cancel" class="action-secondary" type="button">取消</button>
+        <button data-ui="primary" id="share-import-append" class="action-primary" type="button">追加到候选池</button>
+      </div>
+    </dialog>
+
+    <dialog id="bangumi-public-import-dialog" class="bangumi-public-import-dialog" aria-labelledby="bangumi-public-import-title">
+      <div class="dialog-heading">
+        <div>
+          <h2 id="bangumi-public-import-title">从 Bangumi 导入公开收藏</h2>
+          <p class="bangumi-import-eyebrow">读取公开游戏收藏 · 严格匹配 · 追加候选池</p>
+        </div>
+        <div class="bangumi-import-heading-actions">
+          <button type="button" class="icon-button" data-help-article="tier.bangumi" aria-label="Bangumi 导入帮助">?</button>
+          <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭 Bangumi 导入">×</button></form>
+        </div>
+      </div>
+      <div class="bangumi-import-body">
+        <ol class="bangumi-import-steps" aria-label="导入步骤">
+          <li class="is-active">读取公开收藏</li>
+          <li>确认匹配结果</li>
+          <li>追加候选池</li>
+        </ol>
+        <div id="keeper-bangumi-input-guide" class="keeper-guide-host" hidden></div>
+        <form id="bangumi-public-import-form" class="bangumi-import-form">
+          <label for="bangumi-public-user-input">Bangumi 用户名、UID 或个人主页链接</label>
+          <div class="bangumi-import-input-row">
+            <input id="bangumi-public-user-input" type="text" autocomplete="off" spellcheck="false" placeholder="例如 shinkisakura" maxlength="128" required>
+            <button data-ui="primary" id="bangumi-public-fetch" class="action-primary" type="submit">读取公开收藏</button>
+          </div>
+          <p id="bangumi-input-note" class="bangumi-import-note">只读取 Bangumi 公开的游戏收藏；不会请求登录权限，也不会改动已有排榜。</p>
+        </form>
+        <p id="bangumi-public-import-status" class="bangumi-import-status" role="status" aria-live="polite" hidden></p>
+        <section id="bangumi-public-import-results" class="bangumi-import-results" hidden aria-labelledby="bangumi-public-import-results-title">
+          <div class="bangumi-import-result-heading">
+            <div>
+              <h3 id="bangumi-public-import-results-title">确认导入结果</h3>
+              <p id="bangumi-result-note">默认仅勾选主作品；其他版本可按需展开选择。未匹配条目不会自动导入，追加不会改变已有候选和档位。</p>
+            </div>
+            <output id="bangumi-public-import-capacity" class="bangumi-import-capacity">候选池剩余 0</output>
+          </div>
+          <div id="keeper-bangumi-result-guide" class="keeper-guide-host" hidden></div>
+          <div class="bangumi-import-metrics" aria-label="匹配统计">
+            <div><strong id="bangumi-public-total">0</strong><span>公开游戏</span></div>
+            <div><strong id="bangumi-public-matched-subjects">0</strong><span>严格匹配条目</span></div>
+            <div><strong id="bangumi-public-mapped-works">0</strong><span>默认导入主作品</span></div>
+            <div><strong id="bangumi-public-unmatched">0</strong><span>未匹配条目</span></div>
+          </div>
+          <div id="bangumi-public-import-list" class="bangumi-import-list" aria-live="polite"></div>
+          <details id="bangumi-public-import-unmatched" class="bangumi-import-unmatched">
+            <summary>查看未匹配的 Bangumi 条目（<output id="bangumi-public-unmatched-count">0</output>）</summary>
+            <ul id="bangumi-public-unmatched-list"></ul>
+          </details>
+        </section>
+      </div>
+      <div class="dialog-actions gp-dialog-footer bangumi-import-actions">
+        <p id="bangumi-public-import-selection-status" class="bangumi-import-selection-status" aria-live="polite">读取后可选择要追加的作品。</p>
+        <div class="gp-footer-actions">
+          <button data-ui="secondary" id="bangumi-public-import-cancel" class="action-secondary" type="button">取消</button>
+          <button data-ui="primary" id="bangumi-public-import-append" class="action-primary" type="button" disabled>追加到候选池</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div
+      id="ranking-immersive-edge"
+      class="ranking-immersive-edge"
+      tabindex="-1"
+      aria-label="显示直播模式边缘控件"
+    >
+      <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
+        <button
+          id="ranking-immersive-exit"
+          class="icon-button ranking-immersive-exit"
+          type="button"
+          aria-label="退出直播模式"
+          title="退出直播模式"
+        >×</button>
+        <button
+          id="ranking-immersive-help"
+          class="icon-button ranking-immersive-help"
+          type="button"
+          aria-label="打开直播模式说明"
+          title="打开直播模式说明"
+        >?</button>
+      </div>
+    </div>
+
+    <input id="state-file" type="file" accept="application/json,.json" hidden>
+    <input id="media-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <div id="status-message" role="status" aria-live="polite"></div>
+
+
+
+    <dialog id="media-preview" aria-labelledby="media-preview-title">
+      <div class="dialog-heading">
+        <h2 id="media-preview-title">图片预览</h2>
+            <form method="dialog"><button id="media-preview-close" class="icon-button action-neutral" type="submit" aria-label="关闭图片预览" title="关闭图片预览"></button></form>
+      </div>
+      <div class="media-preview-body">
+        <img id="media-preview-image" alt="">
+        <div id="media-preview-actions" class="dialog-actions gp-dialog-footer media-preview-actions"></div>
+      </div>
+    </dialog>
+
+    <dialog id="media-crop" aria-labelledby="media-crop-title-label">
+      <div class="dialog-heading">
+        <h2 id="media-crop-title-label">裁切图片</h2>
+      </div>
+      <div class="media-crop-body">
+        <div class="media-crop-stage">
+          <canvas id="media-crop-canvas" width="512" height="512" aria-label="方形裁切区域"></canvas>
+          <span class="media-crop-guide" aria-hidden="true"></span>
+        </div>
+        <label class="media-crop-field" for="media-crop-title">标题<input id="media-crop-title" type="text" maxlength="120"></label>
+      </div>
+      <div class="media-crop-actions gp-dialog-footer">
+        <div class="gp-footer-tools">
+        <button data-ui="utility" id="media-crop-reset" type="button">重置</button>
+        <button data-ui="utility" id="media-crop-skip" type="button">跳过</button>
+        <button data-ui="utility" id="media-crop-cancel" type="button">取消全部</button>
+        </div>
+        <div class="gp-footer-actions">
+        <button data-ui="secondary" id="media-crop-stickers" type="button">添加贴纸</button>
+        <button data-ui="primary" id="media-crop-confirm" type="button">确认</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="sticker-editor" aria-labelledby="sticker-editor-title">
+          <div class="dialog-heading sticker-editor-heading">
+            <h2 id="sticker-editor-title">图片贴纸</h2><button type="button" class="icon-button" data-help-article="tier.stickers" aria-label="图片贴纸帮助">?</button>
+            <div class="sticker-editor-history" role="toolbar" aria-label="贴纸编辑历史与菜单">
+              <button data-ui="utility" id="sticker-undo" class="icon-button action-neutral" type="button" aria-label="撤销贴纸操作" title="撤销"></button>
+              <button data-ui="utility" id="sticker-redo" class="icon-button action-neutral" type="button" aria-label="重做贴纸操作" title="重做"></button>
+              <button data-ui="utility" id="sticker-more" class="icon-button action-neutral" type="button" aria-label="更多贴纸操作" title="更多贴纸操作" aria-controls="sticker-more-menu" aria-expanded="false"></button>
+            </div>
+            <div id="sticker-more-menu" class="action-menu sticker-more-menu" hidden>
+              <button data-ui="danger" id="sticker-clear" class="action-danger" type="button"><span class="action-label">清空贴纸</span></button>
+            </div>
+      </div>
+      <div class="sticker-editor-body">
+        <div class="sticker-editor-stage">
+          <canvas id="sticker-editor-canvas" width="512" height="512" aria-label="图片贴纸编辑区域"></canvas>
+        </div>
+            <div id="sticker-selection-controls" class="sticker-selection-controls" role="toolbar" aria-label="所选贴纸操作" hidden>
+              <button id="sticker-layer-backward" class="icon-button action-neutral" type="button" aria-label="贴纸下移一层" title="下移一层"></button>
+              <button id="sticker-layer-forward" class="icon-button action-neutral" type="button" aria-label="贴纸上移一层" title="上移一层"></button>
+              <button data-ui="danger" id="sticker-delete" class="icon-button action-danger" type="button" aria-label="删除所选贴纸" title="删除贴纸"></button>
+        </div>
+        <div id="sticker-palette" class="sticker-palette" role="list" aria-label="添加贴纸">
+          <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
+          <button id="sticker-option-pixelate" type="button" data-sticker-kind="pixelate" aria-label="添加马赛克"><span class="sticker-swatch sticker-swatch-pixelate" aria-hidden="true"></span></button>
+          <button id="sticker-option-blur" type="button" data-sticker-kind="blur" aria-label="添加模糊"><span class="sticker-swatch sticker-swatch-blur" aria-hidden="true"></span></button>
+          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./assets/stickers/please-wait-character.webp" alt=""></button>
+          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./assets/stickers/paper-bag-character.png" alt=""></button>
+        </div>
+      </div>
+          <div class="dialog-actions gp-dialog-footer sticker-editor-actions">
+            <button data-ui="secondary" id="sticker-cancel" class="action-neutral" type="button">取消</button>
+            <button data-ui="primary" id="sticker-save" class="action-primary" type="button"><span class="action-label">保存贴纸</span></button>
+      </div>
+    </dialog>
+
+    <dialog id="work-details" aria-labelledby="details-title">
+      <div class="dialog-heading">
+        <div class="details-title-block">
+          <h2 id="details-title">作品详情</h2>
+          <p id="details-aliases" class="details-aliases" hidden></p>
+        </div>
+        <div class="details-heading-actions">
+          <button id="details-version-toggle" class="details-version-toggle" type="button" aria-expanded="false" hidden></button>
+          <button id="details-compare-button" class="details-compare-button" type="button">加入比较</button>
+          <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭详情" title="关闭详情">×</button></form>
+        </div>
+      </div>
+      <div class="details-scroll">
+        <section id="details-version-shelf" class="details-version-shelf" aria-label="公开版本" hidden>
+          <p id="details-version-current" class="details-version-current"></p>
+          <div id="details-version-list" class="details-version-list"></div>
+        </section>
+        <section class="details-hero" aria-label="作品概要">
+          <aside class="details-identity-rail" aria-label="作品身份信息">
+            <div class="details-identity-media">
+              <button id="details-cover" class="details-cover" type="button" aria-label="放大作品图片" disabled>
+                <img id="details-cover-image" alt="" hidden>
+                <span class="details-cover-hint" aria-hidden="true">点击放大</span>
+              </button>
+            </div>
+            <div class="details-identity-meta">
+              <dl class="details-metadata">
+                <div class="details-metadata-company">
+                  <dt>会社</dt>
+                  <dd id="details-brand"></dd>
+                </div>
+                <div class="details-metadata-release">
+                  <dt>发售日</dt>
+                  <dd id="details-release"></dd>
+                </div>
+                <div id="details-views-row" class="details-metadata-views" hidden>
+                  <dt>近30日访问</dt>
+                  <dd id="details-views" aria-live="polite">加载中…</dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
+          <div class="details-info-column">
+            <section class="details-score-panel" aria-label="评分">
+              <div id="details-score" class="details-score-grid"></div>
+            </section>
+            <section class="details-tags-section" aria-labelledby="details-tags-title">
+              <h3 id="details-tags-title">标签</h3>
+              <ul id="details-tags" class="details-tags"></ul>
+            </section>
+            <section id="details-credits" class="details-credits" aria-label="作品制作资料" hidden>
+              <p id="details-credits-status" class="details-credits-status" role="status" hidden></p>
+              <nav id="details-credits-tabs" class="details-credits-tabs" role="tablist" aria-label="作品资料类别" hidden></nav>
+              <div id="details-credits-content" class="details-credits-content"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </dialog>
+
+    <dialog id="work-compare-dialog" class="work-compare-dialog" aria-labelledby="work-compare-dialog-title">
+      <div class="dialog-heading">
+        <div class="details-title-block">
+          <h2 id="work-compare-dialog-title">作品比较</h2>
+          <p id="work-compare-dialog-subtitle" class="details-aliases"></p>
+        </div>
+        <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭作品比较" title="关闭作品比较">×</button></form>
+      </div>
+      <div id="work-compare-content" class="work-compare-content"></div>
+    </dialog>
+
+    <script type="module" src="./galpedia-boot.js"></script>
+  </body>
+</html>

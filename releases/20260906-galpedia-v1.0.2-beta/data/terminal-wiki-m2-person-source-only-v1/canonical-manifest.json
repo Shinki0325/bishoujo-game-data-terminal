@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "terminal-wiki-m2-person-canonical-manifest-v1",
+  "releaseId": "relv_2026-09-04_terminal-wiki-m2-1-voice-projection-source-only-v1",
+  "publicationStatus": "source-only",
+  "generatedAt": "2026-09-04T16:06:05+08:00",
+  "runtimeScope": {
+    "workCount": 7264,
+    "coreEgsWorkCount": 6799,
+    "vndbAdmissionWorkCount": 465,
+    "admissionCharacterCount": 3023
+  },
+  "upstream": {
+    "m1ReleaseId": "relv_2026-08-31_character-source-only-v1",
+    "m1DataRevision": "4f2d930a6a07cef3cdee8d7e82ab65cd7a9f71cdf239aa6d1850f4aad7749cb1",
+    "m1EntitiesPath": "backend/exports/terminal-wiki-m1-character-source-only-v1/entities.json",
+    "m1EntitiesSha256": "1b27a648a0d028ea0adddc536a3ff35a701b761b397d654897638add212e3454",
+    "m1RelationsPath": "backend/exports/terminal-wiki-m1-character-source-only-v1/relations.json",
+    "m1RelationsSha256": "e303d352a0333e073844ca388e18d9f76f96e583f03daa40eb6c16ea9e64004e",
+    "m1PersonEntityCount": 4060,
+    "m1CharacterVoicedByRelationCount": 45712,
+    "m1WorkHasCharacterRelationCount": 66599
+  },
+  "delta": {
+    "entitiesPath": "entities.json",
+    "entitiesSha256": "0f0b2defa3a001f573334ab8193f3465d08458abb98daef4a4a9c91eba8b62f0",
+    "sourceBindingsPath": "source-bindings.json",
+    "sourceBindingsSha256": "74a75fb86ca96efc2ae4c62fc5ac07f6e2e574b164e88d2ece66c144e4bde1eb",
+    "relationsPath": "relations.json",
+    "relationsSha256": "6fe348d0339804305a7694c72505434724effda9824c3183f5238382981eeafe",
+    "summaryPath": "summary.json",
+    "summarySha256": "7a4f697baa1f553f9b6d365a69867e98ab4babe87738cae372c2df5b608af901",
+    "newPersonEntityCount": 6634,
+    "newBindingCount": 6757,
+    "newRelationCount": 32299,
+    "newWorkCreditsPersonRelationCount": 32134,
+    "newAdmissionCharacterVoiceRelationCount": 152,
+    "newM21CharacterVoiceRelationCount": 13
+  },
+  "personCoverage": {
+    "canonicalPersonEntityCount": 10694,
+    "observedSourcePersonUnionCount": 13500,
+    "deferredSongOnlySourceIdCount": 2807,
+    "sameNameAutoMerge": false,
+    "conflicts": "review-only",
+    "missingSourceId": "fail-closed"
+  },
+  "m3Input": {
+    "acceptedM2CanonicalManifest": true,
+    "songRelations": "deferred",
+    "songEntityProjectionMayAddDeferredSongOnlyPeople": true
+  },
+  "publicBoundary": {
+    "publicProjection": false,
+    "visibility": "review",
+    "rawLocatorsIncluded": false,
+    "personImages": "deferred"
+  },
+  "m21VoiceProjection": {
+    "contractLockId": "terminal-wiki-m2-1-voice-projection-20260904-01",
+    "sourceSnapshotId": "vndb-character-dump-2026-08-17",
+    "sourceEvidenceSha256": "f394cc895ca64ed538e6bd379017aee857cb67a5d3a767898153b2b64ba310ea",
+    "officialDumpSha256": "43866b313542e060174d9e478a46e368b2eef4c693d29d63faefe69ea4e1aa24",
+    "egsWorkId": "3007",
+    "vndbEditionId": "v66",
+    "voicedCharacterCount": 11,
+    "voiceRelationCount": 13,
+    "unvoicedCharacterIds": [
+      "c3658",
+      "c56183"
+    ]
+  }
+}
