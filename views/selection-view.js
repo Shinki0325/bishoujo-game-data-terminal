@@ -64,6 +64,16 @@ function appendTextElement(documentRef, parent, tagName, className, text) {
   return element;
 }
 
+// Keep the source's display text and scale intact while giving the number
+// its own typographic emphasis (including non-numeric unavailable states).
+function appendCardRating(documentRef, parent, className, text) {
+  const rating = appendTextElement(documentRef, parent, 'span', className, '');
+  const [source, ...value] = String(text).split(' ');
+  appendTextElement(documentRef, rating, 'span', 'selection-card-rating-source', `${source} `);
+  appendTextElement(documentRef, rating, 'strong', 'selection-card-rating-value', value.join(' '));
+  return rating;
+}
+
 function requiredOwnedElement(root, id) {
   const element = root.querySelector?.(`#${id}`);
   if (!element) throw new Error(`Selection view root is missing #${id}`);
@@ -272,23 +282,36 @@ export function createSelectionCard(documentRef, work, {
   const overlay = documentRef.createElement('div');
   overlay.className = 'selection-card-overlay';
   if (cardDisplay.showTitle) {
-    appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
+    const title = appendTextElement(documentRef, overlay, 'p', 'selection-card-title', displayTitle);
+    title.title = displayTitle;
   }
+  // Compact cards in the ranking candidate drawer retain their legacy overlay.
+  const metadata = view === 'full' ? documentRef.createElement('div') : overlay;
+  if (metadata !== overlay) metadata.className = 'selection-card-metadata';
   if (cardDisplay.showCompany && typeof work.brandName === 'string' && work.brandName.length > 0) {
-    appendTextElement(documentRef, overlay, 'p', 'selection-card-company', work.brandName);
+    const company = appendTextElement(documentRef, metadata, 'p', 'selection-card-company', work.brandName);
+    company.title = work.brandName;
   }
+  const year = cardDisplay.showYear ? releaseYear(work) : null;
+  const yearBadge = year === null ? null : documentRef.createElement('span');
+  if (yearBadge !== null) {
+    yearBadge.className = 'selection-card-year';
+    yearBadge.textContent = year;
+    if (view === 'full') metadata.append(yearBadge);
+  }
+  if (metadata !== overlay && metadata.children.length > 0) overlay.append(metadata);
   if (cardDisplay.showEgs || (cardDisplay.showVndb && work.vndbRating !== undefined) || (cardDisplay.showBangumi && work.bangumiRating !== undefined)) {
     const ratings = documentRef.createElement('div');
     ratings.className = 'selection-card-rating-lines';
     if (cardDisplay.showEgs) {
-      appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-egs-rating', egsRatingText(work));
+      appendCardRating(documentRef, ratings, 'selection-card-rating-line selection-card-egs-rating', egsRatingText(work));
     }
     if (cardDisplay.showVndb && work.vndbRating !== undefined) {
-      appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
+      appendCardRating(documentRef, ratings, 'selection-card-rating-line selection-card-vndb-rating', work.vndbRating.cardText);
     }
     if (cardDisplay.showBangumi && work.bangumiRating !== undefined) {
       const text = bangumiRatingText(work.bangumiRating);
-      if (text !== null) appendTextElement(documentRef, ratings, 'span', 'selection-card-rating-line selection-card-bangumi-rating', text);
+      if (text !== null) appendCardRating(documentRef, ratings, 'selection-card-rating-line selection-card-bangumi-rating', text);
     }
     overlay.append(ratings);
   }
@@ -303,12 +326,6 @@ export function createSelectionCard(documentRef, work, {
     appendTextElement(documentRef, versionBadge, 'span', 'selection-card-version-count', work.presentationMemberCount);
   }
 
-  const year = cardDisplay.showYear ? releaseYear(work) : null;
-  const yearBadge = year === null ? null : documentRef.createElement('span');
-  if (yearBadge !== null) {
-    yearBadge.className = 'selection-card-year';
-    yearBadge.textContent = year;
-  }
   const mobileRating = mobileCardRating(work, mobileSortKey);
   const mobileRatingBadge = documentRef.createElement('span');
   mobileRatingBadge.className = 'selection-card-mobile-rating';
@@ -322,7 +339,7 @@ export function createSelectionCard(documentRef, work, {
     ...(checkbox === null ? [] : [checkbox]),
     ...(hasOverlayContent ? [overlay] : []),
     mobileRatingBadge,
-    ...(yearBadge === null ? [] : [yearBadge])
+    ...(view === 'compact' && yearBadge !== null ? [yearBadge] : [])
   );
   if (typeof onCompare === 'function') {
     const compareButton = documentRef.createElement('button');
