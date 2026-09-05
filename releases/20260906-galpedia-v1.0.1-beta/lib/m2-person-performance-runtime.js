@@ -1,5 +1,5 @@
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
-export const PERSON_PERFORMANCE_MANIFEST_SHA256 = '3926602542014365a3f999084358f3712070754782453979f0101ede5162bdc7';
+export const PERSON_PERFORMANCE_MANIFEST_SHA256 = '53e1e3867ea4323751ee2aa187b45fd5aac23ba0fdc170556938eb5d30883083';
 
 function normalizeActivityAxis(value) {
   const startYear = Number(value?.startYear);

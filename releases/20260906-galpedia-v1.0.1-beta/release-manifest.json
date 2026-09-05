@@ -1,5 +1,5 @@
 {
-  "closureSha256": "1da7454e0fe13d01b2b58901bffc46c48ab77b0d22cee157815e392830077813",
+  "closureSha256": "851ab81836fd9ba6ab5933eeebf81fdb0f1ad47f9822f3f9de435765e26591e8",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -5664,7 +5664,7 @@
     {
       "bytes": 6290,
       "path": "lib/m2-person-performance-runtime.js",
-      "sha256": "44a4682aa5dd35b2c8c8137fda356aaa39346901d1738cc6cbb0f9388d065b9f"
+      "sha256": "9f9677b7e9614f45ef18f82ad3a6153dbef4ee35ea207eaa1d063c75c45f85cd"
     },
     {
       "bytes": 21690,
@@ -5759,7 +5759,7 @@
     {
       "bytes": 7708,
       "path": "lib/runtime-config.js",
-      "sha256": "0578d79f542dd79383006f7cdb3b48f40d2f6f7f913a82cfe02c487edab75d30"
+      "sha256": "d83ea923569bbd51d093c8498cd6ce3d2ab2b7846a0609d84b305d64d26b840f"
     },
     {
       "bytes": 1950,
@@ -5877,9 +5877,9 @@
       "sha256": "41a5ec1d9714d6864fd7b6de98910276c50f7f88a6b4eb879519e2384412c958"
     },
     {
-      "bytes": 244902,
+      "bytes": 245664,
       "path": "main.js",
-      "sha256": "327cb9f27fa52414c7a580f8deaeab3ee526118ac78a214058205e9dc0d3b190"
+      "sha256": "57d014231e7066b36543d074b0f0f91864eba5122694221b93af64f778ac1e8b"
     },
     {
       "bytes": 16989,
