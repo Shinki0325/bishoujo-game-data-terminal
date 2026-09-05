@@ -1,4 +1,6 @@
 // Small home shell: the data workspace is loaded only for a route or a search.
+import { createActionIcon } from './lib/action-icons.js';
+
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
 const status = document.querySelector('#galpedia-load-status');
@@ -18,6 +20,15 @@ let lastWorkspaceRoute = '#works';
 const nav = document.querySelector('#workspace-mode');
 nav.append(document.querySelector('#mode-company'), document.querySelector('#mode-person'), document.querySelector('#mode-ranking'));
 const routes = { 'mode-selection': '#works', 'mode-company': '#companies', 'mode-person': '#persons', 'mode-ranking': '#ranking' };
+// Paint the existing navigation icons before the data runtime is needed.
+for (const [id, iconName] of [['mode-selection', 'library'], ['mode-company', 'building'], ['mode-person', 'person'], ['mode-ranking', 'ranking']]) {
+  const button = document.getElementById(id);
+  const label = document.createElement('span');
+  label.textContent = button.textContent.trim();
+  const icon = createActionIcon(document, iconName);
+  icon.classList.add('workspace-tab-icon');
+  button.replaceChildren(icon, label);
+}
 
 function isHome() { return !location.hash || location.hash === '#home'; }
 function syncHome() {
