@@ -124,6 +124,13 @@ html.galpedia .galpedia-header .mode-switch button[aria-selected="true"] { color
 html.galpedia[data-home="false"] .galpedia-header .mode-switch button[aria-selected="true"] { color: var(--text); border-bottom: 2px solid var(--accent); }
 html.galpedia .galpedia-header .header-actions .icon-button { color: var(--text); background: transparent; border-color: transparent; box-shadow: none; }
 html.galpedia .galpedia-search-form input { color: var(--text); background: transparent; border: 0; box-shadow: none; }
+html.galpedia .galpedia-search-form input[type="search"],
+html.galpedia .galpedia-search-form input[type="search"]:focus,
+html.galpedia .galpedia-search-form input[type="search"]:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
 html.galpedia .galpedia-search-form button { color: var(--accent); background: var(--surface-muted); box-shadow: none; border: 0; }
 html.galpedia .galpedia-home p,html.galpedia .home-footer { font-family: "Segoe UI","Microsoft YaHei","Noto Sans CJK SC",sans-serif; }
 html.galpedia .galpedia-header .header-actions { position: static; }

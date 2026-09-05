@@ -4823,6 +4823,11 @@ async function initialize() {
       rankingSubject = 'work';
       const [sortKey, sortDirection] = location.sort.split('-');
       controller.setWorkspaceMode('selection');
+      // A workspace route only serializes the lightweight title/sort state.
+      // Clear the rest of the previous filter draft before applying it; using
+      // setFilterState alone would merge stale tags/attributes/companies back
+      // into the works page after returning from a zero-result query.
+      controller.clearFilters();
       controller.setFilterState({ titleQuery: location.query, sortKey, sortDirection });
       currentWorkDetailId = null;
       await render();
