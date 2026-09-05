@@ -176,7 +176,7 @@ document.querySelector('#site-info-button').addEventListener('click', event => {
 }, true);
 document.querySelector('#site-welcome-start').addEventListener('click', () => document.querySelector('#site-welcome-dialog').close());
 document.querySelector('#site-welcome-title').textContent = '庭守手册';
-fetch('./brand/snapshot.json').then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {
+fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {
   for (const element of document.querySelectorAll('[data-home-count]')) element.textContent = Number(snapshot[element.dataset.homeCount]).toLocaleString('en-US');
   document.querySelector('#home-snapshot').textContent = `${snapshot.date} 快照`;
 }).catch(() => { document.querySelector('#home-snapshot').textContent = '收录统计暂不可用'; });
