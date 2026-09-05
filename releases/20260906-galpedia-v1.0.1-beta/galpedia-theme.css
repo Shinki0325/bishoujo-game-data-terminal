@@ -346,7 +346,7 @@ html.galpedia[data-theme="light"] .catalog-primary-actions #compare-mode-toggle[
 }
 
 .filter-backdrop {
-  background: rgb(27 24 43 / 22%);
+  background: transparent;
 }
 
 .filter-drawer {

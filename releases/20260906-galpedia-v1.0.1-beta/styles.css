@@ -926,7 +926,7 @@ h3 {
   padding: 0;
   /* Keep the catalogue readable while the drawer is open.  The drawer owns
      the interaction lock; the backdrop is only a quiet spatial cue. */
-  background: rgba(12, 17, 20, 0.22);
+  background: transparent;
   border: 0;
   border-radius: 0;
 }
