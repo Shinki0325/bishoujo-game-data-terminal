@@ -56,6 +56,31 @@ html.galpedia .galpedia-header .header-actions > .icon-button > svg {
 .help-article-link strong { font-size: 14px; font-weight: 600; }
 .help-article-link span { color: var(--text-muted); font-size: 12px; }
 .help-article-link:hover, .help-article-link:focus-visible { background: var(--gp-state-hover); }
+.help-about-intro { margin: 18px 0 24px; }
+.help-about-brand { margin: 0 0 5px !important; color: var(--text); font: 600 16px/1.5 var(--gp-font-heading); letter-spacing: .04em; }
+.help-about-copy { margin: 0 !important; color: var(--text-muted); }
+.help-about-note { margin: 13px 0 0 !important; color: var(--accent); font-size: 12px; }
+.help-release-card { margin: 22px 0 28px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 17px 0 9px; }
+.help-release-kicker { margin: 0 0 8px !important; color: var(--text-muted); font-size: 11px; letter-spacing: .12em; }
+.help-release-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.help-release-version { color: var(--text); font-size: 15px; }
+.help-release-date { color: var(--text-muted); font-size: 12px; }
+.help-release-summary { margin: 12px 0 10px; padding-left: 20px; }
+.help-release-summary li + li { margin-top: 7px; }
+.help-release-card h4 { margin-top: 17px; }
+.help-release-log-link { margin: 8px 0 6px; border: 0; background: transparent; color: var(--accent); padding: 10px 0; font-size: 13px; }
+.help-release-list { margin-top: 18px; }
+.help-release-entry { border-top: 1px solid var(--border); }
+.help-release-entry:last-child { border-bottom: 1px solid var(--border); }
+.help-release-entry summary { cursor: pointer; list-style: none; padding: 15px 0; color: var(--text); font-weight: 600; }
+.help-release-entry summary::-webkit-details-marker { display: none; }
+.help-release-entry summary::after { content: '+'; float: right; color: var(--text-muted); font-weight: 400; }
+.help-release-entry[open] summary::after { content: '−'; }
+.help-release-entry h4 { margin-top: 18px; }
+.help-release-log { margin: 0 0 20px; padding: 0; list-style: none; }
+.help-release-log li { display: grid; gap: 3px; padding: 12px 0; border-top: 1px solid var(--border); }
+.help-release-log li:last-child { border-bottom: 1px solid var(--border); }
+.help-release-log span { color: var(--text-muted); }
 .help-keeper-tip { margin: 26px 0; background: color-mix(in srgb, #ec9cbb 12%, var(--surface)); border-radius: 6px; padding: 18px; font-size: 13px; }
 .help-keeper-tip > div { display: flex; align-items: center; gap: 8px; }
 .help-keeper-tip p { margin-bottom: 0; }
