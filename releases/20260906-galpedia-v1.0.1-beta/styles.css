@@ -932,6 +932,15 @@ h3 {
   border-radius: 0;
 }
 
+.filter-backdrop:hover,
+.filter-backdrop:focus,
+.filter-backdrop:focus-visible {
+  background: transparent !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .filter-drawer {
   position: fixed;
   inset: 0;

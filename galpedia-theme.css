@@ -350,6 +350,15 @@ html.galpedia[data-theme="light"] .catalog-primary-actions #compare-mode-toggle[
   pointer-events: none;
 }
 
+.filter-backdrop:hover,
+.filter-backdrop:focus,
+.filter-backdrop:focus-visible {
+  background: transparent !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .filter-drawer {
   color: var(--text);
   background: var(--surface);
