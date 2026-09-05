@@ -128,6 +128,8 @@ import {
   fetchBangumiPublicGameCollections,
   planBangumiPublicImport
 } from './lib/bangumi-public-import.js?v=20260825-bangumi-family-default-mobile-details-scroll-v1';
+import { createPopoverController } from './lib/ui-popover.js';
+import { syncSelectionContext } from './lib/ui-selection-context.js';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
@@ -324,8 +326,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   cleanupMenu: requiredElement('cleanup-menu'),
   displayMenuButton: requiredElement('display-menu-button'),
   displayMenu: requiredElement('display-menu'),
-  fileMenuButton: requiredElement('file-menu-button'),
-  fileMenu: requiredElement('file-menu'),
   stateFile: requiredElement('state-file'),
   mediaFiles: requiredElement('media-files'),
   mediaPreview: requiredElement('media-preview'),
@@ -1010,6 +1010,18 @@ function showDetails(work, filterById, workAliasesById = null, onOpenCompany = n
 }
 
 async function initialize() {
+  const localSearchClears = [...document.querySelectorAll('[data-clear-input]')].map(button => {
+    const input = document.getElementById(button.dataset.clearInput);
+    const sync = () => { button.hidden = !input.value; };
+    input.addEventListener('input', sync);
+    button.addEventListener('click', () => {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.focus();
+    });
+    sync();
+    return sync;
+  });
   let themeStorage = null;
   try {
     themeStorage = window.localStorage;
@@ -2993,6 +3005,8 @@ async function initialize() {
   }
 
   function renderPersonDirectory() {
+    if (elements.personSearch.value !== personQuery) elements.personSearch.value = personQuery;
+    localSearchClears.forEach(sync => sync());
     if (!personDirectoryView) return;
     const loading = document.querySelector('#person-directory-loading');
     if (!personRuntimeState) {
@@ -3016,6 +3030,8 @@ async function initialize() {
   }
 
   function renderCompanyDirectory() {
+    if (elements.companySearch.value !== companyQuery) elements.companySearch.value = companyQuery;
+    localSearchClears.forEach(sync => sync());
     const [sortKey, direction] = companySort.split('-');
     const companies = searchCompanyDirectory(companyDirectory, companyQuery, {
       sortKey,
@@ -3028,6 +3044,7 @@ async function initialize() {
       ?? null;
     selectedCompanyId = selected?.companyId ?? null;
     companyDirectoryView.render({
+      sortValue: companySort,
       companies,
       selectedCompanyId,
       selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId, {
@@ -3500,20 +3517,15 @@ async function initialize() {
     });
   });
 
-  const toolbarMenus = [
-    { button: elements.cardViewToggle, menu: elements.selectionCardDisplayMenu },
-    { button: elements.cleanupMenuButton, menu: elements.cleanupMenu },
-    { button: elements.displayMenuButton, menu: elements.displayMenu },
-    { button: elements.fileMenuButton, menu: elements.fileMenu }
-  ];
-
-  function closeToolbarMenus(except = null) {
-    for (const item of toolbarMenus) {
-      if (item === except) continue;
-      item.menu.hidden = true;
-      item.button.setAttribute('aria-expanded', 'false');
-    }
-  }
+  const toolbarPopover = createPopoverController({
+    documentRef: document, windowRef: window,
+    items: [
+      { button: elements.cardViewToggle, menu: elements.selectionCardDisplayMenu, kind: 'form' },
+      { button: elements.cleanupMenuButton, menu: elements.cleanupMenu, kind: 'actions' },
+      { button: elements.displayMenuButton, menu: elements.displayMenu, kind: 'form' }
+    ]
+  });
+  const closeToolbarMenus = () => toolbarPopover.closeAll();
 
   function setMobileRankingCandidatesOpen(open) {
     document.body.classList.toggle('is-mobile-ranking-candidates-open', open);
@@ -3537,37 +3549,8 @@ async function initialize() {
     else elements.mobileRankingMenu.open = true;
   }
 
-  function toggleToolbarMenu(item) {
-    const opening = item.menu.hidden;
-    closeToolbarMenus(item);
-    item.menu.hidden = !opening;
-    item.button.setAttribute('aria-expanded', String(opening));
-    if (!opening) return;
-    const anchor = item.button.getBoundingClientRect();
-    const width = item.menu.getBoundingClientRect().width || 132;
-    const left = Math.min(
-      Math.max(8, anchor.left),
-      Math.max(8, window.innerWidth - width - 8)
-    );
-    item.menu.style.left = `${left}px`;
-    item.menu.style.top = `${Math.min(anchor.bottom + 4, window.innerHeight - item.menu.offsetHeight - 8)}px`;
-  }
-
-  for (const item of toolbarMenus) {
-    item.button.addEventListener('click', event => {
-      event.stopPropagation();
-      toggleToolbarMenu(item);
-    });
-  }
-  document.addEventListener('click', event => {
-    if (toolbarMenus.some(item => item.menu.contains(event.target) || item.button.contains(event.target))) return;
-    closeToolbarMenus();
-  });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      closeToolbarMenus();
-      closeMobileRankingCandidates();
-    }
+    if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('dialog:modal')) closeMobileRankingCandidates();
   });
   const immersive = createImmersiveController({
     root: document.body,
@@ -3769,18 +3752,26 @@ async function initialize() {
     elements.browseModeToggle.setAttribute('aria-pressed', String(!selectionMode && !compareMode));
     elements.browseModeToggle.title = '返回浏览作品';
     elements.quickRankingEntry.textContent = model.selectedCount > 0 ? '开始排榜' : '选择后排榜';
-    elements.quickRankingEntry.hidden = model.selectedCount === 0 || selectionMode || compareMode;
+    elements.quickRankingEntry.hidden = true;
     elements.quickRankingEntry.setAttribute('aria-label', model.selectedCount > 0
       ? `开始排榜（已选 ${model.selectedCount} 部）`
       : '选择作品后开始排榜');
     elements.companySelectionModeToggle.setAttribute('aria-pressed', String(companySelectionMode));
     elements.companySelectionModeToggle.textContent = companySelectionMode ? '退出选择' : '选择';
-    elements.selectionContextBar.hidden = companyDirectoryOpen || model.state.workspaceMode === 'ranking' || !selectionMode || compareMode;
+    syncSelectionContext({
+      root: elements.selectionContextBar, mode: !companyDirectoryOpen && model.state.workspaceMode !== 'ranking' && selectionMode && !compareMode,
+      count: model.selectedCount, keepEmptyTools: true, focusFallback: elements.selectionModeToggle,
+      resultActions: [document.getElementById('selected-works-toggle'), elements.clearSelectedWorks, elements.startWorkRanking]
+    });
     elements.selectionContextCount.textContent = String(model.selectedCount);
     elements.startWorkRanking.disabled = importBusy || model.selectedCount === 0;
     elements.clearSelectedWorks.disabled = importBusy || model.selectedCount === 0;
     const companySelectedCount = companyRanking.inspect().selectedCompanyIds.length;
-    elements.companySelectionContextBar.hidden = !companyDirectoryOpen || !companySelectionMode;
+    syncSelectionContext({
+      root: elements.companySelectionContextBar, mode: companyDirectoryOpen && companySelectionMode,
+      count: companySelectedCount, focusFallback: elements.companySelectionModeToggle,
+      resultActions: [elements.clearSelectedCompanies, elements.startCompanyRanking]
+    });
     elements.companySelectionContextCount.textContent = String(companySelectedCount);
     elements.startCompanyRanking.disabled = importBusy || companySelectedCount === 0;
     elements.clearSelectedCompanies.disabled = importBusy || companySelectedCount === 0;
@@ -3799,7 +3790,6 @@ async function initialize() {
     elements.rankingImmersive.disabled = importBusy;
     elements.cleanupMenuButton.disabled = importBusy;
     elements.displayMenuButton.disabled = importBusy;
-    elements.fileMenuButton.disabled = importBusy;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || activeRankingState.rankedCount === 0 || pngExportInProgress;
     elements.mobileRankingUndo.disabled = elements.undoEdit.disabled;
@@ -3858,7 +3848,6 @@ async function initialize() {
         elements.rankingImmersive,
         elements.cleanupMenuButton,
         elements.displayMenuButton,
-        elements.fileMenuButton,
         elements.exportState,
         elements.exportPng
       ]

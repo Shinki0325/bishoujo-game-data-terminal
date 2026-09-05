@@ -1367,25 +1367,29 @@ export function createRankingView({
     colorField.append(colorInput);
 
     const actions = documentRef.createElement('div');
-    actions.className = 'mobile-tier-edit-actions';
+    actions.className = 'mobile-tier-edit-actions gp-footer-tools';
     const moveUp = documentRef.createElement('button');
     moveUp.type = 'button';
+    moveUp.dataset.ui = 'utility';
     moveUp.textContent = '上移';
     moveUp.disabled = tierIndex === 0;
     const moveDown = documentRef.createElement('button');
     moveDown.type = 'button';
+    moveDown.dataset.ui = 'utility';
     moveDown.textContent = '下移';
     moveDown.disabled = tierIndex === model.tiers.length - 1;
     const remove = documentRef.createElement('button');
     remove.type = 'button';
     remove.textContent = '删除分级';
     remove.className = 'mobile-tier-edit-delete';
+    remove.dataset.ui = 'danger';
     remove.disabled = model.tiers.length <= 3;
     actions.append(moveUp, moveDown, remove);
 
     const submit = documentRef.createElement('button');
     submit.type = 'button';
     submit.className = 'mobile-tier-edit-save';
+    submit.dataset.ui = 'primary';
     submit.textContent = '保存名称';
 
     const closeEditorAfterAction = () => closeButton.click();
@@ -1418,8 +1422,17 @@ export function createRankingView({
       onTierDelete(tier.id);
     });
 
-    body.append(nameField, colorField, actions, submit);
-    dialog.append(heading, body);
+    const footer = documentRef.createElement('div');
+    footer.className = 'gp-dialog-footer';
+    const confirmActions = documentRef.createElement('div');
+    confirmActions.className = 'gp-footer-actions';
+    const cancel = documentRef.createElement('button');
+    cancel.type = 'button'; cancel.dataset.ui = 'secondary'; cancel.textContent = '取消';
+    cancel.addEventListener('click', closeMobileTierEditor);
+    confirmActions.append(cancel, submit);
+    footer.append(actions, confirmActions);
+    body.append(nameField, colorField);
+    dialog.append(heading, body, footer);
     dialog.addEventListener('close', () => {
       if (mobileTierEditor === dialog) mobileTierEditor = null;
       dialog.remove?.();

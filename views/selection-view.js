@@ -1,9 +1,10 @@
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
-import { createActionIcon } from '../lib/action-icons.js';
 import { reconcileKeyedChildren } from '../lib/keyed-dom.js';
 import { setListState } from '../lib/list-state.js';
 import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
+import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
+import { createActionIcon } from '../lib/action-icons.js';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
@@ -763,14 +764,17 @@ export function createSelectionView({
       elements.selectAllResults.setAttribute('aria-pressed', String(allState === 'all'));
       elements.selectAllResults.textContent = allState === 'all' ? '取消全选' : '全选';
       elements.selectedWorksToggle.setAttribute('aria-pressed', String(Boolean(model.filterState.selectedOnly)));
-      elements.selectedWorksToggle.textContent = `已选作品 ${model.selectedWorkIds.length}`;
+      elements.selectedWorksToggle.textContent = '查看已选';
       if (!titleCommit.pending()) elements.title.value = model.filterState.titleQuery;
       elements.sortKey.value = model.filterState.sortKey;
-      const ascending = model.filterState.sortDirection === 'asc';
-      elements.sortDirectionToggle.setAttribute('aria-pressed', String(ascending));
-      elements.sortDirectionToggle.setAttribute('aria-label', `排序：${ascending ? '升序' : '降序'}，点击切换`);
-      elements.sortDirectionLabel.textContent = ascending ? '升序' : '降序';
-      elements.sortDirectionIcon.replaceChildren(createActionIcon(documentRef, ascending ? 'arrow-up-a-z' : 'arrow-down-a-z'));
+      syncSortDirectionControl({
+        button: elements.sortDirectionToggle,
+        icon: elements.sortDirectionIcon,
+        label: elements.sortDirectionLabel,
+        direction: model.filterState.sortDirection,
+        labelPrefix: '排序',
+        documentRef
+      });
       elements.pagePrevious.disabled = pageIndex <= 0;
       elements.pageNext.disabled = pageIndex >= pages.length - 1;
       elements.pageInput.value = String(pageIndex + 1);

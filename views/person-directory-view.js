@@ -1,8 +1,8 @@
 const PAGE_SIZE = 48;
 
-import { createActionIcon } from '../lib/action-icons.js';
 import { filterPersonsBySearch } from '../lib/person-search.js';
 import { personNameVariantCount, personNameVariantLabels } from '../lib/person-name-variants.js';
+import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
 import {
   activityAxisLabelPosition,
   activityAxisLabelYears,
@@ -247,7 +247,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const worksBlock = node(documentRef, 'section', 'person-detail-block person-detail-works-block');
     const worksHeading = node(documentRef, 'div', 'person-detail-block-heading');
     worksHeading.append(node(documentRef, 'h3', '', '作品年表'));
-    const timelineTools = node(documentRef, 'div', 'person-detail-sort-tools');
+    const timelineTools = node(documentRef, 'div', 'person-detail-sort-tools gp-sort-control');
     const timelineSort = node(documentRef, 'select', 'person-detail-sort');
     timelineSort.setAttribute('aria-label', '作品年表排序');
     for (const [value, label] of [
@@ -261,14 +261,17 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     }
     const timelineDirection = node(documentRef, 'button', 'person-detail-sort-direction');
     timelineDirection.type = 'button';
+    timelineDirection.dataset.ui = 'utility';
     const timelineSortState = { key: 'releaseDate', direction: 'desc' };
     const updateTimelineControls = () => {
       timelineSort.value = timelineSortState.key;
-      const ascending = timelineSortState.direction === 'asc';
-      timelineDirection.setAttribute('aria-pressed', String(ascending));
-      timelineDirection.setAttribute('aria-label', `作品年表排序：${ascending ? '升序' : '降序'}，点击切换`);
-      timelineDirection.title = `作品年表排序：${ascending ? '升序' : '降序'}，点击切换`;
-      timelineDirection.replaceChildren(createActionIcon(documentRef, ascending ? 'arrow-up-a-z' : 'arrow-down-a-z'));
+      syncSortDirectionControl({
+        button: timelineDirection,
+        icon: timelineDirection,
+        direction: timelineSortState.direction,
+        labelPrefix: '作品年表排序',
+        documentRef
+      });
     };
     timelineTools.append(timelineSort, timelineDirection);
     worksHeading.append(timelineTools);

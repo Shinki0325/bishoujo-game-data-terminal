@@ -1,9 +1,19 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
-import { createActionIcon } from '../lib/action-icons.js';
 import { setListState } from '../lib/list-state.js';
+import { syncSortDirectionControl, toggleSortDirection } from '../lib/ui-sort-control.js';
 
 const COMPANY_PAGE_SIZE = 36;
+const COMPANY_SORT_KEYS = new Set([
+  'totalVoteCount', 'workCount', 'averageVoteCount', 'releaseYearStart', 'brandName'
+]);
+const COMPANY_SORT_DEFAULT_DIRECTIONS = Object.freeze({
+  totalVoteCount: 'desc',
+  workCount: 'desc',
+  averageVoteCount: 'desc',
+  releaseYearStart: 'asc',
+  brandName: 'asc'
+});
 
 function requireElement(root, id) {
   const element = root.querySelector?.(`#${id}`);
@@ -21,6 +31,25 @@ function text(documentRef, tag, className, value) {
 function formatCount(value) {
   if (!Number.isFinite(value)) return '暂无';
   return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(value);
+}
+
+function parseCompanySortValue(value) {
+  const raw = String(value ?? '');
+  const match = /^(.*)-(asc|desc)$/u.exec(raw);
+  const key = match?.[1] ?? raw;
+  if (!COMPANY_SORT_KEYS.has(key)) {
+    return { key: 'totalVoteCount', direction: 'desc' };
+  }
+  return {
+    key,
+    direction: match?.[2] === 'asc' || match?.[2] === 'desc'
+      ? match[2]
+      : COMPANY_SORT_DEFAULT_DIRECTIONS[key]
+  };
+}
+
+function companySortValue({ key, direction }) {
+  return `${key}-${direction}`;
 }
 
 export function createCompanyDirectoryView({
@@ -42,6 +71,10 @@ export function createCompanyDirectoryView({
   const documentRef = root.ownerDocument;
   const search = requireElement(root, 'company-directory-search');
   const sort = requireElement(root, 'company-sort');
+  // The direction control was added after the first directory view tests;
+  // keep it optional so those minimal fixtures remain valid.
+  const sortDirection = root.querySelector?.('#company-sort-direction');
+  const sortDirectionIcon = root.querySelector?.('#company-sort-direction-icon');
   const list = requireElement(root, 'company-list');
   const layout = root.querySelector?.('.company-directory-layout');
   const detail = requireElement(root, 'company-detail');
@@ -68,7 +101,14 @@ export function createCompanyDirectoryView({
   let renderedSelectedCompanyId = null;
 
   search.addEventListener('input', () => onSearch(search.value));
-  sort.addEventListener('change', () => onSort(sort.value));
+  sort.addEventListener('change', () => {
+    const parsed = parseCompanySortValue(sort.value);
+    onSort(companySortValue({ key: parsed.key, direction: COMPANY_SORT_DEFAULT_DIRECTIONS[parsed.key] }));
+  });
+  sortDirection?.addEventListener('click', () => {
+    const parsed = parseCompanySortValue(latestModel?.sortValue ?? sort.value);
+    onSort(companySortValue({ key: parsed.key, direction: toggleSortDirection(parsed.direction) }));
+  });
   detailSort.addEventListener('change', () => onDetailWorkSort({ sortKey: detailSort.value }));
   detailSortDirection.addEventListener('click', () => {
     onDetailWorkSort({ direction: detailSortDirection.getAttribute('aria-pressed') === 'true' ? 'desc' : 'asc' });
@@ -113,12 +153,15 @@ export function createCompanyDirectoryView({
     selectedCompanyId = null,
     selectedCompanyIds = new Set(),
     selectedWorks = [],
+    sortValue = 'totalVoteCount-desc',
     detailWorkSortKey = 'releaseDate',
     detailWorkSortDirection = 'asc',
     selectionMode: currentSelectionMode = selectionMode,
     imageUrlForCompany = null,
     imageUrlForWork = null
   } = {}) {
+    const parsedSort = parseCompanySortValue(sortValue);
+    const normalizedSortValue = companySortValue(parsedSort);
     const companyKey = companies.map(company => company.companyId).join('\u001f');
     if (companyKey !== renderedCompanyKey) {
       renderedCompanyKey = companyKey;
@@ -133,6 +176,7 @@ export function createCompanyDirectoryView({
       selectedCompanyId,
       selectedCompanyIds,
       selectedWorks,
+      sortValue: normalizedSortValue,
       detailWorkSortKey,
       detailWorkSortDirection,
       selectionMode: currentSelectionMode,
@@ -207,6 +251,17 @@ export function createCompanyDirectoryView({
     pageNext.disabled = pageIndex >= totalPages - 1;
     pageInput.value = String(pageIndex + 1);
     pageTotal.textContent = String(totalPages);
+    const sortOptionValues = Array.from(sort.options ?? [], option => option.value);
+    sort.value = sortOptionValues.includes(parsedSort.key) ? parsedSort.key : normalizedSortValue;
+    if (sortDirection) {
+      syncSortDirectionControl({
+        button: sortDirection,
+        icon: sortDirectionIcon,
+        direction: parsedSort.direction,
+        labelPrefix: '会社排序',
+        documentRef
+      });
+    }
     for (const card of list.querySelectorAll('.company-directory-card')) {
       const companyId = card.dataset.companyId;
       card.classList.toggle('is-selected', companyId === selectedCompanyId);
@@ -223,11 +278,13 @@ export function createCompanyDirectoryView({
     imageFor(detailAvatar, selected, 'company-detail-avatar-image', imageUrlForCompany);
     detailMeta.textContent = `${selected.workCount} 部作品 · ${selected.releaseYearStart ?? '未知'}-${selected.releaseYearEnd ?? '未知'} · 总评分 ${formatCount(selected.totalVoteCount)} · 平均每作 ${formatCount(selected.averageVoteCount)}`;
     detailSort.value = detailWorkSortKey;
-    const ascending = detailWorkSortDirection === 'asc';
-    detailSortDirection.setAttribute('aria-pressed', String(ascending));
-    detailSortDirection.setAttribute('aria-label', `作品排序：${ascending ? '升序' : '降序'}，点击切换`);
-    detailSortDirection.title = `作品排序：${ascending ? '升序' : '降序'}，点击切换`;
-    detailSortDirectionIcon.replaceChildren(createActionIcon(documentRef, ascending ? 'arrow-up-a-z' : 'arrow-down-a-z'));
+    syncSortDirectionControl({
+      button: detailSortDirection,
+      icon: detailSortDirectionIcon,
+      direction: detailWorkSortDirection,
+      labelPrefix: '作品排序',
+      documentRef
+    });
     detailWorks.replaceChildren();
     for (const work of selectedWorks) {
       const item = documentRef.createElement('button');
@@ -315,6 +372,7 @@ export function createCompanyDirectoryView({
     elements: Object.freeze({
       search,
       sort,
+      sortDirection,
       list,
       detail,
       detailClose,

@@ -10,6 +10,7 @@ import {
   validateStickerDocument
 } from '../lib/sticker-document.js';
 import { createActionIcon } from '../lib/action-icons.js';
+import { createPopoverController } from '../lib/ui-popover.js';
 
 const PALETTE = Object.freeze({
   'sticker-option-black-bar': 'black-bar',
@@ -56,6 +57,7 @@ function rotatePoint(x, y, radians) {
 
 export function createStickerEditorView({
   documentRef,
+  windowRef = null,
   requestFrame,
   cancelFrame,
   renderPreview,
@@ -130,6 +132,17 @@ export function createStickerEditorView({
   moreButton.setAttribute('aria-controls', 'sticker-more-menu');
   moreButton.setAttribute('aria-expanded', 'false');
   moreMenu.hidden = true;
+  const popoverWindow = windowRef ?? documentRef.defaultView ?? (typeof window === 'undefined' ? {
+    innerWidth: 1024,
+    innerHeight: 768,
+    addEventListener() {},
+    removeEventListener() {}
+  } : window);
+  const popoverController = createPopoverController({
+    items: [{ button: moreButton, menu: moreMenu, kind: 'actions' }],
+    documentRef,
+    windowRef: popoverWindow
+  });
 
   let session = null;
   let frameId = null;
@@ -147,16 +160,7 @@ export function createStickerEditorView({
   }
 
   function closeMenu() {
-    moreMenu.hidden = true;
-    moreButton.setAttribute('aria-expanded', 'false');
-  }
-
-  function toggleMenu() {
-    const opening = moreMenu.hidden;
-    closeMenu();
-    if (!opening) return;
-    moreMenu.hidden = false;
-    moreButton.setAttribute('aria-expanded', 'true');
+    popoverController.closeAll();
   }
 
   function inspect() {
@@ -423,7 +427,6 @@ export function createStickerEditorView({
   redoButton.addEventListener?.('click', () => useHistory('redo'));
   moreButton.addEventListener?.('click', event => {
     event.stopPropagation?.();
-    if (!busy) toggleMenu();
   });
   clearButton.addEventListener?.('click', () => {
     closeMenu();
@@ -504,17 +507,18 @@ export function createStickerEditorView({
 
   cancelButton.addEventListener?.('click', cancel);
   saveButton.addEventListener?.('click', () => { void save(); });
-  documentRef.addEventListener?.('click', event => {
-    if (moreMenu.contains(event.target) || moreButton.contains(event.target)) return;
-    closeMenu();
-  });
   dialog.addEventListener?.('cancel', event => {
     event.preventDefault?.();
     cancel();
   });
 
   documentRef.addEventListener?.('keydown', event => {
+    if (event.defaultPrevented) return;
     if (!session || busy) return;
+    const eventTarget = event.target ?? documentRef.activeElement;
+    if (moreMenu.contains?.(eventTarget) || moreButton.contains?.(eventTarget)) return;
+    const topModal = documentRef.querySelector?.('dialog:modal');
+    if (topModal && !topModal.contains?.(eventTarget)) return;
     const key = String(event.key ?? '');
     const command = event.ctrlKey || event.metaKey;
     if (command && key.toLowerCase() === 'z') {
