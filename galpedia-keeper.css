@@ -1,0 +1,53 @@
+/* Content-first Keeper guidance. Portrait media is opt-in only. */
+.keeper-guide-host { display: block; }
+.keeper-guide-host .keeper-guide-card { margin: 0; }
+.ranking-coachmark.keeper-guide-host { margin: 10px 12px 0; padding: 0; border: 0; background: transparent; }
+#keeper-compare-guide { grid-column: 1 / -1; }
+.keeper-guide-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 12px 0 18px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-soft) 38%, var(--surface));
+  color: var(--text);
+}
+.keeper-guide-card[hidden] { display: none; }
+.keeper-guide-card-copy { min-width: 0; flex: 1; }
+.keeper-guide-card-eyebrow { display: block; color: var(--accent); font-size: 11px; letter-spacing: .12em; }
+.keeper-guide-card-title { margin: 3px 0 4px; font-size: 16px; line-height: 1.45; }
+.keeper-guide-card-body { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.keeper-guide-card.is-base { padding-block: 10px; background: var(--surface); border-color: var(--border); }
+.keeper-guide-card.is-base .keeper-guide-card-body { color: var(--text); }
+.keeper-guide-card.is-base .keeper-guide-card-actions { margin-top: 8px; }
+.keeper-guide-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.keeper-guide-card-compact { align-items: center; padding: 5px 6px; background: transparent; border: 0; }
+.keeper-guide-card-compact .keeper-guide-card-copy { display: flex; align-items: center; gap: 8px; }
+.keeper-guide-card-compact .keeper-guide-card-actions { flex: none; margin-left: auto; }
+.keeper-guide-card-compact .keeper-guide-card-eyebrow { display: inline; margin-right: 8px; letter-spacing: 0; }
+.keeper-guide-card-compact .keeper-guide-card-body { display: inline; }
+.keeper-guide-card-compact .keeper-guide-card-actions { display: inline-flex; margin: 0 0 0 10px; vertical-align: middle; }
+.keeper-guide-card-compact .keeper-guide-card-actions button { min-height: 30px; padding: 4px 9px; font-size: 12px; }
+.keeper-guide-card-media { flex: 0 0 84px; width: 84px; }
+.keeper-guide-card-image { display: block; width: 84px; height: 112px; object-fit: cover; border-radius: 6px; }
+.keeper-guide-help { background: transparent; border: 0; color: var(--accent); padding: 7px 9px; cursor: pointer; }
+#keeper-compare-guide .keeper-guide-card { border: 0; background: transparent; padding: 6px 0; }
+#keeper-compare-guide .keeper-guide-card-copy { display: grid; grid-template-columns: 1fr auto; column-gap: 20px; align-items: center; }
+#keeper-compare-guide .keeper-guide-card-eyebrow { display: none; }
+#keeper-compare-guide .keeper-guide-card-title { grid-column: 1; font-size: 15px; }
+#keeper-compare-guide .keeper-guide-card-body { grid-column: 1; }
+#keeper-compare-guide .keeper-guide-card-actions { grid-column: 2; grid-row: 1 / span 2; margin: 0; }
+.galpedia-help .keeper-guide-card-title { font: 600 16px/1.45 var(--font-ui, system-ui); margin: 3px 0 5px; }
+.galpedia-help .keeper-guide-card-body { margin: 0; font-size: 13px; line-height: 1.7; }
+.galpedia-help .keeper-guide-card { padding: 14px 16px; }
+@media (max-width: 600px) {
+  #keeper-compare-guide .keeper-guide-card-copy { display: block; }
+  #keeper-compare-guide .keeper-guide-card-actions { margin-top: 6px; }
+  .keeper-guide-card { margin: 10px 0 14px; padding: 14px; }
+  .keeper-guide-card-media { flex-basis: 64px; width: 64px; }
+  .keeper-guide-card-image { width: 64px; height: 86px; }
+  .keeper-guide-card .keeper-guide-card-actions { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+  .keeper-guide-card .keeper-guide-card-actions > button { width: auto; flex: 0 1 auto; min-height: 40px; }
+}

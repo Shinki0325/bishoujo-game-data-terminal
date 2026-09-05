@@ -125,7 +125,6 @@ document.addEventListener('click', event => {
   handbookLoad ??= import('./lib/galpedia-help.js').then(module => { handbook = module.createHelpDrawer(); return { handbook, context: module.currentHelpArticle }; }).catch(error => { handbookLoad = null; throw error; });
   void handbookLoad.then(({ handbook, context }) => {
     if (token !== helpRequest) return;
-    document.querySelector('#ranking-coachmark').hidden = true;
     handbook.open(button.dataset.helpArticle || helpTargets[button.id] || context(), button);
   }).catch(() => { status.hidden = false; status.textContent = '手册暂时无法加载，请重试。'; });
 }, true);

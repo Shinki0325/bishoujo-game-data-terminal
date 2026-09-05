@@ -131,6 +131,8 @@ import {
 import { createPopoverController } from './lib/ui-popover.js';
 import { syncSelectionContext } from './lib/ui-selection-context.js';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
+import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
+import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
@@ -360,6 +362,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   workCompareItems: requiredElement('work-compare-items'),
   workCompareOpen: requiredElement('work-compare-open'),
   workCompareClear: requiredElement('work-compare-clear'),
+  keeperCompareGuide: requiredElement('keeper-compare-guide'),
   workCompareDialog: requiredElement('work-compare-dialog'),
   workCompareDialogSubtitle: requiredElement('work-compare-dialog-subtitle'),
   workCompareContent: requiredElement('work-compare-content'),
@@ -1508,6 +1511,31 @@ async function initialize() {
   const replacementMetadataCache = new Map();
   const coverSourceCache = new Map();
   let customWorks = [];
+  const keeperPreferencesStore = createKeeperPreferences();
+  let keeperReady = false;
+  let keeperRestored = false;
+  let keeperInteractionBusy = false;
+  keeperPreferencesStore.subscribe(() => renderKeeperGuidance());
+  const endKeeperInteraction = () => {
+    if (!keeperInteractionBusy) return;
+    keeperInteractionBusy = false;
+    renderKeeperGuidance();
+  };
+  document.addEventListener('dragstart', () => { keeperInteractionBusy = true; }, true);
+  document.addEventListener('dragend', endKeeperInteraction, true);
+  const keeperSurfaceObserver = new MutationObserver(records => {
+    const relevant = records.some(record => (
+      record.attributeName === 'class' && record.target === document.body
+    ) || (
+      record.attributeName === 'open' && record.target?.tagName === 'DIALOG'
+    ));
+    if (relevant) renderKeeperGuidance();
+  });
+  keeperSurfaceObserver.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open', 'class']
+  });
   await startupMetrics.measureAsync('local-media-hydration', async () => {
     try {
       const mediaDatabase = await openLocalMediaDatabase(window.indexedDB);
@@ -1595,6 +1623,7 @@ async function initialize() {
   let compareWorkIds = [];
   let compareSortKey = 'vndbScore';
   let compareSortDirection = 'desc';
+  const MIN_COMPARE_WORKS = 2;
   const MAX_COMPARE_WORKS = 20;
   let compareRenderRequest = 0;
   const compareCreditsCache = new Map();
@@ -1756,16 +1785,16 @@ async function initialize() {
 
   function renderCompareBar() {
     const works = compareWorkIds.map(id => worksById.get(id)).filter(Boolean);
-    elements.workCompareBar.hidden = works.length === 0;
+    elements.workCompareBar.hidden = works.length === 0 && !compareMode;
     elements.workCompareCount.textContent = `已选 ${works.length} 部`;
-    elements.workCompareHint.textContent = works.length < 2
+    elements.workCompareHint.textContent = works.length < MIN_COMPARE_WORKS
       ? '选择两部作品开始并列比较'
       : works.length === 2
         ? '可查看双作并列比较'
         : works.length >= MAX_COMPARE_WORKS
           ? `已达到上限（${MAX_COMPARE_WORKS} 部）`
           : `可查看多作比较列表 · 最多 ${MAX_COMPARE_WORKS} 部`;
-    elements.workCompareOpen.disabled = works.length < 2;
+    elements.workCompareOpen.disabled = works.length < MIN_COMPARE_WORKS;
     elements.workCompareOpen.textContent = works.length > 2 ? '查看多作比较' : '查看双作比较';
     elements.workCompareItems.replaceChildren(...works.map(work => {
       const item = document.createElement('button');
@@ -1795,6 +1824,143 @@ async function initialize() {
       return item;
     }));
     refreshCompareCardControls();
+    renderKeeperGuidance();
+  }
+
+  function keeperDialogOpen() {
+    return Boolean(document.querySelector('dialog[open]'));
+  }
+
+  function focusCompareSelection() {
+    const target = elements.catalogResults.querySelector('.selection-card-compare');
+    if (target) {
+      target.focus({ preventScroll: true });
+      return;
+    }
+    elements.titleSearch.focus({ preventScroll: true });
+  }
+
+  function returnToWorkSelection() {
+    if (importBusy || pngExportInProgress) return;
+    closeMobileRankingCandidates();
+    closeToolbarMenus();
+    companyDirectoryOpen = false;
+    personDirectoryOpen = false;
+    selectedPersonId = null;
+    rankingSubject = 'work';
+    compareMode = false;
+    setWorkSelectionMode(true);
+    void runStateChange(() => controller.setWorkspaceMode('selection'));
+    replaceUiLocation();
+  }
+
+  function focusKeeperFallback(target) {
+    window.setTimeout(() => {
+      const node = [target, elements.rankingHelpButton, elements.modeRanking, elements.modeSelection, elements.titleSearch]
+        .find(candidate => candidate?.isConnected && !candidate.disabled && candidate.getClientRects().length && !candidate.closest('[hidden], [inert]'));
+      node?.focus?.({ preventScroll: true });
+    }, 0);
+  }
+
+  function renderKeeperGuidance() {
+    if (keeperInteractionBusy) return;
+    elements.workCompareBar.hidden = compareWorkIds.length === 0 && !compareMode;
+    const base = {
+      ready: keeperReady,
+      restored: keeperRestored,
+      featureEnabled: RUNTIME_FEATURES.keeperGuide?.enabled !== false,
+      busy: importBusy || pngExportInProgress,
+      live: document.body.classList.contains('is-ranking-immersive'),
+      dialogOpen: keeperDialogOpen()
+    };
+    const resolveKeeperScene = snapshot => {
+      const result = resolveKeeperGuide({ ...snapshot, featureEnabled: true }, keeperPreferencesStore.get());
+      if (!result) return null;
+      const enabled = RUNTIME_FEATURES.keeperGuide?.enabled !== false;
+      return enabled ? result : { ...result, showEnhancement: false, showPortrait: false };
+    };
+    const compare = resolveKeeperScene({
+      ...base,
+      id: 'compareActive',
+      workspace: 'selection',
+      mode: compareMode ? 'compare' : 'browse',
+      compareActive: compareMode,
+      compareWorkIds,
+      compareSelectedCount: compareWorkIds.length,
+      compareMin: MIN_COMPARE_WORKS
+    }, keeperPreferencesStore.get());
+    const keeperState = keeperPreferencesStore.get();
+    const isGuideCompleted = guide => Boolean(
+      guide && keeperState.completed?.[guide.id] === guide.contentVersion
+    );
+    elements.keeperCompareGuide.replaceChildren();
+    if (compare && compareMode) {
+      const card = createKeeperGuideCard({
+        documentRef: document,
+        guideId: compare.id,
+        domGuideId: 'compare.start',
+        title: compare.title,
+        body: compare.summary,
+        actionLabel: '在作品卡上加入比较',
+        helpArticleId: 'works.compare',
+        helpLabel: '查看比较说明',
+        onAction: focusCompareSelection,
+        dismissLabel: compare.showEnhancement && !isGuideCompleted(compare) ? '隐藏提示' : '',
+        onDismiss: compare.showEnhancement && !isGuideCompleted(compare) ? () => {
+          keeperPreferencesStore.dismiss(compare.id, compare.contentVersion);
+          renderKeeperGuidance();
+          focusKeeperFallback(elements.compareModeToggle);
+        } : undefined,
+        enhanced: compare.showEnhancement && !isGuideCompleted(compare)
+      });
+      elements.keeperCompareGuide.append(card);
+      elements.keeperCompareGuide.hidden = false;
+    } else {
+      elements.keeperCompareGuide.hidden = true;
+    }
+
+    const model = lastRenderedModel;
+    const isWorkRanking = model?.state?.workspaceMode === 'ranking' && rankingSubject === 'work';
+    const rankingGuide = isWorkRanking ? resolveKeeperScene({
+      ...base,
+      id: model.rankedCount > 0 ? null : model.unrankedCount > 0 ? 'tier.firstDrag' : 'tier.start',
+      workspace: 'ranking',
+      subject: 'work',
+      selectedWorkIds: model.state.selectedWorkIds,
+      candidateTotal: model.unrankedCount,
+      rankedTotal: model.rankedCount
+    }, keeperPreferencesStore.get()) : null;
+    elements.rankingCoachmark.replaceChildren();
+    if (rankingGuide && (rankingGuide.id !== 'tier.firstDrag' || (rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide)))) {
+      const firstDrag = rankingGuide.id === 'tier.firstDrag';
+      const enhanced = rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
+      const card = createKeeperGuideCard({
+        documentRef: document,
+        guideId: rankingGuide.id,
+        domGuideId: firstDrag ? 'tier.first-drag' : 'tier.start',
+        title: firstDrag ? '' : rankingGuide.title,
+        eyebrow: firstDrag ? '' : '庭守提示',
+        body: rankingGuide.summary,
+        actionLabel: firstDrag ? '' : '前往作品库选择',
+        helpArticleId: firstDrag ? '' : 'tier.overview',
+        helpLabel: '查看排榜说明',
+        onAction: firstDrag ? undefined : returnToWorkSelection,
+        dismissLabel: enhanced ? (firstDrag ? '×' : '隐藏提示') : '',
+        onDismiss: enhanced ? () => {
+          keeperPreferencesStore.dismiss(rankingGuide.id, rankingGuide.contentVersion);
+          renderKeeperGuidance();
+          focusKeeperFallback(elements.rankingHelpButton);
+        } : undefined,
+        enhanced
+      });
+      if (firstDrag) card.classList.add('keeper-guide-card-compact');
+      elements.rankingCoachmark.append(card);
+      elements.rankingCoachmark.hidden = false;
+      elements.rankingCoachmark.dataset.keeperGuide = firstDrag ? 'tier.first-drag' : 'tier.start';
+    } else {
+      elements.rankingCoachmark.hidden = true;
+      elements.rankingCoachmark.removeAttribute('data-keeper-guide');
+    }
   }
 
   function toggleCompareWork(work, include) {
@@ -1906,7 +2072,7 @@ async function initialize() {
 
   function renderWorkCompare() {
     const works = compareWorkIds.map(id => worksById.get(id)).filter(Boolean);
-    if (works.length < 2) return;
+    if (works.length < MIN_COMPARE_WORKS) return;
     const request = ++compareRenderRequest;
     elements.workCompareDialogSubtitle.textContent = works.length === 2
       ? '两部作品的评分与核心资料并列展示'
@@ -2172,6 +2338,10 @@ async function initialize() {
     }
     elements.workCompareContent.replaceChildren(content);
     if (typeof elements.workCompareDialog.showModal === 'function' && !elements.workCompareDialog.open) elements.workCompareDialog.showModal();
+    if (works.length >= MIN_COMPARE_WORKS) {
+      keeperPreferencesStore.complete('compareActive');
+      renderKeeperGuidance();
+    }
     if (works.length === 2) {
       const pendingCredits = works.filter(work => !compareCreditsLoaded.has(work.workId));
       if (pendingCredits.length > 0) {
@@ -3322,8 +3492,8 @@ async function initialize() {
       if (error?.name !== 'AbortError') console.error(error);
     }
     const copied = await copySelectionUrl(url);
-    if (copied) announce('链接已复制，可在电脑网页端打开', 'success');
-    else announce('分享链接已生成，请在电脑网页端打开', 'warning');
+    if (copied) announce('链接已复制，可在当前设备或其他设备打开', 'success');
+    else announce('分享链接已生成，可在当前设备或其他设备打开', 'warning');
     return copied;
   }
 
@@ -3381,7 +3551,9 @@ async function initialize() {
       if (rankingSubject === 'company') {
         return runStateChange(() => companyRanking.moveToTier(workId, tierId, insertionIndex));
       }
-      return runStateChange(() => controller.moveToTier(workId, tierId, insertionIndex));
+      const changed = runStateChange(() => controller.moveToTier(workId, tierId, insertionIndex));
+      if (changed) keeperPreferencesStore.complete('tier.firstDrag');
+      return changed;
     },
     onMoveToUnranked(workId) {
       if (rankingSubject === 'company') {
@@ -3462,7 +3634,9 @@ async function initialize() {
           companyRanking.moveToTier(workId, tierId, insertionIndex + offset)
         )));
       }
-      return runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
+      const changed = runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
+      if (changed) keeperPreferencesStore.complete('tier.firstDrag');
+      return changed;
     },
     showImportTile: () => rankingSubject === 'work',
     isCardActivationEnabled: () => true,
@@ -3853,6 +4027,7 @@ async function initialize() {
       ]
     }, nextBusy);
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
+    renderKeeperGuidance();
   }
 
   function runStateChange(change, visibleBrands = [], interaction = null) {
@@ -3997,6 +4172,7 @@ async function initialize() {
     }
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
+    renderKeeperGuidance();
     if (rankingModel !== null && rankingSubject === 'work') {
       void refreshRankingPreload(rankingModel);
     }
@@ -5062,6 +5238,7 @@ async function initialize() {
 
     pngExportInProgress = true;
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
+    renderKeeperGuidance();
     try {
       const exportState = isCompanyRanking
         ? controller.inspectState()
@@ -5109,6 +5286,7 @@ async function initialize() {
     } finally {
       pngExportInProgress = false;
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
+      renderKeeperGuidance();
     }
   });
 
@@ -5117,6 +5295,9 @@ async function initialize() {
     restoredLocation = await applyUiLocation();
     if (!restoredLocation) await render();
   });
+  keeperRestored = true;
+  keeperReady = true;
+  renderKeeperGuidance();
   openShareImportDialog();
   let globalSearch = null;
   return { search: query => {

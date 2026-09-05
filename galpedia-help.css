@@ -38,6 +38,13 @@
 .help-keeper-tip { margin: 26px 0; background: color-mix(in srgb, #ec9cbb 12%, var(--surface)); border-radius: 6px; padding: 18px; font-size: 13px; }
 .help-keeper-tip > div { display: flex; align-items: center; gap: 8px; }
 .help-keeper-tip p { margin-bottom: 0; }
+.help-preferences { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 14px; }
+.help-preferences summary { cursor: pointer; color: var(--text); font-weight: 600; }
+.help-preferences-intro { color: var(--text-muted); font-size: 12px; }
+.help-preference-row { display: flex; align-items: center; gap: 9px; margin: 10px 0; font-size: 13px; }
+.help-preference-row input { width: 16px; height: 16px; margin: 0; }
+.help-preferences-restore { margin-top: 4px; }
+.keeper-guide-card-handbook { margin-block: 18px 24px; }
 .help-shiori { display: block; width: 120px; height: 160px; object-fit: cover; object-position: center top; margin: 18px 0; }
 .global-search-shortcuts { font-size: 11px; color: var(--text-muted); margin: 12px 0 0; }
 html.galpedia #global-search-input:focus-visible { outline: none; }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20260905-galpedia-interaction-candidate">
+<html lang="zh-CN" data-app-revision="20260905-galpedia-keeper-text-candidate">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="./galpedia-states.css">
     <link rel="stylesheet" href="./galpedia-help.css">
     <link rel="stylesheet" href="./galpedia-controls.css">
+    <link rel="stylesheet" href="./galpedia-keeper.css">
   </head>
   <body>
     <header class="tool-header galpedia-header">
@@ -159,9 +160,9 @@
         </dialog>
         <dialog id="mobile-share-warning" aria-labelledby="mobile-share-warning-title">
           <div class="dialog-heading">
-            <h2 id="mobile-share-warning-title">请在电脑网页端打开此链接</h2>
+            <h2 id="mobile-share-warning-title">打开分享选片</h2>
           </div>
-          <div class="dialog-body"><p>这个分享链接用于在电脑网页端继续排榜。</p></div>
+          <div class="dialog-body"><p>这个分享链接用于在当前设备或其他设备继续排榜。</p></div>
           <div class="dialog-actions gp-dialog-footer">
             <button id="mobile-share-warning-dismiss" class="action-primary" type="button">知道了</button>
           </div>
@@ -388,6 +389,7 @@
                 <span id="work-compare-hint" class="work-compare-hint">选择两部作品开始并列比较</span>
               </div>
               <div id="work-compare-items" class="work-compare-items"></div>
+              <div id="keeper-compare-guide" class="keeper-guide-host" hidden></div>
               <div class="work-compare-actions">
                 <button data-ui="primary" id="work-compare-open" class="toolbar-button toolbar-button-strong" type="button" disabled>查看比较</button>
                 <button data-ui="utility" id="work-compare-clear" class="toolbar-button toolbar-button-neutral" type="button">清空</button>
@@ -486,22 +488,12 @@
 
         <section
           id="ranking-coachmark"
-          class="ranking-coachmark"
-          role="status"
-          aria-labelledby="ranking-coachmark-title"
+          class="ranking-coachmark keeper-guide-host"
+          aria-live="polite"
           hidden
         >
-          <div class="ranking-coachmark-copy">
-            <span class="ranking-coachmark-kicker">快速开始</span>
-            <div>
-              <h3 id="ranking-coachmark-title">把候选作品拖入等级</h3>
-              <p>候选区里的卡片可以拖到分级板；需要完整操作说明时，随时点击工具栏的 <code>?</code>。</p>
-            </div>
-          </div>
-          <div class="ranking-coachmark-actions">
-            <button id="ranking-coachmark-help" class="toolbar-button toolbar-button-neutral" type="button">查看完整说明</button>
-            <button id="ranking-coachmark-dismiss" class="toolbar-button toolbar-button-strong" type="button">知道了</button>
-          </div>
+          <button id="ranking-coachmark-help" class="visually-hidden" type="button" tabindex="-1" aria-hidden="true">查看完整说明</button>
+          <button id="ranking-coachmark-dismiss" class="visually-hidden" type="button" tabindex="-1" aria-hidden="true">知道了</button>
         </section>
 
         <section id="tier-board" class="tier-board" aria-label="分级板" tabindex="-1"></section>
