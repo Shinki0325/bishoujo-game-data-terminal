@@ -129,3 +129,51 @@ html.galpedia .galpedia-home p,html.galpedia .home-footer { font-family: "Segoe 
 html.galpedia .galpedia-header .header-actions { position: static; }
 html.galpedia .galpedia-header .tool-heading { margin: 0; }
 html.galpedia .galpedia-home .home-statement { font-family: "Noto Serif CJK SC","SimSun",serif; }
+
+/* Keep the established mobile bottom workspace navigation. The original
+   --mobile-nav-height also positions the ranking candidate dock above it. */
+@media (max-width: 899px) {
+  html.galpedia {
+    --header-height: 62px;
+    --mobile-nav-height: calc(62px + var(--safe-bottom, 0px));
+  }
+  html.galpedia[data-home] body { padding-bottom: var(--mobile-nav-height); }
+  html.galpedia .galpedia-header.tool-header {
+    display: flex;
+    align-items: center;
+    height: var(--header-height);
+    min-height: var(--header-height);
+    padding: 0 calc(18px + var(--safe-right, 0px)) 0 calc(18px + var(--safe-left, 0px));
+    gap: 12px;
+  }
+  html.galpedia .galpedia-header .tool-heading { flex: 0 1 auto; }
+  html.galpedia .galpedia-header .header-actions { margin-left: auto; }
+  html.galpedia .galpedia-header #workspace-mode {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    width: auto;
+    height: var(--mobile-nav-height);
+    min-height: var(--mobile-nav-height);
+    padding: 7px calc(8px + var(--safe-right, 0px)) calc(7px + var(--safe-bottom, 0px)) calc(8px + var(--safe-left, 0px));
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: 0 -3px 12px rgb(37 32 48 / 5%);
+    transform: none;
+  }
+  html.galpedia .galpedia-header #workspace-mode > button {
+    width: 100%;
+    height: 46px;
+    min-height: 44px;
+    min-width: 0;
+    margin: 0;
+    padding: 6px;
+    font-size: 13px;
+  }
+  html.galpedia body.is-ranking-immersive #workspace-mode { display: none; }
+}

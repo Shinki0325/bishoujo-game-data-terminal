@@ -58,6 +58,7 @@ import { createSelectionCardPresentation } from './lib/selection-card-presentati
 import { createWeightedRatingSort } from './lib/rating-sort.js?v=20260824-source-weighted-rating-sort-v1';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
+import { resolveDetailViewCountMode } from './lib/detail-view-stats.js';
 import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import { prepareCharacterImageMap } from './lib/character-image-map.js';
 import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
@@ -1663,9 +1664,23 @@ async function initialize() {
     } catch {
       return;
     }
-    // Only the public site calls its same-origin endpoint. Local release
-    // candidates intentionally keep working without a telemetry dependency.
-    if (endpoint.origin !== window.location.origin) return;
+    const viewCountMode = resolveDetailViewCountMode({
+      pageOrigin: window.location.origin,
+      endpointOrigin: endpoint.origin
+    });
+    if (viewCountMode === 'local-preview') {
+      if (
+        request !== detailViewsRequest
+        || currentWorkDetailId !== work.workId
+        || !elements.detailsDialog.open
+      ) return;
+      elements.detailsViews.textContent = '本地预览不显示统计';
+      elements.detailsViewsRow.hidden = false;
+      return;
+    }
+    // Only the public site calls its same-origin endpoint. Other different-
+    // origin previews intentionally keep the row hidden without telemetry.
+    if (viewCountMode !== 'same-origin') return;
     endpoint.searchParams.set('entityType', 'work');
     endpoint.searchParams.set('entityId', String(work.workId));
     elements.detailsViewsRow.hidden = false;
