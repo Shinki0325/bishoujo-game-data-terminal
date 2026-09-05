@@ -4,7 +4,9 @@ html.galpedia {
   --gp-state-edge: #8a73c8;
   --gp-state-hover: color-mix(in srgb, var(--accent-soft) 42%, var(--surface));
   --gp-state-pressed: color-mix(in srgb, var(--accent-soft) 75%, var(--surface));
+  --gp-state-selected: color-mix(in srgb, var(--accent-soft) 58%, var(--surface));
   --gp-state-disabled: color-mix(in srgb, var(--text-muted) 75%, var(--surface));
+  --gp-state-focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 28%, transparent);
   --gp-state-speed: 150ms;
   --gp-corner-paint: linear-gradient(var(--gp-state-edge), var(--gp-state-edge));
 }
@@ -39,11 +41,21 @@ html.galpedia[data-theme] :is(.toolbar-button-primary, .action-primary, #filter-
   border-color: var(--gp-primary-bg-hover);
   box-shadow: none;
 }
-html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):is([aria-expanded="true"], [aria-pressed="true"]):not(:disabled) {
+/* Expanded is a persistent open-state marker, separate from a momentary
+   press.  The inset rail survives pointer release and keyboard focus. */
+html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):is([aria-expanded="true"]):not(:disabled):not([aria-disabled="true"]) {
   color: var(--text);
   background: var(--gp-state-hover);
   border-color: var(--gp-state-edge);
   box-shadow: inset 0 -2px 0 var(--gp-state-edge);
+}
+/* Pressed controls keep their own feedback until the controller changes the
+   aria state; :active is deliberately kept below this persistent state. */
+html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):is([aria-pressed="true"]):not(:disabled):not([aria-disabled="true"]) {
+  color: var(--text);
+  background: var(--gp-state-pressed);
+  border-color: var(--gp-state-edge);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 12%);
 }
 html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):active:not(:disabled) {
   color: var(--text);
@@ -65,9 +77,22 @@ html.galpedia[data-theme] :is(.toolbar-button, .action-primary, .action-neutral,
   box-shadow: none;
   cursor: not-allowed;
 }
+/* A disabled control may still be the selected tab or an expanded trigger.
+   Keep that persistent cue while dimming the action itself. */
+html.galpedia[data-theme] :is(.toolbar-button, .action-primary, .action-neutral, .action-danger, .icon-button, .dialog-close, #filter-apply, #start-work-ranking, #start-company-ranking):is([aria-expanded="true"], [aria-pressed="true"]):is(:disabled, [aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--gp-state-hover) 42%, var(--surface-muted));
+  border-color: color-mix(in srgb, var(--gp-state-edge) 62%, var(--border));
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--gp-state-edge) 72%, var(--border));
+}
+/* Busy is an observed controller state, not a CSS-generated delay or spinner. */
+html.galpedia[data-theme] :is(button, a, input, select, textarea)[aria-busy="true"] {
+  cursor: progress;
+  opacity: .82;
+}
 html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
+  box-shadow: var(--gp-state-focus-ring);
 }
 html.galpedia[data-theme] :is(#clear-selected-works, #work-compare-clear, .dialog-close, .galpedia-header .icon-button) {
   color: var(--text-muted);
@@ -112,8 +137,10 @@ html.galpedia[data-theme] #catalog-results:has(#selection-context-bar:not([hidde
   border-color: var(--gp-state-edge);
 }
 
-/* Tabs share transparent active surfaces and two bracket corners. */
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button {
+/* Local tabs/modes use one lower indicator line.  The top workspace nav is
+   intentionally excluded here and retains its brand corner treatment in the
+   data-ui="nav" contract. */
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button {
   position: relative;
   color: var(--text-muted);
   background: transparent;
@@ -122,81 +149,93 @@ html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-sw
   box-shadow: none;
   transition: background-color var(--gp-state-speed) ease, color var(--gp-state-speed) ease;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:hover:not(:disabled) {
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:hover:not(:disabled):not([aria-disabled="true"]) {
   color: var(--text);
   background: var(--gp-state-hover);
   border-color: transparent;
   box-shadow: none;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], .is-active) {
   color: var(--text);
   background: transparent;
   border-color: transparent;
   font-weight: 650;
   box-shadow: none;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button::after {
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button::after {
   content: '';
   position: absolute;
-  inset: 3px;
+  inset: auto 9px 2px;
+  height: 2px;
   pointer-events: none;
-  background: var(--gp-corner-paint) left top / 8px 2px,
-    var(--gp-corner-paint) left top / 2px 8px,
-    var(--gp-corner-paint) right bottom / 8px 2px,
-    var(--gp-corner-paint) right bottom / 2px 8px;
-  background-repeat: no-repeat;
+  background: var(--gp-state-edge);
   opacity: 0;
   transition: opacity var(--gp-state-speed) ease;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], :focus-visible)::after { opacity: 1; }
-html.galpedia[data-theme][data-home="true"] #workspace-mode > button[aria-selected="true"]:not(:focus-visible)::after { opacity: 0; }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:active:not(:disabled) {
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], .is-active)::after { opacity: 1; }
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--gp-state-pressed);
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled {
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled,
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button[aria-disabled="true"] {
   color: var(--gp-state-disabled);
   background: transparent;
   border-color: transparent;
   opacity: 1;
   cursor: not-allowed;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled::after { opacity: 0; }
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is(:disabled, [aria-disabled="true"]):is([aria-selected="true"], [aria-pressed="true"], .is-active)::after {
+  opacity: .62;
+  background: var(--gp-state-edge);
+}
 
-/* Card brackets are paint-only, and never intercept cover/checkbox actions. */
+/* Active/disabled paint must never replace the complete keyboard ring. */
+html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: var(--gp-state-focus-ring);
+}
+
+/* Cards use the existing check/marker plus a quiet surface/border.  No local
+   hover/focus/selected corner is painted; focus gets a complete ring below. */
 html.galpedia #catalog-grid.catalog-grid > .selection-card::after,
 html.galpedia #company-list > .company-directory-card::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  z-index: 5;
-  pointer-events: none;
-  background: var(--gp-corner-paint) left top / 11px 2px,
-    var(--gp-corner-paint) left top / 2px 11px,
-    var(--gp-corner-paint) right bottom / 11px 2px,
-    var(--gp-corner-paint) right bottom / 2px 11px;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: opacity var(--gp-state-speed) ease;
+  content: none;
 }
 @media (hover: hover) {
   html.galpedia #catalog-grid.catalog-grid > .selection-card:hover::after,
-  html.galpedia #company-list > .company-directory-card:hover::after { opacity: .75; }
+  html.galpedia #company-list > .company-directory-card:hover::after { content: none; }
 }
-html.galpedia #catalog-grid.catalog-grid > .selection-card:focus-within::after,
-html.galpedia #company-list > .company-directory-card:focus-within::after { opacity: 1; }
-html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared)),
+html.galpedia #catalog-grid.catalog-grid > .selection-card:focus-within,
+html.galpedia #company-list > .company-directory-card:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: var(--gp-state-focus-ring);
+}
+html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-checkbox:checked), :has(.selection-card-compare.is-compared)),
 html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked)) {
+  background: var(--gp-state-selected);
   border-color: var(--gp-state-edge);
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gp-state-edge) 72%, transparent);
 }
-html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared))::after,
-html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked))::after {
-  background: var(--gp-corner-paint) left top / 16px 2px,
-    var(--gp-corner-paint) left top / 2px 16px,
-    var(--gp-corner-paint) right bottom / 16px 2px,
-    var(--gp-corner-paint) right bottom / 2px 16px;
-  background-repeat: no-repeat;
-  opacity: 1;
+
+/* Person-directory selection is a row-level persistent state.  Keep a quiet
+   surface and fine leading rail so it remains visible after pointer release,
+   while the row's own :focus-visible ring remains independent. */
+html.galpedia[data-theme] .person-directory-row:is(.is-current, [aria-current="true"]) {
+  background: color-mix(in srgb, var(--accent-soft) 46%, var(--surface));
+  border-top-color: color-mix(in srgb, var(--gp-state-edge) 48%, var(--border));
+  box-shadow: inset 3px 0 0 var(--gp-state-edge);
+}
+@media (hover: hover) {
+  html.galpedia[data-theme] .person-directory-row:is(.is-current, [aria-current="true"]):hover {
+    background: color-mix(in srgb, var(--accent-soft) 68%, var(--surface));
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  html.galpedia[data-theme] .person-directory-row:is(.is-current, [aria-current="true"]):hover:not(:focus-visible) {
+    background: color-mix(in srgb, var(--accent-soft) 46%, var(--surface));
+  }
 }
 
 /* Small visual checkbox inside a larger native, keyboard-operable hit target. */
@@ -242,20 +281,29 @@ html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company
 @media (pointer: coarse), (max-width: 899px) {
   html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select) { width: 44px; height: 44px; inset: 0 auto auto 0; }
 }
+
+/* Keep the ring last in the shared state layer so close/active rules cannot
+   accidentally reduce focus-visible to a partial corner or inset rail. */
+html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: var(--gp-state-focus-ring);
+}
 @media (forced-colors: active) {
   html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select) { appearance: auto; }
   html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select)::before,
   html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select)::after { content: none; }
-  html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared)),
+  html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-checkbox:checked), :has(.selection-card-compare.is-compared)),
   html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked)) {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
-  html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+  html.galpedia[data-theme] :is(#catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], .is-active) {
     border-bottom: 2px solid Highlight;
   }
-  html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible { outline-color: Highlight; }
+html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible { outline-color: Highlight; }
 }
+
 @media (prefers-reduced-motion: reduce) {
   html.galpedia { --gp-state-speed: 0ms; }
 }
