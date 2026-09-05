@@ -1,0 +1,196 @@
+{
+  "schema": "galpedia-keeper-portrait-assets-v1",
+  "status": "owner-approved-for-release",
+  "productionReady": true,
+  "ownerApproval": {
+    "date": "2026-09-05",
+    "scope": "原 PNG 按已确认头像/半身构图裁切缩放，不重绘、不改原蒙版；透明与实装验收通过，owner 于 2026-09-05 明确授权随本批上线。"
+  },
+  "method": "Source PNG crop and Lanczos3 resize only; no generative images, no alpha edits, no recoloring.",
+  "assets": [
+    {
+      "expression": "neutral",
+      "variant": "avatar",
+      "scale": 1,
+      "name": "shiori-neutral-avatar.webp",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "bytes": 7080,
+      "sha256": "df002b9b79f3947d20afdeed3e27a664767efba74da8f1229db963d0eb5183cc",
+      "sourceSha256": "62d0667d833d1350fedb45b2d37ea5c369e0177e9275e976f188752d9a9ad150",
+      "crop": {
+        "left": 288,
+        "top": 0,
+        "width": 448,
+        "height": 448
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "neutral",
+      "variant": "avatar",
+      "scale": 2,
+      "name": "shiori-neutral-avatar@2x.webp",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "bytes": 18460,
+      "sha256": "a6c117a47b98095e99fc2f5c700f4441d3526b650436f587bbf961731a16c6c1",
+      "sourceSha256": "62d0667d833d1350fedb45b2d37ea5c369e0177e9275e976f188752d9a9ad150",
+      "crop": {
+        "left": 288,
+        "top": 0,
+        "width": 448,
+        "height": 448
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "neutral",
+      "variant": "bust",
+      "scale": 1,
+      "name": "shiori-neutral-bust.webp",
+      "width": 320,
+      "height": 400,
+      "hasAlpha": true,
+      "bytes": 26774,
+      "sha256": "b38c10453e7660cb091bdf87c99d24566724602153124da94145eac6f70b59f5",
+      "sourceSha256": "62d0667d833d1350fedb45b2d37ea5c369e0177e9275e976f188752d9a9ad150",
+      "crop": {
+        "left": 192,
+        "top": 0,
+        "width": 640,
+        "height": 800
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "neutral",
+      "variant": "bust",
+      "scale": 2,
+      "name": "shiori-neutral-bust@2x.webp",
+      "width": 640,
+      "height": 800,
+      "hasAlpha": true,
+      "bytes": 62052,
+      "sha256": "7dbfb6fcddb736cd5f5eb09e3bd7c0c8e35a6d4f8b6b2a852392d98cb8513dd7",
+      "sourceSha256": "62d0667d833d1350fedb45b2d37ea5c369e0177e9275e976f188752d9a9ad150",
+      "crop": {
+        "left": 192,
+        "top": 0,
+        "width": 640,
+        "height": 800
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "smile",
+      "variant": "avatar",
+      "scale": 1,
+      "name": "shiori-smile-avatar.webp",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "bytes": 7370,
+      "sha256": "135c7212af4c4b0b9fb9bd28835a6edb3d6d757d00fd466c0f65ab88537b180c",
+      "sourceSha256": "30003e28bbf533c0b6954cddd0645b3ecd4542c196cd29704c3a4d9e8e4db2ea",
+      "crop": {
+        "left": 288,
+        "top": 0,
+        "width": 448,
+        "height": 448
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "smile",
+      "variant": "avatar",
+      "scale": 2,
+      "name": "shiori-smile-avatar@2x.webp",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "bytes": 19578,
+      "sha256": "c0f82d612e0ee0e67289a8897d4352c30d767dc4f1c4ac57e0b5d540c68ee580",
+      "sourceSha256": "30003e28bbf533c0b6954cddd0645b3ecd4542c196cd29704c3a4d9e8e4db2ea",
+      "crop": {
+        "left": 288,
+        "top": 0,
+        "width": 448,
+        "height": 448
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "smile",
+      "variant": "bust",
+      "scale": 1,
+      "name": "shiori-smile-bust.webp",
+      "width": 320,
+      "height": 400,
+      "hasAlpha": true,
+      "bytes": 27356,
+      "sha256": "3b85d072572ba3548cc3ae2b24e8d343bed3f576e86e9561e8eeab19a2191fdb",
+      "sourceSha256": "30003e28bbf533c0b6954cddd0645b3ecd4542c196cd29704c3a4d9e8e4db2ea",
+      "crop": {
+        "left": 192,
+        "top": 0,
+        "width": 640,
+        "height": 800
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    },
+    {
+      "expression": "smile",
+      "variant": "bust",
+      "scale": 2,
+      "name": "shiori-smile-bust@2x.webp",
+      "width": 640,
+      "height": 800,
+      "hasAlpha": true,
+      "bytes": 63626,
+      "sha256": "35b6c07edd3e3b6717f11e64bcd508d4da09b2f18e6f2d7e8bd01497d7ba0903",
+      "sourceSha256": "30003e28bbf533c0b6954cddd0645b3ecd4542c196cd29704c3a4d9e8e4db2ea",
+      "crop": {
+        "left": 192,
+        "top": 0,
+        "width": 640,
+        "height": 800
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "productionReady": true
+    }
+  ]
+}

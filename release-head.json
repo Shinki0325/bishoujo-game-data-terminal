@@ -1,6 +1,6 @@
 {
-  "closureSha256": "650b0833ea4f804ddd0362c7f81930d3b2e715dc2a7a2cc5a886a1526171c675",
-  "entry": "releases/20260905-galpedia-ui-v2/index.html",
-  "releaseId": "20260905-galpedia-ui-v2",
+  "closureSha256": "9227c5b1c8b10c4d919287d2e2185b4e4e16988cf4f89a7437bc3ba7aba0dec6",
+  "entry": "releases/20260905-galpedia-handbook-keeper-v1/index.html",
+  "releaseId": "20260905-galpedia-handbook-keeper-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
