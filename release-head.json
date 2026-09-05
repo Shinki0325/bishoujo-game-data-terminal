@@ -1,6 +1,6 @@
 {
-  "closureSha256": "1ac8fcb7419d376d178d79079e31f153f9cb1561aeefbd2700991fab92d53e8f",
-  "entry": "releases/20260905-galpedia-ui-v1/index.html",
-  "releaseId": "20260905-galpedia-ui-v1",
+  "closureSha256": "650b0833ea4f804ddd0362c7f81930d3b2e715dc2a7a2cc5a886a1526171c675",
+  "entry": "releases/20260905-galpedia-ui-v2/index.html",
+  "releaseId": "20260905-galpedia-ui-v2",
   "schemaVersion": "egs-tier-release-head-v1"
 }

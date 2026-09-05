@@ -1,5 +1,5 @@
 {
-  "closureSha256": "1ac8fcb7419d376d178d79079e31f153f9cb1561aeefbd2700991fab92d53e8f",
+  "closureSha256": "650b0833ea4f804ddd0362c7f81930d3b2e715dc2a7a2cc5a886a1526171c675",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -5877,7 +5877,7 @@
       "sha256": "cfc6115b6152911f545ab912368c269b1cd2e1dc09c3a0567ade2f07772df29d"
     }
   ],
-  "releaseId": "20260905-galpedia-ui-v1",
+  "releaseId": "20260905-galpedia-ui-v2",
   "runtimeDataRevision": "a6ad209572ec5b7a1d0e223bff884b78f1315d3b56ca25dd3e2d6edcbf2c2952",
   "schemaVersion": "egs-tier-immutable-release-closure-v1",
   "staticFiles": [
@@ -5892,14 +5892,14 @@
       "sha256": "9983bd564db86a5be3fa93940c3d2627a3765476e89dd56bcd5a913ed28020f9"
     },
     {
-      "bytes": 9979,
+      "bytes": 20315,
       "path": "brand/apple-touch-icon.png",
-      "sha256": "99879248ecf69b4c01178c4fefd83e1bf61ddcf9cb4a45d1aad25f858cc6843a"
+      "sha256": "e89090245a0758ee20a2604fbb6c57734f85d87e917d9a25e5e7dda6b3f1d372"
     },
     {
-      "bytes": 839,
+      "bytes": 2072,
       "path": "brand/favicon-32.png",
-      "sha256": "f4beed05a4058e8083ba6a3ca47c590f375c8f8a01bac5011e28d658a1405f0f"
+      "sha256": "703ab893890170adcc2999607ccd3b145451f4c548a6874c61619039630fa3e0"
     },
     {
       "bytes": 1054993,
@@ -5914,7 +5914,7 @@
     {
       "bytes": 166,
       "path": "brand/snapshot.json",
-      "sha256": "3594b497331d8fe39862160cf8b12559246ec615cf02a5d861e531b2cbe0c163"
+      "sha256": "1c1c64f0b16ac1684e44d1262756f4172cb58914f26a958f62ffd94bf7a0989e"
     },
     {
       "bytes": 15569,
@@ -5934,7 +5934,7 @@
     {
       "bytes": 69545,
       "path": "index.html",
-      "sha256": "8de4a64f94674e2866b3ad8f64919d09583d60a374ad484e4f6b73060c60f839"
+      "sha256": "85eae8da35945a9ba6184d89fd83e6a9d959d269c6cf53d545ae3e4257ba21f3"
     },
     {
       "bytes": 230608,
