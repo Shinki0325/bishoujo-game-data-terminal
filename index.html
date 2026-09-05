@@ -725,10 +725,13 @@
     <dialog id="bangumi-public-import-dialog" class="bangumi-public-import-dialog" aria-labelledby="bangumi-public-import-title">
       <div class="dialog-heading">
         <div>
-          <h2 id="bangumi-public-import-title">从 Bangumi 导入公开收藏</h2><button type="button" class="icon-button" data-help-article="tier.bangumi" aria-label="Bangumi 导入帮助">?</button>
+          <h2 id="bangumi-public-import-title">从 Bangumi 导入公开收藏</h2>
           <p class="bangumi-import-eyebrow">读取公开游戏收藏 · 严格匹配 · 追加候选池</p>
         </div>
-        <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭 Bangumi 导入">×</button></form>
+        <div class="bangumi-import-heading-actions">
+          <button type="button" class="icon-button" data-help-article="tier.bangumi" aria-label="Bangumi 导入帮助">?</button>
+          <form method="dialog"><button class="icon-button" type="submit" aria-label="关闭 Bangumi 导入">×</button></form>
+        </div>
       </div>
       <div class="bangumi-import-body">
         <ol class="bangumi-import-steps" aria-label="导入步骤">

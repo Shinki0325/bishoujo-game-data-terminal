@@ -1,10 +1,10 @@
 {
   "schema": "galpedia-keeper-portrait-assets-v1",
-  "status": "local-integration-candidate",
-  "productionReady": false,
+  "status": "owner-approved-for-release",
+  "productionReady": true,
   "ownerApproval": {
     "date": "2026-09-05",
-    "scope": "按已确认头像/半身构图，直接裁切与缩放原 PNG 后接入；不重绘、不改原蒙版；不包含发布授权。"
+    "scope": "原 PNG 按已确认头像/半身构图裁切缩放，不重绘、不改原蒙版；透明与实装验收通过，owner 于 2026-09-05 明确授权随本批上线。"
   },
   "method": "Source PNG crop and Lanczos3 resize only; no generative images, no alpha edits, no recoloring.",
   "assets": [
@@ -29,7 +29,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "neutral",
@@ -52,7 +52,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "neutral",
@@ -75,7 +75,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "neutral",
@@ -98,7 +98,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "smile",
@@ -121,7 +121,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "smile",
@@ -144,7 +144,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "smile",
@@ -167,7 +167,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     },
     {
       "expression": "smile",
@@ -190,7 +190,7 @@
         "x": 0.5,
         "y": 0
       },
-      "productionReady": false
+      "productionReady": true
     }
   ]
 }

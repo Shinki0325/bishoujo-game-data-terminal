@@ -1,4 +1,6 @@
 /* Content-first Keeper guidance. Portrait media is opt-in only. */
+.bangumi-import-heading-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.bangumi-import-heading-actions form { margin: 0; }
 .keeper-guide-host { display: block; }
 .keeper-guide-host .keeper-guide-card { margin: 0; }
 .ranking-coachmark.keeper-guide-host { margin: 10px 12px 0; padding: 0; border: 0; background: transparent; }
