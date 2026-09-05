@@ -1150,7 +1150,7 @@ export function createFilterView({
       }
       elements.summary.textContent = appliedCount === 0
         ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
-        : `${activeFilterCount(currentState)} 项筛选 · ${currentCounts.current} 个结果`;
+        : `${activeFilterCount(currentState)} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
       renderTagActions();
       renderCompanies();
       renderAttributeGroups();

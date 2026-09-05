@@ -356,6 +356,25 @@ html.galpedia[data-theme="light"] .catalog-primary-actions #compare-mode-toggle[
   box-shadow: 10px 0 28px rgb(24 22 38 / 16%);
 }
 
+/* Help and close share one action group. Do not let the scrolling body
+   shrink/cover the heading at browser zoom. */
+html.galpedia[data-theme] .filter-drawer > .panel-heading {
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) 120px auto;
+  gap: 6px;
+}
+html.galpedia[data-theme] .filter-heading-actions { display: flex; align-items: center; gap: 4px; }
+html.galpedia[data-theme] .filter-heading-actions > .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
 .panel-heading,
 .dialog-heading,
 .candidate-toolbar {

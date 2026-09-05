@@ -188,12 +188,15 @@
           aria-hidden="true"
         >
           <div class="panel-heading">
-            <h2>筛选</h2><button type="button" class="icon-button" data-help-article="works.filters" aria-label="筛选作品帮助">?</button>
+            <h2>筛选</h2>
             <div class="filter-mode-switch" role="group" aria-label="标签筛选模式">
               <button data-ui="mode" id="mode-basic" type="button" aria-pressed="true">基础</button>
               <button data-ui="mode" id="mode-advanced" type="button" aria-pressed="false">公式</button>
             </div>
-            <button id="filter-close" class="icon-button" type="button" aria-label="关闭筛选" title="关闭筛选">×</button>
+            <div class="filter-heading-actions">
+              <button type="button" class="icon-button" data-help-article="works.filters" aria-label="筛选作品帮助" title="筛选作品帮助">?</button>
+              <button id="filter-close" class="icon-button" type="button" aria-label="关闭筛选" title="关闭筛选">×</button>
+            </div>
           </div>
 
           <div class="filter-scroll">
