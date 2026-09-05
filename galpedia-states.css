@@ -113,7 +113,7 @@ html.galpedia[data-theme] #catalog-results:has(#selection-context-bar:not([hidde
 }
 
 /* Tabs share transparent active surfaces and two bracket corners. */
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button {
   position: relative;
   color: var(--text-muted);
   background: transparent;
@@ -122,20 +122,20 @@ html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-sw
   box-shadow: none;
   transition: background-color var(--gp-state-speed) ease, color var(--gp-state-speed) ease;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:hover:not(:disabled) {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:hover:not(:disabled) {
   color: var(--text);
   background: var(--gp-state-hover);
   border-color: transparent;
   box-shadow: none;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
   color: var(--text);
   background: transparent;
   border-color: transparent;
   font-weight: 650;
   box-shadow: none;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button::after {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button::after {
   content: '';
   position: absolute;
   inset: 3px;
@@ -148,19 +148,19 @@ html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-sw
   opacity: 0;
   transition: opacity var(--gp-state-speed) ease;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], :focus-visible)::after { opacity: 1; }
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], :focus-visible)::after { opacity: 1; }
 html.galpedia[data-theme][data-home="true"] #workspace-mode > button[aria-selected="true"]:not(:focus-visible)::after { opacity: 0; }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:active:not(:disabled) {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:active:not(:disabled) {
   background: var(--gp-state-pressed);
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled {
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled {
   color: var(--gp-state-disabled);
   background: transparent;
   border-color: transparent;
   opacity: 1;
   cursor: not-allowed;
 }
-html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled::after { opacity: 0; }
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled::after { opacity: 0; }
 
 /* Card brackets are paint-only, and never intercept cover/checkbox actions. */
 html.galpedia #catalog-grid.catalog-grid > .selection-card::after,
@@ -255,7 +255,7 @@ html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
-  html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+  html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
     border-bottom: 2px solid Highlight;
   }
   html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible { outline-color: Highlight; }

@@ -41,6 +41,13 @@
   --danger-soft: #553038;
   --warning: #c39a5b;
   --line: #3f485c;
+  /* Informational role chips stay distinct from the violet interaction
+     accent. These are deliberately quiet so they do not compete with Tier
+     colours or artwork. */
+  --gp-role-main: #b9c9df;
+  --gp-role-main-bg: #2e3c53;
+  --gp-role-side: #ddb5a9;
+  --gp-role-side-bg: #49393c;
 }
 
 :root[data-theme="light"] {
@@ -67,6 +74,10 @@
   --danger-soft: #f5dddd;
   --warning: #9a7338;
   --line: #d9d6e1;
+  --gp-role-main: #4d6582;
+  --gp-role-main-bg: #edf2f8;
+  --gp-role-side: #885b4c;
+  --gp-role-side-bg: #faefeb;
 }
 
 /* Shared type roles: controls stay sans; only content headings use Songti. */
@@ -1243,5 +1254,430 @@ html.galpedia #work-details .details-rating-link:focus-visible {
   .toolbar-button-primary,
   .action-primary {
     transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   GALPEDIA detail/ranking close-out
+
+   The legacy terminal stylesheet has a few late, theme-specific cyan rules.
+   Keep this block scoped to the GALPEDIA shell so the old terminal skin and
+   the ranking's Tier labels/custom colours remain untouched. No dimensions,
+   image fitting, drag targets, or data-bearing states are changed here.
+   ------------------------------------------------------------------------- */
+
+/* Company detail: paper/indigo surfaces and a quieter metadata hierarchy. */
+html.galpedia[data-theme] .company-directory-detail {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 12px 30px rgb(23 20 35 / 18%);
+}
+
+html.galpedia[data-theme] .company-detail-heading {
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .company-detail-heading h2,
+html.galpedia[data-theme] .company-detail-works-heading h3,
+html.galpedia[data-theme] .company-ranking-heading h2,
+html.galpedia[data-theme] .company-ranking-candidate-section h3 {
+  color: var(--text);
+  font-family: var(--gp-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+html.galpedia[data-theme] .company-detail-meta,
+html.galpedia[data-theme] .company-ranking-heading p {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-detail-avatar {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .company-directory-tools select,
+html.galpedia[data-theme] .company-detail-sort-controls select,
+html.galpedia[data-theme] .company-image-filter {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .company-image-filter {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work {
+  color: var(--text);
+  border-bottom-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work-cover {
+  background: var(--surface-raised);
+}
+
+html.galpedia[data-theme] .company-directory-work-title {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .company-directory-work-meta {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work:hover,
+html.galpedia[data-theme] .company-directory-work:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 65%, var(--surface));
+}
+
+html.galpedia[data-theme="light"] .company-directory-card {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-muted);
+  box-shadow: 0 1px 3px rgb(37 32 48 / 10%);
+}
+
+html.galpedia[data-theme="light"] .company-directory-card:hover,
+html.galpedia[data-theme="light"] .company-directory-card:focus-within {
+  border-color: var(--accent);
+  background: var(--surface-muted);
+  box-shadow: 0 4px 12px rgb(37 32 48 / 14%);
+}
+
+/* Person directory/detail: make identity, metadata, and content blocks read
+   as one hierarchy while keeping the existing grid and scroll geometry. */
+html.galpedia[data-theme] .person-view,
+html.galpedia[data-theme] .person-directory-panel,
+html.galpedia[data-theme] .person-detail-dialog {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .person-directory-heading h2,
+html.galpedia[data-theme] .person-detail-heading h2,
+html.galpedia[data-theme] .person-detail-section-title,
+html.galpedia[data-theme] .person-detail-block-heading h3 {
+  color: var(--text);
+  font-family: var(--gp-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+html.galpedia[data-theme] .person-directory-panel {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: 0 5px 18px rgb(23 20 35 / 8%);
+}
+
+html.galpedia[data-theme] .person-directory-list-head {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-directory-row {
+  color: var(--text);
+  border-top-color: color-mix(in srgb, var(--border) 72%, transparent);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-directory-row:hover {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .person-directory-role,
+html.galpedia[data-theme] .person-detail-primary-role {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+html.galpedia[data-theme] .person-detail-dialog {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 18px 48px rgb(23 20 35 / 28%);
+}
+
+html.galpedia[data-theme] .person-detail-heading {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-identity {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface));
+  border-right-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-content {
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-role-chip {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-alias-chip {
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-alias-chip.is-main {
+  color: var(--gp-role-main);
+  background: var(--gp-role-main-bg);
+  border-color: color-mix(in srgb, var(--gp-role-main) 62%, var(--border));
+}
+
+html.galpedia[data-theme] .person-detail-representative {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .person-detail-stat,
+html.galpedia[data-theme] .person-representative-item,
+html.galpedia[data-theme] .person-representative-work {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-stats {
+  background: var(--border);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-company-row,
+html.galpedia[data-theme] .person-co-row,
+html.galpedia[data-theme] .person-work-row {
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-company-row:hover,
+html.galpedia[data-theme] .person-co-row:hover,
+html.galpedia[data-theme] .person-work-row:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .person-work-character {
+  color: var(--text-muted);
+}
+
+/* Role badges are informational, not interactive: use quiet blue/clay
+   tokens instead of the old saturated teal/orange pair. */
+html.galpedia[data-theme] .person-character-role.is-main {
+  color: var(--gp-role-main);
+  background: var(--gp-role-main-bg);
+}
+
+html.galpedia[data-theme] .person-character-role.is-side {
+  color: var(--gp-role-side);
+  background: var(--gp-role-side-bg);
+}
+
+html.galpedia[data-theme] .person-character-role.is-appears {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+/* Ranking shell only: neutral indigo surfaces and controls. Tier labels,
+   tier custom colours, ranking-card artwork, and all drag geometry remain
+   owned by the legacy ranking rules. */
+html.galpedia[data-theme] .ranking-view {
+  color: var(--text);
+  background: var(--bg);
+}
+
+html.galpedia[data-theme] .ranking-page-heading,
+html.galpedia[data-theme] .ranking-toolbar,
+html.galpedia[data-theme] .candidate-toolbar {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .ranking-page-heading .workspace-counts {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button,
+html.galpedia[data-theme] .ranking-subject-tabs button:first-child,
+html.galpedia[data-theme] .ranking-subject-tabs button:last-child {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 82%, var(--surface-muted));
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-page-heading .count-item output {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .icon-button,
+html.galpedia[data-theme] .ranking-toolbar .toolbar-button-neutral,
+html.galpedia[data-theme] .ranking-toolbar .action-neutral,
+html.galpedia[data-theme] .ranking-toolbar #cleanup-menu-button,
+html.galpedia[data-theme] .ranking-toolbar #display-menu-button,
+html.galpedia[data-theme] .ranking-toolbar #export-png {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .ranking-toolbar .icon-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar .toolbar-button-neutral:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar .action-neutral:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #cleanup-menu-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #display-menu-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #export-png:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .ranking-live-mode,
+html.galpedia[data-theme] .ranking-toolbar #export-png[aria-pressed="true"] {
+  color: var(--text-on-strong);
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+  box-shadow: 0 2px 6px rgb(37 30 54 / 16%);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .ranking-live-mode:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #export-png[aria-pressed="true"]:hover:not(:disabled) {
+  color: var(--text-on-strong);
+  background: var(--gp-primary-bg-hover);
+  border-color: var(--gp-primary-bg-hover);
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch,
+html.galpedia[data-theme] .ranking-view .view-switch {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button,
+html.galpedia[data-theme] .ranking-view .view-switch button {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-view .view-switch button:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 82%, var(--surface-muted));
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button[aria-selected="true"],
+html.galpedia[data-theme] .ranking-view .view-switch button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu,
+html.galpedia[data-theme] .ranking-view .tier-color-palette {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 14px 34px rgb(23 20 35 / 22%);
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu button,
+html.galpedia[data-theme] .ranking-view .toolbar-menu label {
+  color: var(--text);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-view .toolbar-menu label:hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-board,
+html.galpedia[data-theme] .ranking-candidates {
+  border-bottom-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-row,
+html.galpedia[data-theme] .tier-track,
+html.galpedia[data-theme] .ranking-candidate-grid {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .tier-add-button,
+html.galpedia[data-theme] .ranking-upload-tile {
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-add-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-upload-tile:hover,
+html.galpedia[data-theme] .ranking-upload-tile:focus-visible,
+html.galpedia[data-theme] .ranking-upload-tile.is-drop-target {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .candidate-toolbar {
+  border-top-color: var(--border);
+}
+
+html.galpedia[data-theme] .candidate-toolbar .search-field input {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+html.galpedia[data-theme] .company-ranking {
+  border-top-color: var(--border);
+}
+
+html.galpedia[data-theme] .company-ranking-tier,
+html.galpedia[data-theme] .company-ranking-track,
+html.galpedia[data-theme] .company-ranking-candidates {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .company-ranking-candidates {
+  background: var(--surface-muted);
+}
+
+@media (max-width: 899px) {
+  html.galpedia[data-theme] .person-detail-heading,
+  html.galpedia[data-theme] .ranking-page-heading,
+  html.galpedia[data-theme] .ranking-toolbar,
+  html.galpedia[data-theme] .candidate-toolbar {
+    box-shadow: none;
   }
 }
