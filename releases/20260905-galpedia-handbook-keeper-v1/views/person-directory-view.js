@@ -3,6 +3,7 @@ const PAGE_SIZE = 48;
 import { filterPersonsBySearch } from '../lib/person-search.js';
 import { personNameVariantCount, personNameVariantLabels } from '../lib/person-name-variants.js';
 import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
+import { syncLocalFeedback } from '../lib/ui-page-heading.js';
 import {
   activityAxisLabelPosition,
   activityAxisLabelYears,
@@ -70,6 +71,10 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   const close = documentRef.querySelector('#person-detail-close');
   const roleTabs = [...root.querySelectorAll('[data-person-role]')];
   let model = [];
+  let populationCount = null;
+  let detailRequest = 0;
+  let detailInFlight = null;
+  let detailDisplayedId = null;
   let filtered = [];
   let selectedId = null;
   let pageIndex = 0;
@@ -89,6 +94,132 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     }
   }
   function showDialog() { if (typeof dialog?.showModal === 'function' && !dialog.open) dialog.showModal(); else if (dialog) dialog.open = true; }
+
+  function markCurrentRows() {
+    for (const row of list.querySelectorAll('[data-person-id]')) {
+      const current = row.dataset.personId === selectedId;
+      row.classList.toggle('is-current', current);
+      if (current) row.setAttribute('aria-current', 'true');
+      else row.removeAttribute('aria-current');
+    }
+  }
+
+  function captureDetailViewState() {
+    if (!detailBody) return null;
+    const activeElement = documentRef.activeElement;
+    const focus = detailBody.contains(activeElement)
+      ? activeElement?.id
+        ? { type: 'id', value: activeElement.id }
+        : activeElement?.dataset?.detailFocusToken
+          ? { type: 'token', value: activeElement.dataset.detailFocusToken }
+          : null
+      : null;
+    const activePage = detailBody.querySelector('[data-person-detail-page][aria-selected="true"]')?.dataset.personDetailPage ?? null;
+    const timelineSort = detailBody.querySelector('.person-detail-sort');
+    const timelineDirection = detailBody.querySelector('.person-detail-sort-direction');
+    return {
+      activePage,
+      focus,
+      timelineSortKey: timelineSort?.value ?? null,
+      timelineDirection: timelineDirection?.getAttribute('aria-pressed') === 'true' ? 'asc' : 'desc'
+    };
+  }
+
+  function restoreDetailViewState(state) {
+    if (!state || !detailBody) return;
+    const timelineSort = detailBody.querySelector('.person-detail-sort');
+    if (timelineSort && state.timelineSortKey && [...timelineSort.options].some(option => option.value === state.timelineSortKey)) {
+      timelineSort.value = state.timelineSortKey;
+      timelineSort.dispatchEvent(new Event('change'));
+    }
+    const timelineDirection = detailBody.querySelector('.person-detail-sort-direction');
+    if (timelineDirection && state.timelineDirection) {
+      const isAscending = timelineDirection.getAttribute('aria-pressed') === 'true';
+      if ((state.timelineDirection === 'asc') !== isAscending) timelineDirection.click();
+    }
+    if (state.activePage) {
+      [...detailBody.querySelectorAll('[data-person-detail-page]')]
+        .find(tab => tab.dataset.personDetailPage === state.activePage)
+        ?.click();
+    }
+    if (state.focus) {
+      const target = state.focus.type === 'id'
+        ? documentRef.getElementById(state.focus.value)
+        : [...detailBody.querySelectorAll('[data-detail-focus-token]')]
+          .find(element => element.dataset.detailFocusToken === state.focus.value);
+      target?.focus?.({ preventScroll: true });
+    }
+  }
+
+  function invalidateDetailRequest() {
+    detailRequest += 1;
+    detailInFlight = null;
+    detailDisplayedId = null;
+    dialog?.setAttribute('aria-busy', 'false');
+  }
+
+  function loadDetail(person) {
+    const personId = person?.entityId;
+    if (!personId) return Promise.resolve();
+    if (dialog?.open && detailInFlight?.personId === personId && detailInFlight.request === detailRequest) {
+      markCurrentRows();
+      return detailInFlight.promise;
+    }
+    if (dialog?.open && detailDisplayedId === personId && detailInFlight === null) {
+      markCurrentRows();
+      return Promise.resolve();
+    }
+    const request = ++detailRequest;
+    detailDisplayedId = null;
+    const status = documentRef.querySelector('#person-detail-load-status');
+    renderDetail(person);
+    showDialog();
+    markCurrentRows();
+    dialog?.setAttribute('aria-busy', 'true');
+    if (status) { status.hidden = false; syncLocalFeedback(status, '正在补充人物资料…'); }
+    const flight = { personId, request, promise: null };
+    detailInFlight = flight;
+    const promise = (async () => {
+      try {
+        const detail = await onLoadPerson?.(personId, person) ?? person;
+        if (request !== detailRequest || selectedId !== personId || !dialog?.open) return;
+        // Preserve the tab, timeline sort, and focus choice made while detail loads.
+        const viewState = captureDetailViewState();
+        renderDetail(detail);
+        restoreDetailViewState(viewState);
+        detailDisplayedId = personId;
+        if (status) status.hidden = true;
+      } catch {
+        if (request === detailRequest) {
+          detailDisplayedId = personId;
+          if (status) syncLocalFeedback(status, '完整资料暂时未能加载，先显示已收录摘要。');
+        }
+      } finally {
+        if (request === detailRequest) dialog?.setAttribute('aria-busy', 'false');
+        if (detailInFlight?.request === request) detailInFlight = null;
+      }
+    })();
+    flight.promise = promise;
+    return promise;
+  }
+  function closeDetailFromUser() {
+    selectedId = null;
+    invalidateDetailRequest();
+    if (dialog?.open) dialog.close();
+    // Close before notifying main.js so its nested-person restore starts from
+    // the same closed state for both the button and intercepted Escape paths.
+    onSelect?.(null);
+  }
+  dialog?.addEventListener('cancel', event => {
+    event.preventDefault();
+    closeDetailFromUser();
+  });
+  dialog?.addEventListener('close', () => {
+    // A native close event can be queued after a new detail has reopened the
+    // same dialog. Do not let that stale event invalidate the new request.
+    if (dialog.open) return;
+    invalidateDetailRequest();
+  });
 
   function renderDetail(person) {
     if (!person || !detailBody) return;
@@ -129,6 +260,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         const item = node(documentRef, 'button', 'person-representative-work');
         item.type = 'button';
         item.dataset.workId = work.workId ?? '';
+        if (work.workId) item.dataset.detailFocusToken = `representative-work:${work.workId}`;
         item.disabled = !work.workId;
         item.setAttribute('aria-label', `打开作品 ${work.title || work.workId || '详情'}`);
         item.title = work.title || '';
@@ -170,9 +302,9 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     pageTabs.id = 'person-detail-page-tabs';
     pageTabs.setAttribute('aria-label', '人物详情分页');
     const overviewButton = node(documentRef, 'button', 'person-detail-page-tab is-active', '共演关系');
-    overviewButton.type = 'button'; overviewButton.id = 'person-detail-tab-overview'; overviewButton.dataset.personDetailPage = 'overview'; overviewButton.setAttribute('role', 'tab'); overviewButton.setAttribute('aria-selected', 'true'); overviewButton.setAttribute('aria-pressed', 'true'); overviewButton.setAttribute('aria-controls', 'person-detail-panel-overview'); overviewButton.tabIndex = 0;
+    overviewButton.type = 'button'; overviewButton.id = 'person-detail-tab-overview'; overviewButton.dataset.personDetailPage = 'overview'; overviewButton.dataset.detailFocusToken = 'tab:overview'; overviewButton.setAttribute('role', 'tab'); overviewButton.setAttribute('aria-selected', 'true'); overviewButton.setAttribute('aria-pressed', 'true'); overviewButton.setAttribute('aria-controls', 'person-detail-panel-overview'); overviewButton.tabIndex = 0;
     const timelineButton = node(documentRef, 'button', 'person-detail-page-tab', '作品年表');
-    timelineButton.type = 'button'; timelineButton.id = 'person-detail-tab-timeline'; timelineButton.dataset.personDetailPage = 'timeline'; timelineButton.setAttribute('role', 'tab'); timelineButton.setAttribute('aria-selected', 'false'); timelineButton.setAttribute('aria-pressed', 'false'); timelineButton.setAttribute('aria-controls', 'person-detail-panel-timeline'); timelineButton.tabIndex = -1;
+    timelineButton.type = 'button'; timelineButton.id = 'person-detail-tab-timeline'; timelineButton.dataset.personDetailPage = 'timeline'; timelineButton.dataset.detailFocusToken = 'tab:timeline'; timelineButton.setAttribute('role', 'tab'); timelineButton.setAttribute('aria-selected', 'false'); timelineButton.setAttribute('aria-pressed', 'false'); timelineButton.setAttribute('aria-controls', 'person-detail-panel-timeline'); timelineButton.tabIndex = -1;
     pageTabs.append(overviewButton, timelineButton); content.append(pageTabs);
 
     const overviewPage = node(documentRef, 'div', 'person-detail-page person-detail-overview-page');
@@ -218,7 +350,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const companyList = node(documentRef, 'div', 'person-company-list');
     const coCompanies = typeof person.getCoCompanies === 'function' ? person.getCoCompanies() : (person.coCompanies ?? []);
     for (const company of coCompanies.slice(0, 5)) {
-      const row = node(documentRef, 'button', 'person-company-row'); row.type = 'button'; row.dataset.companyId = company.companyId;
+      const row = node(documentRef, 'button', 'person-company-row'); row.type = 'button'; row.dataset.companyId = company.companyId; row.dataset.detailFocusToken = `company:${company.companyId}`;
       row.append(node(documentRef, 'span', 'person-company-name', company.name), node(documentRef, 'strong', '', company.count), node(documentRef, 'span', 'person-detail-muted', '部作品'));
       row.addEventListener('click', () => onOpenCompany?.(company.companyId)); companyList.append(row);
     }
@@ -231,7 +363,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const coList = node(documentRef, 'div', 'person-co-list');
     const coActors = typeof person.getCoActors === 'function' ? person.getCoActors() : (person.coActors ?? []);
     for (const actor of coActors.slice(0, 5)) {
-      const row = node(documentRef, 'button', 'person-co-row'); row.type = 'button'; row.dataset.personId = actor.personId;
+      const row = node(documentRef, 'button', 'person-co-row'); row.type = 'button'; row.dataset.personId = actor.personId; row.dataset.detailFocusToken = `person:${actor.personId}`;
       row.append(node(documentRef, 'span', 'person-co-name', actor.name), node(documentRef, 'strong', '', actor.count), node(documentRef, 'span', 'person-detail-muted', '共同作品'));
       row.addEventListener('click', () => onOpenPerson?.(actor.personId)); coList.append(row);
     }
@@ -249,6 +381,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     worksHeading.append(node(documentRef, 'h3', '', '作品年表'));
     const timelineTools = node(documentRef, 'div', 'person-detail-sort-tools gp-sort-control');
     const timelineSort = node(documentRef, 'select', 'person-detail-sort');
+    timelineSort.dataset.detailFocusToken = 'timeline-sort';
     timelineSort.setAttribute('aria-label', '作品年表排序');
     for (const [value, label] of [
       ['releaseDate', '发售日期'],
@@ -262,6 +395,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const timelineDirection = node(documentRef, 'button', 'person-detail-sort-direction');
     timelineDirection.type = 'button';
     timelineDirection.dataset.ui = 'utility';
+    timelineDirection.dataset.detailFocusToken = 'timeline-direction';
     const timelineSortState = { key: 'releaseDate', direction: 'desc' };
     const updateTimelineControls = () => {
       timelineSort.value = timelineSortState.key;
@@ -298,7 +432,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       const end = Math.min(timelineCredits.length, start + TIMELINE_BATCH_SIZE);
       for (let index = start; index < end; index += 1) {
         const credit = timelineCredits[index];
-      const row = node(documentRef, 'button', 'person-work-row'); row.type = 'button'; row.dataset.workId = credit.workId ?? ''; row.disabled = !credit.workId;
+      const row = node(documentRef, 'button', 'person-work-row'); row.type = 'button'; row.dataset.workId = credit.workId ?? ''; row.dataset.detailFocusToken = credit.workId ? `timeline-work:${credit.workId}` : `timeline-work:missing:${index}`; row.disabled = !credit.workId;
       row.setAttribute('aria-setsize', String(timelineCredits.length));
       row.setAttribute('aria-posinset', String(index + 1));
       row.setAttribute('aria-label', `打开作品 ${credit.displayTitle ?? credit.title ?? '未命名作品'}`);
@@ -390,7 +524,10 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     if (representativeHeading) representativeHeading.textContent = roleFilter === 'voice-actor'
       ? '代表角色'
       : roleFilter === 'all' ? '代表角色/作品' : '代表作品';
-    count.textContent = new Intl.NumberFormat('zh-CN').format(filtered.length); page.textContent = String(pageIndex + 1); total.textContent = String(totalPages);
+    syncLocalFeedback(count, new Intl.NumberFormat('zh-CN').format(filtered.length));
+    const resultSummary = root.querySelector('#person-result-summary');
+    if (resultSummary) resultSummary.hidden = filtered.length === populationCount;
+    page.textContent = String(pageIndex + 1); total.textContent = String(totalPages);
     previous.disabled = pageIndex === 0; next.disabled = pageIndex >= totalPages - 1; list.replaceChildren();
     const visible = filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE); empty.hidden = visible.length !== 0;
     for (const person of visible) {
@@ -443,22 +580,19 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         node(documentRef, 'small', 'person-directory-span-last', person.lastYear ? `最后收录于 ${person.lastYear}` : '年份未知')
       );
       row.append(faces, cell, metrics, node(documentRef, 'span', 'person-directory-role', roleLabel(primaryRole)), activity, span);
-      row.addEventListener('click', async () => {
+      row.addEventListener('click', () => {
         selectedId = person.entityId;
         onSelect?.(person.entityId);
-        showDialog();
-        let detail = person;
-        try { detail = await onLoadPerson?.(person.entityId, person) ?? person; } catch { /* keep the summary visible */ }
-        if (selectedId !== person.entityId) return;
-        renderDetail(detail);
+        void loadDetail(person);
       }); list.append(row);
     }
+    markCurrentRows();
   }
 
   search?.addEventListener('input', () => { pageIndex = 0; onSearch?.(search.value); });
   previous?.addEventListener('click', () => { pageIndex = Math.max(0, pageIndex - 1); render(); });
   next?.addEventListener('click', () => { pageIndex += 1; render(); });
-  close?.addEventListener('click', () => onSelect?.(null));
+  close?.addEventListener('click', closeDetailFromUser);
   roleTabs.forEach((tab, index) => {
     tab.addEventListener('click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); item.setAttribute('aria-pressed', String(active)); item.tabIndex = active ? 0 : -1; }); pageIndex = 0; render(); onRoleChange?.(roleFilter); });
     tab.addEventListener('keydown', event => {
@@ -470,18 +604,16 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   });
 
   return Object.freeze({
-    render({ persons = [], selectedPersonId = null, activityAxis: nextActivityAxis = null } = {}) {
+    render({ persons = [], totalPersonCount = null, selectedPersonId = null, activityAxis: nextActivityAxis = null } = {}) {
       model = Array.isArray(persons) ? persons : [];
+      populationCount = totalPersonCount;
       suppliedActivityBounds = normalizePersonActivityBounds(nextActivityAxis);
       selectedId = selectedPersonId;
       render();
       if (selectedId) {
         const person = model.find(item => item.entityId === selectedId);
         if (person) {
-          showDialog();
-          Promise.resolve(onLoadPerson?.(person.entityId, person)).catch(() => null).then(detail => {
-            if (selectedId === person.entityId) renderDetail(detail ?? person);
-          });
+          void loadDetail(person);
         }
       }
     },
@@ -490,10 +622,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       selectedId = personId;
       const person = model.find(item => item.entityId === personId);
       if (!person) return;
-      showDialog();
-      Promise.resolve(onLoadPerson?.(person.entityId, person)).catch(() => null).then(detail => {
-        if (selectedId === person.entityId) renderDetail(detail ?? person);
-      });
+      void loadDetail(person);
     },
     setRoleFilter(role = 'all') { roleFilter = roleTabs.some(tab => tab.dataset.personRole === role) ? role : 'all'; roleTabs.forEach(tab => { const active = tab.dataset.personRole === roleFilter; tab.classList.toggle('is-active', active); tab.setAttribute('aria-selected', String(active)); tab.setAttribute('aria-pressed', String(active)); tab.tabIndex = active ? 0 : -1; }); pageIndex = 0; render(); },
     filter(query = '') {

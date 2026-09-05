@@ -7,6 +7,8 @@ const home = document.querySelector('#galpedia-home');
 const status = document.querySelector('#galpedia-load-status');
 const dialog = document.querySelector('#galpedia-search-dialog');
 const themeButton = document.querySelector('#theme-toggle');
+document.querySelector('#global-search-open').replaceChildren(createActionIcon(document, 'search'));
+document.querySelector('#site-info-button svg').replaceWith(createActionIcon(document, 'book'));
 const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
@@ -36,7 +38,7 @@ function syncHome() {
 }
 function paintTheme() {
   const light = root.dataset.theme !== 'dark';
-  themeButton.textContent = light ? '☾' : '☀';
+  themeButton.replaceChildren(createActionIcon(document, light ? 'moon' : 'sun'));
   themeButton.setAttribute('aria-label', light ? '切换到暗色界面' : '切换到亮色界面');
   themeButton.title = themeButton.getAttribute('aria-label');
   themeButton.setAttribute('aria-pressed', String(light));

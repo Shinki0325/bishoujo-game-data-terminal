@@ -1,3 +1,5 @@
+import { CURRENT_GALPEDIA_RELEASE } from './galpedia-release-notes.js';
+
 /**
  * GALPEDIA 庭守手册唯一正文来源。
  *
@@ -390,10 +392,26 @@ const DEFINITIONS = [
     keywords: ['关于', 'GALPEDIA', '少女箱庭', '资料库', '个人工具', '品牌'],
     steps: [],
     notes: [],
-    related: ['about.shiori', 'home.overview', 'data.sources'],
+    related: ['about.changelog', 'about.shiori', 'home.overview', 'data.sources'],
     contexts: [CONTEXTS.ABOUT],
     sections: [{ title: '庭守手册', paragraphs: ['手册按你所在页面提供简短操作说明；从首页、作品、会社、人物或排榜打开帮助，都可以直接查看当前任务的做法。'] }],
     sourceRefs: ['index.html#galpedia-home']
+  }),
+  makeArticle({
+    id: 'about.changelog', category: CATEGORIES.ABOUT, title: '版本与更新日志',
+    subtitle: '按日期查看公开更新',
+    summary: `${CURRENT_GALPEDIA_RELEASE.version} · ${CURRENT_GALPEDIA_RELEASE.label}，发布日期 ${CURRENT_GALPEDIA_RELEASE.date}。查看每个公开版本的更新摘要。`,
+    keywords: [
+      '版本', '版本号', '更新日志', '更新记录', '发布日期',
+      CURRENT_GALPEDIA_RELEASE.version, CURRENT_GALPEDIA_RELEASE.label, CURRENT_GALPEDIA_RELEASE.date,
+      ...CURRENT_GALPEDIA_RELEASE.summary
+    ],
+    steps: [],
+    notes: [],
+    related: ['about.galpedia', 'about.shiori', 'data.snapshots'],
+    contexts: [CONTEXTS.ABOUT],
+    sections: [],
+    sourceRefs: [CURRENT_GALPEDIA_RELEASE.releaseId]
   }),
   makeArticle({
     id: 'about.shiori', category: CATEGORIES.ABOUT, title: '关于綴木 栞',

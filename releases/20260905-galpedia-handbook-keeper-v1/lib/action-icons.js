@@ -1,4 +1,11 @@
 const RAW_ICONS = Object.freeze({
+  search: [
+    ['circle', { cx: '10.5', cy: '10.5', r: '7.5' }],
+    ['path', { d: 'm16 16 5 5' }]
+  ],
+  book: [
+    ['path', { d: 'M12 5v15M12 5C8 2 3 3 3 3v15s5-1 9 2c4-3 9-2 9-2V3s-5-1-9 2Z' }]
+  ],
   sticker: [
     ['path', { d: 'M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z' }],
     ['path', { d: 'M15 3v5a1 1 0 0 0 1 1h5' }],
@@ -134,6 +141,7 @@ const ICONS = Object.freeze(Object.fromEntries(
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 export const ACTION_ICON_NAMES = Object.freeze([
+  'search', 'book',
   'sticker', 'image-up', 'ellipsis', 'rotate-ccw', 'undo-2', 'redo-2',
   'layers-2', 'arrow-down', 'arrow-up', 'trash-2', 'save', 'x',
   'filter', 'sun', 'moon', 'arrow-down-a-z', 'arrow-up-a-z',
