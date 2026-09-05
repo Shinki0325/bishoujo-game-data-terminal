@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20260905-galpedia-keeper-portrait-candidate">
+<html lang="zh-CN" data-app-revision="20260905-galpedia-keeper-bangumi-candidate">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -736,23 +736,25 @@
           <li>确认匹配结果</li>
           <li>追加候选池</li>
         </ol>
+        <div id="keeper-bangumi-input-guide" class="keeper-guide-host" hidden></div>
         <form id="bangumi-public-import-form" class="bangumi-import-form">
           <label for="bangumi-public-user-input">Bangumi 用户名、UID 或个人主页链接</label>
           <div class="bangumi-import-input-row">
             <input id="bangumi-public-user-input" type="text" autocomplete="off" spellcheck="false" placeholder="例如 shinkisakura" maxlength="128" required>
             <button data-ui="primary" id="bangumi-public-fetch" class="action-primary" type="submit">读取公开收藏</button>
           </div>
-          <p class="bangumi-import-note">只读取 Bangumi 公开的游戏收藏；不会请求登录权限，也不会改动已有排榜。</p>
+          <p id="bangumi-input-note" class="bangumi-import-note">只读取 Bangumi 公开的游戏收藏；不会请求登录权限，也不会改动已有排榜。</p>
         </form>
         <p id="bangumi-public-import-status" class="bangumi-import-status" role="status" aria-live="polite" hidden></p>
         <section id="bangumi-public-import-results" class="bangumi-import-results" hidden aria-labelledby="bangumi-public-import-results-title">
           <div class="bangumi-import-result-heading">
             <div>
               <h3 id="bangumi-public-import-results-title">确认导入结果</h3>
-              <p>默认仅勾选主作品；同一展示家族的其他版本可按需展开选择。</p>
+              <p id="bangumi-result-note">默认仅勾选主作品；其他版本可按需展开选择。未匹配条目不会自动导入，追加不会改变已有候选和档位。</p>
             </div>
             <output id="bangumi-public-import-capacity" class="bangumi-import-capacity">候选池剩余 0</output>
           </div>
+          <div id="keeper-bangumi-result-guide" class="keeper-guide-host" hidden></div>
           <div class="bangumi-import-metrics" aria-label="匹配统计">
             <div><strong id="bangumi-public-total">0</strong><span>公开游戏</span></div>
             <div><strong id="bangumi-public-matched-subjects">0</strong><span>严格匹配条目</span></div>

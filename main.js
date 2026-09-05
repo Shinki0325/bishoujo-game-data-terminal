@@ -186,6 +186,10 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   shareImportCancel: requiredElement('share-import-cancel'),
   bangumiImportOpen: requiredElement('bangumi-import-open'),
   bangumiPublicImportDialog: requiredElement('bangumi-public-import-dialog'),
+  keeperBangumiInput: requiredElement('keeper-bangumi-input-guide'),
+  keeperBangumiResult: requiredElement('keeper-bangumi-result-guide'),
+  bangumiInputNote: requiredElement('bangumi-input-note'),
+  bangumiResultNote: requiredElement('bangumi-result-note'),
   bangumiPublicImportForm: requiredElement('bangumi-public-import-form'),
   bangumiPublicUserInput: requiredElement('bangumi-public-user-input'),
   bangumiPublicFetch: requiredElement('bangumi-public-fetch'),
@@ -1516,6 +1520,8 @@ async function initialize() {
   let keeperReady = false;
   let keeperRestored = false;
   let keeperInteractionBusy = false;
+  let bangumiKeeperPhase = 'input';
+  let bangumiOpenedFromEmpty = false;
   keeperPreferencesStore.subscribe(() => renderKeeperGuidance());
   const endKeeperInteraction = () => {
     if (!keeperInteractionBusy) return;
@@ -1865,6 +1871,7 @@ async function initialize() {
 
   function renderKeeperGuidance() {
     if (keeperInteractionBusy) return;
+    renderBangumiKeeperGuidance();
     elements.workCompareBar.hidden = compareWorkIds.length === 0 && !compareMode;
     const base = {
       ready: keeperReady,
@@ -1947,6 +1954,9 @@ async function initialize() {
         helpArticleId: firstDrag ? '' : 'tier.overview',
         helpLabel: '查看排榜说明',
         onAction: firstDrag ? undefined : returnToWorkSelection,
+        secondaryActionLabel: firstDrag ? '' : '从 Bangumi 导入',
+        onSecondaryAction: firstDrag ? undefined : () => openBangumiPublicImportDialog({ fromEmpty: true }),
+        secondaryActionDisabled: importBusy || confirmedBangumiImportBindings === null,
         dismissLabel: enhanced ? (firstDrag ? '×' : '隐藏提示') : '',
         onDismiss: enhanced ? () => {
           keeperPreferencesStore.dismiss(rankingGuide.id, rankingGuide.contentVersion);
@@ -4255,6 +4265,47 @@ async function initialize() {
     elements.bangumiPublicImportStatus.hidden = message.length === 0;
     elements.bangumiPublicImportStatus.textContent = message;
     elements.bangumiPublicImportStatus.classList.toggle('is-error', error);
+    if (error) bangumiKeeperPhase = 'error';
+    renderBangumiKeeperGuidance();
+  }
+
+  function renderBangumiKeeperGuidance() {
+    if (!keeperReady) return;
+    const activeStep = elements.bangumiPublicImportResults.hidden ? 0 : 1;
+    elements.bangumiPublicImportDialog.querySelectorAll('.bangumi-import-steps li').forEach((step, index) => {
+      step.classList.toggle('is-active', index === activeStep);
+      if (index === activeStep) step.setAttribute('aria-current', 'step');
+      else step.removeAttribute('aria-current');
+    });
+    const otherDialog = [...document.querySelectorAll('dialog[open]')].some(dialog => dialog !== elements.bangumiPublicImportDialog);
+    for (const phase of ['input', 'result']) {
+      const host = phase === 'input' ? elements.keeperBangumiInput : elements.keeperBangumiResult;
+      const note = phase === 'input' ? elements.bangumiInputNote : elements.bangumiResultNote;
+      const guide = resolveKeeperGuide({
+        id: `bangumi.${phase}`, ready: keeperReady, restored: keeperRestored,
+        featureEnabled: RUNTIME_FEATURES.keeperGuide?.enabled !== false,
+        p1Enabled: RUNTIME_FEATURES.keeperGuide?.p1 === true,
+        importDialogOpen: elements.bangumiPublicImportDialog.open,
+        importPhase: bangumiKeeperPhase,
+        busy: importBusy || pngExportInProgress,
+        live: document.body.classList.contains('is-ranking-immersive'),
+        topOverlay: otherDialog
+      }, keeperPreferencesStore.get());
+      host.replaceChildren(); host.hidden = true; note.hidden = false;
+      if (!guide?.showEnhancement) continue;
+      host.append(createKeeperGuideCard({
+        guideId: guide.id, title: guide.title, body: guide.summary,
+        portrait: resolveKeeperPortrait(guide, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true }),
+        dismissLabel: '隐藏提示',
+        onDismiss: () => {
+          keeperPreferencesStore.dismiss(guide.id, guide.contentVersion);
+          const target = phase === 'input' || elements.bangumiPublicImportAppend.disabled
+            ? elements.bangumiPublicUserInput : elements.bangumiPublicImportAppend;
+          target.focus({ preventScroll: true });
+        }
+      }));
+      host.hidden = false; note.hidden = true;
+    }
   }
 
   function selectedBangumiImportWorkIds() {
@@ -4281,6 +4332,7 @@ async function initialize() {
   }
 
   function resetBangumiPublicImportDialog({ keepInput = true } = {}) {
+    bangumiKeeperPhase = 'input';
     pendingBangumiPublicImport = null;
     elements.bangumiPublicImportResults.hidden = true;
     elements.bangumiPublicImportList.replaceChildren();
@@ -4405,6 +4457,7 @@ async function initialize() {
     elements.bangumiPublicImportAppend.disabled = true;
     elements.bangumiPublicFetch.disabled = true;
     elements.bangumiPublicUserInput.disabled = true;
+    bangumiKeeperPhase = 'loading';
     setBangumiPublicImportStatus('正在读取 Bangumi 公开游戏收藏…');
     try {
       const result = await fetchBangumiPublicGameCollections({
@@ -4421,8 +4474,10 @@ async function initialize() {
       });
       pendingBangumiPublicImport = plan;
       renderBangumiPublicImportPlan(plan, result.reportedTotal);
+      bangumiKeeperPhase = 'result';
+      keeperPreferencesStore.complete('bangumi.input');
       setBangumiPublicImportStatus(
-        `已读取 ${result.reportedTotal} 条公开游戏收藏；其中 ${plan.matchedSubjectCount} 条可按现有 confirmed 映射导入。`
+        `已读取 ${result.reportedTotal} 条公开游戏收藏；其中 ${plan.matchedSubjectCount} 条已确认与本站作品对应。`
       );
     } catch (error) {
       if (request !== bangumiPublicImportRequest || error?.name === 'AbortError') return;
@@ -4439,8 +4494,9 @@ async function initialize() {
     }
   }
 
-  function openBangumiPublicImportDialog() {
+  function openBangumiPublicImportDialog({ fromEmpty = false } = {}) {
     if (importBusy) return false;
+    bangumiOpenedFromEmpty = fromEmpty;
     closeToolbarMenus();
     if (elements.mobileRankingMenu.open) closeDialog(elements.mobileRankingMenu);
     resetBangumiPublicImportDialog();
@@ -4855,6 +4911,10 @@ async function initialize() {
     bangumiPublicImportAbort?.abort();
     bangumiPublicImportAbort = null;
     resetBangumiPublicImportDialog();
+    if (bangumiOpenedFromEmpty) {
+      bangumiOpenedFromEmpty = false;
+      window.setTimeout(() => focusKeeperFallback(document.querySelector('[data-keeper-secondary-action="tier.start"]')), 0);
+    }
   });
   elements.bangumiPublicImportAppend.addEventListener('click', () => {
     if (pendingBangumiPublicImport === null) return;
@@ -4872,6 +4932,7 @@ async function initialize() {
       }
       closeBangumiPublicImportDialog();
       announce(`已将 ${workIds.length} 部作品追加到候选池。`, 'success');
+      keeperPreferencesStore.complete('bangumi.result');
     } catch (error) {
       setBangumiPublicImportStatus(
         error instanceof Error ? error.message : '追加候选池失败，当前排榜未修改。',
