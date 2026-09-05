@@ -65,8 +65,6 @@ export function createMobileSelectionView({
     share: requiredOwnedElement(root, 'mobile-share-selection'),
     clear: requiredOwnedElement(root, 'mobile-clear-selection'),
     help: requiredOwnedElement(root, 'mobile-help-button'),
-    helpDialog: requiredOwnedElement(root, 'mobile-help-dialog'),
-    helpDismiss: requiredOwnedElement(root, 'mobile-help-dismiss'),
     titleSearch: requiredOwnedElement(root, 'mobile-title-search'),
     filter: requiredOwnedElement(root, 'mobile-filter-toggle')
   };
@@ -156,9 +154,7 @@ export function createMobileSelectionView({
   const onClearClick = () => onClearSelection([...lastModel.selectedWorkIds]);
   const onHelpClick = () => {
     onHelpOpen();
-    showDialog(elements.helpDialog);
   };
-  const onHelpDismissClick = () => closeDialog(elements.helpDialog);
   const onTitleInput = () => onTitleQuery(elements.titleSearch.value);
   const onFilterClick = () => onFilterOpen();
 
@@ -167,7 +163,6 @@ export function createMobileSelectionView({
   elements.share.addEventListener('click', onShareClick);
   elements.clear.addEventListener('click', onClearClick);
   elements.help.addEventListener('click', onHelpClick);
-  elements.helpDismiss.addEventListener('click', onHelpDismissClick);
   elements.titleSearch.addEventListener('input', onTitleInput);
   elements.filter.addEventListener('click', onFilterClick);
 
@@ -178,7 +173,6 @@ export function createMobileSelectionView({
     elements.share.removeEventListener?.('click', onShareClick);
     elements.clear.removeEventListener?.('click', onClearClick);
     elements.help.removeEventListener?.('click', onHelpClick);
-    elements.helpDismiss.removeEventListener?.('click', onHelpDismissClick);
     elements.titleSearch.removeEventListener?.('input', onTitleInput);
     elements.filter.removeEventListener?.('click', onFilterClick);
   }

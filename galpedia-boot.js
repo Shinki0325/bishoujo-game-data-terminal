@@ -1,24 +1,17 @@
 // Small home shell: the data workspace is loaded only for a route or a search.
 import { createActionIcon } from './lib/action-icons.js';
+import { createCommandSearch } from './lib/galpedia-command-search.js';
 
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
 const status = document.querySelector('#galpedia-load-status');
 const dialog = document.querySelector('#galpedia-search-dialog');
-const searchInput = document.querySelector('#global-search-input');
-const results = document.querySelector('#global-search-results');
-const searchStatus = document.querySelector('#global-search-status');
 const themeButton = document.querySelector('#theme-toggle');
 const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
-let requestId = 0;
-let debounce;
-let composing = false;
-let returnFocus = null;
 let lastWorkspaceRoute = '#works';
 const nav = document.querySelector('#workspace-mode');
-nav.append(document.querySelector('#mode-company'), document.querySelector('#mode-person'), document.querySelector('#mode-ranking'));
 const routes = { 'mode-selection': '#works', 'mode-company': '#companies', 'mode-person': '#persons', 'mode-ranking': '#ranking' };
 // Paint the existing navigation icons before the data runtime is needed.
 for (const [id, iconName] of [['mode-selection', 'library'], ['mode-company', 'building'], ['mode-person', 'person'], ['mode-ranking', 'ranking']]) {
@@ -107,7 +100,7 @@ nav.addEventListener('keydown', event => {
   tabs[next].click();
 }, true);
 document.addEventListener('click', event => {
-  const link = event.target.closest('.galpedia-logo, .home-portals a, .home-actions a, #global-search-results a');
+  const link = event.target.closest('.galpedia-logo, .home-portals a, .home-actions a');
   if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   const href = link.getAttribute('href');
@@ -119,63 +112,45 @@ window.addEventListener('hashchange', () => {
 });
 window.addEventListener('popstate', syncHome);
 
-function openSearch(query = '') {
-  returnFocus = document.activeElement;
-  if (!dialog.open) dialog.showModal();
-  searchInput.value = query;
-  searchInput.focus();
-  void runSearch();
-}
-dialog.addEventListener('close', () => { requestId += 1; clearTimeout(debounce); returnFocus?.focus?.(); });
-document.querySelector('#global-search-open').addEventListener('click', () => openSearch());
-document.querySelector('#home-search-form').addEventListener('submit', event => {
-  event.preventDefault();
-  openSearch(document.querySelector('#home-search-input').value);
-});
-document.querySelector('#global-search-form').addEventListener('submit', event => { event.preventDefault(); clearTimeout(debounce); void runSearch(); });
-searchInput.addEventListener('compositionstart', () => { composing = true; clearTimeout(debounce); requestId += 1; });
-searchInput.addEventListener('compositionend', () => { composing = false; clearTimeout(debounce); debounce = setTimeout(runSearch, 250); });
-searchInput.addEventListener('input', () => { requestId += 1; clearTimeout(debounce); if (!composing) debounce = setTimeout(runSearch, 250); });
-async function runSearch() {
-  const query = searchInput.value.trim();
-  const id = ++requestId;
-  results.replaceChildren();
-  if (!query) { searchStatus.textContent = '输入名称、别名或拼音，探索作品、会社与人物。'; return; }
-  searchStatus.textContent = '正在检索作品、会社与人物…';
-  try {
-    const api = await ensureRuntime();
-    const groups = await api.search(query);
-    if (id !== requestId || !dialog.open) return;
-    let count = 0;
-    for (const [key, label, base, entity] of [['works','作品','#works','work'], ['companies','会社','#companies','company'], ['persons','人物','#persons','person']]) {
-      const section = document.createElement('section');
-      const title = document.createElement('h3'); title.textContent = label; section.append(title);
-      for (const item of groups[key] ?? []) {
-        count += 1;
-        const link = document.createElement('a');
-        link.href = key === 'works' ? `#work/${encodeURIComponent(item.id)}` : `${base}/${entity}/${encodeURIComponent(item.id)}`;
-        link.textContent = item.name;
-        const meta = document.createElement('small'); meta.textContent = item.subtitle || label; link.append(meta); section.append(link);
-      }
-      if (!(groups[key]?.length)) { const empty = document.createElement('p'); empty.textContent = '暂无匹配'; section.append(empty); }
-      const all = document.createElement('a'); all.href = `${base}?query=${encodeURIComponent(query)}${key === 'companies' ? '&hasImage=0' : ''}`; all.className = 'search-all'; all.textContent = `查看全部${label} →`; section.append(all);
-      results.append(section);
-    }
-    searchStatus.textContent = count ? `“${query}”的匹配结果 · 每类最多展示 5 项` : `没有找到“${query}”，可尝试其他名称或别名。`;
-  } catch {
-    if (id === requestId) searchStatus.textContent = '搜索资料暂时无法加载，请稍后重试。';
-  }
-}
-document.querySelector('#site-info-button').addEventListener('click', event => {
-  // Help works before the data workspace is loaded.
-  if (!runtimePromise) {
-    event.stopImmediatePropagation();
-    document.querySelector('#site-welcome-title').textContent = '庭守手册';
-    document.querySelector('#site-welcome-dialog').showModal();
-  }
+let handbook;
+let handbookLoad;
+let helpRequest = 0;
+const helpTargets = { 'mobile-help-button': 'works.mobile', 'ranking-help-button': 'tier.overview', 'ranking-coachmark-help': 'tier.overview', 'ranking-immersive-help': 'tier.live', 'company-help-button': 'companies.overview' };
+document.addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button || button.disabled) return;
+  if (button.id !== 'site-info-button' && !helpTargets[button.id] && !button.dataset.helpArticle) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  const token = ++helpRequest;
+  handbookLoad ??= import('./lib/galpedia-help.js').then(module => { handbook = module.createHelpDrawer(); return { handbook, context: module.currentHelpArticle }; }).catch(error => { handbookLoad = null; throw error; });
+  void handbookLoad.then(({ handbook, context }) => {
+    if (token !== helpRequest) return;
+    document.querySelector('#ranking-coachmark').hidden = true;
+    handbook.open(button.dataset.helpArticle || helpTargets[button.id] || context(), button);
+  }).catch(() => { status.hidden = false; status.textContent = '手册暂时无法加载，请重试。'; });
 }, true);
-document.querySelector('#site-welcome-start').addEventListener('click', () => document.querySelector('#site-welcome-dialog').close());
-document.querySelector('#site-welcome-title').textContent = '庭守手册';
+let focusObserver;
+let focusTimeout;
+function focusDestination(route) {
+  focusObserver?.disconnect(); clearTimeout(focusTimeout);
+  const selector = route.startsWith('#work/') ? '#work-details[open] h2' : route.startsWith('#persons/person/') ? '#person-detail-dialog[open] h2, #person-detail h2' : route.startsWith('#companies/company/') ? '#company-detail h2' : '#workspace > section:not([hidden]) h1, #workspace > section:not([hidden]) h2';
+  const focus = () => {
+    if (location.hash !== route) return false;
+    const heading = [...document.querySelectorAll(selector)].find(node => node.getClientRects().length && !node.closest('[hidden], [inert]'));
+    if (!heading) return false;
+    heading.tabIndex = -1; heading.focus({ preventScroll: true }); focusObserver?.disconnect(); clearTimeout(focusTimeout); return true;
+  };
+  if (focus()) return;
+  focusObserver = new MutationObserver(focus); focusObserver.observe(document.querySelector('#workspace'), { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'open'] });
+  // Details dialogs live outside workspace.
+  for (const node of document.querySelectorAll('dialog')) focusObserver.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+  focusTimeout = setTimeout(() => { focusObserver?.disconnect(); }, 15000);
+}
+createCommandSearch({
+  ensureRuntime,
+  beforeOpen: () => { helpRequest += 1; handbook?.close({ restore: false, immediate: true }); },
+  navigate: route => { navigate(route); void ensureRuntime().then(() => focusDestination(route)).catch(() => {}); }
+});
 fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {
   for (const element of document.querySelectorAll('[data-home-count]')) element.textContent = Number(snapshot[element.dataset.homeCount]).toLocaleString('en-US');
   document.querySelector('#home-snapshot').textContent = `${snapshot.date} 快照`;

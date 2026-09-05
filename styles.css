@@ -637,59 +637,6 @@ h3 {
   padding: 4px 10px;
 }
 
-#company-directory-help {
-  width: min(520px, calc(100vw - 32px));
-  height: min(640px, calc(100dvh - 32px));
-  max-height: min(640px, calc(100dvh - 32px));
-  overflow: hidden;
-  padding: 0;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  color: var(--text);
-  background: var(--surface);
-}
-
-#company-directory-help::backdrop {
-  background: rgb(14 22 26 / 56%);
-}
-
-.company-directory-help-shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  height: 100%;
-  min-height: 0;
-}
-
-.company-directory-help-body {
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 20px 4px;
-  background: var(--surface);
-}
-
-.company-directory-help-body section + section {
-  margin-top: 16px;
-}
-
-.company-directory-help-body h3 {
-  margin: 0;
-  font-size: 15px;
-}
-
-.company-directory-help-body ul {
-  display: grid;
-  gap: 6px;
-  margin: 8px 0 0;
-  padding-left: 20px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.company-directory-help-shell .dialog-actions {
-  margin: 12px 20px 20px;
-}
-
 /* Company cards intentionally share the square work-card footprint. */
 .company-directory-list {
   grid-template-columns: repeat(auto-fill, var(--selection-card-size));
@@ -3344,57 +3291,6 @@ html.work-compare-open body {
   -webkit-overflow-scrolling: touch;
 }
 
-#ranking-help {
-  width: min(720px, calc(100% - 28px));
-  overflow: hidden;
-}
-
-.ranking-help-shell {
-  max-height: calc(100dvh - 28px - var(--safe-top) - var(--safe-bottom));
-  display: flex;
-  flex-direction: column;
-}
-
-.ranking-help-body {
-  min-height: 0;
-  padding: 14px 18px;
-  overflow-y: auto;
-}
-
-.ranking-help-context {
-  display: grid;
-  gap: 18px;
-}
-
-.ranking-help-context section {
-  min-width: 0;
-}
-
-.ranking-help-context h3 {
-  margin-bottom: 7px;
-  font-size: 15px;
-}
-
-.ranking-help-context ul {
-  display: grid;
-  gap: 6px;
-  padding-left: 22px;
-  margin: 0;
-}
-
-.ranking-help-context li {
-  padding-left: 2px;
-}
-
-.ranking-help-context code {
-  font: inherit;
-  font-weight: 750;
-}
-
-.ranking-help-actions {
-  border-top: 1px solid var(--border);
-}
-
 #media-preview {
   width: min(760px, calc(100% - 28px));
   overflow: hidden;
@@ -5739,15 +5635,6 @@ dialog:not(#media-preview):not(#media-crop):not(#sticker-editor) {
 .dialog-heading {
   background: #101920;
 }
-
-#company-directory-help,
-.company-directory-help-body,
-.company-directory-help-shell {
-  color: var(--text);
-  background: #16212a;
-}
-
-#company-directory-help::backdrop,
 dialog::backdrop {
   background: rgb(0 0 0 / 68%);
 }
@@ -5937,10 +5824,7 @@ dialog::backdrop {
 :root[data-theme="light"] .company-directory-card { background: #edf2f3; }
 
 :root[data-theme="light"] .company-directory-detail,
-:root[data-theme="light"] dialog:not(#media-preview):not(#media-crop):not(#sticker-editor),
-:root[data-theme="light"] #company-directory-help,
-:root[data-theme="light"] .company-directory-help-body,
-:root[data-theme="light"] .company-directory-help-shell {
+:root[data-theme="light"] dialog:not(#media-preview):not(#media-crop):not(#sticker-editor){
   color: var(--text);
   border-color: #c5d1d5;
   background: #ffffff;
@@ -6018,8 +5902,6 @@ dialog::backdrop {
   background: #075f75;
   box-shadow: 0 10px 30px rgb(29 42 49 / 20%);
 }
-
-:root[data-theme="light"] #company-directory-help::backdrop,
 :root[data-theme="light"] dialog::backdrop { background: rgb(24 42 49 / 38%); }
 
 :root[data-theme="light"] body.is-ranking-immersive .ranking-view { background: #e8eef0; }
@@ -7122,7 +7004,6 @@ dialog::backdrop {
   .ranking-toolbar .edit-actions > .toolbar-menu-shell { order: 4; }
   .ranking-toolbar .state-actions > .toolbar-menu-shell { order: 5; }
   .ranking-toolbar #export-png { order: 6; }
-  .ranking-toolbar #ranking-help-button { order: 7; }
 
   .ranking-toolbar .toolbar-menu-shell {
     min-width: 0;
@@ -7144,13 +7025,6 @@ dialog::backdrop {
     width: 100%;
     padding-inline: 5px;
     font-size: 12px;
-  }
-
-  .ranking-toolbar #ranking-help-button {
-    width: 36px;
-    min-width: 36px;
-    height: 36px;
-    min-height: 36px;
   }
 
   .ranking-toolbar .ranking-live-mode,
@@ -8984,7 +8858,7 @@ dialog::backdrop {
 :root[data-theme="light"] .work-compare-mobile-row.source-vndb .work-compare-mobile-value strong { color:#574795; }
 :root[data-theme="light"] .work-compare-mobile-row.source-bangumi .work-compare-mobile-value strong { color:#82591d; }
 
-/* First-visit orientation dialog: concise, versioned, and safe to reopen from the header. */
+/* Shared header help entry. Contextual content lives in the handbook. */
 .site-info-button {
   flex: 0 0 auto;
   font-weight: 600;
@@ -9032,175 +8906,7 @@ dialog::backdrop {
   .tool-heading { margin-right: 84px; }
 }
 
-.site-welcome-dialog {
-  width: min(620px, calc(100vw - 32px));
-  max-height: min(760px, calc(100dvh - 32px));
-  padding: 0;
-  overflow: hidden;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  box-shadow: 0 22px 70px rgb(0 0 0 / 48%);
-}
-
-.site-welcome-shell {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
-.site-welcome-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.site-welcome-heading > div { min-width: 0; }
-
-.site-welcome-kicker {
-  margin: 0 0 4px;
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.site-welcome-heading h2 {
-  max-width: 470px;
-  font-size: 21px;
-  line-height: 1.25;
-}
-
-.site-welcome-body {
-  min-height: 0;
-  overflow-y: auto;
-  padding: 20px 22px 4px;
-  overscroll-behavior: contain;
-}
-
-.site-welcome-lede {
-  max-width: 54ch;
-  margin-bottom: 18px;
-  color: var(--text);
-  font-size: 15px;
-  line-height: 1.65;
-}
-
-.site-welcome-section + .site-welcome-section {
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-}
-
-.site-welcome-section-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.site-welcome-section-heading h3 {
-  margin: 0;
-  font-size: 14px;
-}
-
-.site-welcome-snapshot {
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.site-welcome-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.site-welcome-stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
-  min-height: 58px;
-  padding: 10px 8px;
-  color: var(--text-muted);
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.site-welcome-stat strong {
-  color: var(--text);
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
-}
-
-.site-welcome-stat span { font-size: 12px; }
-
-.site-welcome-note {
-  margin: 9px 0 0;
-  color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.site-welcome-roadmap {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.site-welcome-roadmap li {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 7px 9px;
-  border-left: 2px solid var(--border);
-}
-
-.site-welcome-roadmap li > span {
-  color: var(--text-muted);
-  font-size: 16px;
-  text-align: center;
-}
-
-.site-welcome-roadmap li.is-complete { border-left-color: #3e9a83; }
-.site-welcome-roadmap li.is-complete > span { color: #3e9a83; }
-.site-welcome-roadmap li.is-active {
-  border-left-color: var(--accent);
-  background: var(--accent-soft);
-}
-.site-welcome-roadmap li.is-active > span { color: var(--accent); }
-
-.site-welcome-roadmap strong,
-.site-welcome-roadmap small { display: block; }
-.site-welcome-roadmap strong { font-size: 13px; font-weight: 500; }
-.site-welcome-roadmap small { margin-top: 2px; color: var(--text-muted); font-size: 11px; }
-
-.site-welcome-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 22px 18px;
-  border-top: 1px solid var(--border);
-}
-
 @media (max-width: 899px) {
-  .site-welcome-dialog {
-    width: calc(100vw - 20px);
-    max-height: calc(100dvh - 20px);
-  }
-
-  .site-welcome-heading h2 { font-size: 18px; }
-  .site-welcome-body { padding: 16px 16px 2px; }
-  .site-welcome-lede { font-size: 14px; }
-  .site-welcome-actions { padding: 10px 16px 14px; }
-.site-welcome-actions button { width: 100%; }
 }
 
 /* M2 person directory candidate */

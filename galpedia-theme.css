@@ -834,8 +834,7 @@ dialog:not(#media-preview):not(#media-crop):not(#sticker-editor),
   box-shadow: 0 16px 40px rgb(23 20 35 / 24%);
 }
 
-dialog::backdrop,
-#company-directory-help::backdrop {
+dialog::backdrop{
   background: rgb(27 24 43 / 48%);
 }
 

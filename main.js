@@ -50,8 +50,6 @@ import {
 import { personNameVariantCount } from './lib/person-name-variants.js';
 import { applyTheme, readTheme, saveTheme } from './lib/theme-preference.js';
 import { createMediaPreviewActions } from './lib/media-preview-actions.js';
-import { createRankingHelp } from './lib/ranking-help.js';
-import { createGuideController } from './lib/guide-controller.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createSelectionCardPresentation } from './lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
@@ -168,8 +166,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileClearSelection: requiredElement('mobile-clear-selection'),
   mobileBangumiImportOpen: requiredElement('mobile-bangumi-import-open'),
   mobileHelpButton: requiredElement('mobile-help-button'),
-  mobileHelpDialog: requiredElement('mobile-help-dialog'),
-  mobileHelpDismiss: requiredElement('mobile-help-dismiss'),
   mobileTitleSearch: requiredElement('mobile-title-search'),
   mobileTitleSearchClear: requiredElement('mobile-title-search-clear'),
   mobileFilterToggle: requiredElement('mobile-filter-toggle'),
@@ -207,11 +203,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   modeCompany: requiredElement('mode-company'),
   modePerson: requiredElement('mode-person'),
   themeToggle: requiredElement('theme-toggle'),
-  siteInfoButton: requiredElement('site-info-button'),
-  siteWelcomeDialog: requiredElement('site-welcome-dialog'),
-  siteWelcomeStart: requiredElement('site-welcome-start'),
-  siteWelcomeWorkCount: requiredElement('site-welcome-work-count'),
-  siteWelcomeCompanyCount: requiredElement('site-welcome-company-count'),
   selectionView: requiredElement('selection-view'),
   rankingView: requiredElement('ranking-view'),
   rankingSubjectWork: requiredElement('ranking-subject-work'),
@@ -222,8 +213,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   companySort: requiredElement('company-sort'),
   companyHasImage: requiredElement('company-has-image'),
   companyHelpButton: requiredElement('company-help-button'),
-  companyHelp: requiredElement('company-directory-help'),
-  companyHelpDismiss: requiredElement('company-directory-help-dismiss'),
   companyRankingToggle: requiredElement('company-ranking-toggle'),
   companyRankingClose: requiredElement('company-ranking-close'),
   companyRanking: requiredElement('company-ranking'),
@@ -328,11 +317,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   rankingHelpButton: requiredElement('ranking-help-button'),
   rankingImmersive: requiredElement('ranking-immersive'),
   rankingImmersiveHelp: requiredElement('ranking-immersive-help'),
-  rankingHelp: requiredElement('ranking-help'),
-  rankingHelpTitle: requiredElement('ranking-help-title'),
-  rankingHelpFull: requiredElement('ranking-help-full'),
-  rankingHelpImmersive: requiredElement('ranking-help-immersive'),
-  rankingHelpDismiss: requiredElement('ranking-help-dismiss'),
   rankingCoachmark: requiredElement('ranking-coachmark'),
   rankingCoachmarkHelp: requiredElement('ranking-coachmark-help'),
   rankingCoachmarkDismiss: requiredElement('ranking-coachmark-dismiss'),
@@ -1060,32 +1044,6 @@ async function initialize() {
     applyTheme(document, activeTheme);
     renderThemeToggle();
   });
-  const SITE_WELCOME_STORAGE_KEY = 'egs-tier-terminal:site-welcome-v1';
-  const markSiteWelcomeSeen = () => {
-    try {
-      themeStorage?.setItem(SITE_WELCOME_STORAGE_KEY, 'seen');
-    } catch {
-      // A blocked preference store should not prevent the dialog from closing.
-    }
-  };
-  const hasSeenSiteWelcome = () => {
-    try {
-      return themeStorage?.getItem(SITE_WELCOME_STORAGE_KEY) === 'seen';
-    } catch {
-      return false;
-    }
-  };
-  const openSiteWelcome = ({ force = false, workCount = 7264, companyCount = 1364 } = {}) => {
-    if (!force && hasSeenSiteWelcome()) return false;
-    elements.siteWelcomeWorkCount.textContent = Number(workCount).toLocaleString('en-US');
-    elements.siteWelcomeCompanyCount.textContent = Number(companyCount).toLocaleString('en-US');
-    if (typeof elements.siteWelcomeDialog.showModal === 'function') elements.siteWelcomeDialog.showModal();
-    else elements.siteWelcomeDialog.open = true;
-    return true;
-  };
-  elements.siteInfoButton.addEventListener('click', () => openSiteWelcome({ force: true }));
-  elements.siteWelcomeStart.addEventListener('click', () => elements.siteWelcomeDialog.close());
-  elements.siteWelcomeDialog.addEventListener('close', markSiteWelcomeSeen);
   const startupMetrics = createStartupMetrics();
   const interactionMetrics = createInteractionMetrics();
   const assetBase = configuredAssetBase();
@@ -2212,12 +2170,6 @@ async function initialize() {
     }
     if (request !== compareRenderRequest) return;
   }
-  const companyGuide = createGuideController({
-    key: 'egs-tier-terminal:company-directory-guide-v2',
-    read: key => window.localStorage.getItem(key),
-    write: (key, value) => window.localStorage.setItem(key, value),
-    open: openCompanyDirectoryHelp
-  });
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
@@ -2225,16 +2177,6 @@ async function initialize() {
   });
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
-
-  function openCompanyDirectoryHelp() {
-    if (elements.companyHelp.open) return;
-    if (typeof elements.companyHelp.showModal === 'function') elements.companyHelp.showModal();
-    else elements.companyHelp.open = true;
-  }
-
-  function showCompanyDirectoryHelpOnce() {
-    companyGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
-  }
 
   function openCompanyDirectory(companyId = null, { push = true, interaction = null } = {}) {
     const activeInteraction = interaction ?? (push ? interactionMetrics.begin('company-directory') : null);
@@ -2257,7 +2199,6 @@ async function initialize() {
     renderCompanyDirectory();
     interactionMetrics.stage(activeInteraction, 'dom-updated');
     interactionMetrics.completeAfterFrame(activeInteraction);
-    showCompanyDirectoryHelpOnce();
     if (push) pushUiLocation();
   }
 
@@ -3323,21 +3264,6 @@ async function initialize() {
     renderCompanyDirectory();
     replaceUiLocation();
   });
-  const mobileGuide = createGuideController({
-    key: 'egs-tier-terminal:mobile-guide-v2',
-    read: key => window.localStorage.getItem(key),
-    write: (key, value) => window.localStorage.setItem(key, value),
-    open: () => {
-      if (typeof elements.mobileHelpDialog.showModal === 'function') elements.mobileHelpDialog.showModal();
-      else elements.mobileHelpDialog.open = true;
-    }
-  });
-
-  function showMobileHelpOnce() {
-    if (!mobileCompanion) return;
-    mobileGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
-  }
-
   async function copySelectionUrl(url) {
     try {
       if (typeof navigator.clipboard?.writeText === 'function') {
@@ -3535,27 +3461,6 @@ async function initialize() {
   });
   // Company ranking shares the work ranking presentation state; only ranking data is separate.
   const companyPresentation = presentation;
-  const help = createRankingHelp({
-    read: key => window.localStorage.getItem(key),
-    write: (key, value) => window.localStorage.setItem(key, value),
-    open(context) {
-      const immersiveContext = context === 'immersive';
-      elements.rankingHelpTitle.textContent = immersiveContext ? '直播模式' : '排榜使用说明';
-      elements.rankingHelpFull.hidden = immersiveContext;
-      elements.rankingHelpImmersive.hidden = !immersiveContext;
-      elements.rankingHelpDismiss.textContent = immersiveContext ? '返回排榜' : '知道了';
-      if (!elements.rankingHelp.open) elements.rankingHelp.showModal();
-    }
-  });
-  const rankingCoachmarkGuide = createGuideController({
-    key: 'egs-tier-terminal:ranking-coachmark-v1',
-    read: key => window.localStorage.getItem(key),
-    write: (key, value) => window.localStorage.setItem(key, value),
-    open: () => {
-      elements.rankingCoachmark.hidden = false;
-    }
-  });
-
   const scaleControls = [
     ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
     ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
@@ -3864,6 +3769,7 @@ async function initialize() {
     elements.browseModeToggle.setAttribute('aria-pressed', String(!selectionMode && !compareMode));
     elements.browseModeToggle.title = '返回浏览作品';
     elements.quickRankingEntry.textContent = model.selectedCount > 0 ? '开始排榜' : '选择后排榜';
+    elements.quickRankingEntry.hidden = model.selectedCount === 0 || selectionMode || compareMode;
     elements.quickRankingEntry.setAttribute('aria-label', model.selectedCount > 0
       ? `开始排榜（已选 ${model.selectedCount} 部）`
       : '选择作品后开始排榜');
@@ -4100,16 +4006,12 @@ async function initialize() {
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
-    if (!companyDirectoryOpen && ranking && renderedWorkspaceMode !== 'ranking') {
-      rankingCoachmarkGuide.enter({ automatic: !document.body.classList.contains('is-ranking-immersive') });
-    }
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
     if (rankingModel !== null && rankingSubject === 'work') {
       void refreshRankingPreload(rankingModel);
     }
     else cancelRankingPreload();
-    showMobileHelpOnce();
     interactionMetrics.completeAfterFrame(interaction);
     return true;
   }
@@ -4619,7 +4521,12 @@ async function initialize() {
     return true;
   }
 
+  let uiLocationGeneration = 0;
   async function applyUiLocation() {
+    const generation = ++uiLocationGeneration;
+    applyingUiLocation = false;
+    const sourceHash = window.location.hash;
+    const isCurrentLocation = () => generation === uiLocationGeneration && window.location.hash === sourceHash;
     if (parseSelectionShare(window.location) !== null) return false;
     if (document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home')) {
       currentWorkDetailId = null;
@@ -4641,6 +4548,7 @@ async function initialize() {
         rankingSubject = location.subject;
         controller.setWorkspaceMode('ranking');
         await render();
+        if (!isCurrentLocation()) return true;
         return true;
       }
       if (location.page === 'companies') {
@@ -4652,6 +4560,7 @@ async function initialize() {
         openCompanyDirectory(location.companyId, { push: false });
         companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
         await render();
+        if (!isCurrentLocation()) return true;
         if (location.companyId === null) companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
         return true;
       }
@@ -4667,6 +4576,7 @@ async function initialize() {
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         renderPersonDirectory();
         await ensurePersonRuntime();
+        if (!isCurrentLocation()) return true;
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         personDirectoryView.setRoleFilter?.(personRole);
         renderPersonDirectory();
@@ -4683,6 +4593,7 @@ async function initialize() {
       controller.setFilterState({ titleQuery: location.query, sortKey, sortDirection });
       currentWorkDetailId = null;
       await render();
+      if (!isCurrentLocation()) return true;
       selectionView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
       if (location.workId !== null) {
         const work = worksById.get(location.workId);
@@ -4694,7 +4605,7 @@ async function initialize() {
       }
       return true;
     } finally {
-      applyingUiLocation = false;
+      if (generation === uiLocationGeneration) applyingUiLocation = false;
     }
   }
 
@@ -4798,13 +4709,6 @@ async function initialize() {
         error instanceof Error ? error.message : '追加候选池失败，当前排榜未修改。',
         { error: true }
       );
-    }
-  });
-  elements.mobileHelpDismiss.addEventListener('click', () => {
-    try {
-      window.localStorage.setItem(mobileHelpStorageKey, '1');
-    } catch {
-      // Session-only help is acceptable when storage is unavailable.
     }
   });
   elements.mobileShareWarningDismiss.addEventListener('click', () => {
@@ -4986,19 +4890,6 @@ async function initialize() {
       openCompanyDirectory();
     };
     open();
-  });
-  elements.companyHelpButton.addEventListener('click', () => companyGuide.open());
-  elements.mobileHelpButton.addEventListener('click', () => mobileGuide.open());
-  elements.companyHelpDismiss.addEventListener('click', () => elements.companyHelp.close());
-  elements.rankingHelpButton.addEventListener('click', () => {
-    elements.rankingCoachmark.hidden = true;
-    help.openFull();
-  });
-  elements.rankingImmersiveHelp.addEventListener('click', () => help.openImmersive());
-  elements.rankingHelpDismiss.addEventListener('click', () => elements.rankingHelp.close());
-  elements.rankingCoachmarkHelp.addEventListener('click', () => {
-    elements.rankingCoachmark.hidden = true;
-    help.openFull();
   });
   elements.rankingCoachmarkDismiss.addEventListener('click', () => {
     elements.rankingCoachmark.hidden = true;
@@ -5237,16 +5128,7 @@ async function initialize() {
     restoredLocation = await applyUiLocation();
     if (!restoredLocation) await render();
   });
-  const shareImportOpened = openShareImportDialog();
-  // Deep links (persons/companies/work details) must remain immediately
-  // interactive; the first-visit welcome dialog is only useful on the root
-  // workspace and otherwise masks the requested destination.
-  if (!shareImportOpened && !restoredLocation && !document.documentElement.classList.contains('galpedia')) {
-    openSiteWelcome({
-      workCount: populationContract.runtime.workIds.length,
-      companyCount: companyDirectory.companies.length
-    });
-  }
+  openShareImportDialog();
   let globalSearch = null;
   return { search: query => {
     globalSearch ??= createGalpediaSearch({

@@ -193,10 +193,6 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has
 html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked))::after {
   background: var(--gp-corner-paint) left top / 16px 2px,
     var(--gp-corner-paint) left top / 2px 16px,
-    var(--gp-corner-paint) right top / 16px 2px,
-    var(--gp-corner-paint) right top / 2px 16px,
-    var(--gp-corner-paint) left bottom / 16px 2px,
-    var(--gp-corner-paint) left bottom / 2px 16px,
     var(--gp-corner-paint) right bottom / 16px 2px,
     var(--gp-corner-paint) right bottom / 2px 16px;
   background-repeat: no-repeat;
