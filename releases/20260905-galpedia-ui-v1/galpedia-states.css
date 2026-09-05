@@ -1,0 +1,265 @@
+/* Shared interaction states. No tier backgrounds, drag geometry or data rules.
+   Kept after the legacy skin so every control uses the same state language. */
+html.galpedia {
+  --gp-state-edge: #8a73c8;
+  --gp-state-hover: color-mix(in srgb, var(--accent-soft) 42%, var(--surface));
+  --gp-state-pressed: color-mix(in srgb, var(--accent-soft) 75%, var(--surface));
+  --gp-state-disabled: color-mix(in srgb, var(--text-muted) 75%, var(--surface));
+  --gp-state-speed: 150ms;
+  --gp-corner-paint: linear-gradient(var(--gp-state-edge), var(--gp-state-edge));
+}
+html.galpedia[data-theme="dark"] { --gp-state-edge: #c6a8df; }
+
+/* Default / hover / pressed / focus / disabled: native semantics stay intact. */
+html.galpedia[data-theme] :is(.toolbar-button, .action-primary, .action-neutral, .action-danger, .icon-button, .dialog-close, #filter-apply, #start-work-ranking, #start-company-ranking) {
+  border-radius: 6px;
+  box-shadow: none;
+  transition: background-color var(--gp-state-speed) ease, border-color var(--gp-state-speed) ease, color var(--gp-state-speed) ease;
+}
+html.galpedia[data-theme] :is(.toolbar-button-neutral, .toolbar-button-strong, .action-neutral, .icon-button, .dialog-close) {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+html.galpedia[data-theme] :is(.toolbar-button-neutral, .toolbar-button-strong, .action-neutral, .icon-button, .dialog-close):hover:not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-hover);
+  border-color: var(--gp-state-edge);
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(.toolbar-button-primary, .action-primary, #filter-apply, #start-work-ranking, #start-company-ranking, #company-ranking-toggle) {
+  color: #fff;
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(.toolbar-button-primary, .action-primary, #filter-apply, #start-work-ranking, #start-company-ranking, #company-ranking-toggle):hover:not(:disabled) {
+  color: #fff;
+  background: var(--gp-primary-bg-hover);
+  border-color: var(--gp-primary-bg-hover);
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):is([aria-expanded="true"], [aria-pressed="true"]):not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-hover);
+  border-color: var(--gp-state-edge);
+  box-shadow: inset 0 -2px 0 var(--gp-state-edge);
+}
+html.galpedia[data-theme] :is(.toolbar-button, .action-neutral, .icon-button, .dialog-close):active:not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-pressed);
+  border-color: var(--gp-state-edge);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 12%);
+}
+html.galpedia[data-theme] :is(.toolbar-button-primary, .action-primary, #filter-apply, #start-work-ranking, #start-company-ranking):active:not(:disabled) {
+  color: #fff;
+  background: color-mix(in srgb, var(--gp-primary-bg-hover) 88%, #000);
+  border-color: var(--gp-primary-bg-hover);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 15%);
+}
+html.galpedia[data-theme] :is(.toolbar-button, .action-primary, .action-neutral, .action-danger, .icon-button, .dialog-close, #filter-apply, #start-work-ranking, #start-company-ranking):disabled {
+  color: var(--gp-state-disabled);
+  background: var(--surface-muted);
+  border-color: var(--border);
+  opacity: 1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+html.galpedia[data-theme] :is(#clear-selected-works, #work-compare-clear, .dialog-close, .galpedia-header .icon-button) {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(#clear-selected-works, #work-compare-clear, .dialog-close, .galpedia-header .icon-button):hover:not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-hover);
+  border-color: var(--border);
+}
+html.galpedia[data-theme] :is(#clear-selected-works, #work-compare-clear, .dialog-close, .galpedia-header .icon-button):active:not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-pressed);
+  border-color: var(--gp-state-edge);
+}
+
+/* Surface selection must not compete with the single primary ranking action. */
+html.galpedia[data-theme] :is(#selection-context-bar, #company-selection-context-bar) {
+  color: var(--text);
+  background: var(--gp-state-hover);
+  border-color: var(--border);
+  box-shadow: inset 3px 0 0 var(--gp-state-edge);
+}
+html.galpedia[data-theme] :is(#selection-context-bar, #company-selection-context-bar) .selection-context-summary {
+  color: var(--text);
+}
+html.galpedia[data-theme] :is(#catalog-results, #company-view) .results-heading-count {
+  color: var(--text-muted);
+  background: var(--surface);
+  border-color: var(--border);
+}
+html.galpedia[data-theme] #catalog-results:has(#selection-context-bar:not([hidden])) #quick-ranking-entry:not(:disabled) {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+html.galpedia[data-theme] #catalog-results:has(#selection-context-bar:not([hidden])) #quick-ranking-entry:hover:not(:disabled) {
+  background: var(--gp-state-hover);
+  border-color: var(--gp-state-edge);
+}
+
+/* Tabs share transparent active surfaces and two bracket corners. */
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button {
+  position: relative;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  box-shadow: none;
+  transition: background-color var(--gp-state-speed) ease, color var(--gp-state-speed) ease;
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--gp-state-hover);
+  border-color: transparent;
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+  color: var(--text);
+  background: transparent;
+  border-color: transparent;
+  font-weight: 650;
+  box-shadow: none;
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  background: var(--gp-corner-paint) left top / 8px 2px,
+    var(--gp-corner-paint) left top / 2px 8px,
+    var(--gp-corner-paint) right bottom / 8px 2px,
+    var(--gp-corner-paint) right bottom / 2px 8px;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity var(--gp-state-speed) ease;
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"], :focus-visible)::after { opacity: 1; }
+html.galpedia[data-theme][data-home="true"] #workspace-mode > button[aria-selected="true"]:not(:focus-visible)::after { opacity: 0; }
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:active:not(:disabled) {
+  background: var(--gp-state-pressed);
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled {
+  color: var(--gp-state-disabled);
+  background: transparent;
+  border-color: transparent;
+  opacity: 1;
+  cursor: not-allowed;
+}
+html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:disabled::after { opacity: 0; }
+
+/* Card brackets are paint-only, and never intercept cover/checkbox actions. */
+html.galpedia #catalog-grid.catalog-grid > .selection-card::after,
+html.galpedia #company-list > .company-directory-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--gp-corner-paint) left top / 11px 2px,
+    var(--gp-corner-paint) left top / 2px 11px,
+    var(--gp-corner-paint) right bottom / 11px 2px,
+    var(--gp-corner-paint) right bottom / 2px 11px;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity var(--gp-state-speed) ease;
+}
+@media (hover: hover) {
+  html.galpedia #catalog-grid.catalog-grid > .selection-card:hover::after,
+  html.galpedia #company-list > .company-directory-card:hover::after { opacity: .75; }
+}
+html.galpedia #catalog-grid.catalog-grid > .selection-card:focus-within::after,
+html.galpedia #company-list > .company-directory-card:focus-within::after { opacity: 1; }
+html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared)),
+html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked)) {
+  border-color: var(--gp-state-edge);
+  box-shadow: none;
+}
+html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared))::after,
+html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked))::after {
+  background: var(--gp-corner-paint) left top / 16px 2px,
+    var(--gp-corner-paint) left top / 2px 16px,
+    var(--gp-corner-paint) right top / 16px 2px,
+    var(--gp-corner-paint) right top / 2px 16px,
+    var(--gp-corner-paint) left bottom / 16px 2px,
+    var(--gp-corner-paint) left bottom / 2px 16px,
+    var(--gp-corner-paint) right bottom / 16px 2px,
+    var(--gp-corner-paint) right bottom / 2px 16px;
+  background-repeat: no-repeat;
+  opacity: 1;
+}
+
+/* Small visual checkbox inside a larger native, keyboard-operable hit target. */
+html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select) {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  inset: 5px auto auto 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  display: grid;
+  place-content: center;
+  box-shadow: none;
+  z-index: 7;
+}
+html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select)::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 16%);
+}
+html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select):checked::before {
+  border-color: var(--gp-primary-bg);
+  background: var(--gp-primary-bg);
+}
+html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select):checked::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 5px;
+  top: calc(50% - 4px);
+  left: calc(50% - 5px);
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg);
+}
+html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select):hover::before { border-color: var(--gp-state-edge); }
+@media (pointer: coarse), (max-width: 899px) {
+  html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select) { width: 44px; height: 44px; inset: 0 auto auto 0; }
+}
+@media (forced-colors: active) {
+  html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select) { appearance: auto; }
+  html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select)::before,
+  html.galpedia :is(#catalog-grid .selection-card-checkbox, #company-list .company-directory-card-select)::after { content: none; }
+  html.galpedia #catalog-grid.catalog-grid > .selection-card:is(.is-selected, :has(.selection-card-compare.is-compared)),
+  html.galpedia #company-list > .company-directory-card:is(.is-selected, :has(.company-directory-card-select:checked)) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  html.galpedia[data-theme] :is(#workspace-mode, #catalog-results .catalog-mode-switch, #details-credits-tabs, #person-detail-page-tabs, #person-view .person-directory-tabs, #ranking-view .ranking-subject-tabs, #filter-drawer .filter-mode-switch) > button:is([aria-selected="true"], [aria-pressed="true"]) {
+    border-bottom: 2px solid Highlight;
+  }
+  html.galpedia[data-theme] :is(button, input, select, textarea, summary, a[href]):focus-visible { outline-color: Highlight; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.galpedia { --gp-state-speed: 0ms; }
+}

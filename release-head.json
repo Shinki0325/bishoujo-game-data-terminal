@@ -1,6 +1,6 @@
 {
-  "closureSha256": "b33d97d52da379937abe38c30485ac06f5abd9999ab945a3ab9a2e7141c51442",
-  "entry": "releases/20260905-work-detail-image-shards-v1/index.html",
-  "releaseId": "20260905-work-detail-image-shards-v1",
+  "closureSha256": "1ac8fcb7419d376d178d79079e31f153f9cb1561aeefbd2700991fab92d53e8f",
+  "entry": "releases/20260905-galpedia-ui-v1/index.html",
+  "releaseId": "20260905-galpedia-ui-v1",
   "schemaVersion": "egs-tier-release-head-v1"
 }
