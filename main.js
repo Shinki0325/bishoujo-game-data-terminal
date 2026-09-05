@@ -132,6 +132,7 @@ import { createPopoverController } from './lib/ui-popover.js';
 import { syncSelectionContext } from './lib/ui-selection-context.js';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
 import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
+import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
 import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
@@ -1911,7 +1912,8 @@ async function initialize() {
           renderKeeperGuidance();
           focusKeeperFallback(elements.compareModeToggle);
         } : undefined,
-        enhanced: compare.showEnhancement && !isGuideCompleted(compare)
+        enhanced: compare.showEnhancement && !isGuideCompleted(compare),
+        portrait: resolveKeeperPortrait(compare, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true && !isGuideCompleted(compare), variant: 'bust' })
       });
       elements.keeperCompareGuide.append(card);
       elements.keeperCompareGuide.hidden = false;
@@ -1951,7 +1953,8 @@ async function initialize() {
           renderKeeperGuidance();
           focusKeeperFallback(elements.rankingHelpButton);
         } : undefined,
-        enhanced
+        enhanced,
+        portrait: resolveKeeperPortrait(rankingGuide, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true && enhanced && !firstDrag })
       });
       if (firstDrag) card.classList.add('keeper-guide-card-compact');
       elements.rankingCoachmark.append(card);
