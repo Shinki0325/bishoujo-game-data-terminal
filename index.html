@@ -4,22 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="egs-tier-asset-base" content="https://assets.bishojo.date/">
-    <title>美少女游戏数据终端</title>
+    <title>少女箱庭 GALPEDIA · 美少女游戏资料库</title>
     <script>
+      document.documentElement.classList.add('galpedia');
+      document.documentElement.dataset.home = String(!location.hash || location.hash === '#home');
+      document.documentElement.dataset.theme = 'light';
       try {
-        if (localStorage.getItem('egs-tier-terminal:theme-v1') === 'light') {
-          document.documentElement.dataset.theme = 'light';
-        }
+        const theme = localStorage.getItem('egs-tier-terminal:theme-v1') || 'light';
+        document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+        if (!localStorage.getItem('egs-tier-terminal:theme-v1')) localStorage.setItem('egs-tier-terminal:theme-v1', 'light');
       } catch {
-        // Keep the dark default when preference storage is unavailable.
+        // The home shell keeps a usable session-only light theme without storage.
       }
     </script>
-    <link rel="stylesheet" href="./releases/20260905-work-detail-image-shards-v1/styles.css">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./galpedia-theme.css">
+    <link rel="stylesheet" href="./galpedia-home.css">
   </head>
   <body>
-    <header class="tool-header">
+    <header class="tool-header galpedia-header">
       <div class="tool-heading">
-        <h1>美少女游戏数据终端</h1>
+        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./brand/logo.png" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
       </div>
 
       <div id="workspace-mode" class="mode-switch" role="tablist" aria-label="工作模式">
@@ -57,12 +62,13 @@
         >人物</button>
       </div>
       <div class="header-actions" aria-label="网站工具">
+        <button id="global-search-open" class="icon-button" type="button" aria-label="搜索作品、会社和人物" title="搜索">⌕</button>
         <button
           id="site-info-button"
           class="icon-button site-info-button"
           type="button"
-          aria-label="网站说明与更新计划"
-          title="网站说明与更新计划"
+          aria-label="庭守手册"
+          title="庭守手册"
         >?</button>
         <button
           id="theme-toggle"
@@ -74,6 +80,39 @@
         ></button>
       </div>
     </header>
+
+    <section id="galpedia-home" class="galpedia-home" aria-labelledby="home-title">
+      <div class="home-hero">
+        <div class="home-copy">
+          <p class="home-eyebrow">BISHOUJO GAME ARCHIVE</p>
+          <h1 id="home-title">美少女游戏<span>资料库</span></h1>
+          <p class="home-statement">少女使时间成为故事，<br>记录让故事继续存在。</p>
+          <p class="home-description">汇集 EGS、VNDB 与 Bangumi 的美少女游戏资料，<br class="desktop-break">连接作品、人物、会社与时代。</p>
+          <form id="home-search-form" class="galpedia-search-form" role="search">
+            <span aria-hidden="true">⌕</span>
+            <input id="home-search-input" type="search" aria-label="搜索作品、会社或人物" placeholder="搜索作品、会社或人物…" autocomplete="off" maxlength="120">
+            <button type="submit" aria-label="开始搜索">搜索 <span aria-hidden="true">↗</span></button>
+          </form>
+          <p class="home-search-hint">支持日文、简体中文、别名与拼音检索</p>
+          <div class="home-actions"><a class="home-primary" href="#works">浏览作品库 <span aria-hidden="true">→</span></a><a class="home-secondary" href="#ranking">开始排榜 <span aria-hidden="true">↗</span></a></div>
+          <dl class="home-stats"><div><dt>作品</dt><dd data-home-count="works">—</dd></div><div><dt>会社</dt><dd data-home-count="companies">—</dd></div><div><dt>人物</dt><dd data-home-count="persons">—</dd></div></dl>
+        </div>
+        <div class="home-portrait"><div class="home-corners" aria-hidden="true"></div><img src="./brand/shiori.png" width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async"><span class="home-portrait-caption">庭守 / 綴木 栞</span></div>
+      </div>
+      <nav class="home-portals" aria-label="探索资料库">
+        <a href="#works"><span class="portal-number">01 / WORKS</span><h2>作品库 <span aria-hidden="true">↗</span></h2><p>浏览作品、对照评分，找到下一段故事。</p></a>
+        <a href="#companies"><span class="portal-number">02 / COMPANIES</span><h2>会社库 <span aria-hidden="true">↗</span></h2><p>从创作品牌出发，梳理作品与沿革。</p></a>
+        <a href="#persons"><span class="portal-number">03 / PEOPLE</span><h2>人物 <span aria-hidden="true">↗</span></h2><p>声优、剧本、原画与音乐，连接幕后的名字。</p></a>
+        <a href="#ranking"><span class="portal-number">04 / TIER LIST</span><h2>排榜 <span aria-hidden="true">↗</span></h2><p>整理个人喜好，制作与分享你的作品榜单。</p></a>
+      </nav>
+      <footer class="home-footer"><span>少女箱庭 <span class="footer-en">GALPEDIA</span></span><span>资料来源 EGS · VNDB · Bangumi <span aria-hidden="true"> / </span> <span id="home-snapshot">公开资料快照</span></span></footer>
+    </section>
+    <p id="galpedia-load-status" class="galpedia-load-status" role="status" hidden></p>
+    <dialog id="galpedia-search-dialog" class="galpedia-search-dialog" aria-labelledby="global-search-title">
+      <div class="global-search-heading"><h2 id="global-search-title">探索资料库</h2><form method="dialog"><button type="submit" class="icon-button" aria-label="关闭搜索">×</button></form></div>
+      <form id="global-search-form" class="galpedia-search-form" role="search"><span aria-hidden="true">⌕</span><input id="global-search-input" type="search" aria-label="搜索全部资料" placeholder="作品、会社、人物…" autocomplete="off" maxlength="120"><button type="submit">搜索</button></form>
+      <p id="global-search-status" role="status">输入名称、别名或拼音，探索作品、会社与人物。</p><div id="global-search-results" class="global-search-results"></div>
+    </dialog>
 
     <dialog id="site-welcome-dialog" class="site-welcome-dialog" aria-labelledby="site-welcome-title">
       <div class="site-welcome-shell">
@@ -1068,6 +1107,6 @@
       <div id="work-compare-content" class="work-compare-content"></div>
     </dialog>
 
-    <script type="module" src="./releases/20260905-work-detail-image-shards-v1/main.js"></script>
+    <script type="module" src="./galpedia-boot.js"></script>
   </body>
 </html>

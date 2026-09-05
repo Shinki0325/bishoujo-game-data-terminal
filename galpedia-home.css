@@ -1,0 +1,131 @@
+.galpedia { --home-width: 1220px; --header-height: 76px; }
+.galpedia [hidden] { display: none !important; }
+.galpedia[data-home="true"] #workspace,
+.galpedia:not([data-home="true"]) .galpedia-home { display: none !important; }
+.galpedia[data-home="true"] body { padding-bottom: 0; }
+.galpedia-header.tool-header { height: 76px; min-height: 76px; padding: 0 max(28px, calc((100vw - 1360px)/2)); display: flex; justify-content: space-between; gap: 24px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--border); background: var(--bg); box-shadow: none; }
+.galpedia-header .tool-heading { flex: 0 0 218px; min-width: 0; }
+.galpedia-logo { display: block; width: 218px; height: 60px; overflow: hidden; position: relative; border-radius: 3px; }
+.galpedia-logo img { display: block; width: 256px; max-width: none; height: 128px; position: absolute; left: -20px; top: -34px; }
+:root[data-theme="light"] .galpedia-logo { mix-blend-mode: multiply; }
+:root[data-theme="dark"] .galpedia-logo { background: transparent; }
+:root[data-theme="dark"] .galpedia-logo img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
+.galpedia-header .mode-switch { flex: 0 1 auto; display: flex; align-items: center; gap: 26px; border: 0; background: transparent; padding: 0; }
+.galpedia-header .mode-switch button { padding: 10px 4px; min-width: 54px; height: 48px; position: relative; background: transparent; border: 0; border-radius: 0; color: var(--text-muted); box-shadow: none; font-size: 15px; font-weight: 500; }
+.galpedia-header .mode-switch button[aria-selected="true"] { color: var(--text); background: transparent; border-bottom: 2px solid var(--accent); }
+.galpedia[data-home="true"] .galpedia-header .mode-switch button { border: 0; color: var(--text-muted); }
+.galpedia-header .workspace-tab-icon { display: none; }
+.galpedia-header .header-actions { margin: 0; display: flex; gap: 8px; }
+.galpedia-header .icon-button { width: 40px; height: 40px; min-width: 40px; border-color: transparent; background: transparent; font-size: 21px; }
+.galpedia-header .icon-button:hover { background: var(--surface-muted); border-color: var(--border); }
+.galpedia-home { max-width: var(--home-width); margin: 0 auto; padding: 0 28px; }
+.home-hero { min-height: 590px; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 35px; padding: 30px 0 26px; }
+.home-copy { padding: 20px 0; position: relative; z-index: 1; }
+.home-eyebrow,.portal-number,.footer-en { font: 11px/1.5 "Segoe UI",sans-serif; letter-spacing: .2em; color: var(--text-muted); }
+.home-copy h1 { font-family: "Noto Serif CJK SC","Source Han Serif SC","Songti SC","SimSun",serif; font-size: clamp(38px,3.6vw,52px); font-weight: 600; letter-spacing: .055em; line-height: 1.3; margin: 20px 0 18px; color: var(--text); }
+.home-copy h1 span { display: inline; }
+.home-statement { font: 23px/1.65 "Noto Serif CJK SC","SimSun",serif; color: var(--accent); margin: 0 0 18px; letter-spacing: .04em; }
+.home-description { font-size: 14px; line-height: 1.9; color: var(--text-muted); margin-bottom: 26px; }
+.galpedia-search-form { display: flex; align-items: center; min-width: 0; gap: 12px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 5px 6px 5px 17px; min-height: 56px; background: var(--surface); }
+.galpedia-search-form:focus-within { border-color: var(--accent); outline: 2px solid var(--accent-soft); outline-offset: 2px; }
+.galpedia-search-form > span { font-size: 29px; color: var(--accent); line-height: 1; }
+.galpedia-search-form input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; outline: none; padding: 8px 0; width: 100%; height: auto; font-size: 15px; }
+.galpedia-search-form button { border: 0; background: var(--surface-muted); padding: 9px 13px; white-space: nowrap; color: var(--accent); }
+.home-search-hint { font-size: 11px; color: var(--text-muted); margin: 9px 0 22px; }
+.home-actions { display: flex; gap: 14px; }
+.home-actions a { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; min-width: 175px; }
+.home-primary { background: var(--gp-primary-bg,var(--accent)); color: white; border: 1px solid var(--gp-primary-bg,var(--accent)); }
+.home-secondary { border: 1px solid var(--border-strong); color: var(--text); }
+.home-actions a:hover { filter: brightness(.96); }
+.home-stats { display: flex; margin: 28px 0 0; }
+.home-stats > div { display: flex; flex-direction: column-reverse; padding: 0 28px; border-left: 1px solid var(--border); }
+.home-stats > div:first-child { border-left: 0; padding-left: 0; }
+.home-stats dt { font-size: 12px; margin-top: 4px; color: var(--text-muted); }
+.home-stats dd { font: 26px/1.2 Georgia,"Times New Roman",serif; font-variant-numeric: tabular-nums; color: var(--text); margin: 0; }
+.home-portrait { height: 530px; position: relative; display: flex; justify-content: center; align-items: flex-end; }
+.home-portrait img { position: relative; z-index: 1; display: block; width: 360px; height: 530px; object-fit: contain; }
+.home-corners { position: absolute; inset: 44px 20px 65px; opacity: .5; background: linear-gradient(var(--accent-soft),var(--accent-soft)) left top/80px 7px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) left top/7px 70px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) right top/80px 7px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) right top/7px 70px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) left bottom/80px 7px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) left bottom/7px 70px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) right bottom/80px 7px no-repeat,linear-gradient(var(--accent-soft),var(--accent-soft)) right bottom/7px 70px no-repeat; }
+.home-portrait-caption { position: absolute; right: 4px; bottom: 26px; color: var(--text-muted); font-size: 11px; writing-mode: vertical-rl; letter-spacing: .2em; }
+.home-portals { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-top: 1px solid var(--border); padding: 24px 0 28px; gap: 0; }
+.home-portals a { color: var(--text); padding: 12px 22px; text-decoration: none; border-right: 1px solid var(--border); transition: background 150ms; }
+.home-portals a:first-child { padding-left: 0; }
+.home-portals a:last-child { border-right: 0; }
+.home-portals a:hover { background: var(--surface-muted); }
+.home-portals h2 { font: 22px/1.5 "Noto Serif CJK SC","SimSun",serif; margin: 10px 0 7px; display: flex; justify-content: space-between; }
+.home-portals h2 span { font: 18px sans-serif; color: var(--accent); }
+.home-portals p { color: var(--text-muted); font-size: 12px; line-height: 1.8; margin: 0; }
+.home-footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); padding: 20px 0; font-size: 11px; color: var(--text-muted); }
+.footer-en { margin-left: 12px; font-size: 10px; }
+.galpedia-load-status { position: fixed; top: 82px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 22px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; }
+.galpedia-search-dialog { width: min(850px,calc(100vw - 32px)); max-height: 80dvh; padding: 26px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.galpedia-search-dialog::backdrop { background: rgba(22,25,35,.4); }
+.global-search-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+.global-search-heading h2 { margin: 0; font-family: "SimSun",serif; font-size: 25px; }
+#global-search-status { color: var(--text-muted); font-size: 13px; margin: 18px 0; }
+.global-search-results { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
+.global-search-results h3 { font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.global-search-results a { display: block; text-decoration: none; color: var(--text); padding: 10px 4px; font-size: 14px; overflow-wrap: anywhere; }
+.global-search-results a:hover { background: var(--surface-muted); }
+.global-search-results small { display: block; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.global-search-results .search-all { color: var(--accent); font-size: 12px; }
+.galpedia a:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+@media(min-width:1600px) { .home-hero { min-height: 650px; } .home-portrait { height: 580px; } .home-portrait img { height: 580px; width: 390px; } }
+@media(max-width:1000px) { .galpedia-header.tool-header { gap: 12px; padding: 0 20px; } .galpedia-header .mode-switch { gap: 10px; } .home-hero { gap: 10px; } .home-portrait img { width: 300px; } .home-stats > div { padding: 0 20px; } }
+@media(max-width:700px) {
+  .galpedia { --header-height: 106px; }
+  .galpedia-header.tool-header { height: 106px; min-height: 106px; padding: 0 18px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 62px 44px; gap: 0; }
+  .galpedia-header .tool-heading { width: 165px; grid-row: 1; grid-column: 1; align-self: center; }
+  .galpedia-logo { width: 165px; height: 57px; }
+  .galpedia-logo img { width: 197px; height: 98.5px; top: -21px; left: -15px; }
+  .galpedia-header .mode-switch { grid-row: 2; grid-column: 1 / -1; justify-content: space-between; width: 100%; height: 43px; }
+  .galpedia-header .mode-switch button { font-size: 13px; height: 40px; padding: 6px 8px; }
+  .galpedia-header .header-actions { grid-column: 2; grid-row: 1; gap: 1px; }
+  .galpedia-header .icon-button { min-width: 34px; width: 34px; height: 38px; }
+  .galpedia-home { padding: 0 22px; }
+  .home-hero { display: block; min-height: 0; padding: 30px 0 22px; position: relative; }
+  .home-copy { padding: 0; }
+  .home-eyebrow { font-size: 9px; letter-spacing: .15em; }
+  .home-copy h1 { font-size: 34px; line-height: 1.3; max-width: 230px; margin: 20px 0 13px; }
+  .home-copy h1 span { display: block; }
+  .home-statement { font-size: 17px; line-height: 1.8; margin: 0 0 20px; }
+  .home-description { font-size: 12px; line-height: 1.8; max-width: 90%; margin: 18px 0; }
+  .home-portrait { position: absolute; right: -13px; top: 35px; width: 128px; height: 205px; pointer-events: none; }
+  .home-portrait img { width: 128px; height: 205px; }
+  .home-corners { inset: 20px 4px 22px; background-size: 32px 3px,3px 32px,32px 3px,3px 32px,32px 3px,3px 32px,32px 3px,3px 32px; }
+  .home-portrait-caption { display: none; }
+  .home-search-hint { font-size: 10px; margin-bottom: 19px; }
+  .galpedia-search-form { padding-left: 12px; gap: 8px; min-height: 52px; }
+  .galpedia-search-form input { font-size: 14px; }
+  .galpedia-search-form button { padding: 9px; font-size: 12px; }
+  .home-actions { gap: 10px; }
+  .home-actions a { min-width: 0; flex: 1; padding: 11px 14px; font-size: 13px; }
+  .home-stats { margin-top: 26px; justify-content: space-between; }
+  .home-stats > div { flex: 1; padding: 0 19px; }
+  .home-stats dd { font-size: 24px; }
+  .home-portals { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 0; padding: 20px 0; }
+  .home-portals a { padding: 4px 15px; }
+  .home-portals a:nth-child(odd) { padding-left: 0; }
+  .home-portals a:nth-child(even) { padding-right: 0; border-right: 0; }
+  .portal-number { font-size: 9px; letter-spacing: .1em; }
+  .home-portals h2 { font-size: 19px; margin: 8px 0; }
+  .home-portals p { font-size: 11px; }
+  .home-footer { flex-direction: column; gap: 9px; font-size: 10px; }
+  .galpedia-search-dialog { padding: 20px; }
+  .global-search-results { grid-template-columns: 1fr; gap: 16px; }
+  .galpedia-load-status { top: 114px; width: max-content; max-width: 90vw; }
+}
+@media(prefers-reduced-motion:reduce) { .galpedia * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* Override legacy theme-specific shell chrome without changing workspace controls. */
+html.galpedia .galpedia-header { background: var(--bg); box-shadow: none; color: var(--text); }
+html.galpedia .galpedia-header .mode-switch { position: static; inset: auto; transform: none; background: transparent; border: 0; box-shadow: none; }
+html.galpedia .galpedia-header .mode-switch button { color: var(--text-muted); background: transparent; box-shadow: none; border: 0; border-radius: 0; }
+html.galpedia .galpedia-header .mode-switch button[aria-selected="true"] { color: var(--text); background: transparent; box-shadow: none; }
+html.galpedia[data-home="false"] .galpedia-header .mode-switch button[aria-selected="true"] { color: var(--text); border-bottom: 2px solid var(--accent); }
+html.galpedia .galpedia-header .header-actions .icon-button { color: var(--text); background: transparent; border-color: transparent; box-shadow: none; }
+html.galpedia .galpedia-search-form input { color: var(--text); background: transparent; border: 0; box-shadow: none; }
+html.galpedia .galpedia-search-form button { color: var(--accent); background: var(--surface-muted); box-shadow: none; border: 0; }
+html.galpedia .galpedia-home p,html.galpedia .home-footer { font-family: "Segoe UI","Microsoft YaHei","Noto Sans CJK SC",sans-serif; }
+html.galpedia .galpedia-header .header-actions { position: static; }
+html.galpedia .galpedia-header .tool-heading { margin: 0; }
+html.galpedia .galpedia-home .home-statement { font-family: "Noto Serif CJK SC","SimSun",serif; }

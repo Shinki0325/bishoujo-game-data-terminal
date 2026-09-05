@@ -8,6 +8,7 @@ import {
   prepareBackendBetaFixture
 } from './lib/backend-beta-fixture.js';
 import { createHistory } from './lib/history.js';
+import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
 import { createCustomWork } from './lib/custom-work.js';
 import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
@@ -1030,7 +1031,8 @@ async function initialize() {
   } catch {
     // Private browsing or a blocked storage policy should not block startup.
   }
-  let activeTheme = applyTheme(document, readTheme(themeStorage));
+  let activeTheme = applyTheme(document, document.documentElement.classList.contains('galpedia')
+    ? document.documentElement.dataset.theme : readTheme(themeStorage));
   const renderThemeToggle = () => {
     const isLight = activeTheme === 'light';
     const nextThemeLabel = isLight ? '暗色' : '亮色';
@@ -1041,8 +1043,8 @@ async function initialize() {
   };
   renderThemeToggle();
   for (const [button, iconName, label] of [
-    [elements.modeSelection, 'library', '作品'],
-    [elements.modeCompany, 'building', '会社'],
+    [elements.modeSelection, 'library', '作品库'],
+    [elements.modeCompany, 'building', '会社库'],
     [elements.modeRanking, 'ranking', '排榜'],
     [elements.modePerson, 'person', '人物']
   ]) {
@@ -2204,7 +2206,7 @@ async function initialize() {
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
-    storage: window.localStorage
+    storage: browserStorage()
   });
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
@@ -4396,6 +4398,7 @@ async function initialize() {
 
   function updateUiLocation(method = 'replaceState') {
     if (applyingUiLocation) return;
+    if (document.documentElement.dataset.home === 'true' && method === 'replaceState') return;
     const url = new URL(window.location.href);
     url.hash = formatUiLocationHash(currentUiLocation()).slice(1);
     window.history[method]({}, '', url.href);
@@ -4603,6 +4606,12 @@ async function initialize() {
 
   async function applyUiLocation() {
     if (parseSelectionShare(window.location) !== null) return false;
+    if (document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home')) {
+      currentWorkDetailId = null;
+      if (elements.detailsDialog.open) elements.detailsDialog.close();
+      if (elements.personDetailDialog.open) elements.personDetailDialog.close();
+      return true;
+    }
     const location = parseUiLocationHash(window.location.hash);
     if (location === null) {
       replaceUiLocation();
@@ -5217,18 +5226,26 @@ async function initialize() {
   // Deep links (persons/companies/work details) must remain immediately
   // interactive; the first-visit welcome dialog is only useful on the root
   // workspace and otherwise masks the requested destination.
-  if (!shareImportOpened && !restoredLocation) {
+  if (!shareImportOpened && !restoredLocation && !document.documentElement.classList.contains('galpedia')) {
     openSiteWelcome({
       workCount: populationContract.runtime.workIds.length,
       companyCount: companyDirectory.companies.length
     });
   }
+  let globalSearch = null;
+  return { search: query => {
+    globalSearch ??= createGalpediaSearch({
+      works: ratedDisplayWorks,
+      companyDirectory,
+      enrichment: { workAliasesById: workerWorkAliasesById, workPinyinById: workerWorkPinyinById, workDisplayTitlesById },
+      loadPersons: async () => personPerformanceRuntime ? (await personPerformanceRuntime.loadDirectory()).records : []
+    });
+    return globalSearch(query);
+  } };
 }
 
-if (typeof document !== 'undefined') {
-  installExternalCoverImageRecovery(document);
-  initialize().catch(error => {
-    showStartupFailure(error);
-    console.error(error);
-  });
-}
+if (typeof document !== 'undefined') installExternalCoverImageRecovery(document);
+export const ready = typeof document !== 'undefined' ? initialize().catch(error => {
+  showStartupFailure(error);
+  throw error;
+}) : Promise.resolve(null);
