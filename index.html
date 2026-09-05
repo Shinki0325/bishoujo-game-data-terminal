@@ -306,12 +306,12 @@
         <section id="catalog-results" class="catalog-results" aria-labelledby="catalog-title">
           <div class="results-toolbar">
             <div class="results-heading">
-              <h2 id="catalog-title">作品库</h2>
+              <div class="gp-page-heading"><h2 id="catalog-title">作品库</h2><span class="gp-page-total" id="catalog-total-count">加载中…</span></div>
               <div class="active-filter-state">
                 <output id="active-filter-summary">全部作品</output>
                 <div id="active-filter-chips" class="active-filter-chips" aria-live="polite"></div>
               </div>
-              <span class="results-heading-count" aria-live="polite"><output id="catalog-result-count">0 / 0 项</output></span>
+              <span class="results-heading-count" hidden><output id="catalog-result-count" aria-live="polite" aria-atomic="true">加载中…</output></span>
               <div class="catalog-primary-actions" role="group" aria-label="作品库模式与操作">
                 <div class="catalog-mode-switch" role="group" aria-label="作品库模式">
                   <button data-ui="mode" id="browse-mode-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-pressed="true">浏览作品</button>
@@ -332,7 +332,8 @@
               </div>
               <button data-ui="secondary" id="filter-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-controls="filter-drawer" aria-expanded="false">
                 <span class="toolbar-button-icon" data-icon="filter" aria-hidden="true"></span>
-                <span>筛选</span>
+                <span class="gp-filter-label">筛选</span>
+                <span id="filter-applied-count" class="gp-filter-count" hidden></span>
               </button>
               <div class="gp-sort-control" role="group" aria-label="作品排序">
               <label class="select-field" for="sort-key">
@@ -357,7 +358,7 @@
               </button>
               </div>
               <div class="toolbar-menu-shell selection-card-display-shell">
-                <button data-ui="secondary" id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-expanded="false" aria-controls="selection-card-display-menu">卡片显示 ▾</button>
+                <button data-ui="secondary" id="card-view-toggle" class="toolbar-button toolbar-button-neutral" type="button" aria-label="卡片显示设置" aria-expanded="false" aria-controls="selection-card-display-menu"><span class="gp-display-long">卡片显示 ▾</span><span class="gp-display-short" aria-hidden="true">显示</span></button>
                 <div id="selection-card-display-menu" class="toolbar-menu selection-card-display-menu" hidden>
                   <strong class="toolbar-menu-section-title">显示内容</strong>
                   <div class="selection-card-display-options">
@@ -397,7 +398,7 @@
             </section>
           </div>
 
-          <div id="catalog-grid" class="catalog-grid" aria-live="polite"></div>
+          <div id="catalog-grid" class="catalog-grid"></div>
           <p id="catalog-list-state" class="list-state" role="status" hidden></p>
           <nav id="selection-pagination" class="selection-pagination" aria-label="选片分页">
             <button data-ui="utility" id="selection-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
@@ -415,8 +416,9 @@
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
         <header class="ranking-page-heading">
           <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-label="展开候选作品" aria-controls="ranking-candidates" aria-expanded="false"><span id="mobile-ranking-candidates-label">展开候选</span><output id="mobile-ranking-candidate-count">0</output><span class="mobile-ranking-candidates-chevron" aria-hidden="true"></span></button>
-          <div class="ranking-page-title">
+          <div class="ranking-page-title gp-page-heading">
             <h2>排榜</h2>
+            <span id="ranking-heading-count" class="gp-page-total">加载中…</span>
             <div class="ranking-subject-tabs" role="group" aria-label="排榜对象">
               <button data-ui="mode" id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
               <button data-ui="mode" id="ranking-subject-company" type="button" aria-pressed="false">会社</button>
@@ -543,9 +545,10 @@
       </section>
       <section id="company-view" class="company-view" role="tabpanel" aria-labelledby="mode-company" hidden>
         <header class="company-directory-header">
-          <div class="company-directory-heading">
+          <div class="company-directory-heading gp-page-heading">
             <h2>会社库</h2>
-            <p class="company-directory-summary">COMPANY ARCHIVE · <span id="company-directory-count">213</span></p>
+            <span id="company-directory-total" class="gp-page-total">加载中…</span>
+            <span class="gp-result-summary" role="status" aria-atomic="true">筛选 <span id="company-directory-count">—</span> 家</span>
           </div>
           <button data-ui="utility" id="company-ranking-toggle" class="toolbar-button toolbar-button-neutral company-ranking-entry" type="button" aria-expanded="false" hidden>进入排榜 →</button>
           <div class="company-directory-tools">
@@ -590,7 +593,7 @@
         </div>
         <div class="company-directory-layout">
           <div>
-            <div id="company-list" class="company-directory-list" aria-live="polite"></div>
+            <div id="company-list" class="company-directory-list"></div>
             <nav id="company-directory-pagination" class="selection-pagination company-directory-pagination" aria-label="会社目录分页">
               <button data-ui="utility" id="company-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
               <label class="selection-page-field" for="company-page-input">
@@ -648,9 +651,10 @@
 
       <section id="person-view" class="person-view" role="tabpanel" aria-labelledby="mode-person" hidden>
         <header class="person-directory-header">
-          <div class="person-directory-heading">
+          <div class="person-directory-heading gp-page-heading">
             <h2>人物库</h2>
-            <p class="person-directory-summary">PERSON ARCHIVE · <span id="person-directory-count">0</span></p>
+            <span id="person-directory-total" class="gp-page-total">加载中…</span>
+            <span class="gp-result-summary" id="person-result-summary" role="status" aria-atomic="true" hidden>筛选 <span id="person-directory-count">—</span> 位</span>
           </div>
           <div class="person-directory-tools">
             <div class="search-field person-directory-search gp-local-search">
@@ -670,7 +674,7 @@
           </div>
         </header>
         <div class="person-directory-layout">
-          <section id="person-directory-panel" class="person-directory-panel" role="tabpanel" aria-label="人物列表" aria-live="polite">
+          <section id="person-directory-panel" class="person-directory-panel" role="tabpanel" aria-label="人物列表">
             <div class="person-directory-list-head" aria-hidden="true">
               <span>代表角色/作品</span><span>人物</span><span>作品 / 名义</span><span>职能</span>
               <span class="person-directory-activity-heading">
@@ -679,7 +683,7 @@
               </span>
               <span>收录范围</span>
             </div>
-            <div id="person-directory-list" class="person-directory-list" aria-live="polite"></div>
+            <div id="person-directory-list" class="person-directory-list"></div>
             <p id="person-directory-loading" class="person-directory-loading" role="status" hidden>正在加载人物数据…</p>
             <nav id="person-directory-pagination" class="selection-pagination person-directory-pagination" aria-label="人物目录分页">
               <button id="person-page-previous" class="toolbar-button toolbar-button-neutral" type="button">上一页</button>
@@ -701,6 +705,7 @@
         <p id="person-detail-meta" class="person-detail-header-counts"></p>
         <form method="dialog"><button id="person-detail-close" class="icon-button" type="submit" aria-label="关闭人物详情">×</button></form>
       </div>
+      <p id="person-detail-load-status" class="gp-result-summary" role="status" hidden></p>
       <div id="person-detail-body" class="person-detail-body">
         <p class="person-directory-empty">选择人物查看详情</p>
       </div>

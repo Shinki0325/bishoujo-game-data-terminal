@@ -8,6 +8,7 @@ import {
   prepareBackendBetaFixture
 } from './lib/backend-beta-fixture.js';
 import { createHistory } from './lib/history.js';
+import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
 import { createCustomWork } from './lib/custom-work.js';
@@ -3208,8 +3209,8 @@ async function initialize() {
     // and full-width typography so an unspaced query cannot accidentally
     // select only the sparse same-name EGS record.
     const persons = filterPersonsBySearch(personRuntimeState, personQuery);
-    elements.personDirectoryCount.textContent = new Intl.NumberFormat('zh-CN').format(persons.length);
-    personDirectoryView.render({ persons, selectedPersonId: selectedPersonId ?? null, activityAxis: personActivityAxis });
+    syncHeadingCount(document.querySelector('#person-directory-total'), personRuntimeState.length, '位人物');
+    personDirectoryView.render({ persons, totalPersonCount: personRuntimeState.length, selectedPersonId: selectedPersonId ?? null, activityAxis: personActivityAxis });
   }
 
   function renderCompanyDirectory() {
@@ -3221,7 +3222,9 @@ async function initialize() {
       direction,
       hasAvatar: companyHasImage ? true : null
     });
-    elements.companyDirectoryCount.textContent = String(companies.length);
+    syncHeadingCount(document.querySelector('#company-directory-total'), companyDirectory.companies.length, '家会社');
+    syncLocalFeedback(elements.companyDirectoryCount, new Intl.NumberFormat('zh-CN').format(companies.length));
+    elements.companyDirectoryCount.parentElement.hidden = companies.length === companyDirectory.companies.length;
     const selected = companies.find(company => company.companyId === selectedCompanyId)
       ?? companyDirectory.companies.find(company => company.companyId === selectedCompanyId)
       ?? null;
@@ -3979,6 +3982,8 @@ async function initialize() {
     elements.displayMenuButton.disabled = importBusy;
     elements.exportState.disabled = importBusy;
     elements.exportPng.disabled = importBusy || activeRankingState.rankedCount === 0 || pngExportInProgress;
+    elements.exportPng.setAttribute('aria-busy', String(pngExportInProgress));
+    elements.exportPng.setAttribute('aria-label', pngExportInProgress ? '正在导出图片' : '导出图片');
     elements.mobileRankingUndo.disabled = elements.undoEdit.disabled;
     elements.mobileRankingRedo.disabled = elements.redoEdit.disabled;
     elements.mobileRankingCandidateCount.textContent = String(activeRankingState.unrankedCount);
@@ -3991,6 +3996,7 @@ async function initialize() {
     elements.mobileRankingImport.disabled = importBusy;
     elements.mobileRankingExport.disabled = importBusy;
     elements.mobileRankingExportPng.disabled = elements.exportPng.disabled;
+    elements.mobileRankingExportPng.setAttribute('aria-busy', String(pngExportInProgress));
     elements.mobileRankingClearBoard.disabled = elements.clearBoard.disabled;
     elements.mobileRankingClearCandidates.disabled = elements.clearCandidates.disabled;
     elements.mobileRankingClearAnnotations.disabled = elements.clearAnnotations.disabled;
@@ -4123,8 +4129,11 @@ async function initialize() {
     elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
     elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
     elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
+    syncLocalFeedback(document.querySelector('#ranking-heading-count'), `已排 ${new Intl.NumberFormat('zh-CN').format(companyState?.rankedCount ?? model.rankedCount)} · 候选 ${new Intl.NumberFormat('zh-CN').format(companyState?.candidateCompanyIds.length ?? model.unrankedCount)}`);
+    syncHeadingCount(document.querySelector('#catalog-total-count'), catalogTotal, '部作品');
     elements.filterResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
-    elements.catalogResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
+    syncLocalFeedback(elements.catalogResultCount, `${new Intl.NumberFormat('zh-CN').format(visiblePresentationWorks.length)} / ${new Intl.NumberFormat('zh-CN').format(catalogTotal)} 项`);
+    elements.catalogResultCount.parentElement.hidden = visiblePresentationWorks.length === catalogTotal;
     renderWorkspace(model);
     if (personDirectoryOpen) {
       renderPersonDirectory();

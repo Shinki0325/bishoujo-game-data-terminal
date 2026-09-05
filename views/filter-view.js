@@ -1140,8 +1140,16 @@ export function createFilterView({
       }
       if (!emitAdvanced.pending()) elements.expression.value = advancedDraft;
       elements.modeBasic.disabled = currentState.mode === 'advanced' && !canRepresentDraftAsBasic();
-      elements.summary.textContent = activeFilterCount(currentState) === 0
-        ? `全部作品 · ${currentCounts.current}`
+      const appliedCount = activeFilterCount(currentState);
+      const badge = optionalElement(root, 'filter-applied-count');
+      if (badge) {
+        badge.hidden = appliedCount === 0;
+        badge.textContent = String(appliedCount);
+        badge.setAttribute('aria-label', `已应用 ${appliedCount} 项筛选`);
+        badge.parentElement.setAttribute('aria-label', appliedCount ? `筛选，已应用 ${appliedCount} 项` : '筛选');
+      }
+      elements.summary.textContent = appliedCount === 0
+        ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
         : `${activeFilterCount(currentState)} 项筛选 · ${currentCounts.current} 个结果`;
       renderTagActions();
       renderCompanies();

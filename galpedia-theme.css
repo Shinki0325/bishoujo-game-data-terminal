@@ -744,7 +744,7 @@ html.galpedia #catalog-results .catalog-controls {
 }
 
 @media (max-width: 899px) {
-  html.galpedia #catalog-results .results-heading h2 { grid-area: title; }
+  html.galpedia #catalog-results .results-heading .gp-page-heading { grid-area: title; }
   html.galpedia #catalog-results .results-heading .active-filter-state { grid-area: state; min-width: 0; }
   html.galpedia #catalog-results .results-heading .results-heading-count { grid-area: count; }
   html.galpedia #catalog-results .results-heading .catalog-primary-actions { grid-area: actions; }
@@ -1670,6 +1670,81 @@ html.galpedia[data-theme] .company-ranking-candidates {
 
 html.galpedia[data-theme] .company-ranking-candidates {
   background: var(--surface-muted);
+}
+
+/* Shared workspace headings: callers supply counts, layout stays local. */
+html.galpedia[data-theme] .gp-page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  min-width: 0;
+}
+html.galpedia[data-theme] .gp-page-heading h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 0;
+}
+html.galpedia[data-theme] :is(.gp-page-total, .gp-result-summary) {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+html.galpedia[data-theme] .gp-result-summary { font-size: 12px; }
+html.galpedia[data-theme] .gp-filter-count:not([hidden]) {
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--text);
+  background: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+html.galpedia[data-theme] #person-detail-load-status { padding: 0 20px 8px; }
+html.galpedia[data-theme] .gp-display-short { display: none; }
+html.galpedia[data-theme] .gp-result-summary[hidden],
+html.galpedia[data-theme] .results-heading-count[hidden] { display: none; }
+html.galpedia[data-theme] :is(.company-directory-header, .person-directory-header) {
+  align-items: center;
+  gap: 12px 20px;
+  padding-block: 4px 10px;
+  margin-bottom: 12px;
+}
+html.galpedia[data-theme] .ranking-page-title { gap: 6px 14px; }
+html.galpedia[data-theme] .ranking-page-heading .workspace-counts {
+  background: transparent;
+  border-color: transparent;
+}
+html.galpedia[data-theme] .ranking-page-heading .count-item:not(:first-child) { display: none; }
+html.galpedia[data-theme] #catalog-results .results-heading {
+  min-height: 48px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 6px 14px;
+}
+@media (max-width: 899px) {
+  html.galpedia[data-theme] #filter-toggle { position: relative; }
+  html.galpedia[data-theme] #card-view-toggle .gp-display-long { display: none; }
+  html.galpedia[data-theme] #card-view-toggle .gp-display-short { display: inline; }
+  html.galpedia[data-theme] #filter-toggle .gp-filter-label { display: none; }
+  html.galpedia[data-theme] #filter-toggle .gp-filter-count:not([hidden]) {
+    position: absolute;
+    top: -5px;
+    right: -4px;
+    font-size: 10px;
+    line-height: 14px;
+  }
+  html.galpedia[data-theme] #catalog-results .results-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'title count' 'actions actions';
+    gap: 4px 10px;
+  }
+  html.galpedia[data-theme] :is(.company-directory-heading, .person-directory-heading) { margin-bottom: 8px; }
+  html.galpedia[data-theme] .ranking-page-title { flex: 1; }
 }
 
 @media (max-width: 899px) {
