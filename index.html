@@ -241,11 +241,13 @@
                   data-year-boundary="none"
                   aria-label="发行年份范围"
                 >
-                  <input id="release-year-start" class="year-range-input year-range-start" type="range" min="1987" max="2026" step="1" aria-label="最早发行年份">
-                  <input id="release-year-end" class="year-range-input year-range-end" type="range" min="1987" max="2026" step="1" aria-label="最晚发行年份">
+                  <input id="release-year-start" class="year-range-input year-range-start" type="range" min="1987" max="2026" step="1" aria-label="最早发行年份" tabindex="-1" aria-hidden="true">
+                  <input id="release-year-end" class="year-range-input year-range-end" type="range" min="1987" max="2026" step="1" aria-label="最晚发行年份" tabindex="-1" aria-hidden="true">
                   <span class="year-range-track" aria-hidden="true">
                     <span id="release-year-range-selection" class="year-range-selection"></span>
                   </span>
+                  <button id="release-year-start-handle" class="year-range-handle year-range-handle-start" type="button" role="slider" aria-label="最早发行年份边界" aria-valuemin="1987" aria-valuemax="2026" aria-valuenow="1987"></button>
+                  <button id="release-year-end-handle" class="year-range-handle year-range-handle-end" type="button" role="slider" aria-label="最晚发行年份边界" aria-valuemin="1987" aria-valuemax="2026" aria-valuenow="2026"></button>
                   <span class="year-range-bound year-range-bound-start" aria-hidden="true">1987</span>
                   <span class="year-range-bound year-range-bound-middle" aria-hidden="true">2000</span>
                   <span class="year-range-bound year-range-bound-end" aria-hidden="true">2026</span>

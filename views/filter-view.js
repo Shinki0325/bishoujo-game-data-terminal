@@ -269,6 +269,8 @@ export function createFilterView({
     releaseYearRangeSelection: optionalElement(root, 'release-year-range-selection'),
     releaseYearStartTooltip: optionalElement(root, 'release-year-start-tooltip'),
     releaseYearEndTooltip: optionalElement(root, 'release-year-end-tooltip'),
+    releaseYearStartHandle: optionalElement(root, 'release-year-start-handle'),
+    releaseYearEndHandle: optionalElement(root, 'release-year-end-handle'),
     releaseYearHistogram: optionalElement(root, 'release-year-histogram'),
     releaseYearPreview: optionalElement(root, 'release-year-result-preview'),
     companySearch: requiredElement(root, 'company-search'),
@@ -1078,6 +1080,18 @@ export function createFilterView({
   function renderYearLabels(values = currentState) {
     const startText = String(values.releaseYearStart);
     const endText = String(values.releaseYearEnd);
+    const yearMinimum = DEFAULT_FILTER_STATE.releaseYearStart;
+    const yearCount = Math.max(1, yearCounts.size);
+    const handlePosition = (year, endpoint) => {
+      const index = year - yearMinimum;
+      // Place the start boundary on the preceding bar and the end boundary
+      // on the following bar so neither vertical handle covers a selected
+      // year's data column.
+      const offset = endpoint === 'start' ? -0.5 : 1.5;
+      return Math.max(0, Math.min(100, ((index + offset) / yearCount) * 100));
+    };
+    const startHandlePosition = handlePosition(values.releaseYearStart, 'start');
+    const endHandlePosition = handlePosition(values.releaseYearEnd, 'end');
     if (elements.releaseYearStart) elements.releaseYearStart.value = startText;
     if (elements.releaseYearEnd) elements.releaseYearEnd.value = endText;
     if (elements.releaseYearStartNumber) elements.releaseYearStartNumber.value = startText;
@@ -1108,8 +1122,17 @@ export function createFilterView({
       const endPercent = 100 - (((values.releaseYearEnd - minimum) / span) * 100);
       elements.releaseYearRangeSelection.style.setProperty('--year-range-start', `${startPercent}%`);
       elements.releaseYearRangeSelection.style.setProperty('--year-range-end', `${endPercent}%`);
-      elements.releaseYearSlider?.style.setProperty('--year-start-position', `${startPercent}%`);
-      elements.releaseYearSlider?.style.setProperty('--year-end-position', `${100 - endPercent}%`);
+    }
+    elements.releaseYearSlider?.style.setProperty('--year-start-position', `${startHandlePosition}%`);
+    elements.releaseYearSlider?.style.setProperty('--year-end-position', `${endHandlePosition}%`);
+    for (const [handle, position, value, label] of [
+      [elements.releaseYearStartHandle, startHandlePosition, startText, `最早发行年份边界 ${startText}`],
+      [elements.releaseYearEndHandle, endHandlePosition, endText, `最晚发行年份边界 ${endText}`]
+    ]) {
+      if (!handle) continue;
+      handle.style.left = `${position}%`;
+      handle.setAttribute('aria-valuenow', value);
+      handle.setAttribute('aria-valuetext', label);
     }
     if (elements.releaseYearStartTooltip) elements.releaseYearStartTooltip.textContent = startText;
     if (elements.releaseYearEndTooltip) elements.releaseYearEndTooltip.textContent = endText;
@@ -1147,7 +1170,9 @@ export function createFilterView({
       bar.className = 'year-histogram-bar';
       bar.style.setProperty('--year-height', `${(count / maximum) * 100}%`);
       bar.dataset.year = String(year);
-      bar.dataset.inRange = String(year >= values.releaseYearStart && year <= values.releaseYearEnd);
+      const inRange = year >= values.releaseYearStart && year <= values.releaseYearEnd;
+      bar.dataset.inRange = String(inRange);
+      bar.classList.toggle('is-in-range', inRange);
       bar.title = `${year}：${count} 部作品`;
       bar.setAttribute('aria-label', `${year} 年，${count} 部作品，点击调整年份范围`);
       bar.addEventListener('click', () => {
@@ -1161,16 +1186,33 @@ export function createFilterView({
     elements.releaseYearHistogram.replaceChildren(fragment);
   }
 
-  function commitYearEndpoint(endpoint, value) {
+  function yearFromClientX(endpoint, clientX) {
+    const rect = elements.releaseYearHistogram?.getBoundingClientRect?.();
+    if (!rect || rect.width <= 0) return null;
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const index = endpoint === 'start'
+      ? Math.round(ratio * yearCounts.size + 0.5)
+      : Math.round(ratio * yearCounts.size - 1.5);
+    return clampYear(DEFAULT_FILTER_STATE.releaseYearStart + index);
+  }
+
+  function draftYearEndpoint(endpoint, value) {
     const input = endpoint === 'start' ? elements.releaseYearStart : elements.releaseYearEnd;
-    if (!input) return;
+    if (!input) return null;
     input.value = String(value);
     const values = normalizeYearValues(endpoint, input);
     renderYearLabels(values);
     renderYearPreview(values);
+    return values;
+  }
+
+  function commitYearEndpoint(endpoint, value) {
+    const values = draftYearEndpoint(endpoint, value);
+    if (!values) return;
     emitYear(values);
     emitYear.flush();
-    input.focus({ preventScroll: true });
+    const handle = endpoint === 'start' ? elements.releaseYearStartHandle : elements.releaseYearEndHandle;
+    handle?.focus({ preventScroll: true });
   }
 
   function flushPendingEdits() {
@@ -1241,6 +1283,51 @@ export function createFilterView({
     if (!input) return;
     commitYearEndpoint(endpoint, year);
   });
+  for (const [endpoint, handle] of [
+    ['start', elements.releaseYearStartHandle],
+    ['end', elements.releaseYearEndHandle]
+  ]) {
+    if (!handle) continue;
+    handle.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      emitYear.cancel();
+      let lastValues = null;
+      const move = moveEvent => {
+        const year = yearFromClientX(endpoint, moveEvent.clientX);
+        if (year === null) return;
+        lastValues = draftYearEndpoint(endpoint, year);
+      };
+      const finish = finishEvent => {
+        handle.releasePointerCapture?.(finishEvent.pointerId);
+        handle.removeEventListener('pointermove', move);
+        handle.classList.remove('is-dragging');
+        if (lastValues) {
+          emitYear(lastValues);
+          emitYear.flush();
+        }
+      };
+      handle.classList.add('is-dragging');
+      handle.setPointerCapture?.(event.pointerId);
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', finish, { once: true });
+      handle.addEventListener('pointercancel', finish, { once: true });
+    });
+    handle.addEventListener('keydown', event => {
+      const current = Number(endpoint === 'start'
+        ? elements.releaseYearStart?.value
+        : elements.releaseYearEnd?.value);
+      let next = current;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') next -= 1;
+      else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') next += 1;
+      else if (event.key === 'PageUp') next += 5;
+      else if (event.key === 'PageDown') next -= 5;
+      else if (event.key === 'Home') next = DEFAULT_FILTER_STATE.releaseYearStart;
+      else if (event.key === 'End') next = DEFAULT_FILTER_STATE.releaseYearEnd;
+      else return;
+      event.preventDefault();
+      commitYearEndpoint(endpoint, clampYear(next));
+    });
+  }
   elements.companySearch.setAttribute('aria-controls', 'company-options');
   elements.companySearch.addEventListener('input', () => {
     companyPopupActive = true;

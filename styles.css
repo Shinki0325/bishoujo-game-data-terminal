@@ -1079,6 +1079,7 @@ h3 {
   position: sticky;
   top: 0;
   z-index: 3;
+  height: 34px;
   min-height: 34px;
   display: flex;
   align-items: center;
@@ -1524,6 +1525,7 @@ h3 {
   appearance: none;
   pointer-events: none;
   background: transparent;
+  opacity: 0;
 }
 
 .company-directory-card-open > .company-avatar.company-avatar-fallback {
@@ -1540,16 +1542,15 @@ h3 {
 }
 
 .year-range-input::-webkit-slider-thumb {
-  width: 3px;
+  width: 1px;
   height: 74px;
   margin-top: 0;
   appearance: none;
-  pointer-events: auto;
-  background: var(--accent);
+  pointer-events: none;
+  background: transparent;
   border: 0;
   border-radius: 2px;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent);
-  cursor: grab;
+  box-shadow: none;
 }
 
 .year-range-input::-moz-range-track {
@@ -1559,35 +1560,67 @@ h3 {
 }
 
 .year-range-input::-moz-range-thumb {
-  width: 3px;
+  width: 1px;
   height: 74px;
   box-sizing: border-box;
-  pointer-events: auto;
-  background: var(--accent);
+  pointer-events: none;
+  background: transparent;
   border: 0;
   border-radius: 2px;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent);
-  cursor: grab;
+  box-shadow: none;
 }
 
 .year-range-start::-webkit-slider-thumb {
-  background: var(--year-start-handle);
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-start-handle);
+  background: transparent;
+  box-shadow: none;
 }
 
 .year-range-end::-webkit-slider-thumb {
-  background: var(--year-end-handle);
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-end-handle);
+  background: transparent;
+  box-shadow: none;
 }
 
 .year-range-start::-moz-range-thumb {
+  background: transparent;
+  box-shadow: none;
+}
+
+.year-range-end::-moz-range-thumb {
+  background: transparent;
+  box-shadow: none;
+}
+
+.year-range-handle {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  width: 3px;
+  height: 74px;
+  min-height: 74px;
+  padding: 0;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  border: 0;
+  border-radius: 2px;
+  cursor: grab;
+}
+
+#release-year-start-handle {
   background: var(--year-start-handle);
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-start-handle);
 }
 
-.year-range-end::-moz-range-thumb {
+#release-year-end-handle {
   background: var(--year-end-handle);
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-end-handle);
+}
+
+.year-range-handle:hover,
+.year-range-handle:focus-visible,
+.year-range-handle.is-dragging {
+  width: 5px;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .year-range-bound {
@@ -1672,7 +1705,12 @@ h3 {
 }
 
 #release-year-histogram .year-histogram-bar[data-in-range="true"] {
-  background: var(--accent);
+  background: var(--accent) !important;
+}
+
+#release-year-histogram .year-histogram-bar.is-in-range {
+  background: var(--accent) !important;
+  background-image: none !important;
 }
 
 .year-histogram-bar:hover,
@@ -1720,6 +1758,26 @@ h3 {
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="maximum"]
   .year-range-start::-moz-range-thumb {
   transform: translateX(-6px);
+}
+
+.year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
+  #release-year-start-handle {
+  transform: translateX(calc(-50% - 3px));
+}
+
+.year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
+  #release-year-end-handle {
+  transform: translateX(calc(-50% + 3px));
+}
+
+.year-range-slider[data-year-handles="coincident"][data-year-boundary="minimum"]
+  #release-year-end-handle {
+  transform: translateX(calc(-50% + 6px));
+}
+
+.year-range-slider[data-year-handles="coincident"][data-year-boundary="maximum"]
+  #release-year-start-handle {
+  transform: translateX(calc(-50% - 6px));
 }
 
 .year-range-input:focus-visible::-webkit-slider-thumb {
