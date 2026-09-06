@@ -47,7 +47,7 @@ body {
 }
 
 body.is-filter-drawer-open {
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -1773,6 +1773,16 @@ input[type="range"] {
   flex-direction: column;
   overflow: visible;
   background: var(--surface);
+}
+
+/* On desktop the drawer is a real left workspace: the catalogue keeps its
+   document flow and scroll position instead of being covered by it. */
+@media (min-width: 900px) {
+  body.is-filter-drawer-open .catalog-results {
+    width: calc(100% - var(--filter-drawer-width));
+    margin-left: var(--filter-drawer-width);
+    transition: width 100ms ease-out, margin-left 100ms ease-out;
+  }
 }
 
 .results-toolbar {
@@ -4430,6 +4440,10 @@ dialog::backdrop {
 }
 
 @media (max-width: 899px) {
+  body.is-filter-drawer-open {
+    overflow: hidden;
+  }
+
   :root {
     --header-height: 112px;
     --ranking-card-size: 72px;
