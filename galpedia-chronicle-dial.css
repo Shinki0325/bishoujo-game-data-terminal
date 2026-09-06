@@ -1,0 +1,147 @@
+/* GALPEDIA Chronicle Dial v0.1. Namespaced; no global reset or external assets. */
+/* The host owns the palette; the dial never infers light/dark from pixels. */
+html.galpedia {
+  --gp-host-dial-ink: var(--text-muted);
+  --gp-host-dial-accent: var(--accent);
+  --gp-host-dial-secondary: color-mix(in srgb, var(--accent) 58%, var(--text-muted));
+}
+
+html.galpedia .galpedia-load-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 6px 16px;
+}
+
+.gp-dial {
+  --gp-dial-size: 96px;
+  --gp-dial-ink: #34354f;
+  --gp-dial-accent: #7358bd;
+  --gp-dial-secondary: #9384af;
+  --gp-dial-duration: 1.8s;
+  --gp-dial-orbit-duration: 6.8s;
+  --gp-dial-mini-duration: .9s;
+  display: inline-flex; flex: 0 0 auto;
+  width: var(--gp-dial-size); height: var(--gp-dial-size);
+  vertical-align: middle; color: var(--gp-dial-ink);
+  pointer-events: none; isolation: isolate;
+}
+.gp-dial[data-theme="dark"] {
+  --gp-dial-ink: #d6d5e6; --gp-dial-accent: #bea7fb;
+  --gp-dial-secondary: #aa9bbc;
+}
+/* theme=inherit is explicit: map these through host tokens instead of guessing its theme. */
+.gp-dial[data-theme="inherit"] {
+  --gp-dial-ink: var(--gp-host-dial-ink, #34354f);
+  --gp-dial-accent: var(--gp-host-dial-accent, #7358bd);
+  --gp-dial-secondary: var(--gp-host-dial-secondary, #9384af);
+}
+.gp-dial__svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gp-dial__outer, .gp-dial__rim, .gp-dial__track,
+.gp-dial__tick, .gp-dial__crosshair { fill: none; stroke: var(--gp-dial-ink); }
+.gp-dial__outer { stroke-width: .8; opacity: .12; }
+.gp-dial__rim { stroke-width: 1.25; opacity: .62; }
+.gp-dial__tick { stroke-linecap: round; }
+.gp-dial__tick--major { stroke-width: 1.9; opacity: .85; }
+.gp-dial__tick--minor { stroke-width: 1.2; opacity: .50; }
+.gp-dial__crosshair { stroke-width: .8; stroke-dasharray: 1 6; opacity: .14; }
+.gp-dial__track { stroke-width: 1.15; opacity: .30; }
+.gp-dial__track--inner { opacity: .15; }
+.gp-dial__anchor { fill: var(--gp-dial-ink); opacity: .94; }
+.gp-dial__center { fill: var(--gp-dial-accent); }
+.gp-dial__rotor { transform-box: view-box; transform-origin: 50% 50%; }
+.gp-dial__rotor--primary {
+  animation: gp-dial-wind var(--gp-dial-duration) linear infinite;
+}
+.gp-dial__rotor--secondary {
+  animation: gp-dial-counter var(--gp-dial-orbit-duration) linear infinite;
+}
+.gp-dial__arc { fill: none; stroke: var(--gp-dial-accent); stroke-width: 3.6; }
+.gp-dial__haze { fill: none; stroke: var(--gp-dial-accent); stroke-width: 9; opacity: .07; stroke-linecap: round; }
+.gp-dial__echo { fill: none; stroke: var(--gp-dial-accent); stroke-width: 1; opacity: .33; }
+.gp-dial__head { fill: var(--gp-dial-accent); }
+.gp-dial__hand { fill: none; stroke: var(--gp-dial-accent); stroke-width: 1.9; opacity: .68; }
+.gp-dial__secondary-arc { fill: none; stroke: var(--gp-dial-secondary); stroke-width: 1.2; }
+.gp-dial__orbit-dot { fill: var(--gp-dial-secondary); opacity: .55; }
+/* Compact: less geometry, thicker lines, a genuinely small clock rather than microtype. */
+.gp-dial--compact { --gp-dial-size: 48px; }
+.gp-dial--compact .gp-dial__tick--minor,
+.gp-dial--compact .gp-dial__outer,
+.gp-dial--compact .gp-dial__crosshair,
+.gp-dial--compact .gp-dial__rotor--secondary,
+.gp-dial--compact .gp-dial__track--inner,
+.gp-dial--compact .gp-dial__haze,
+.gp-dial--compact .gp-dial__echo { display: none; }
+.gp-dial--compact .gp-dial__rim { stroke-width: 3; opacity: .44; }
+.gp-dial--compact .gp-dial__tick--major { stroke-width: 4; }
+.gp-dial--compact .gp-dial__track { stroke-width: 2.5; opacity: .22; }
+.gp-dial--compact .gp-dial__arc { stroke-width: 6; }
+.gp-dial--compact .gp-dial__hand { stroke-width: 3.8; opacity: .75; }
+.gp-dial--inline { --gp-dial-size: 20px; }
+.gp-dial__mini-track { fill: none; stroke: var(--gp-dial-ink); opacity: .24; stroke-width: 1.6; }
+.gp-dial__mini-ticks { fill: none; stroke: var(--gp-dial-ink); stroke-width: 1.4; opacity: .65; }
+.gp-dial__mini-arc, .gp-dial__mini-hand { fill: none; stroke: var(--gp-dial-accent); stroke-width: 2.1; stroke-linecap: round; }
+.gp-dial__mini-dot { fill: var(--gp-dial-accent); }
+.gp-dial__rotor--mini { animation: gp-dial-clockwise var(--gp-dial-mini-duration) linear infinite; }
+.gp-loading-view { display: inline-flex; align-items: center; gap: 10px; }
+.gp-loading-view[hidden] { display: none !important; }
+.gp-loading-view__label { color: inherit; font: inherit; }
+.gp-loading-view--stack { flex-direction: column; gap: 14px; }
+/* Explicit pause for previews; background tabs pause without changing request state. */
+.gp-dial[data-paused="true"] .gp-dial__rotor,
+html[data-gp-dials-suspended] .gp-dial__rotor { animation-play-state: paused; }
+.gp-dial[data-reduced-motion="true"] .gp-dial__rotor { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .gp-dial .gp-dial__rotor { animation: none; }
+}
+@media (forced-colors: active) {
+  .gp-dial { --gp-dial-ink: CanvasText !important;
+    --gp-dial-accent: CanvasText !important; --gp-dial-secondary: CanvasText !important; }
+  .gp-dial__haze, .gp-dial__echo { display: none; }
+}
+@keyframes gp-dial-counter { to { transform: rotate(-360deg); } }
+@keyframes gp-dial-clockwise { to { transform: rotate(360deg); } }
+@keyframes gp-dial-wind {
+  0% { transform: rotate(0.0000deg); }
+  2.5% { transform: rotate(4.7031deg); }
+  5% { transform: rotate(9.7336deg); }
+  7.5% { transform: rotate(15.4108deg); }
+  10% { transform: rotate(22.0383deg); }
+  12.5% { transform: rotate(29.8959deg); }
+  15% { transform: rotate(39.2336deg); }
+  17.5% { transform: rotate(50.2644deg); }
+  20% { transform: rotate(63.1602deg); }
+  22.5% { transform: rotate(78.0465deg); }
+  25% { transform: rotate(95.0000deg); }
+  27.5% { transform: rotate(114.0465deg); }
+  30% { transform: rotate(135.1602deg); }
+  32.5% { transform: rotate(158.2644deg); }
+  35% { transform: rotate(183.2336deg); }
+  37.5% { transform: rotate(209.8959deg); }
+  40% { transform: rotate(238.0383deg); }
+  42.5% { transform: rotate(267.4108deg); }
+  45% { transform: rotate(297.7336deg); }
+  47.5% { transform: rotate(328.7031deg); }
+  50% { transform: rotate(360.0000deg); }
+  52.5% { transform: rotate(391.2969deg); }
+  55% { transform: rotate(422.2664deg); }
+  57.5% { transform: rotate(452.5892deg); }
+  60% { transform: rotate(481.9617deg); }
+  62.5% { transform: rotate(510.1041deg); }
+  65% { transform: rotate(536.7664deg); }
+  67.5% { transform: rotate(561.7356deg); }
+  70% { transform: rotate(584.8398deg); }
+  72.5% { transform: rotate(605.9535deg); }
+  75% { transform: rotate(625.0000deg); }
+  77.5% { transform: rotate(641.9535deg); }
+  80% { transform: rotate(656.8398deg); }
+  82.5% { transform: rotate(669.7356deg); }
+  85% { transform: rotate(680.7664deg); }
+  87.5% { transform: rotate(690.1041deg); }
+  90% { transform: rotate(697.9617deg); }
+  92.5% { transform: rotate(704.5892deg); }
+  95% { transform: rotate(710.2664deg); }
+  97.5% { transform: rotate(715.2969deg); }
+  100% { transform: rotate(720.0000deg); }
+}

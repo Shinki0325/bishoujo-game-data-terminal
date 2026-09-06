@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" class="galpedia">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>时庭轮盘 · GALPEDIA 本地接入预览</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./galpedia-theme.css">
+    <link rel="stylesheet" href="./galpedia-chronicle-dial.css">
+    <style>
+      body { min-height: 100vh; padding: 32px; background: var(--bg); color: var(--text); }
+      main { max-width: 900px; margin: 0 auto; }
+      header { display: flex; justify-content: space-between; gap: 24px; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+      h1 { margin: 0; font: 28px/1.3 var(--gp-font-heading, serif); }
+      p { color: var(--text-muted); }
+      .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0; }
+      .toolbar button { min-height: 38px; }
+      .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .sample { min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+      .sample h2 { margin: 0; font-size: 14px; }
+      #runtime-region { min-height: 76px; display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+      #loader-host { min-width: 48px; }
+      #loader-host[hidden] { display: none; }
+      #announcement { margin: 12px 0 0; min-height: 22px; }
+      @media (max-width: 640px) { body { padding: 20px 14px; } header { display: block; } .panel { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p>GALPEDIA / LOCAL CANDIDATE</p>
+          <h1>时庭轮盘</h1>
+          <p>只演示真实 loading 状态绑定，不伪造进度，也不锁定页面。</p>
+        </div>
+        <button id="theme-toggle" type="button">切换明暗</button>
+      </header>
+      <div class="toolbar" aria-label="加载状态测试">
+        <button id="run-fast" type="button">快任务（不显示）</button>
+        <button id="run-slow" type="button">开始加载</button>
+        <button id="run-error" type="button">模拟失败</button>
+        <button id="run-cancel" type="button">取消</button>
+      </div>
+      <section id="runtime-region" aria-busy="false" aria-label="加载区域">
+        <span id="loader-host" aria-hidden="true"></span>
+        <span id="region-copy">这里保留已有内容，轮盘只占用状态位置。</span>
+      </section>
+      <p id="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+      <section class="panel" aria-label="三档尺寸">
+        <article class="sample"><h2>standard · 96px</h2><span id="standard-dial"></span></article>
+        <article class="sample"><h2>compact · 48px</h2><span id="compact-dial"></span></article>
+        <article class="sample"><h2>inline · 20px</h2><span id="inline-dial"></span></article>
+        <article class="sample"><h2>减少动态效果</h2><span id="reduced-dial"></span></article>
+      </section>
+    </main>
+    <script src="./lib/chronicle-dial.js"></script>
+    <script>
+      const root = document.documentElement;
+      const host = document.querySelector('#loader-host');
+      const region = document.querySelector('#runtime-region');
+      const announcement = document.querySelector('#announcement');
+      const loader = window.GalpediaDial.createLoadingController({ host, region, announcer: announcement, variant: 'compact', theme: 'inherit', delay: 160, slowAfter: 8000 });
+      for (const [id, variant, options] of [['standard-dial', 'standard', { size: 96 }], ['compact-dial', 'compact'], ['inline-dial', 'inline'], ['reduced-dial', 'compact', { reducedMotion: true }]]) document.querySelector('#' + id).append(window.GalpediaDial.createDial({ variant, theme: 'inherit', ...(options ?? {}) }));
+      let ticket = null;
+      function start(duration, label, outcome = 'finish') { ticket?.cancel(); ticket = loader.begin(label); window.setTimeout(() => { if (outcome === 'fail') ticket?.fail('本次任务失败，保留原有内容。'); else ticket?.finish('任务已结束。'); ticket = null; }, duration); }
+      document.querySelector('#run-fast').addEventListener('click', () => start(70, '快速命中缓存…'));
+      document.querySelector('#run-slow').addEventListener('click', () => start(1800, '正在准备资料库…'));
+      document.querySelector('#run-error').addEventListener('click', () => start(1100, '正在读取资料…', 'fail'));
+      document.querySelector('#run-cancel').addEventListener('click', () => { ticket?.cancel(); ticket = null; });
+      document.querySelector('#theme-toggle').addEventListener('click', () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; });
+    </script>
+  </body>
+</html>
