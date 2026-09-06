@@ -1228,6 +1228,14 @@ h3 {
   border-bottom: 1px solid var(--border);
 }
 
+.filter-foundation-title {
+  margin: 0;
+  padding: 10px 12px 4px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
 .filter-section legend {
   padding: 0;
   margin-bottom: 8px;
