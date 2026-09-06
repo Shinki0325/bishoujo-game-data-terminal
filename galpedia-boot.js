@@ -31,13 +31,31 @@ const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
 let lastWorkspaceRoute = '#works';
-const isLocalPreview = location.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-const localLoadingMinimumMs = isLocalPreview ? 900 : 0;
 const dialRevealDelay = 160;
-let loadingStartedAt = 0;
-let loadingFinishTimer = null;
 let statusRevealTimer = null;
 let runtimeLoading = null;
+function prepareLoadingRegion() {
+  const route = location.hash.split('?')[0];
+  const id = route === '#persons' ? 'person-view'
+    : route === '#companies' ? 'company-view'
+      : route === '#ranking' ? 'ranking-view' : 'selection-view';
+  const active = document.getElementById(id);
+  if (!active) return;
+  document.querySelectorAll('#workspace > section').forEach(section => { section.hidden = section !== active; });
+  active.hidden = false;
+}
+function placeLoadingStatus() {
+  const route = location.hash.split('?')[0];
+  const target = route === '#persons'
+    ? document.querySelector('#person-directory-panel')
+    : route === '#companies'
+      ? document.querySelector('#company-directory-layout, .company-directory-layout')
+      : route === '#ranking'
+        ? document.querySelector('#ranking-view')
+        : document.querySelector('#catalog-results');
+  if (target && status.parentElement !== target) target.append(status);
+  status.dataset.loadRegion = route.slice(1) || 'works';
+}
 function createRuntimeLoading() {
   if (!runtimeLoading && globalThis.GalpediaDial && loadIndicator) {
     runtimeLoading = globalThis.GalpediaDial.createLoadingController({
@@ -45,6 +63,7 @@ function createRuntimeLoading() {
       region: workspace,
       announcer: statusText,
       variant: 'standard',
+      size: 72,
       theme: 'inherit',
       delay: 160,
       slowAfter: 8000
@@ -93,7 +112,8 @@ paintTheme();
 
 async function ensureRuntime() {
   if (!runtimePromise) {
-    loadingStartedAt = performance.now();
+    prepareLoadingRegion();
+    placeLoadingStatus();
     if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
     const dialReady = globalThis.GalpediaDial
       ? Promise.resolve()
@@ -118,16 +138,13 @@ async function ensureRuntime() {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;
       const finish = () => {
-        loadingFinishTimer = null;
         clearTimeout(statusRevealTimer);
         statusRevealTimer = null;
         runtimeTicket?.finish();
         runtimeTicket = null;
         status.hidden = true;
       };
-      const remaining = Math.max(0, localLoadingMinimumMs - (performance.now() - loadingStartedAt));
-      if (remaining > 0) loadingFinishTimer = setTimeout(finish, remaining);
-      else finish();
+      finish();
       paintTheme();
       syncHome();
       return api;

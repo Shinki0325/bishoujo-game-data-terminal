@@ -7,11 +7,46 @@ html.galpedia {
 }
 
 html.galpedia .galpedia-load-status {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 112px;
-  padding: 8px 18px;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
+  padding: 32px 24px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transform: none;
+  pointer-events: none;
+  flex-direction: column;
+}
+html.galpedia #catalog-results,
+html.galpedia #company-directory-layout,
+html.galpedia .company-directory-layout,
+html.galpedia #person-directory-panel,
+html.galpedia #ranking-view {
+  position: relative;
+}
+html.galpedia .galpedia-load-status .gp-loading-view__label {
+  max-width: min(100%, 360px);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+}
+html.galpedia #catalog-results:has(> .galpedia-load-status:not([hidden])) > #catalog-grid,
+html.galpedia #catalog-results:has(> .galpedia-load-status:not([hidden])) > #selection-pagination,
+html.galpedia #person-directory-panel:has(> .galpedia-load-status:not([hidden])) > .person-directory-list-head,
+html.galpedia #person-directory-panel:has(> .galpedia-load-status:not([hidden])) > #person-directory-list,
+html.galpedia #person-directory-panel:has(> .galpedia-load-status:not([hidden])) > #person-directory-pagination,
+html.galpedia .company-directory-layout:has(.galpedia-load-status:not([hidden])) #company-list,
+html.galpedia .company-directory-layout:has(.galpedia-load-status:not([hidden])) #company-directory-pagination {
+  visibility: hidden;
 }
 
 .gp-dial {
@@ -84,23 +119,10 @@ html.galpedia .galpedia-load-status {
 .gp-dial__mini-arc, .gp-dial__mini-hand { fill: none; stroke: var(--gp-dial-accent); stroke-width: 2.1; stroke-linecap: round; }
 .gp-dial__mini-dot { fill: var(--gp-dial-accent); }
 .gp-dial__rotor--mini { animation: gp-dial-clockwise var(--gp-dial-mini-duration) linear infinite; }
-.gp-loading-view { display: inline-flex; align-items: center; gap: 10px; }
+.gp-loading-view { display: inline-flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
 .gp-loading-view[hidden] { display: none !important; }
 .gp-loading-view__label { color: inherit; font: inherit; }
 .gp-loading-view--stack { flex-direction: column; gap: 14px; }
-/* Keep the standard dial observable on narrow local/mobile previews instead of
- * letting the live label squeeze the host into a tall, empty-looking sliver. */
-@media (max-width: 360px) {
-  html.galpedia .galpedia-load-status {
-    width: calc(100vw - 24px);
-    max-width: calc(100vw - 24px);
-    min-height: 128px;
-    box-sizing: border-box;
-    justify-content: center;
-  }
-  .gp-loading-view { flex-direction: column; gap: 8px; }
-  .gp-loading-view__label { white-space: nowrap; }
-}
 /* Explicit pause for previews; background tabs pause without changing request state. */
 .gp-dial[data-paused="true"] .gp-dial__rotor,
 html[data-gp-dials-suspended] .gp-dial__rotor { animation-play-state: paused; }
