@@ -347,6 +347,10 @@ html.galpedia[data-theme="light"] .catalog-primary-actions #compare-mode-toggle[
 
 .filter-backdrop {
   background: transparent;
+  background-color: transparent !important;
+  background-image: none !important;
+  appearance: none;
+  opacity: 0;
   pointer-events: none;
 }
 

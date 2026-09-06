@@ -927,6 +927,10 @@ h3 {
   /* Keep the catalogue readable while the drawer is open.  The drawer owns
      the interaction lock; the backdrop is only a quiet spatial cue. */
   background: transparent;
+  background-color: transparent !important;
+  background-image: none !important;
+  appearance: none;
+  opacity: 0;
   pointer-events: none;
   border: 0;
   border-radius: 0;
@@ -981,8 +985,8 @@ h3 {
   grid-template-columns: minmax(0, 1fr) 120px 40px;
   align-items: center;
   gap: 8px;
-  min-height: 54px;
-  padding: 9px 12px;
+  min-height: 52px;
+  padding: 7px 12px;
   background: var(--surface-muted);
   border-bottom: 1px solid var(--border);
 }
@@ -1194,8 +1198,8 @@ h3 {
 }
 
 .filter-region {
-  padding: 12px;
-  margin: 10px;
+  padding: 10px;
+  margin: 8px;
   border-radius: var(--radius);
 }
 
@@ -1218,7 +1222,7 @@ h3 {
 }
 
 .filter-section {
-  padding: 14px;
+  padding: 12px;
   margin: 0;
   border: 0;
   border-bottom: 1px solid var(--border);
