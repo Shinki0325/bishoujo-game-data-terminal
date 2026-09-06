@@ -41,6 +41,10 @@
   --danger-soft: #553038;
   --warning: #c39a5b;
   --line: #3f485c;
+  /* Boundary handles are controls, not data columns: cool cyan and warm
+     amber keep the two draggable edges legible against the violet histogram. */
+  --year-start-handle: #79c8d2;
+  --year-end-handle: #e2a06d;
   /* Informational role chips stay distinct from the violet interaction
      accent. These are deliberately quiet so they do not compete with Tier
      colours or artwork. */
@@ -74,6 +78,9 @@
   --danger-soft: #f5dddd;
   --warning: #9a7338;
   --line: #d9d6e1;
+  /* Keep the control colors distinct from the purple in-range bars. */
+  --year-start-handle: #356b7c;
+  --year-end-handle: #a45d3c;
   --gp-role-main: #4d6582;
   --gp-role-main-bg: #edf2f8;
   --gp-role-side: #885b4c;
