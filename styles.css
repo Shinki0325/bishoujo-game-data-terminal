@@ -25,6 +25,8 @@
   --focus: #087c72;
   --accent: #087c72;
   --accent-soft: #dcefeb;
+  --year-start-handle: #8b78b5;
+  --year-end-handle: #b77b5d;
   --danger: #a53c37;
   --warning: #d99a22;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -1568,6 +1570,26 @@ h3 {
   cursor: grab;
 }
 
+.year-range-start::-webkit-slider-thumb {
+  background: var(--year-start-handle);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-start-handle);
+}
+
+.year-range-end::-webkit-slider-thumb {
+  background: var(--year-end-handle);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-end-handle);
+}
+
+.year-range-start::-moz-range-thumb {
+  background: var(--year-start-handle);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-start-handle);
+}
+
+.year-range-end::-moz-range-thumb {
+  background: var(--year-end-handle);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--year-end-handle);
+}
+
 .year-range-bound {
   position: absolute;
   top: 78px;
@@ -1602,6 +1624,8 @@ h3 {
 
 .year-range-value-start { left: var(--year-start-position, 0%); }
 .year-range-value-end { left: var(--year-end-position, 100%); }
+.year-range-value-start { border-color: var(--year-start-handle); }
+.year-range-value-end { border-color: var(--year-end-handle); }
 
 .year-range-slider:focus-within .year-range-value,
 .year-range-slider:hover .year-range-value {
@@ -5918,6 +5942,8 @@ dialog::backdrop {
   --focus: #087f9a;
   --accent: #0783a1;
   --accent-soft: #dceff3;
+  --year-start-handle: #75639e;
+  --year-end-handle: #a76548;
 }
 
 :root[data-theme="light"] body { background: var(--bg); }
