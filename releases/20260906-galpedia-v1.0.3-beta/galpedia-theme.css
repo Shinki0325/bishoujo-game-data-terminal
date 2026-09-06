@@ -1,0 +1,1799 @@
+/*
+ * GALPEDIA shared visual skin
+ *
+ * This file is intentionally loaded after the legacy terminal stylesheet. It
+ * owns the paper/indigo surfaces, restrained controls, work cards, filters,
+ * dialogs, and work-detail surfaces. The shell/homepage and tier colour
+ * variables remain outside this file so their interaction contracts stay
+ * untouched.
+ */
+
+:root {
+  --gp-font-ui: Inter, "Segoe UI", "Noto Sans SC", "Noto Sans JP", sans-serif;
+  --gp-font-heading: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --radius: 4px;
+}
+
+:root:not([data-theme]),
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1f2431;
+  --surface: #252b39;
+  --panel: #252b39;
+  --surface-muted: #2d3c58;
+  --surface-raised: #33425f;
+  --surface-strong: #1b2030;
+  --text: #f3f0f6;
+  --text-muted: #b8b6c1;
+  --muted: #b8b6c1;
+  --text-on-strong: #ffffff;
+  --border: #3f485c;
+  --border-strong: #5a667e;
+  --focus: #c8a9e3;
+  /* Light wisteria is for labels, links, and state text on indigo. */
+  --accent: #c6a8df;
+  --accent-hover: #dfc5f2;
+  /* Darker violet keeps white primary actions comfortably contrasted. */
+  --gp-primary-bg: #5d3c79;
+  --gp-primary-bg-hover: #70498f;
+  --accent-soft: #423356;
+  --danger: #b64d4a;
+  --danger-soft: #553038;
+  --warning: #c39a5b;
+  --line: #3f485c;
+  /* Boundary handles are controls, not data columns: cool cyan and warm
+     amber keep the two draggable edges legible against the violet histogram. */
+  --year-start-handle: #79c8d2;
+  --year-end-handle: #e2a06d;
+  /* Informational role chips stay distinct from the violet interaction
+     accent. These are deliberately quiet so they do not compete with Tier
+     colours or artwork. */
+  --gp-role-main: #b9c9df;
+  --gp-role-main-bg: #2e3c53;
+  --gp-role-side: #ddb5a9;
+  --gp-role-side-bg: #49393c;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #faf9fb;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --surface-muted: #f0edf4;
+  --surface-raised: #ffffff;
+  --surface-strong: #252b39;
+  --text: #252b39;
+  --text-muted: #656477;
+  --muted: #656477;
+  --text-on-strong: #ffffff;
+  --border: #d9d6e1;
+  --border-strong: #b8b4c5;
+  --focus: #6b4a8d;
+  --accent: #6b4a8d;
+  --accent-hover: #573a73;
+  --gp-primary-bg: #68458a;
+  --gp-primary-bg-hover: #563875;
+  --accent-soft: #eee7f5;
+  --danger: #a43e3d;
+  --danger-soft: #f5dddd;
+  --warning: #9a7338;
+  --line: #d9d6e1;
+  /* Keep the control colors distinct from the purple in-range bars. */
+  --year-start-handle: #356b7c;
+  --year-end-handle: #a45d3c;
+  --gp-role-main: #4d6582;
+  --gp-role-main-bg: #edf2f8;
+  --gp-role-side: #885b4c;
+  --gp-role-side-bg: #faefeb;
+}
+
+/* Shared type roles: controls stay sans; only content headings use Songti. */
+button,
+input,
+select,
+textarea {
+  font-family: var(--gp-font-ui);
+}
+
+:root:not([data-theme]) body,
+:root[data-theme="dark"] body,
+:root[data-theme="light"] body {
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--gp-font-ui);
+}
+
+.selection-view,
+.catalog-results,
+.company-view,
+.mobile-selection-view {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.results-heading h2,
+.company-directory-heading h2,
+.ranking-page-title h2,
+.mobile-selection-heading h2,
+.panel-heading h2,
+.dialog-heading h2,
+#work-details .details-title-block h2,
+#work-compare-dialog h2 {
+  font-family: var(--gp-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* Keep shared controls compact and squared-off; no new control geometry is
+   introduced here, and the existing tier controls keep their own colours. */
+.selection-view button,
+.selection-view input,
+.selection-view select,
+.company-view button,
+.company-view input,
+.company-view select,
+.filter-drawer button,
+.filter-drawer input,
+.filter-drawer select,
+dialog button,
+dialog input,
+dialog select,
+dialog textarea {
+  border-radius: 4px;
+}
+
+.selection-view input[type="number"],
+.selection-view input[type="search"],
+.selection-view select,
+.company-view input[type="search"],
+.company-view select,
+.filter-drawer input[type="number"],
+.filter-drawer input[type="search"],
+.filter-drawer select,
+dialog input[type="number"],
+dialog input[type="search"],
+dialog select,
+dialog textarea {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+.selection-view input:focus-visible,
+.selection-view select:focus-visible,
+.company-view input:focus-visible,
+.company-view select:focus-visible,
+.filter-drawer input:focus-visible,
+.filter-drawer select:focus-visible,
+dialog input:focus-visible,
+dialog select:focus-visible,
+dialog textarea:focus-visible {
+  outline-color: var(--focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 22%, transparent);
+}
+
+/* Work-library toolbar and filters. */
+.results-toolbar {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 96%, var(--surface-muted));
+  border-bottom-color: var(--border);
+  box-shadow: 0 2px 8px rgb(24 22 38 / 8%);
+}
+
+.results-heading {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.results-heading output,
+.results-heading-count,
+.company-directory-summary,
+.selection-page-total {
+  color: var(--text-muted);
+}
+
+.results-heading-count {
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 85%, var(--text));
+}
+
+.catalog-controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-button-neutral,
+.action-neutral {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+.toolbar-button-neutral:hover:not(:disabled),
+.action-neutral:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.toolbar-button-neutral[aria-pressed="true"],
+.toolbar-button-neutral[aria-expanded="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.toolbar-button-primary,
+.toolbar-button-strong,
+.action-primary,
+#filter-apply,
+#start-work-ranking,
+#start-company-ranking,
+#company-ranking-toggle,
+.details-compare-button {
+  color: #ffffff;
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+  box-shadow: 0 2px 5px rgb(37 30 54 / 18%);
+}
+
+.toolbar-button-primary:hover:not(:disabled),
+.toolbar-button-strong:hover:not(:disabled),
+.action-primary:hover:not(:disabled),
+#filter-apply:hover:not(:disabled),
+#start-work-ranking:hover:not(:disabled),
+#start-company-ranking:hover:not(:disabled),
+#company-ranking-toggle:hover:not(:disabled),
+.details-compare-button:hover:not(:disabled),
+.details-compare-button:focus-visible {
+  color: #ffffff;
+  background: var(--gp-primary-bg-hover);
+  border-color: var(--gp-primary-bg-hover);
+  box-shadow: 0 3px 8px rgb(37 30 54 / 24%);
+}
+
+.toolbar-button-strong {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+/* The legacy light-theme rules are intentionally specific. Keep this
+   html.galpedia layer equally explicit so catalogue controls do not fall back
+   to the old cyan palette. */
+html.galpedia:not([data-theme]) .toolbar-button-primary,
+html.galpedia[data-theme="dark"] .toolbar-button-primary,
+html.galpedia[data-theme="light"] .toolbar-button-primary,
+html.galpedia:not([data-theme]) .action-primary,
+html.galpedia[data-theme="dark"] .action-primary,
+html.galpedia[data-theme="light"] .action-primary,
+html.galpedia:not([data-theme]) #filter-apply,
+html.galpedia[data-theme="dark"] #filter-apply,
+html.galpedia[data-theme="light"] #filter-apply,
+html.galpedia:not([data-theme]) #start-work-ranking,
+html.galpedia[data-theme="dark"] #start-work-ranking,
+html.galpedia[data-theme="light"] #start-work-ranking,
+html.galpedia:not([data-theme]) #start-company-ranking,
+html.galpedia[data-theme="dark"] #start-company-ranking,
+html.galpedia[data-theme="light"] #start-company-ranking,
+html.galpedia:not([data-theme]) #company-ranking-toggle,
+html.galpedia[data-theme="dark"] #company-ranking-toggle,
+html.galpedia[data-theme="light"] #company-ranking-toggle {
+  color: #ffffff;
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+}
+
+html.galpedia:not([data-theme]) .toolbar-button-primary:hover:not(:disabled),
+html.galpedia[data-theme="dark"] .toolbar-button-primary:hover:not(:disabled),
+html.galpedia[data-theme="light"] .toolbar-button-primary:hover:not(:disabled),
+html.galpedia:not([data-theme]) .action-primary:hover:not(:disabled),
+html.galpedia[data-theme="dark"] .action-primary:hover:not(:disabled),
+html.galpedia[data-theme="light"] .action-primary:hover:not(:disabled),
+html.galpedia:not([data-theme]) #filter-apply:hover:not(:disabled),
+html.galpedia[data-theme="dark"] #filter-apply:hover:not(:disabled),
+html.galpedia[data-theme="light"] #filter-apply:hover:not(:disabled),
+html.galpedia:not([data-theme]) #start-work-ranking:hover:not(:disabled),
+html.galpedia[data-theme="dark"] #start-work-ranking:hover:not(:disabled),
+html.galpedia[data-theme="light"] #start-work-ranking:hover:not(:disabled),
+html.galpedia:not([data-theme]) #start-company-ranking:hover:not(:disabled),
+html.galpedia[data-theme="dark"] #start-company-ranking:hover:not(:disabled),
+html.galpedia[data-theme="light"] #start-company-ranking:hover:not(:disabled),
+html.galpedia:not([data-theme]) #company-ranking-toggle:hover:not(:disabled),
+html.galpedia[data-theme="dark"] #company-ranking-toggle:hover:not(:disabled),
+html.galpedia[data-theme="light"] #company-ranking-toggle:hover:not(:disabled) {
+  color: #ffffff;
+  background: var(--gp-primary-bg-hover);
+  border-color: var(--gp-primary-bg-hover);
+}
+
+html.galpedia:not([data-theme]) .catalog-mode-switch > .toolbar-button,
+html.galpedia[data-theme="dark"] .catalog-mode-switch > .toolbar-button,
+html.galpedia[data-theme="light"] .catalog-mode-switch > .toolbar-button {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html.galpedia:not([data-theme]) .catalog-mode-switch .toolbar-button[aria-pressed="true"],
+html.galpedia[data-theme="dark"] .catalog-mode-switch .toolbar-button[aria-pressed="true"],
+html.galpedia[data-theme="light"] .catalog-mode-switch .toolbar-button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+html.galpedia:not([data-theme]) .catalog-primary-actions #compare-mode-toggle[aria-pressed="true"],
+html.galpedia[data-theme="dark"] .catalog-primary-actions #compare-mode-toggle[aria-pressed="true"],
+html.galpedia[data-theme="light"] .catalog-primary-actions #compare-mode-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.selection-context-bar {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 82%, var(--surface));
+  border-bottom-color: color-mix(in srgb, var(--accent) 36%, var(--border));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.selection-context-summary {
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+}
+
+.filter-backdrop {
+  background: transparent;
+  background-color: transparent !important;
+  background-image: none !important;
+  appearance: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-backdrop:hover,
+.filter-backdrop:focus,
+.filter-backdrop:focus-visible {
+  background: transparent !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.filter-drawer {
+  color: var(--text);
+  background: var(--surface);
+  border-right-color: var(--border);
+  box-shadow: 10px 0 28px rgb(24 22 38 / 16%);
+}
+
+/* Help and close share one action group. Do not let the scrolling body
+   shrink/cover the heading at browser zoom. */
+html.galpedia[data-theme] .filter-drawer > .panel-heading {
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) 120px auto;
+  gap: 6px;
+}
+html.galpedia[data-theme] .filter-heading-actions { display: flex; align-items: center; gap: 4px; }
+html.galpedia[data-theme] .filter-heading-actions > .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.panel-heading,
+.dialog-heading,
+.candidate-toolbar {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+.filter-scroll,
+.filter-footer {
+  background: var(--surface);
+}
+
+.filter-footer {
+  border-top-color: var(--border);
+}
+
+.filter-section,
+.filter-group,
+.checkbox-list,
+#company-options,
+.person-filter-options,
+.company-option,
+.checkbox-row {
+  border-color: var(--border);
+}
+
+.filter-group summary,
+.numeric-filters label,
+.year-number-inputs label,
+.select-field {
+  color: var(--text-muted);
+}
+
+.filter-chip,
+.count-badge,
+.active-filter-chips:not(:empty),
+.company-selected:not(:empty),
+.person-filter-selected:not(:empty),
+.attribute-selected:not(:empty),
+.tag-selected:not(:empty) {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--border);
+  border-radius: 3px;
+}
+
+.tag-state-button[data-state="include"] {
+  color: #2a6f64;
+  background: #e7f3f0;
+  border-color: #79afa6;
+}
+
+.tag-state-button[data-state="exclude"] {
+  color: #8f3a53;
+  background: #fae9ee;
+  border-color: #cb8295;
+}
+
+/* Paper cards: cover artwork is contained, preserving the source image. */
+.catalog-grid {
+  background: var(--surface);
+}
+
+.work-card,
+.selection-card,
+.company-directory-card {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgb(37 32 48 / 12%);
+  transition: border-color 130ms ease, box-shadow 130ms ease;
+}
+
+.work-card > img,
+.selection-card-cover > img,
+.company-directory-card-open > .company-avatar {
+  object-fit: contain;
+  background: var(--surface-muted);
+}
+
+.selection-card:hover,
+.company-directory-card:hover,
+.selection-card:focus-within,
+.company-directory-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgb(37 32 48 / 18%);
+  transform: none;
+}
+
+.selection-card.is-selected,
+.company-directory-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent), 0 3px 10px rgb(37 32 48 / 16%);
+}
+
+.selection-card-overlay,
+.work-card-info,
+.company-directory-card-overlay {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgb(37 43 57 / 0%), rgb(37 43 57 / 94%) 45%);
+  backdrop-filter: none;
+}
+
+.selection-card-title,
+.work-card-title {
+  color: #ffffff;
+  background: transparent;
+}
+
+.selection-card-company,
+.selection-card-stats,
+.work-card-brand,
+.work-card-stats {
+  color: #e5e1eb;
+}
+
+.selection-card-rating-line {
+  color: #f5f0f8;
+  background: rgb(107 74 141 / 45%);
+  border-color: rgb(255 255 255 / 24%);
+  border-radius: 3px;
+}
+
+.selection-card-vndb-rating { color: #dfd7f0; }
+.selection-card-bangumi-rating { color: #d7eadf; }
+
+.selection-card-selected-mark,
+.company-directory-card-selected-mark {
+  color: #ffffff;
+  background: var(--gp-primary-bg);
+  border-color: rgb(255 255 255 / 55%);
+  border-radius: 3px;
+  box-shadow: none;
+}
+
+.selection-card-compare {
+  color: #ffffff;
+  background: rgb(37 43 57 / 92%);
+  border-color: rgb(255 255 255 / 36%);
+  border-radius: 4px;
+}
+
+.selection-card-compare.is-compared {
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+}
+
+.selection-card-version-badge,
+.selection-card-year {
+  color: #ffffff;
+  background: rgb(37 43 57 / 92%);
+  border-color: rgb(255 255 255 / 28%);
+  border-radius: 3px;
+}
+
+.selection-card-missing-image {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+/* Library cards only: ranking artwork and user tier colours stay untouched. */
+html.galpedia #catalog-grid.catalog-grid > .selection-card {
+  height: auto;
+  aspect-ratio: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--border) 50%, var(--surface));
+  box-shadow: none;
+}
+
+html.galpedia #catalog-grid > .selection-card:hover,
+html.galpedia #catalog-grid > .selection-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 3px 10px rgb(37 32 48 / 10%);
+}
+
+html.galpedia #catalog-grid > .selection-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover {
+  position: relative;
+  inset: auto;
+  flex: 0 0 var(--selection-card-size);
+  width: 100%;
+  height: var(--selection-card-size);
+  min-height: var(--selection-card-size);
+  aspect-ratio: auto;
+  background: var(--bg);
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover > img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: var(--bg);
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay {
+  position: relative;
+  inset: auto;
+  flex: 1 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title {
+  flex: 0 0 auto;
+  display: -webkit-box;
+  min-height: 36px;
+  margin: 0;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+html.galpedia #catalog-grid .selection-card-metadata {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--text-muted);
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-company {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-year {
+  position: static;
+  flex: 0 0 auto;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+html.galpedia #catalog-grid .selection-card-company + .selection-card-year::before {
+  content: '·';
+  margin-right: 5px;
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-lines {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 9px;
+  margin-top: auto;
+}
+
+html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+html.galpedia #catalog-grid .selection-card-rating-source {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+html.galpedia #catalog-grid .selection-card-rating-value {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 899px) {
+  html.galpedia #catalog-grid.catalog-grid > .selection-card {
+    padding-bottom: 27px;
+  }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay {
+    flex: 0 0 auto;
+    gap: 0;
+    padding: 7px 6px 0;
+  }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title {
+    display: block;
+    min-height: 17px;
+    font-size: 11px;
+    line-height: 17px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-company,
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-lines {
+    display: none;
+  }
+
+  html.galpedia #catalog-grid .selection-card-metadata { display: contents; }
+  html.galpedia #catalog-grid .selection-card-company + .selection-card-year::before { content: none; }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-year {
+    position: absolute;
+    inset: auto 6px 7px auto;
+    font-size: 10px;
+    line-height: 14px;
+  }
+
+  /* Year is positioned against the card, not against its metadata band. */
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay { position: static; }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-mobile-rating {
+    display: inline-flex;
+    bottom: 7px;
+    left: 6px;
+    min-height: 0;
+    max-width: calc(100% - 12px);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--text);
+    background: transparent;
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 600;
+  }
+
+  html.galpedia #catalog-grid.catalog-grid > .selection-card.has-selection-card-year .selection-card-mobile-rating {
+    max-width: calc(100% - 43px);
+  }
+}
+
+/* Reduce toolbar chrome without removing controls or shrinking touch targets. */
+html.galpedia #catalog-results .active-filter-chips:not(:empty) {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+html.galpedia #catalog-results .catalog-mode-switch {
+  background: transparent;
+  border-color: transparent;
+}
+
+html.galpedia #catalog-results .results-heading {
+  min-height: 46px;
+  padding-block: 4px;
+}
+
+html.galpedia #catalog-results .catalog-controls {
+  box-shadow: none;
+  padding-top: 2px;
+  padding-bottom: 6px;
+}
+
+@media (max-width: 899px) {
+  html.galpedia #catalog-results .results-heading .gp-page-heading { grid-area: title; }
+  html.galpedia #catalog-results .results-heading .active-filter-state { grid-area: state; min-width: 0; }
+  html.galpedia #catalog-results .results-heading .results-heading-count { grid-area: count; }
+  html.galpedia #catalog-results .results-heading .catalog-primary-actions { grid-area: actions; }
+}
+
+@media (max-width: 720px) {
+  html.galpedia #catalog-results .results-heading {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'title state count' 'actions actions actions';
+    gap: 3px 8px;
+    align-items: center;
+  }
+  html.galpedia #catalog-results .active-filter-state { padding: 0; }
+}
+
+@media (min-width: 721px) and (max-width: 899px) {
+  html.galpedia #catalog-results .results-heading {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'title state count' 'actions actions actions';
+    gap: 4px 12px;
+  }
+  html.galpedia #catalog-results .results-heading-count { justify-self: end; }
+  html.galpedia #catalog-results .catalog-primary-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  html.galpedia #catalog-results .catalog-primary-actions > #quick-ranking-entry { width: auto; }
+  html.galpedia #catalog-results .catalog-controls {
+    grid-template-columns: 42px minmax(0, 1fr) 160px 42px;
+  }
+  html.galpedia #catalog-results .catalog-search { grid-column: 2; grid-row: 1; }
+  html.galpedia #catalog-results #filter-toggle { grid-column: 1; grid-row: 1; }
+  html.galpedia #catalog-results .catalog-controls .select-field { grid-column: 3; grid-row: 1; }
+  html.galpedia #catalog-results #sort-direction-toggle { grid-column: 4; grid-row: 1; }
+  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title { font-size: 13px; line-height: 19px; }
+}
+
+/* Company list/detail cards use the same surface vocabulary without touching
+   any ranking-tier geometry or custom tier colours. */
+.company-directory-detail {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 8px 22px rgb(37 32 48 / 12%);
+}
+
+.company-directory-work {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+.company-directory-work:hover,
+.company-directory-work:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 65%, var(--surface));
+  border-color: var(--accent);
+}
+
+.company-directory-work-cover {
+  background: var(--surface-raised);
+}
+
+.company-directory-work-cover img {
+  object-fit: contain;
+}
+
+.company-directory-work-title {
+  color: var(--text);
+}
+
+.company-directory-work-meta,
+.company-detail-meta {
+  color: var(--text-muted);
+}
+
+/* Dialogs and menus share one quiet paper/indigo frame. */
+dialog:not(#media-preview):not(#media-crop):not(#sticker-editor),
+.toolbar-menu,
+.tier-color-palette {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  border-radius: 5px;
+  box-shadow: 0 16px 40px rgb(23 20 35 / 24%);
+}
+
+dialog::backdrop{
+  background: rgb(27 24 43 / 48%);
+}
+
+.dialog-heading {
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+.dialog-actions {
+  border-top: 1px solid var(--border);
+}
+
+.toolbar-menu-section-title {
+  color: var(--text-muted);
+}
+
+.toolbar-menu button,
+.toolbar-menu label {
+  color: var(--text);
+  background: transparent;
+}
+
+.toolbar-menu button:hover:not(:disabled),
+.toolbar-menu label:hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+.action-danger {
+  color: #ffffff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.action-danger:hover:not(:disabled) {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--danger) 82%, #000000);
+  border-color: color-mix(in srgb, var(--danger) 82%, #000000);
+}
+
+.bangumi-import-capacity {
+  border-radius: 4px;
+}
+
+#status-message {
+  color: #ffffff;
+  background: var(--surface-strong);
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px rgb(23 20 35 / 22%);
+}
+
+/* Detail view: the identity rail remains visually primary, while metadata
+   and credits use low-density rules instead of nested boxed panels. */
+#work-details {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 18px 48px rgb(23 20 35 / 28%);
+}
+
+#work-details .details-scroll,
+#work-details .details-hero,
+#work-details .details-info-column,
+#work-details .details-identity-media,
+#work-details .details-identity-meta {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+#work-details .details-identity-media {
+  background: var(--surface-muted);
+}
+
+#work-details .details-cover {
+  background: var(--surface-muted);
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+#work-details .details-cover img {
+  object-fit: contain;
+}
+
+#work-details .details-metadata div {
+  border-color: var(--border);
+}
+
+#work-details .details-metadata dt,
+#work-details .details-aliases,
+#work-details .details-rating-snapshot,
+#work-details .details-credit-list dt,
+#work-details .details-song-credits,
+#work-details .details-cast-actors {
+  color: var(--text-muted);
+}
+
+#work-details .details-metadata dd,
+#work-details .details-cast-character strong {
+  color: var(--text);
+}
+
+#work-details .details-score-panel {
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+#work-details .details-score-source {
+  border: 1px solid var(--border);
+  border-top-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-raised);
+  box-shadow: none;
+}
+
+#work-details .details-score-source::after {
+  display: none;
+}
+
+#work-details .details-score-source-egs {
+  border-top-color: #6e9f96;
+  background: color-mix(in srgb, #6e9f96 12%, var(--surface-raised));
+}
+
+#work-details .details-score-source-vndb {
+  border-top-color: #8994c1;
+  background: color-mix(in srgb, #8994c1 12%, var(--surface-raised));
+}
+
+#work-details .details-score-source-bangumi {
+  border-top-color: #bd975e;
+  background: color-mix(in srgb, #bd975e 12%, var(--surface-raised));
+}
+
+#work-details .details-score-source .details-rating-line {
+  color: var(--text);
+}
+
+#work-details .details-score-source-egs .details-rating-line { color: #79b3a8; }
+#work-details .details-score-source-vndb .details-rating-line { color: #aeb8e2; }
+#work-details .details-score-source-bangumi .details-rating-line { color: #d5b273; }
+
+#work-details .details-score-source .details-rating-link,
+#work-details .details-rating-link {
+  color: color-mix(in srgb, var(--accent) 88%, var(--text));
+}
+
+#work-details .details-tags-section,
+#work-details .details-info-column > .details-credits {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+#work-details .details-tags li,
+#work-details .details-tags li:not([class*="details-tag-"]) {
+  height: 30px;
+  min-height: 30px;
+  padding: 4px 8px;
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+#work-details .details-tags .details-tag-attribute {
+  color: #e4d8f0;
+  background: color-mix(in srgb, var(--accent) 38%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
+}
+
+#work-details .details-tags .details-tag-content {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+#work-details .details-tags .details-tag-character {
+  color: #d4e5eb;
+  background: #304c5b;
+  border-color: #567587;
+}
+
+#work-details .details-tags .details-tag-adult {
+  color: #f4d7de;
+  background: color-mix(in srgb, var(--danger) 35%, var(--surface));
+  border-color: color-mix(in srgb, var(--danger) 68%, var(--border));
+}
+
+#work-details .details-sensitive-toggle[aria-expanded="false"] {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+}
+
+#work-details .details-sensitive-toggle[aria-expanded="true"] {
+  color: #ffffff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+#work-details .details-credits-tabs {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+  box-shadow: 0 2px 7px rgb(23 20 35 / 8%);
+}
+
+#work-details .details-credits-tabs button {
+  color: var(--text-muted);
+  background: var(--surface);
+  border-bottom-color: transparent;
+}
+
+#work-details .details-credits-tabs button:hover,
+#work-details .details-credits-tabs button:focus-visible {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+#work-details .details-credits-tabs button[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* A nested legacy refinement previously painted this tab rail with a
+   semi-transparent grey wash. The explicit GALPEDIA path wins while leaving
+   tab spacing and scroll behavior untouched. */
+html.galpedia #work-details .details-info-column > .details-credits .details-credits-tabs {
+  color: var(--text);
+  background: var(--surface);
+  border-top-color: var(--border);
+  border-bottom-color: var(--border);
+  box-shadow: 0 2px 7px rgb(23 20 35 / 8%);
+}
+
+html.galpedia #work-details .details-credits-tabs button {
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+html.galpedia #work-details .details-credits-tabs button:hover,
+html.galpedia #work-details .details-credits-tabs button:focus-visible {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+html.galpedia #work-details .details-credits-tabs button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--surface);
+  border-bottom-color: var(--accent);
+}
+
+/* Detail links should read as links in both themes, especially the company
+   relation which otherwise inherits a low-emphasis metadata colour. */
+html.galpedia #work-details .details-company-link,
+html.galpedia #work-details .details-credits-content a,
+html.galpedia #work-details .details-rating-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+html.galpedia #work-details .details-company-link:hover,
+html.galpedia #work-details .details-company-link:focus-visible,
+html.galpedia #work-details .details-credits-content a:hover,
+html.galpedia #work-details .details-credits-content a:focus-visible,
+html.galpedia #work-details .details-rating-link:hover,
+html.galpedia #work-details .details-rating-link:focus-visible {
+  color: var(--accent-hover);
+}
+
+#work-details .details-credit-list > div,
+#work-details .details-song-credits > div {
+  border-bottom-color: color-mix(in srgb, var(--border) 76%, transparent);
+}
+
+#work-details .details-cast-list {
+  background: var(--border);
+}
+
+#work-details .details-cast-list li {
+  background: var(--surface);
+}
+
+#work-details .details-cast-portrait {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+#work-details .details-cast-scope {
+  color: #d9c38e;
+  background: color-mix(in srgb, #bd975e 20%, var(--surface));
+  border-color: color-mix(in srgb, #bd975e 55%, var(--border));
+}
+
+/* Light mode keeps source/category recognition while returning every label
+   to paper-appropriate contrast. */
+:root[data-theme="light"] #work-details .details-score-source-egs .details-rating-line {
+  color: #286f66;
+}
+
+:root[data-theme="light"] #work-details .details-score-source-vndb .details-rating-line {
+  color: #4e568d;
+}
+
+:root[data-theme="light"] #work-details .details-score-source-bangumi .details-rating-line {
+  color: #805d22;
+}
+
+:root[data-theme="light"] #work-details .details-score-source-egs .details-rating-snapshot,
+:root[data-theme="light"] #work-details .details-score-source-vndb .details-rating-snapshot,
+:root[data-theme="light"] #work-details .details-score-source-bangumi .details-rating-snapshot {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] #work-details .details-tags .details-tag-attribute {
+  color: #5a3d78;
+  background: #eee7f5;
+  border-color: #b9a4cf;
+}
+
+:root[data-theme="light"] #work-details .details-tags .details-tag-content {
+  color: #414456;
+  background: #f0edf4;
+  border-color: #c9c5d2;
+}
+
+:root[data-theme="light"] #work-details .details-tags .details-tag-character {
+  color: #315d6b;
+  background: #e8f1f3;
+  border-color: #a9c4cb;
+}
+
+:root[data-theme="light"] #work-details .details-tags .details-tag-adult {
+  color: #8f304c;
+  background: #fbecef;
+  border-color: #dda7b5;
+}
+
+:root[data-theme="light"] #work-details .details-cast-scope {
+  color: #77531e;
+  background: #f8f0df;
+  border-color: #d4b97d;
+}
+
+/* Comparison surfaces are shared with the library, but source identities
+   remain expressed by their existing .source-* selectors. */
+.work-compare-bar,
+.work-compare-dialog,
+.work-compare-section,
+.work-compare-header-card,
+.work-compare-item {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.work-compare-bar {
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--surface));
+}
+
+.work-compare-kicker,
+.work-compare-item-remove {
+  color: var(--accent);
+}
+
+.work-compare-hint,
+.work-compare-header-card p,
+.work-compare-label {
+  color: var(--text-muted);
+}
+
+.work-compare-item:hover,
+.work-compare-item:focus-visible,
+.work-compare-header-card:hover,
+.work-compare-header-card:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-muted);
+}
+
+.work-compare-section h3 {
+  background: var(--surface-muted);
+}
+
+.work-compare-score-row,
+.work-compare-info-row {
+  border-top-color: var(--border);
+}
+
+@media (max-width: 899px) {
+  .catalog-grid {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .results-heading,
+  .catalog-controls {
+    box-shadow: none;
+  }
+
+  #work-details .details-score-panel {
+    background: var(--surface-muted);
+  }
+
+  #work-details .details-score-source {
+    border-radius: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-card,
+  .selection-card,
+  .company-directory-card,
+  .toolbar-button-primary,
+  .action-primary {
+    transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   GALPEDIA detail/ranking close-out
+
+   The legacy terminal stylesheet has a few late, theme-specific cyan rules.
+   Keep this block scoped to the GALPEDIA shell so the old terminal skin and
+   the ranking's Tier labels/custom colours remain untouched. No dimensions,
+   image fitting, drag targets, or data-bearing states are changed here.
+   ------------------------------------------------------------------------- */
+
+/* Company detail: paper/indigo surfaces and a quieter metadata hierarchy. */
+html.galpedia[data-theme] .company-directory-detail {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 12px 30px rgb(23 20 35 / 18%);
+}
+
+html.galpedia[data-theme] .company-detail-heading {
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .company-detail-heading h2,
+html.galpedia[data-theme] .company-detail-works-heading h3,
+html.galpedia[data-theme] .company-ranking-heading h2,
+html.galpedia[data-theme] .company-ranking-candidate-section h3 {
+  color: var(--text);
+  font-family: var(--gp-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+html.galpedia[data-theme] .company-detail-meta,
+html.galpedia[data-theme] .company-ranking-heading p {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-detail-avatar {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .company-directory-tools select,
+html.galpedia[data-theme] .company-detail-sort-controls select,
+html.galpedia[data-theme] .company-image-filter {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .company-image-filter {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work {
+  color: var(--text);
+  border-bottom-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work-cover {
+  background: var(--surface-raised);
+}
+
+html.galpedia[data-theme] .company-directory-work-title {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .company-directory-work-meta {
+  color: var(--text-muted);
+}
+
+html.galpedia[data-theme] .company-directory-work:hover,
+html.galpedia[data-theme] .company-directory-work:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 65%, var(--surface));
+}
+
+html.galpedia[data-theme="light"] .company-directory-card {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-muted);
+  box-shadow: 0 1px 3px rgb(37 32 48 / 10%);
+}
+
+html.galpedia[data-theme="light"] .company-directory-card:hover,
+html.galpedia[data-theme="light"] .company-directory-card:focus-within {
+  border-color: var(--accent);
+  background: var(--surface-muted);
+  box-shadow: 0 4px 12px rgb(37 32 48 / 14%);
+}
+
+/* Person directory/detail: make identity, metadata, and content blocks read
+   as one hierarchy while keeping the existing grid and scroll geometry. */
+html.galpedia[data-theme] .person-view,
+html.galpedia[data-theme] .person-directory-panel,
+html.galpedia[data-theme] .person-detail-dialog {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .person-directory-heading h2,
+html.galpedia[data-theme] .person-detail-heading h2,
+html.galpedia[data-theme] .person-detail-section-title,
+html.galpedia[data-theme] .person-detail-block-heading h3 {
+  color: var(--text);
+  font-family: var(--gp-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+html.galpedia[data-theme] .person-directory-panel {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: 0 5px 18px rgb(23 20 35 / 8%);
+}
+
+html.galpedia[data-theme] .person-directory-list-head {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-directory-row {
+  color: var(--text);
+  border-top-color: color-mix(in srgb, var(--border) 72%, transparent);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-directory-row:hover {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .person-directory-role,
+html.galpedia[data-theme] .person-detail-primary-role {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+html.galpedia[data-theme] .person-detail-dialog {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 18px 48px rgb(23 20 35 / 28%);
+}
+
+html.galpedia[data-theme] .person-detail-heading {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-identity {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface));
+  border-right-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-content {
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-role-chip {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-alias-chip {
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .person-alias-chip.is-main {
+  color: var(--gp-role-main);
+  background: var(--gp-role-main-bg);
+  border-color: color-mix(in srgb, var(--gp-role-main) 62%, var(--border));
+}
+
+html.galpedia[data-theme] .person-detail-representative {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .person-detail-stat,
+html.galpedia[data-theme] .person-representative-item,
+html.galpedia[data-theme] .person-representative-work {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-detail-stats {
+  background: var(--border);
+  border-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-company-row,
+html.galpedia[data-theme] .person-co-row,
+html.galpedia[data-theme] .person-work-row {
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+
+html.galpedia[data-theme] .person-company-row:hover,
+html.galpedia[data-theme] .person-co-row:hover,
+html.galpedia[data-theme] .person-work-row:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .person-work-character {
+  color: var(--text-muted);
+}
+
+/* Role badges are informational, not interactive: use quiet blue/clay
+   tokens instead of the old saturated teal/orange pair. */
+html.galpedia[data-theme] .person-character-role.is-main {
+  color: var(--gp-role-main);
+  background: var(--gp-role-main-bg);
+}
+
+html.galpedia[data-theme] .person-character-role.is-side {
+  color: var(--gp-role-side);
+  background: var(--gp-role-side-bg);
+}
+
+html.galpedia[data-theme] .person-character-role.is-appears {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+/* Ranking shell only: neutral indigo surfaces and controls. Tier labels,
+   tier custom colours, ranking-card artwork, and all drag geometry remain
+   owned by the legacy ranking rules. */
+html.galpedia[data-theme] .ranking-view {
+  color: var(--text);
+  background: var(--bg);
+}
+
+html.galpedia[data-theme] .ranking-page-heading,
+html.galpedia[data-theme] .ranking-toolbar,
+html.galpedia[data-theme] .candidate-toolbar {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .ranking-page-heading .workspace-counts {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button,
+html.galpedia[data-theme] .ranking-subject-tabs button:first-child,
+html.galpedia[data-theme] .ranking-subject-tabs button:last-child {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 82%, var(--surface-muted));
+}
+
+html.galpedia[data-theme] .ranking-subject-tabs button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-page-heading .count-item output {
+  color: var(--text);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .icon-button,
+html.galpedia[data-theme] .ranking-toolbar .toolbar-button-neutral,
+html.galpedia[data-theme] .ranking-toolbar .action-neutral,
+html.galpedia[data-theme] .ranking-toolbar #cleanup-menu-button,
+html.galpedia[data-theme] .ranking-toolbar #display-menu-button,
+html.galpedia[data-theme] .ranking-toolbar #export-png {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+html.galpedia[data-theme] .ranking-toolbar .icon-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar .toolbar-button-neutral:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar .action-neutral:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #cleanup-menu-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #display-menu-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #export-png:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-muted);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .ranking-live-mode,
+html.galpedia[data-theme] .ranking-toolbar #export-png[aria-pressed="true"] {
+  color: var(--text-on-strong);
+  background: var(--gp-primary-bg);
+  border-color: var(--gp-primary-bg);
+  box-shadow: 0 2px 6px rgb(37 30 54 / 16%);
+}
+
+html.galpedia[data-theme] .ranking-toolbar .ranking-live-mode:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-toolbar #export-png[aria-pressed="true"]:hover:not(:disabled) {
+  color: var(--text-on-strong);
+  background: var(--gp-primary-bg-hover);
+  border-color: var(--gp-primary-bg-hover);
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch,
+html.galpedia[data-theme] .ranking-view .view-switch {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button,
+html.galpedia[data-theme] .ranking-view .view-switch button {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-view .view-switch button:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-soft) 82%, var(--surface-muted));
+}
+
+html.galpedia[data-theme] .ranking-view .mode-switch button[aria-selected="true"],
+html.galpedia[data-theme] .ranking-view .view-switch button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu,
+html.galpedia[data-theme] .ranking-view .tier-color-palette {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 14px 34px rgb(23 20 35 / 22%);
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu button,
+html.galpedia[data-theme] .ranking-view .toolbar-menu label {
+  color: var(--text);
+  background: transparent;
+}
+
+html.galpedia[data-theme] .ranking-view .toolbar-menu button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-view .toolbar-menu label:hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-board,
+html.galpedia[data-theme] .ranking-candidates {
+  border-bottom-color: var(--border);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-row,
+html.galpedia[data-theme] .tier-track,
+html.galpedia[data-theme] .ranking-candidate-grid {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .tier-add-button,
+html.galpedia[data-theme] .ranking-upload-tile {
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+html.galpedia[data-theme] .tier-add-button:hover:not(:disabled),
+html.galpedia[data-theme] .ranking-upload-tile:hover,
+html.galpedia[data-theme] .ranking-upload-tile:focus-visible,
+html.galpedia[data-theme] .ranking-upload-tile.is-drop-target {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface));
+}
+
+html.galpedia[data-theme] .candidate-toolbar {
+  border-top-color: var(--border);
+}
+
+html.galpedia[data-theme] .candidate-toolbar .search-field input {
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+html.galpedia[data-theme] .company-ranking {
+  border-top-color: var(--border);
+}
+
+html.galpedia[data-theme] .company-ranking-tier,
+html.galpedia[data-theme] .company-ranking-track,
+html.galpedia[data-theme] .company-ranking-candidates {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+html.galpedia[data-theme] .company-ranking-candidates {
+  background: var(--surface-muted);
+}
+
+/* Shared workspace headings: callers supply counts, layout stays local. */
+html.galpedia[data-theme] .gp-page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  min-width: 0;
+}
+html.galpedia[data-theme] .gp-page-heading h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 0;
+}
+html.galpedia[data-theme] :is(.gp-page-total, .gp-result-summary) {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+html.galpedia[data-theme] .gp-result-summary { font-size: 12px; }
+html.galpedia[data-theme] .gp-filter-count:not([hidden]) {
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--text);
+  background: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+html.galpedia[data-theme] #person-detail-load-status { padding: 0 20px 8px; }
+html.galpedia[data-theme] .gp-display-short { display: none; }
+html.galpedia[data-theme] .gp-result-summary[hidden],
+html.galpedia[data-theme] .results-heading-count[hidden] { display: none; }
+html.galpedia[data-theme] :is(.company-directory-header, .person-directory-header) {
+  align-items: center;
+  gap: 12px 20px;
+  padding-block: 4px 10px;
+  margin-bottom: 12px;
+}
+html.galpedia[data-theme] .ranking-page-title { gap: 6px 14px; }
+html.galpedia[data-theme] .ranking-page-heading .workspace-counts {
+  background: transparent;
+  border-color: transparent;
+}
+html.galpedia[data-theme] .ranking-page-heading .count-item:not(:first-child) { display: none; }
+html.galpedia[data-theme] #catalog-results .results-heading {
+  min-height: 48px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 6px 14px;
+}
+@media (max-width: 899px) {
+  html.galpedia[data-theme] #filter-toggle { position: relative; }
+  html.galpedia[data-theme] #card-view-toggle .gp-display-long { display: none; }
+  html.galpedia[data-theme] #card-view-toggle .gp-display-short { display: inline; }
+  html.galpedia[data-theme] #filter-toggle .gp-filter-label { display: none; }
+  html.galpedia[data-theme] #filter-toggle .gp-filter-count:not([hidden]) {
+    position: absolute;
+    top: -5px;
+    right: -4px;
+    font-size: 10px;
+    line-height: 14px;
+  }
+  html.galpedia[data-theme] #catalog-results .results-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'title count' 'actions actions';
+    gap: 4px 10px;
+  }
+  html.galpedia[data-theme] :is(.company-directory-heading, .person-directory-heading) { margin-bottom: 8px; }
+  html.galpedia[data-theme] .ranking-page-title { flex: 1; }
+}
+
+@media (max-width: 899px) {
+  html.galpedia[data-theme] .person-detail-heading,
+  html.galpedia[data-theme] .ranking-page-heading,
+  html.galpedia[data-theme] .ranking-toolbar,
+  html.galpedia[data-theme] .candidate-toolbar {
+    box-shadow: none;
+  }
+}
