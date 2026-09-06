@@ -35,17 +35,21 @@ const isLocalPreview = location.protocol === 'file:' || ['localhost', '127.0.0.1
 const localLoadingMinimumMs = isLocalPreview ? 900 : 0;
 let loadingStartedAt = 0;
 let loadingFinishTimer = null;
-const runtimeLoading = globalThis.GalpediaDial && loadIndicator
-  ? globalThis.GalpediaDial.createLoadingController({
-    host: loadIndicator,
-    region: workspace,
-    announcer: statusText,
-    variant: 'standard',
-    theme: 'inherit',
-    delay: 160,
-    slowAfter: 8000
-  })
-  : null;
+let runtimeLoading = null;
+function createRuntimeLoading() {
+  if (!runtimeLoading && globalThis.GalpediaDial && loadIndicator) {
+    runtimeLoading = globalThis.GalpediaDial.createLoadingController({
+      host: loadIndicator,
+      region: workspace,
+      announcer: statusText,
+      variant: 'standard',
+      theme: 'inherit',
+      delay: 160,
+      slowAfter: 8000
+    });
+  }
+  return runtimeLoading;
+}
 let runtimeTicket = null;
 const nav = document.querySelector('#workspace-mode');
 const routes = { 'mode-selection': '#works', 'mode-company': '#companies', 'mode-person': '#persons', 'mode-ranking': '#ranking' };
@@ -89,9 +93,19 @@ async function ensureRuntime() {
   if (!runtimePromise) {
     status.hidden = false;
     loadingStartedAt = performance.now();
-    runtimeTicket = runtimeLoading?.begin('正在准备资料库…') ?? null;
-    if (!runtimeLoading && statusText) statusText.textContent = '正在准备资料库…';
-    runtimePromise = import('./main.js').then(module => module.ready).then(api => {
+    if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
+    const dialReady = globalThis.GalpediaDial
+      ? Promise.resolve()
+      : import('./lib/chronicle-dial.js?v=chronicle-dial-0.1.2').catch(() => null);
+    runtimePromise = dialReady.then(() => {
+      createRuntimeLoading();
+      runtimeTicket = runtimeLoading?.begin('正在准备资料库…') ?? null;
+      if (!runtimeLoading && statusText) {
+        statusText.classList.remove('visually-hidden');
+        statusText.textContent = '正在准备资料库…';
+      }
+      return import('./main.js');
+    }).then(module => module.ready).then(api => {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;
       const finish = () => {
