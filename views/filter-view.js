@@ -1306,6 +1306,10 @@ export function createFilterView({
     advancedDraft = '';
     advancedDraftInvalid = false;
     clearFormulaError();
+    elements.companySearch.value = '';
+    if (elements.personSearch) elements.personSearch.value = '';
+    companyPopupActive = false;
+    personPopupActive = false;
     emit(resetDrawerFilterState(currentState));
   });
   elements.tagActionAnd.addEventListener('click', () => {
