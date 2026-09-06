@@ -1414,7 +1414,7 @@ h3 {
 
 .year-range-slider {
   position: relative;
-  height: 36px;
+  height: 46px;
   cursor: pointer;
 }
 
@@ -1505,6 +1505,33 @@ h3 {
 
 .year-range-bound-start { left: 10px; }
 .year-range-bound-end { right: 10px; }
+
+.year-range-value {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  min-width: 32px;
+  padding: 2px 5px;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1.1;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 80ms ease-out;
+}
+
+.year-range-value-start { left: var(--year-start-position, 0%); }
+.year-range-value-end { left: var(--year-end-position, 100%); }
+
+.year-range-slider:focus-within .year-range-value,
+.year-range-slider:hover .year-range-value {
+  opacity: 1;
+}
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-start::-webkit-slider-thumb {
