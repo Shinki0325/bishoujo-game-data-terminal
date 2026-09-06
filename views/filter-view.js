@@ -1537,7 +1537,38 @@ export function createFilterView({
       showFormulaError(error);
     }
   });
+  function renderAppliedSummary() {
+    const appliedCount = activeFilterCount(currentState);
+    const badge = optionalElement(root, 'filter-applied-count');
+    if (badge) {
+      badge.hidden = appliedCount === 0;
+      badge.textContent = String(appliedCount);
+      badge.setAttribute('aria-label', `已应用 ${appliedCount} 项筛选`);
+      badge.parentElement.setAttribute('aria-label', appliedCount ? `筛选，已应用 ${appliedCount} 项` : '筛选');
+    }
+    const drawerCount = drawerFilterCount(currentState);
+    if (elements.draftSummary) {
+      elements.draftSummary.textContent = drawerCount === 0
+        ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`
+        : `${drawerCount} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+    }
+    if (elements.clearAll) elements.clearAll.hidden = drawerCount === 0;
+    if (elements.resultStatus) {
+      elements.resultStatus.textContent = '已更新';
+      elements.resultStatus.dataset.state = 'ready';
+    }
+    elements.summary.textContent = appliedCount === 0
+      ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
+      : `${activeFilterCount(currentState)} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+  }
   return Object.freeze({
+    renderSummary(filterState, resultCount) {
+      currentState = cloneFilterState(filterState);
+      currentCounts.current = resultCount;
+      renderAppliedSummary();
+      renderActiveChips();
+      restorePendingFocus();
+    },
     render(filterState, prospectiveCounts = {}) {
       currentState = cloneFilterState(filterState);
       currentCounts = {
@@ -1576,28 +1607,7 @@ export function createFilterView({
       }
       if (!emitAdvanced.pending()) elements.expression.value = advancedDraft;
       elements.modeBasic.disabled = currentState.mode === 'advanced' && !canRepresentDraftAsBasic();
-      const appliedCount = activeFilterCount(currentState);
-      const badge = optionalElement(root, 'filter-applied-count');
-      if (badge) {
-        badge.hidden = appliedCount === 0;
-        badge.textContent = String(appliedCount);
-        badge.setAttribute('aria-label', `已应用 ${appliedCount} 项筛选`);
-        badge.parentElement.setAttribute('aria-label', appliedCount ? `筛选，已应用 ${appliedCount} 项` : '筛选');
-      }
-      const drawerCount = drawerFilterCount(currentState);
-      if (elements.draftSummary) {
-        elements.draftSummary.textContent = drawerCount === 0
-          ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`
-          : `${drawerCount} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
-      }
-      if (elements.clearAll) elements.clearAll.hidden = drawerCount === 0;
-      if (elements.resultStatus) {
-        elements.resultStatus.textContent = '已更新';
-        elements.resultStatus.dataset.state = 'ready';
-      }
-      elements.summary.textContent = appliedCount === 0
-        ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
-        : `${activeFilterCount(currentState)} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+      renderAppliedSummary();
       renderTagActions();
       renderCompanies();
       renderPersons();

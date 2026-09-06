@@ -11,6 +11,7 @@ import { createHistory } from './lib/history.js';
 import { mergeVndbAdmissionsIntoFixture } from './lib/catalog-admissions.js';
 import { loadRuntimeSource } from './lib/runtime-source-cache.js';
 import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
+import { createLazyResource } from './lib/lazy-resource.js';
 import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
@@ -30,7 +31,6 @@ import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from '
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import { createStickerDocument, STICKER_TYPES } from './lib/sticker-document.js';
-import { composeStickerImage, encodeStickerComposite } from './lib/sticker-compositor.js';
 import {
   createImportCoordinator,
   downloadBlob,
@@ -40,7 +40,6 @@ import {
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { createPersonWorkIndexRuntime } from './lib/person-work-index-runtime.js';
-import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
 import {
@@ -62,7 +61,6 @@ import { createWeightedRatingSort } from './lib/rating-sort.js?v=20260824-source
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { resolveDetailViewCountMode } from './lib/detail-view-stats.js';
-import { createProjectEntityRuntime, applyProjectedMediaToWork } from './lib/project-entity-runtime.js';
 import { prepareCharacterImageMap } from './lib/character-image-map.js';
 import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
 import {
@@ -111,7 +109,6 @@ import {
   FILTER_GROUP_ORDER
 } from './lib/attribute-filters.js';
 import { createFilterView } from './views/filter-view.js';
-import { buildRankingModel, createRankingCard, createRankingView } from './views/ranking-view.js';
 import { createSelectionView, selectionInitialWorks } from './views/selection-view.js?v=20260824-mobile-single-score-card-v2';
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
@@ -119,7 +116,6 @@ import { createPersonDirectoryView } from './views/person-directory-view.js?v=20
 import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-identity-character-image-v1';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
-import { createStickerEditorView } from './views/sticker-editor-view.js';
 import { createWorkDetailCreditsView } from './views/work-detail-credits-view.js';
 import {
   buildSelectionShareUrl,
@@ -127,12 +123,6 @@ import {
   parseSelectionShare
 } from './lib/share-selection.js';
 import { planSharedSelectionImport } from './lib/share-import.js';
-import {
-  BangumiPublicImportError,
-  collectionTypeLabel,
-  fetchBangumiPublicGameCollections,
-  planBangumiPublicImport
-} from './lib/bangumi-public-import.js?v=20260825-bangumi-family-default-mobile-details-scroll-v1';
 import { createPopoverController } from './lib/ui-popover.js';
 import { syncSelectionContext } from './lib/ui-selection-context.js';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
@@ -141,6 +131,20 @@ import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
 import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
 
 const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
+let PngExportError;
+const loadPngExport = createLazyResource(async attempt => {
+  const module = await (attempt === 0 ? import('./lib/png-export.js') : import(`./lib/png-export.js?retry=${attempt}`));
+  PngExportError = module.PngExportError;
+  return module;
+});
+async function exportTierPng(options) { return (await loadPngExport()).exportTierPng(options); }
+let bangumiImport;
+const loadBangumiImport = createLazyResource(async attempt => {
+  bangumiImport = await (attempt === 0
+    ? import('./lib/bangumi-public-import.js?v=20260825-bangumi-family-default-mobile-details-scroll-v1')
+    : import(`./lib/bangumi-public-import.js?retry=${attempt}`));
+  return bangumiImport;
+});
 const EXPECTED_CONTENT_FILTER_COUNT = 45;
 const EXPECTED_GENRE_FILTER_COUNT = 4;
 const EXPECTED_PLATFORM_FILTER_COUNT = 13;
@@ -496,7 +500,7 @@ function loadImageUrl(url, { crossOrigin = 'anonymous' } = {}) {
 }
 
 function pngExportMessage(error) {
-  if (error instanceof PngExportError) {
+  if (PngExportError && error instanceof PngExportError) {
     if (error.code === 'COVER_LOAD_FAILED') {
       return '封面加载失败，请检查已排榜作品的本地封面文件。';
     }
@@ -1049,7 +1053,6 @@ async function initialize() {
     vndbRatingsSource,
     bangumiRatingsSource,
     bangumiCanonicalAliasFallbackSource,
-    mediaClearanceBridgeSource,
     authorityFanoutSource
     ]
   ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
@@ -1077,9 +1080,6 @@ async function initialize() {
         : Promise.resolve(null),
       RUNTIME_FEATURES.bangumiCanonicalAliasFallbackV1.enabled
         ? fetchJsonWithSha256(DATA_URLS.bangumiCanonicalAliasFallback, 'Bangumi canonical alias fallback')
-        : Promise.resolve(null),
-      RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance
-        ? fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge')
         : Promise.resolve(null),
       RUNTIME_FEATURES.authorityFanoutV1.enabled
         ? fetchJsonWithSha256(DATA_URLS.authorityFanout, 'authority fanout projection')
@@ -1202,22 +1202,33 @@ async function initialize() {
     return projectIdentityCrosswalkPromise;
   };
   let projectEntityRuntime = null;
-  if (mediaClearanceBridgeSource !== null) {
+  let applyProjectedMediaToWork;
+  const ensureProjectEntityRuntime = createLazyResource(async attempt => {
+    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance)) return null;
     try {
+      const [mediaClearanceBridgeSource, module] = await Promise.all([
+        fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'),
+        attempt === 0 ? import('./lib/project-entity-runtime.js') : import(`./lib/project-entity-runtime.js?retry=${attempt}`)
+      ]);
       if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
         throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
       }
-      projectEntityRuntime = await createProjectEntityRuntime({
+      projectEntityRuntime = await module.createProjectEntityRuntime({
         bridge: mediaClearanceBridgeSource.value,
         catalog: { ...catalogSource.value, catalogSha256: catalogSource.sha256 },
         dataRevision: DATA_REVISION,
         cryptoRef: crypto
       });
       console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
+      applyProjectedMediaToWork = module.applyProjectedMediaToWork;
+      return projectEntityRuntime;
     } catch (error) {
       throw new TypeError('G1 media clearance bridge rejected', { cause: error });
     }
-  }
+  });
+  // The validated final fanout already covers every core work's display media.
+  // Keep the original eager proof path when that authority is not enabled.
+  if (!RUNTIME_FEATURES.authorityFanoutV1.enabled) await ensureProjectEntityRuntime();
   let personRuntime = null;
   let personPerformanceRuntime = null;
   let personWorkIndexRuntime = null;
@@ -1540,7 +1551,7 @@ async function initialize() {
     companyAliasesById: workerCompanyAliasesById,
     companyPinyinById: workerCompanyPinyinById
   };
-  await startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload));
+  const ensureFilterWorker = createLazyResource(() => startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload)));
   let personWorkIndex = null;
   let personWorkIndexPromise = null;
   async function ensurePersonFilterIndex() {
@@ -1549,6 +1560,7 @@ async function initialize() {
     if (personWorkIndexPromise !== null) return personWorkIndexPromise;
     personWorkIndexPromise = personWorkIndexRuntime.load()
       .then(async index => {
+        await ensureFilterWorker();
         await filterWorkerClient.update({ ...filterWorkerPayload, personWorkIndex: index });
         personWorkIndex = index;
         return index;
@@ -2712,7 +2724,14 @@ async function initialize() {
     }
   }
 
-  const stickerEditor = createStickerEditorView({
+  let stickerEditor = null, composeStickerImage, encodeStickerComposite;
+  const ensureStickerEditor = createLazyResource(async attempt => {
+    const [view, compositor] = await Promise.all([
+      attempt === 0 ? import('./views/sticker-editor-view.js') : import(`./views/sticker-editor-view.js?retry=${attempt}`),
+      attempt === 0 ? import('./lib/sticker-compositor.js') : import(`./lib/sticker-compositor.js?retry=${attempt}`)
+    ]);
+    ({ composeStickerImage, encodeStickerComposite } = compositor);
+    stickerEditor = view.createStickerEditorView({
     documentRef: document,
     requestFrame: callback => window.requestAnimationFrame(callback),
     cancelFrame: frame => window.cancelAnimationFrame(frame),
@@ -2733,7 +2752,11 @@ async function initialize() {
     }
   });
 
+    return stickerEditor;
+  });
+
   async function editStickersForCrop({ baseBlob, width, height }) {
+    await ensureStickerEditor();
     const decoded = await decodeBlob(baseBlob);
     try {
       const edited = await stickerEditor.open({
@@ -2754,6 +2777,7 @@ async function initialize() {
   }
 
   async function editStickersForWork(work) {
+    await ensureStickerEditor();
     if (mediaStore === null) throw new Error('本地图片存储不可用');
     const custom = work.localMediaKind === 'custom';
     const identity = custom
@@ -3571,7 +3595,8 @@ async function initialize() {
     void render();
   }
 
-  const rankingView = createRankingView({
+  let rankingView = null, buildRankingModel, createRankingCard;
+  const rankingOptions = {
     root: elements.rankingView,
     createCard: (documentRef, item, callbacks) => rankingSubject === 'company'
       ? createCompanyRankingCard(documentRef, item, callbacks)
@@ -3670,6 +3695,12 @@ async function initialize() {
     showImportTile: () => rankingSubject === 'work',
     isCardActivationEnabled: () => true,
     assetBase
+  };
+  const ensureRankingView = createLazyResource(async attempt => {
+    const module = await (attempt === 0 ? import('./views/ranking-view.js') : import(`./views/ranking-view.js?retry=${attempt}`));
+    ({ buildRankingModel, createRankingCard } = module);
+    rankingView = module.createRankingView(rankingOptions);
+    return rankingView;
   });
   const presentation = createRankingPresentation({
     read: key => window.localStorage.getItem(key),
@@ -3698,7 +3729,7 @@ async function initialize() {
       output.textContent = `${value}%`;
       document.documentElement.style.setProperty(`--ranking-ui-scale-${cssKey}`, String(value / 100));
     }
-    rankingView.refreshLayout();
+    rankingView?.refreshLayout();
   }
 
   applyUiScale(presentation.inspect().uiScale);
@@ -3716,7 +3747,7 @@ async function initialize() {
     window.cancelAnimationFrame(rankingLayoutFrame);
     rankingLayoutFrame = window.requestAnimationFrame(() => {
       rankingLayoutFrame = null;
-      rankingView.refreshLayout();
+      rankingView?.refreshLayout();
     });
   });
 
@@ -3764,11 +3795,11 @@ async function initialize() {
       previewLoader.cancel();
       previewActions.clear();
       if (value) {
-        stickerEditor.cancel();
+        stickerEditor?.cancel();
         if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
         else elements.mediaPreview.open = false;
       }
-      rankingView.setImmersive(value);
+      rankingView?.setImmersive(value);
     }
   });
   const mediaDialog = createMediaDialogView({
@@ -3825,9 +3856,6 @@ async function initialize() {
   }
   elements.rankingShowCounts.checked = presentation.inspect().showCounts;
   elements.rankingShowTitles.checked = presentation.inspect().showTitles;
-  rankingView.setShowCounts(presentation.inspect().showCounts);
-  rankingView.setShowTitles(presentation.inspect().showTitles);
-  rankingView.setAnnotations(presentation.inspect().annotations);
   const selectionCardDisplayInputs = [
     ['showTitle', elements.selectionCardShowTitle],
     ['showCompany', elements.selectionCardShowCompany],
@@ -3847,7 +3875,7 @@ async function initialize() {
     if (renderedWorkspaceMode === 'selection') {
       selectionScrollPosition = selectionView.captureScroll();
     } else if (renderedWorkspaceMode === 'ranking') {
-      rankingScrollPosition = rankingView.captureScroll();
+      rankingScrollPosition = rankingView?.captureScroll() ?? rankingScrollPosition;
     }
   }
 
@@ -4074,17 +4102,21 @@ async function initialize() {
     captureWorkspaceScroll();
     const state = controller.inspectState();
     let outcome;
+    const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
     try {
-      outcome = await filterWorkerClient.query({
+      const needsFiltering = state.workspaceMode !== 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
+      if (state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen) await ensureRankingView();
+      if (needsFiltering) await ensureFilterWorker();
+      outcome = needsFiltering ? await filterWorkerClient.query({
         filterState: state.filterState,
         selectedWorkIds: state.selectedWorkIds,
-        includeProjectedCounts: true,
+        includeProjectedCounts: includeFilterCounts,
         visibleBrands,
         companyLimit: 24
-      });
+      }) : { status: 'success', workIds: [], counts: null };
     } catch (error) {
       interactionMetrics.cancel(interaction, 'worker-error');
-      announce('筛选计算失败，可继续调整条件重试。', 'error');
+      announce(state.workspaceMode === 'ranking' ? '排榜暂时未能加载，请重新进入排榜重试。' : '筛选计算失败，可继续调整条件重试。', 'error');
       console.error(error);
       return false;
     }
@@ -4099,7 +4131,7 @@ async function initialize() {
     interactionMetrics.stage(interaction, 'worker-return');
     const model = controller.inspect(outcome.workIds);
     interactionMetrics.stage(interaction, 'controller-ready');
-    const ranking = model.state.workspaceMode === 'ranking';
+    const ranking = model.state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
     const companyState = ranking && rankingSubject === 'company' ? companyRanking.inspect() : null;
     const activePresentation = companyState === null ? presentation : companyPresentation;
     let rankingModel = null;
@@ -4189,7 +4221,7 @@ async function initialize() {
       interactionMetrics.stage(interaction, 'dom-updated');
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
-    if (nextFilterKey !== renderedFilterKey) {
+    if (includeFilterCounts && outcome.counts && nextFilterKey !== renderedFilterKey) {
       filterView.render(model.state.filterState, {
         current: visiblePresentationWorks.length,
         filters: outcome.counts.filters,
@@ -4197,12 +4229,14 @@ async function initialize() {
         yearCounts: outcome.counts.yearCounts
       });
       renderedFilterKey = nextFilterKey;
+    } else if (!ranking && !personDirectoryOpen && !companyDirectoryOpen) {
+      filterView.renderSummary(model.state.filterState, visiblePresentationWorks.length);
     }
     renderControlStates(model);
     if (companyDirectoryOpen) {
       // The directory owns its own scroll surface and is intentionally not persisted.
     } else if (model.state.workspaceMode === 'ranking') {
-      rankingView.restoreScroll(rankingScrollPosition);
+      rankingView?.restoreScroll(rankingScrollPosition);
     } else {
       selectionView.restoreScroll(selectionScrollPosition);
     }
@@ -4276,7 +4310,11 @@ async function initialize() {
     backdrop: elements.filterBackdrop,
     applyButton: elements.filterApply,
     mediaQuery: window.matchMedia('(max-width: 899px)'),
-    documentRef: document
+    documentRef: document,
+    onOpen() {
+      elements.filterDrawer.setAttribute('aria-busy', 'true');
+      void render().finally(() => elements.filterDrawer.setAttribute('aria-busy', 'false'));
+    }
   });
   const importCoordinator = createImportCoordinator({
     readText: file => file.text(),
@@ -4417,7 +4455,7 @@ async function initialize() {
     title.textContent = worksById.get(workId)?.title ?? `EGS #${workId}`;
     const meta = document.createElement('span');
     meta.className = 'bangumi-import-item-meta';
-    const details = [`Bangumi #${collection.subjectId}`, collectionTypeLabel(collection.collectionType)];
+    const details = [`Bangumi #${collection.subjectId}`, bangumiImport.collectionTypeLabel(collection.collectionType)];
     if (collection.personalRate !== null) details.push(`个人评分 ${collection.personalRate}`);
     details.push(variantLabel);
     meta.textContent = details.join(' · ');
@@ -4498,6 +4536,8 @@ async function initialize() {
     bangumiKeeperPhase = 'loading';
     setBangumiPublicImportStatus('正在读取 Bangumi 公开游戏收藏…');
     try {
+      const { fetchBangumiPublicGameCollections, planBangumiPublicImport } = await loadBangumiImport();
+      if (request !== bangumiPublicImportRequest) return;
       const result = await fetchBangumiPublicGameCollections({
         userIdentifier: elements.bangumiPublicUserInput.value,
         signal: abortController.signal
@@ -4519,7 +4559,7 @@ async function initialize() {
       );
     } catch (error) {
       if (request !== bangumiPublicImportRequest || error?.name === 'AbortError') return;
-      const message = error instanceof BangumiPublicImportError
+      const message = bangumiImport && error instanceof bangumiImport.BangumiPublicImportError
         ? error.message
         : '读取 Bangumi 公开收藏失败，请稍后重试。';
       setBangumiPublicImportStatus(message, { error: true });
@@ -4669,12 +4709,17 @@ async function initialize() {
     renderDetailsVersions(work);
     const loadCredits = async () => {
       try {
-        const credits = await workDetailCreditsLoader.load(work.workId);
+        const [credits] = await Promise.all([
+          workDetailCreditsLoader.load(work.workId), ensureProjectEntityRuntime()
+        ]);
         if (
           request !== workDetailCreditsRequest
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
         ) return;
+        elements.detailsDialog.dataset.projectEntitySource = projectEntityRuntime?.adaptWorkDetail(work.workId, work)?.source ?? 'legacy';
+        const proofMedia = projectEntityRuntime?.selectedMediaByWorkId.get(work.workId);
+        elements.detailsDialog.dataset.mediaClearanceStatus = proofMedia?.availability === 'available' ? 'cleared' : 'legacy-fallback';
         if (credits === null) {
           workDetailCreditsView.clear();
           elements.detailsCredits.dataset.projectEntityPeople = '0';
@@ -4805,6 +4850,7 @@ async function initialize() {
     try {
       if (location.page === 'ranking') {
         companyDirectoryOpen = false;
+        personDirectoryOpen = false;
         setWorkSelectionMode(false);
         currentWorkDetailId = null;
         rankingSubject = location.subject;
@@ -5389,7 +5435,7 @@ async function initialize() {
       announce(`PNG 已导出：${result.filename}`, 'success');
     } catch (error) {
       announce(pngExportMessage(error), 'error');
-      if (!(error instanceof PngExportError)) console.error(error);
+      if (!(PngExportError && error instanceof PngExportError)) console.error(error);
     } finally {
       pngExportInProgress = false;
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
