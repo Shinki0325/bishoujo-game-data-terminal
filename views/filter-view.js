@@ -954,6 +954,31 @@ export function createFilterView({
       }
     });
   }
+  elements.releaseYearSlider?.addEventListener('click', event => {
+    // The range inputs intentionally expose only their thumbs to pointer input.
+    // A click on the track itself should still provide the expected jump-to-year
+    // interaction, while clicks that originate on a thumb remain native drags.
+    if (event.target?.tagName === 'INPUT') return;
+    const rect = elements.releaseYearSlider.getBoundingClientRect();
+    const trackStart = rect.left + 10;
+    const trackEnd = rect.right - 10;
+    const ratio = Math.max(0, Math.min(1, (event.clientX - trackStart) / Math.max(1, trackEnd - trackStart)));
+    const minimum = DEFAULT_FILTER_STATE.releaseYearStart;
+    const maximum = DEFAULT_FILTER_STATE.releaseYearEnd;
+    const year = Math.round(minimum + ratio * (maximum - minimum));
+    const start = Number(elements.releaseYearStart?.value ?? currentState.releaseYearStart);
+    const end = Number(elements.releaseYearEnd?.value ?? currentState.releaseYearEnd);
+    const endpoint = Math.abs(year - start) <= Math.abs(year - end) ? 'start' : 'end';
+    const input = endpoint === 'start' ? elements.releaseYearStart : elements.releaseYearEnd;
+    if (!input) return;
+    input.value = String(year);
+    const values = normalizeYearValues(endpoint, input);
+    renderYearLabels(values);
+    renderYearPreview(values);
+    emitYear(values);
+    emitYear.flush();
+    input.focus({ preventScroll: true });
+  });
   elements.companySearch.setAttribute('aria-controls', 'company-options');
   elements.companySearch.addEventListener('input', () => {
     companyPopupActive = true;

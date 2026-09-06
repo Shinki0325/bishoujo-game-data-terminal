@@ -1383,6 +1383,7 @@ h3 {
 .year-range-slider {
   position: relative;
   height: 44px;
+  cursor: pointer;
 }
 
 .year-range-track,
@@ -1431,9 +1432,9 @@ h3 {
 }
 
 .year-range-input::-webkit-slider-thumb {
-  width: 20px;
-  height: 20px;
-  margin-top: -8px;
+  width: 28px;
+  height: 28px;
+  margin-top: -12px;
   appearance: none;
   pointer-events: auto;
   background: var(--accent);
@@ -1450,8 +1451,8 @@ h3 {
 }
 
 .year-range-input::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   box-sizing: border-box;
   pointer-events: auto;
   background: var(--accent);
@@ -1460,6 +1461,18 @@ h3 {
   box-shadow: 0 0 0 1px var(--accent);
   cursor: grab;
 }
+
+.year-range-bound {
+  position: absolute;
+  top: calc(50% + 12px);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.year-range-bound-start { left: 10px; }
+.year-range-bound-end { right: 10px; }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-start::-webkit-slider-thumb {
