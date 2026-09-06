@@ -4191,7 +4191,8 @@ async function initialize() {
       filterView.render(model.state.filterState, {
         current: visiblePresentationWorks.length,
         filters: outcome.counts.filters,
-        brands: outcome.counts.brands
+        brands: outcome.counts.brands,
+        yearCounts: outcome.counts.yearCounts
       });
       renderedFilterKey = nextFilterKey;
     }

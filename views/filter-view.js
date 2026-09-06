@@ -265,7 +265,7 @@ export function createFilterView({
   let pendingFocus = null;
   let formulaCompletion = null;
   let activeFormulaCompletionIndex = -1;
-  const yearCounts = new Map();
+  let yearCounts = new Map();
   for (
     let year = DEFAULT_FILTER_STATE.releaseYearStart;
     year <= DEFAULT_FILTER_STATE.releaseYearEnd;
@@ -1167,8 +1167,15 @@ export function createFilterView({
       currentCounts = {
         current: prospectiveCounts.current ?? 0,
         filters: prospectiveCounts.filters ?? {},
-        brands: prospectiveCounts.brands ?? {}
+        brands: prospectiveCounts.brands ?? {},
+        yearCounts: prospectiveCounts.yearCounts ?? null
       };
+      if (currentCounts.yearCounts) {
+        yearCounts = new Map();
+        for (let year = DEFAULT_FILTER_STATE.releaseYearStart; year <= DEFAULT_FILTER_STATE.releaseYearEnd; year += 1) {
+          yearCounts.set(year, Number(currentCounts.yearCounts[year] ?? 0));
+        }
+      }
       if (!advancedDraftInvalid && !emitAdvanced.pending()) {
         advancedDraft = canonicalToDisplayFormula(currentState.advancedExpression, filters);
       }
