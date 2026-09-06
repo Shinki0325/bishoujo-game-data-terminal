@@ -1641,6 +1641,16 @@ h3 {
   opacity: .86;
 }
 
+/* The theme button reset is intentionally broad; keep histogram bars as data
+   columns so their range state remains visible in both themes. */
+#release-year-histogram .year-histogram-bar {
+  background: var(--border-strong);
+}
+
+#release-year-histogram .year-histogram-bar[data-in-range="true"] {
+  background: var(--accent);
+}
+
 .year-histogram-bar:hover,
 .year-histogram-bar:focus-visible {
   opacity: 1;
