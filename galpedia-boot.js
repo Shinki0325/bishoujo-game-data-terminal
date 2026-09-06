@@ -17,6 +17,7 @@ if (status) {
   loadIndicator.id = 'galpedia-load-indicator';
   loadIndicator.setAttribute('aria-hidden', 'true');
   statusText.id = 'galpedia-load-status-text';
+  statusText.classList.add('visually-hidden');
   statusText.setAttribute('role', 'status');
   statusText.setAttribute('aria-live', 'polite');
   statusText.setAttribute('aria-atomic', 'true');

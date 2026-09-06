@@ -6,8 +6,8 @@
     <meta name="egs-tier-asset-base" content="https://assets.bishojo.date/">
     <title>少女箱庭 GALPEDIA · 美少女游戏资料库</title>
     <meta name="description" content="少女箱庭 GALPEDIA：探索美少女游戏作品、会社与人物资料，搜索、比较并制作自己的作品排榜。">
-    <link rel="icon" type="image/png" sizes="32x32" href="./releases/20260906-galpedia-v1.0.2-beta/brand/favicon-32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./releases/20260906-galpedia-v1.0.2-beta/brand/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./brand/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./brand/apple-touch-icon.png">
     <script>
       document.documentElement.classList.add('galpedia');
       document.documentElement.dataset.home = String(!location.hash || location.hash === '#home');
@@ -20,18 +20,19 @@
         // The home shell keeps a usable session-only light theme without storage.
       }
     </script>
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/styles.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-theme.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-home.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-states.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-help.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-controls.css">
-    <link rel="stylesheet" href="./releases/20260906-galpedia-v1.0.2-beta/galpedia-keeper.css">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./galpedia-theme.css">
+    <link rel="stylesheet" href="./galpedia-home.css">
+    <link rel="stylesheet" href="./galpedia-states.css">
+    <link rel="stylesheet" href="./galpedia-help.css">
+    <link rel="stylesheet" href="./galpedia-controls.css">
+    <link rel="stylesheet" href="./galpedia-keeper.css">
+    <link rel="stylesheet" href="./galpedia-chronicle-dial.css">
   </head>
   <body>
     <header class="tool-header galpedia-header">
       <div class="tool-heading">
-        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./releases/20260906-galpedia-v1.0.2-beta/brand/logo.png" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
+        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./brand/logo.png" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
       </div>
 
       <div id="workspace-mode" class="mode-switch" role="tablist" aria-label="工作模式">
@@ -104,7 +105,7 @@
           <div class="home-actions"><a class="home-primary" href="#works">浏览作品库 <span aria-hidden="true">→</span></a><a class="home-secondary" href="#ranking">开始排榜 <span aria-hidden="true">↗</span></a></div>
           <dl class="home-stats"><div><dt>作品</dt><dd data-home-count="works">—</dd></div><div><dt>会社</dt><dd data-home-count="companies">—</dd></div><div><dt>人物</dt><dd data-home-count="persons">—</dd></div></dl>
         </div>
-        <div class="home-portrait"><div class="home-corners" aria-hidden="true"></div><img src="./releases/20260906-galpedia-v1.0.2-beta/brand/shiori.png" width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async"><span class="home-portrait-caption">庭守 / 綴木 栞</span></div>
+        <div class="home-portrait"><div class="home-corners" aria-hidden="true"></div><img src="./brand/shiori.png" width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async"><span class="home-portrait-caption">庭守 / 綴木 栞</span></div>
       </div>
       <nav class="home-portals" aria-label="探索资料库">
         <a href="#works"><span class="portal-number">01 / WORKS</span><h2>作品库 <span aria-hidden="true">↗</span></h2><p>浏览作品、对照评分，找到下一段故事。</p></a>
@@ -114,7 +115,10 @@
       </nav>
       <footer class="home-footer"><span>少女箱庭 <span class="footer-en">GALPEDIA</span></span><span>资料来源 EGS · VNDB · Bangumi <span aria-hidden="true"> / </span> <span id="home-snapshot">公开资料快照</span></span></footer>
     </section>
-    <p id="galpedia-load-status" class="galpedia-load-status" role="status" hidden></p>
+    <p id="galpedia-load-status" class="galpedia-load-status" hidden>
+      <span id="galpedia-load-indicator" aria-hidden="true"></span>
+      <span id="galpedia-load-status-text" role="status" aria-live="polite" aria-atomic="true"></span>
+    </p>
     <dialog id="galpedia-search-dialog" class="galpedia-search-dialog" aria-labelledby="global-search-title">
       <div class="global-search-heading"><h2 id="global-search-title">探索资料库</h2><form method="dialog"><button type="submit" class="icon-button" aria-label="关闭搜索">×</button></form></div>
       <form id="global-search-form" class="galpedia-search-form" role="search"><span aria-hidden="true">⌕</span><input id="global-search-input" type="search" aria-label="搜索全部资料" placeholder="作品、会社、人物…" autocomplete="off" maxlength="120"><button type="submit">搜索</button></form>
@@ -915,8 +919,8 @@
           <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
           <button id="sticker-option-pixelate" type="button" data-sticker-kind="pixelate" aria-label="添加马赛克"><span class="sticker-swatch sticker-swatch-pixelate" aria-hidden="true"></span></button>
           <button id="sticker-option-blur" type="button" data-sticker-kind="blur" aria-label="添加模糊"><span class="sticker-swatch sticker-swatch-blur" aria-hidden="true"></span></button>
-          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./releases/20260906-galpedia-v1.0.2-beta/assets/stickers/please-wait-character.webp" alt=""></button>
-          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./releases/20260906-galpedia-v1.0.2-beta/assets/stickers/paper-bag-character.png" alt=""></button>
+          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img src="./assets/stickers/please-wait-character.webp" alt=""></button>
+          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img src="./assets/stickers/paper-bag-character.png" alt=""></button>
         </div>
       </div>
           <div class="dialog-actions gp-dialog-footer sticker-editor-actions">
@@ -996,6 +1000,7 @@
       <div id="work-compare-content" class="work-compare-content"></div>
     </dialog>
 
-    <script type="module" src="./releases/20260906-galpedia-v1.0.2-beta/galpedia-boot.js"></script>
+    <script src="./lib/chronicle-dial.js"></script>
+    <script type="module" src="./galpedia-boot.js"></script>
   </body>
 </html>
