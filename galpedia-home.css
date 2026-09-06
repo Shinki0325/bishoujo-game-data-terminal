@@ -56,7 +56,7 @@
 .home-portals p { color: var(--text-muted); font-size: 12px; line-height: 1.8; margin: 0; }
 .home-footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); padding: 20px 0; font-size: 11px; color: var(--text-muted); }
 .footer-en { margin-left: 12px; font-size: 10px; }
-.galpedia-load-status { position: fixed; top: 82px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 22px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; }
+.galpedia-load-status { position: fixed; top: 82px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 6px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; }
 .galpedia-search-dialog { width: min(850px,calc(100vw - 32px)); max-height: 80dvh; padding: 26px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .galpedia-search-dialog::backdrop { background: rgba(22,25,35,.4); }
 .global-search-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }

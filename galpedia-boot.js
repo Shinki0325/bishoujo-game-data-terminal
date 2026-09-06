@@ -5,6 +5,9 @@ import { createCommandSearch } from './lib/galpedia-command-search.js';
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
 const status = document.querySelector('#galpedia-load-status');
+const statusText = document.querySelector('#galpedia-load-status-text');
+const loadIndicator = document.querySelector('#galpedia-load-indicator');
+const workspace = document.querySelector('#workspace');
 const dialog = document.querySelector('#galpedia-search-dialog');
 const themeButton = document.querySelector('#theme-toggle');
 document.querySelector('#global-search-open').replaceChildren(createActionIcon(document, 'search'));
@@ -13,6 +16,18 @@ const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
 let lastWorkspaceRoute = '#works';
+const runtimeLoading = globalThis.GalpediaDial && loadIndicator
+  ? globalThis.GalpediaDial.createLoadingController({
+    host: loadIndicator,
+    region: workspace,
+    announcer: statusText,
+    variant: 'compact',
+    theme: 'inherit',
+    delay: 160,
+    slowAfter: 8000
+  })
+  : null;
+let runtimeTicket = null;
 const nav = document.querySelector('#workspace-mode');
 const routes = { 'mode-selection': '#works', 'mode-company': '#companies', 'mode-person': '#persons', 'mode-ranking': '#ranking' };
 // Paint the existing navigation icons before the data runtime is needed.
@@ -54,17 +69,22 @@ paintTheme();
 async function ensureRuntime() {
   if (!runtimePromise) {
     status.hidden = false;
-    status.textContent = '正在准备资料库…';
+    runtimeTicket = runtimeLoading?.begin('正在准备资料库…') ?? null;
+    if (!runtimeLoading && statusText) statusText.textContent = '正在准备资料库…';
     runtimePromise = import('./main.js').then(module => module.ready).then(api => {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;
+      runtimeTicket?.finish();
+      runtimeTicket = null;
       status.hidden = true;
       paintTheme();
       syncHome();
       return api;
     }).catch(error => {
       status.hidden = false;
-      status.textContent = '资料库暂时未能加载，请刷新页面重试。';
+      runtimeTicket?.fail('资料库暂时未能加载，请刷新页面重试。');
+      runtimeTicket = null;
+      if (!runtimeLoading && statusText) statusText.textContent = '资料库暂时未能加载，请刷新页面重试。';
       throw error;
     });
   }
@@ -128,7 +148,7 @@ document.addEventListener('click', event => {
   void handbookLoad.then(({ handbook, context }) => {
     if (token !== helpRequest) return;
     handbook.open(button.dataset.helpArticle || helpTargets[button.id] || context(), button);
-  }).catch(() => { status.hidden = false; status.textContent = '手册暂时无法加载，请重试。'; });
+  }).catch(() => { status.hidden = false; if (statusText) statusText.textContent = '手册暂时无法加载，请重试。'; });
 }, true);
 let focusObserver;
 let focusTimeout;
