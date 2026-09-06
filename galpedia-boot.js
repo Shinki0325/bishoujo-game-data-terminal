@@ -33,8 +33,10 @@ let runtimeReady = false;
 let lastWorkspaceRoute = '#works';
 const isLocalPreview = location.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const localLoadingMinimumMs = isLocalPreview ? 900 : 0;
+const dialRevealDelay = 160;
 let loadingStartedAt = 0;
 let loadingFinishTimer = null;
+let statusRevealTimer = null;
 let runtimeLoading = null;
 function createRuntimeLoading() {
   if (!runtimeLoading && globalThis.GalpediaDial && loadIndicator) {
@@ -91,7 +93,6 @@ paintTheme();
 
 async function ensureRuntime() {
   if (!runtimePromise) {
-    status.hidden = false;
     loadingStartedAt = performance.now();
     if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
     const dialReady = globalThis.GalpediaDial
@@ -99,8 +100,16 @@ async function ensureRuntime() {
       : import('./lib/chronicle-dial.js?v=chronicle-dial-0.1.2').catch(() => null);
     runtimePromise = dialReady.then(() => {
       createRuntimeLoading();
-      runtimeTicket = runtimeLoading?.begin('正在准备资料库…') ?? null;
-      if (!runtimeLoading && statusText) {
+      if (runtimeLoading) {
+        status.hidden = true;
+        runtimeTicket = runtimeLoading.begin('正在准备资料库…');
+        clearTimeout(statusRevealTimer);
+        statusRevealTimer = setTimeout(() => {
+          statusRevealTimer = null;
+          if (runtimeTicket && runtimeLoading.isActive) status.hidden = false;
+        }, dialRevealDelay);
+      } else if (statusText) {
+        status.hidden = false;
         statusText.classList.remove('visually-hidden');
         statusText.textContent = '正在准备资料库…';
       }
@@ -110,6 +119,8 @@ async function ensureRuntime() {
       runtimeReady = true;
       const finish = () => {
         loadingFinishTimer = null;
+        clearTimeout(statusRevealTimer);
+        statusRevealTimer = null;
         runtimeTicket?.finish();
         runtimeTicket = null;
         status.hidden = true;
@@ -121,6 +132,8 @@ async function ensureRuntime() {
       syncHome();
       return api;
     }).catch(error => {
+      clearTimeout(statusRevealTimer);
+      statusRevealTimer = null;
       status.hidden = false;
       runtimeTicket?.fail('资料库暂时未能加载，请刷新页面重试。');
       runtimeTicket = null;
