@@ -217,6 +217,7 @@ export function createFilterView({
     releaseYearRangeSelection: optionalElement(root, 'release-year-range-selection'),
     releaseYearStartTooltip: optionalElement(root, 'release-year-start-tooltip'),
     releaseYearEndTooltip: optionalElement(root, 'release-year-end-tooltip'),
+    releaseYearHistogram: optionalElement(root, 'release-year-histogram'),
     releaseYearPreview: optionalElement(root, 'release-year-result-preview'),
     companySearch: requiredElement(root, 'company-search'),
     companySelected: requiredElement(root, 'company-selected'),
@@ -896,6 +897,7 @@ export function createFilterView({
     for (const element of [elements.releaseYearEnd, elements.releaseYearEndNumber]) {
       element?.setAttribute('aria-valuetext', `最晚发行年份 ${endText}`);
     }
+    renderYearHistogram(values);
   }
 
   function renderYearPreview(values, committed = false) {
@@ -909,6 +911,25 @@ export function createFilterView({
     }
     elements.releaseYearPreview.setAttribute('aria-live', 'polite');
     elements.releaseYearPreview.textContent = `预计 ${count} 个结果`;
+  }
+
+  function renderYearHistogram(values = currentState) {
+    if (!elements.releaseYearHistogram) return;
+    const years = [...yearCounts.keys()];
+    const maximum = Math.max(1, ...years.map(year => yearCounts.get(year) ?? 0));
+    const fragment = documentRef.createDocumentFragment();
+    for (const year of years) {
+      const count = yearCounts.get(year) ?? 0;
+      const bar = documentRef.createElement('span');
+      bar.className = 'year-histogram-bar';
+      bar.style.setProperty('--year-height', `${(count / maximum) * 100}%`);
+      bar.dataset.year = String(year);
+      bar.dataset.inRange = String(year >= values.releaseYearStart && year <= values.releaseYearEnd);
+      bar.title = `${year}：${count} 部作品`;
+      bar.setAttribute('aria-hidden', 'true');
+      fragment.append(bar);
+    }
+    elements.releaseYearHistogram.replaceChildren(fragment);
   }
 
   function flushPendingEdits() {
@@ -1160,6 +1181,7 @@ export function createFilterView({
         if (elements.releaseYearEnd) elements.releaseYearEnd.value = String(currentState.releaseYearEnd);
       }
       renderYearLabels();
+      renderYearHistogram();
       renderYearPreview(currentState, true);
       elements.modeBasic.setAttribute('aria-pressed', String(currentState.mode === 'basic'));
       elements.modeAdvanced.setAttribute('aria-pressed', String(currentState.mode === 'advanced'));

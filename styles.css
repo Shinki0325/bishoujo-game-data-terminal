@@ -1533,6 +1533,30 @@ h3 {
   opacity: 1;
 }
 
+.year-histogram {
+  display: flex;
+  align-items: end;
+  gap: 1px;
+  height: 28px;
+  margin: -1px 10px 0;
+  padding-top: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.year-histogram-bar {
+  flex: 1 1 0;
+  min-width: 1px;
+  height: max(2px, var(--year-height));
+  background: var(--border-strong);
+  opacity: .42;
+  transition: height 100ms ease-out, opacity 100ms ease-out, background 100ms ease-out;
+}
+
+.year-histogram-bar[data-in-range="true"] {
+  background: var(--accent);
+  opacity: .86;
+}
+
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-start::-webkit-slider-thumb {
   transform: translateX(-11px);
