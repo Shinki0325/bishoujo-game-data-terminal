@@ -1090,6 +1090,7 @@ h3 {
 }
 
 .company-selected,
+.person-filter-selected,
 .attribute-selected,
 .tag-selected,
 .active-filter-chips {
@@ -1100,6 +1101,7 @@ h3 {
 }
 
 .company-selected:not(:empty),
+.person-filter-selected:not(:empty),
 .attribute-selected:not(:empty),
 .tag-selected:not(:empty) {
   margin: 8px 0;
@@ -1119,6 +1121,12 @@ h3 {
   color: #195f49;
   background: #e2f0e9;
   border-color: #8eb5a3;
+}
+
+.person-chip {
+  color: #5b397d;
+  background: #f0e9f7;
+  border-color: #b89dd2;
 }
 
 .attribute-filter-chip {
@@ -1720,6 +1728,42 @@ input[type="range"] {
   color: var(--text-muted);
   font-size: 11px;
 }
+
+.person-filter-role-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.8fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.person-filter-options {
+  max-height: 210px;
+  margin-top: 5px;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.person-option {
+  width: 100%;
+  min-height: 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.person-option:last-child { border-bottom: 0; }
+.person-option span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-option small { color: var(--text-muted); }
+.person-filter-options .empty-list { margin: 0; padding: 8px; color: var(--text-muted); font-size: 11px; }
 
 .checkbox-row {
   display: grid;

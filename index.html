@@ -278,6 +278,26 @@
               <div id="company-options" class="checkbox-list" role="group" aria-label="会社多选"></div>
             </section>
 
+            <section class="filter-section person-filter-section" aria-labelledby="person-filter-title">
+              <h3 id="person-filter-title">人物参与</h3>
+              <label class="search-field" for="person-filter-search">
+                <span class="visually-hidden">搜索人物</span>
+                <input id="person-filter-search" type="search" placeholder="搜索人物名义或拼音" autocomplete="off">
+              </label>
+              <label class="select-field person-filter-role-label" for="person-filter-role">
+                <span>职能</span>
+                <select id="person-filter-role">
+                  <option value="all">全部职能</option>
+                  <option value="voice-actor">声优</option>
+                  <option value="scenario">剧本</option>
+                  <option value="artwork">原画</option>
+                  <option value="music">音乐</option>
+                </select>
+              </label>
+              <div id="person-filter-selected" class="person-filter-selected" aria-live="polite"></div>
+              <div id="person-filter-options" class="person-filter-options" role="listbox" aria-label="人物多选" hidden></div>
+            </section>
+
             <section
               id="attribute-filter-region"
               class="filter-section filter-region filter-region-attributes"

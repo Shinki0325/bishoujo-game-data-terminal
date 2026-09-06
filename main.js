@@ -36,6 +36,7 @@ import {
 } from './lib/browser-io.js';
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
+import { createPersonWorkIndexRuntime } from './lib/person-work-index-runtime.js';
 import { exportTierPng, PngExportError } from './lib/png-export.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
@@ -89,6 +90,7 @@ import {
   M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256,
   M1_PERSON_ONLY_ENTITIES_SHA256,
   M1_PERSON_VOICE_RELATIONS_SHA256,
+  PERSON_WORK_INDEX_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
   TELEMETRY_ENDPOINT,
@@ -1264,6 +1266,7 @@ async function initialize() {
   }
   let personRuntime = null;
   let personPerformanceRuntime = null;
+  let personWorkIndexRuntime = null;
   if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
     if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
       && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
@@ -1292,6 +1295,15 @@ async function initialize() {
       cryptoRef: crypto,
       cacheMode: RUNTIME_DATA_CACHE_MODE
     });
+    if (RUNTIME_FEATURES.personFilterV1?.enabled === true) {
+      personWorkIndexRuntime = createPersonWorkIndexRuntime({
+        indexUrl: DATA_URLS.personWorkIndex,
+        sha256: PERSON_WORK_INDEX_SHA256,
+        fetchImpl: fetch,
+        cryptoRef: crypto,
+        cacheMode: RUNTIME_DATA_CACHE_MODE
+      });
+    }
   }
   let vndbRatings = null;
   if (vndbRatingsSource !== null) {
@@ -1570,7 +1582,7 @@ async function initialize() {
     ),
     timeoutMs: 10000
   });
-  await startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init({
+  const filterWorkerPayload = {
     works: sortableSample.works,
     knownFilterIds: sample.filters.map(filter => filter.filterId),
     brands,
@@ -1579,7 +1591,26 @@ async function initialize() {
     workPinyinById: workerWorkPinyinById,
     companyAliasesById: workerCompanyAliasesById,
     companyPinyinById: workerCompanyPinyinById
-  }));
+  };
+  await startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload));
+  let personWorkIndex = null;
+  let personWorkIndexPromise = null;
+  async function ensurePersonFilterIndex() {
+    if (personWorkIndex !== null) return personWorkIndex;
+    if (personWorkIndexRuntime === null) throw new Error('人物筛选索引不可用');
+    if (personWorkIndexPromise !== null) return personWorkIndexPromise;
+    personWorkIndexPromise = personWorkIndexRuntime.load()
+      .then(async index => {
+        await filterWorkerClient.update({ ...filterWorkerPayload, personWorkIndex: index });
+        personWorkIndex = index;
+        return index;
+      })
+      .catch(error => {
+        personWorkIndexPromise = null;
+        throw error;
+      });
+    return personWorkIndexPromise;
+  }
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
   let filterView;
@@ -3194,6 +3225,29 @@ async function initialize() {
     return personRuntimeState;
   }
 
+  async function ensurePersonFilterOptions() {
+    if (!filterView) return;
+    filterView.setPersonOptionsLoading?.(true);
+    try {
+      const [, records] = await Promise.all([
+        ensurePersonFilterIndex(),
+        ensurePersonRuntime()
+      ]);
+      const indexedPersonIds = new Set(Object.keys(personWorkIndex?.persons ?? {}));
+      const options = (records ?? [])
+        .map(person => ({
+          ...person,
+          personId: String(person.entityId ?? person.personId ?? '')
+        }))
+        .filter(person => indexedPersonIds.has(person.personId));
+      filterView.setPersonOptions(options);
+    } catch (error) {
+      filterView.setPersonOptions([]);
+      announce('人物筛选资料加载失败，请稍后重试。', 'error');
+      console.error(error);
+    }
+  }
+
   function renderPersonDirectory() {
     if (elements.personSearch.value !== personQuery) elements.personSearch.value = personQuery;
     localSearchClears.forEach(sync => sync());
@@ -4227,6 +4281,17 @@ async function initialize() {
     onFilterChange(nextFilterState) {
       const interaction = interactionMetrics.begin('filter');
       interactionMetrics.stage(interaction, 'debounce-complete');
+      if (nextFilterState.personIds?.length > 0 && personWorkIndex === null) {
+        const result = controller.setFilterState(nextFilterState);
+        void ensurePersonFilterIndex()
+          .then(() => render([], interaction))
+          .catch(error => {
+            interactionMetrics.cancel(interaction, 'person-index-error');
+            announce('人物筛选索引加载失败，请稍后重试。', 'error');
+            console.error(error);
+          });
+        return result;
+      }
       return runStateChange(() => controller.setFilterState(nextFilterState), [], interaction);
     },
     onAttributeSelectionChange(groupId, selectedIds) {
@@ -4241,6 +4306,10 @@ async function initialize() {
           }
         });
       }, [], interaction);
+    },
+    personOptions: [],
+    onPersonFilterFocus() {
+      void ensurePersonFilterOptions();
     },
     onRequestCounts(_filterState, visibleBrands) {
       const interaction = interactionMetrics.begin('filter-counts');

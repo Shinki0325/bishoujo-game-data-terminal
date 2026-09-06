@@ -65,7 +65,9 @@ function cloneFilterState(state) {
       [...(state.attributeSelections?.[groupId] ?? DEFAULT_ATTRIBUTE_SELECTIONS[groupId])]
     ])),
     positiveFilterIds: [...state.positiveFilterIds],
-    excludedFilterIds: [...state.excludedFilterIds]
+    excludedFilterIds: [...state.excludedFilterIds],
+    personIds: [...(state.personIds ?? [])],
+    personRole: state.personRole ?? 'all'
   };
 }
 
@@ -133,6 +135,7 @@ function activeFilterCount(state) {
       || state.releaseYearEnd !== DEFAULT_FILTER_STATE.releaseYearEnd
     )
     + state.brandIds.length
+    + (state.personIds?.length ?? 0)
     + attributeCount
     + tagCount
     + Number(state.selectedOnly);
@@ -192,7 +195,9 @@ export function createFilterView({
   releaseYearCounts = {},
   onFilterChange,
   onRequestCounts,
-  onAttributeSelectionChange = () => {}
+  onAttributeSelectionChange = () => {},
+  onPersonFilterFocus = () => {},
+  personOptions = []
 }) {
   if (!Array.isArray(filters) || !Array.isArray(brands)) {
     throw new TypeError('filters and brands must be arrays');
@@ -202,6 +207,9 @@ export function createFilterView({
   }
   if (typeof onAttributeSelectionChange !== 'function') {
     throw new TypeError('onAttributeSelectionChange must be a function');
+  }
+  if (typeof onPersonFilterFocus !== 'function') {
+    throw new TypeError('onPersonFilterFocus must be a function');
   }
 
   const elements = {
@@ -222,6 +230,10 @@ export function createFilterView({
     companySearch: requiredElement(root, 'company-search'),
     companySelected: requiredElement(root, 'company-selected'),
     companyOptions: requiredElement(root, 'company-options'),
+    personSearch: optionalElement(root, 'person-filter-search'),
+    personSelected: optionalElement(root, 'person-filter-selected'),
+    personOptions: optionalElement(root, 'person-filter-options'),
+    personRole: optionalElement(root, 'person-filter-role'),
     attributeGroups: requiredElement(root, 'attribute-filter-groups'),
     attributeSelected: requiredElement(root, 'attribute-selected'),
     groups: requiredElement(root, 'filter-groups'),
@@ -261,6 +273,9 @@ export function createFilterView({
   let tagAction = 'and';
   let openGroupId = null;
   let companyPopupActive = false;
+  let personPopupActive = false;
+  let personOptionsState = Array.isArray(personOptions) ? [...personOptions] : [];
+  let personOptionsLoading = false;
   let suppressCompanyFocusOpen = false;
   let pendingFocus = null;
   let formulaCompletion = null;
@@ -494,6 +509,114 @@ export function createFilterView({
   function renderCompanies() {
     renderSelectedCompanies();
     renderCompanyOptions();
+  }
+
+  function personIdOf(person) {
+    return String(person?.personId ?? person?.entityId ?? '');
+  }
+
+  function personNameOf(person) {
+    return String(person?.displayName ?? person?.canonicalName ?? person?.name ?? personIdOf(person));
+  }
+
+  function personMatchesQuery(person, query) {
+    const needle = String(query ?? '').trim().toLocaleLowerCase('zh-Hans');
+    if (!needle) return true;
+    return [
+      personNameOf(person),
+      person?.canonicalName,
+      ...(Array.isArray(person?.aliases) ? person.aliases : []),
+      person?.searchKey,
+      person?.pinyinSearchKey
+    ].filter(Boolean).some(value => String(value).toLocaleLowerCase('zh-Hans').includes(needle));
+  }
+
+  function visiblePersonSuggestions() {
+    const selected = new Set(currentState.personIds ?? []);
+    const query = elements.personSearch?.value ?? '';
+    return personOptionsState
+      .filter(person => personIdOf(person) && personMatchesQuery(person, query))
+      .sort((left, right) => Number(selected.has(personIdOf(right))) - Number(selected.has(personIdOf(left)))
+        || personNameOf(left).localeCompare(personNameOf(right), 'zh-Hans'))
+      .slice(0, 12);
+  }
+
+  function renderSelectedPersons() {
+    if (!elements.personSelected) return;
+    const chips = (currentState.personIds ?? []).map(personId => {
+      const person = personOptionsState.find(item => personIdOf(item) === personId);
+      const button = documentRef.createElement('button');
+      button.type = 'button';
+      button.className = 'filter-chip person-chip';
+      button.dataset.personId = personId;
+      const label = person ? personNameOf(person) : personId;
+      button.textContent = `${label} ×`;
+      button.setAttribute('aria-label', `移除人物 ${label}`);
+      button.addEventListener('click', () => {
+        flushPendingEdits();
+        emit({ ...currentState, personIds: currentState.personIds.filter(id => id !== personId) });
+      });
+      return button;
+    });
+    elements.personSelected.replaceChildren(...chips);
+  }
+
+  function renderPersonOptions() {
+    if (!elements.personOptions) return;
+    elements.personOptions.hidden = !personPopupActive;
+    if (!personPopupActive) {
+      elements.personOptions.replaceChildren();
+      return;
+    }
+    const selected = new Set(currentState.personIds ?? []);
+    const rows = visiblePersonSuggestions().map(person => {
+      const personId = personIdOf(person);
+      const active = selected.has(personId);
+      const button = documentRef.createElement('button');
+      button.type = 'button';
+      button.className = 'person-option facet-control';
+      button.dataset.personId = personId;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+      const name = documentRef.createElement('span');
+      name.textContent = personNameOf(person);
+      const meta = documentRef.createElement('small');
+      meta.textContent = active ? '已选' : (person?.primaryRole === 'voice-actor' ? '声优' : '');
+      button.append(name, meta);
+      button.addEventListener('click', () => {
+        flushPendingEdits();
+        const next = new Set(currentState.personIds ?? []);
+        if (next.has(personId)) next.delete(personId); else next.add(personId);
+        emit({
+          ...currentState,
+          personIds: personOptionsState
+            .map(item => personIdOf(item))
+            .filter(id => next.has(id))
+        });
+        renderPersonOptions();
+      });
+      return button;
+    });
+    if (personOptionsLoading) {
+      const loading = documentRef.createElement('p');
+      loading.className = 'empty-list';
+      loading.textContent = '正在加载人物…';
+      rows.push(loading);
+    } else if (rows.length === 0) {
+      const empty = documentRef.createElement('p');
+      empty.className = 'empty-list';
+      empty.textContent = personOptionsState.length ? '没有匹配的人物' : '打开人物条件后加载目录';
+      rows.push(empty);
+    }
+    elements.personOptions.replaceChildren(...rows);
+  }
+
+  function renderPersons() {
+    renderSelectedPersons();
+    if (elements.personRole && elements.personRole.value !== (currentState.personRole ?? 'all')) {
+      elements.personRole.value = currentState.personRole ?? 'all';
+    }
+    renderPersonOptions();
   }
 
   function toggleTag(filterId) {
@@ -769,6 +892,14 @@ export function createFilterView({
         brandIds: currentState.brandIds.filter(id => id !== brandId)
       }));
     }
+    for (const personId of currentState.personIds ?? []) {
+      const person = personOptionsState.find(item => personIdOf(item) === personId);
+      const label = person ? personNameOf(person) : personId;
+      addChip(`person:${personId}`, `人物 ${label}`, () => emit({
+        ...currentState,
+        personIds: currentState.personIds.filter(id => id !== personId)
+      }));
+    }
     if (currentState.mode === 'basic') {
       for (const filterId of currentState.positiveFilterIds) {
         const filter = filters.find(item => item.filterId === filterId);
@@ -1024,6 +1155,34 @@ export function createFilterView({
     renderCompanyOptions();
   });
   companyRegion.addEventListener('keydown', closeCompanyPopupOnEscape);
+  if (elements.personSearch && elements.personOptions) {
+    elements.personSearch.setAttribute('aria-controls', 'person-filter-options');
+    elements.personSearch.addEventListener('focus', () => {
+      personPopupActive = true;
+      onPersonFilterFocus();
+      renderPersonOptions();
+    });
+    elements.personSearch.addEventListener('input', () => {
+      personPopupActive = true;
+      onPersonFilterFocus();
+      renderPersonOptions();
+    });
+    elements.personSearch.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      personPopupActive = false;
+      renderPersonOptions();
+    });
+    elements.personSearch.addEventListener('blur', event => {
+      if (event.relatedTarget && elements.personOptions.contains(event.relatedTarget)) return;
+      personPopupActive = false;
+      renderPersonOptions();
+    });
+    elements.personRole?.addEventListener('change', () => {
+      flushPendingEdits();
+      emit({ ...currentState, personRole: elements.personRole.value });
+    });
+  }
   elements.tagActionAnd.addEventListener('click', () => {
     flushPendingEdits();
     tagAction = 'and';
@@ -1213,12 +1372,22 @@ export function createFilterView({
         : `${activeFilterCount(currentState)} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
       renderTagActions();
       renderCompanies();
+      renderPersons();
       renderAttributeGroups();
       renderSelectedAttributes();
       renderGroups();
       renderSelectedTags();
       renderActiveChips();
       restorePendingFocus();
+    },
+    setPersonOptions(options) {
+      personOptionsState = Array.isArray(options) ? [...options] : [];
+      personOptionsLoading = false;
+      renderPersons();
+    },
+    setPersonOptionsLoading(loading = true) {
+      personOptionsLoading = Boolean(loading);
+      renderPersonOptions();
     }
   });
 }

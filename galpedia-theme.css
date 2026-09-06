@@ -410,6 +410,7 @@ html.galpedia[data-theme] .filter-heading-actions > .icon-button {
 .filter-group,
 .checkbox-list,
 #company-options,
+.person-filter-options,
 .company-option,
 .checkbox-row {
   border-color: var(--border);
@@ -426,6 +427,7 @@ html.galpedia[data-theme] .filter-heading-actions > .icon-button {
 .count-badge,
 .active-filter-chips:not(:empty),
 .company-selected:not(:empty),
+.person-filter-selected:not(:empty),
 .attribute-selected:not(:empty),
 .tag-selected:not(:empty) {
   color: var(--text);
