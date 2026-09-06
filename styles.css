@@ -1481,10 +1481,18 @@ h3 {
   font-size: 11px;
 }
 
-.year-range-slider {
+.year-histogram-control {
   position: relative;
-  height: 46px;
-  cursor: pointer;
+  height: 92px;
+  margin: 0 10px;
+}
+
+.year-range-slider {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 18px;
+  height: 74px;
+  pointer-events: none;
 }
 
 .year-range-track,
@@ -1497,21 +1505,18 @@ h3 {
 }
 
 .year-range-track {
-  right: 10px;
-  left: 10px;
-  background: var(--border-strong);
+  display: none;
 }
 
 .year-range-selection {
-  right: var(--year-range-end, 0%);
-  left: var(--year-range-start, 0%);
-  background: var(--accent);
+  display: none;
 }
 
 .year-range-input {
   position: absolute;
   z-index: 1;
   inset: 0;
+  height: 74px;
   min-height: 36px;
   margin: 0;
   appearance: none;
@@ -1528,44 +1533,44 @@ h3 {
 }
 
 .year-range-input::-webkit-slider-runnable-track {
-  height: 4px;
+  height: 74px;
   background: transparent;
 }
 
 .year-range-input::-webkit-slider-thumb {
-  width: 28px;
-  height: 28px;
-  margin-top: -12px;
+  width: 3px;
+  height: 74px;
+  margin-top: 0;
   appearance: none;
   pointer-events: auto;
   background: var(--accent);
-  border: 2px solid var(--surface);
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--accent);
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent);
   cursor: grab;
 }
 
 .year-range-input::-moz-range-track {
-  height: 4px;
+  height: 74px;
   background: transparent;
   border: 0;
 }
 
 .year-range-input::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+  width: 3px;
+  height: 74px;
   box-sizing: border-box;
   pointer-events: auto;
   background: var(--accent);
-  border: 2px solid var(--surface);
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--accent);
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent);
   cursor: grab;
 }
 
 .year-range-bound {
   position: absolute;
-  top: calc(50% + 12px);
+  top: 78px;
   color: var(--text-muted);
   font-size: 10px;
   line-height: 1;
@@ -1578,7 +1583,7 @@ h3 {
 
 .year-range-value {
   position: absolute;
-  top: 0;
+  top: -1px;
   z-index: 3;
   min-width: 32px;
   padding: 2px 5px;
@@ -1607,8 +1612,10 @@ h3 {
   display: flex;
   align-items: end;
   gap: 1px;
-  height: 28px;
-  margin: -1px 10px 0;
+  position: absolute;
+  inset: 0 0 18px;
+  height: 74px;
+  margin: 0;
   padding-top: 4px;
   border-bottom: 1px solid var(--border);
 }
@@ -1643,42 +1650,42 @@ h3 {
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-start::-webkit-slider-thumb {
-  transform: translateX(-11px);
+  transform: translateX(-3px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-end::-webkit-slider-thumb {
-  transform: translateX(11px);
+  transform: translateX(3px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="minimum"]
   .year-range-end::-webkit-slider-thumb {
-  transform: translateX(22px);
+  transform: translateX(6px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="maximum"]
   .year-range-start::-webkit-slider-thumb {
-  transform: translateX(-22px);
+  transform: translateX(-6px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-start::-moz-range-thumb {
-  transform: translateX(-11px);
+  transform: translateX(-3px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
   .year-range-end::-moz-range-thumb {
-  transform: translateX(11px);
+  transform: translateX(3px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="minimum"]
   .year-range-end::-moz-range-thumb {
-  transform: translateX(22px);
+  transform: translateX(6px);
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="maximum"]
   .year-range-start::-moz-range-thumb {
-  transform: translateX(-22px);
+  transform: translateX(-6px);
 }
 
 .year-range-input:focus-visible::-webkit-slider-thumb {
