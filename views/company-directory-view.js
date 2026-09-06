@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from '../lib/asset-url.js';
+import { createViewLifetime } from '../lib/view-lifetime.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { setListState } from '../lib/list-state.js';
 import { syncSortDirectionControl, toggleSortDirection } from '../lib/ui-sort-control.js';
@@ -69,6 +70,7 @@ export function createCompanyDirectoryView({
     throw new TypeError('company directory callbacks must be functions');
   }
   const documentRef = root.ownerDocument;
+  const lifetime = createViewLifetime();
   const search = requireElement(root, 'company-directory-search');
   const sort = requireElement(root, 'company-sort');
   // The direction control was added after the first directory view tests;
@@ -78,6 +80,7 @@ export function createCompanyDirectoryView({
   const list = requireElement(root, 'company-list');
   const layout = root.querySelector?.('.company-directory-layout');
   const detail = requireElement(root, 'company-detail');
+  const detailHome = detail.parentElement;
   const detailTitle = requireElement(root, 'company-detail-title');
   const detailAvatar = requireElement(root, 'company-detail-avatar');
   const detailMeta = requireElement(root, 'company-detail-meta');
@@ -100,20 +103,20 @@ export function createCompanyDirectoryView({
   let pageIndex = 0;
   let renderedSelectedCompanyId = null;
 
-  search.addEventListener('input', () => onSearch(search.value));
-  sort.addEventListener('change', () => {
+  lifetime.listen(search, 'input', () => onSearch(search.value));
+  lifetime.listen(sort, 'change', () => {
     const parsed = parseCompanySortValue(sort.value);
     onSort(companySortValue({ key: parsed.key, direction: COMPANY_SORT_DEFAULT_DIRECTIONS[parsed.key] }));
   });
-  sortDirection?.addEventListener('click', () => {
+  lifetime.listen(sortDirection, 'click', () => {
     const parsed = parseCompanySortValue(latestModel?.sortValue ?? sort.value);
     onSort(companySortValue({ key: parsed.key, direction: toggleSortDirection(parsed.direction) }));
   });
-  detailSort.addEventListener('change', () => onDetailWorkSort({ sortKey: detailSort.value }));
-  detailSortDirection.addEventListener('click', () => {
+  lifetime.listen(detailSort, 'change', () => onDetailWorkSort({ sortKey: detailSort.value }));
+  lifetime.listen(detailSortDirection, 'click', () => {
     onDetailWorkSort({ direction: detailSortDirection.getAttribute('aria-pressed') === 'true' ? 'desc' : 'asc' });
   });
-  detailClose?.addEventListener('click', () => onCloseDetail());
+  lifetime.listen(detailClose, 'click', () => onCloseDetail());
 
   function pageCount(companies) {
     return Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
@@ -344,9 +347,9 @@ export function createCompanyDirectoryView({
     if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
   }
 
-  pagePrevious.addEventListener('click', () => setPage(pageIndex - 1));
-  pageNext.addEventListener('click', () => setPage(pageIndex + 1));
-  pageInput.addEventListener('keydown', event => {
+  lifetime.listen(pagePrevious, 'click', () => setPage(pageIndex - 1));
+  lifetime.listen(pageNext, 'click', () => setPage(pageIndex + 1));
+  lifetime.listen(pageInput, 'keydown', event => {
     if (event.key !== 'Enter') return;
     event.preventDefault();
     const raw = String(pageInput.value ?? '').trim();
@@ -359,6 +362,13 @@ export function createCompanyDirectoryView({
   });
 
   return Object.freeze({
+    dispose() {
+      lifetime.dispose();
+      // Mobile places the detail between cards. Return the owned panel before
+      // clearing rows so a subsequent workspace owner can still find its IDs.
+      if (detailHome && detail.parentElement !== detailHome) detailHome.append(detail);
+      list.replaceChildren(); detailWorks.replaceChildren();
+    },
     render,
     getPageNumber() {
       return pageIndex + 1;

@@ -30,12 +30,19 @@ document.querySelector('#site-info-button svg').replaceWith(createActionIcon(doc
 const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
+let directoryController;
+let routeRequest = 0;
+const retryLoading = document.createElement('button');
+retryLoading.type = 'button'; retryLoading.textContent = '重试'; retryLoading.hidden = true;
+retryLoading.className = 'toolbar-button toolbar-button-neutral';
+status?.append(retryLoading);
+retryLoading.addEventListener('click', () => { void ensureRoute().catch(() => {}); });
 let lastWorkspaceRoute = '#works';
 const dialRevealDelay = 160;
 let statusRevealTimer = null;
 let runtimeLoading = null;
 function prepareLoadingRegion() {
-  const route = location.hash.split('?')[0];
+  const route = '#' + location.hash.slice(1).split(/[/?]/)[0];
   const id = route === '#persons' ? 'person-view'
     : route === '#companies' ? 'company-view'
       : route === '#ranking' ? 'ranking-view' : 'selection-view';
@@ -43,9 +50,13 @@ function prepareLoadingRegion() {
   if (!active) return;
   document.querySelectorAll('#workspace > section').forEach(section => { section.hidden = section !== active; });
   active.hidden = false;
+  for (const [buttonId, hash] of Object.entries(routes)) {
+    const button = document.getElementById(buttonId), selected = hash === route;
+    button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
+  }
 }
 function placeLoadingStatus() {
-  const route = location.hash.split('?')[0];
+  const route = '#' + location.hash.slice(1).split(/[/?]/)[0];
   const target = route === '#persons'
     ? document.querySelector('#person-directory-panel')
     : route === '#companies'
@@ -91,6 +102,10 @@ function syncHome() {
   home.hidden = !active;
   document.querySelector('#workspace').inert = active;
   if (active) {
+    routeRequest += 1;
+    directoryController?.suspend();
+    runtimeTicket?.finish(); runtimeTicket = null;
+    clearTimeout(statusRevealTimer); status.hidden = true;
     for (const button of nav.querySelectorAll('button')) { button.setAttribute('aria-selected', 'false'); button.tabIndex = 0; }
   }
   document.title = active ? '少女箱庭 GALPEDIA · 美少女游戏资料库' : 'GALPEDIA · 作品、会社与人物';
@@ -112,6 +127,9 @@ paintTheme();
 
 async function ensureRuntime() {
   if (!runtimePromise) {
+    routeRequest += 1;
+    directoryController?.dispose(); directoryController = null;
+    retryLoading.hidden = true;
     prepareLoadingRegion();
     placeLoadingStatus();
     if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
@@ -160,12 +178,42 @@ async function ensureRuntime() {
   }
   return runtimePromise;
 }
+
+async function ensureRoute() {
+  if (isHome()) return;
+  prepareLoadingRegion(); placeLoadingStatus();
+  if (runtimePromise) return ensureRuntime();
+  const hash = location.hash;
+  // Detail/editing routes still use the existing complete workbench. Directory
+  // browsing is independent and never imports that workbench speculatively.
+  if (!/^#companies(?:[/?]|$)/u.test(hash) && !/^#persons(?:\?|$)/u.test(hash)) return ensureRuntime();
+  const request = ++routeRequest;
+  retryLoading.hidden = true;
+  if (createRuntimeLoading()) {
+    status.hidden = false;
+    runtimeTicket = runtimeLoading.begin(hash.startsWith('#persons') ? '正在载入人物资料…' : '正在载入会社资料…');
+  } else { status.hidden = false; statusText.classList.remove('visually-hidden'); statusText.textContent = '正在载入资料…'; }
+  try {
+    const { createDirectoryWorkspaces } = await import('./lib/directory-workspaces.js');
+    if (request !== routeRequest || runtimePromise) return;
+    directoryController ??= createDirectoryWorkspaces({ navigate, activateFull: ensureRuntime });
+    await directoryController.show(hash);
+    if (request !== routeRequest || runtimePromise) return;
+    runtimeTicket?.finish(); runtimeTicket = null; status.hidden = true;
+  } catch (error) {
+    if (request !== routeRequest || runtimePromise) return;
+    runtimeTicket?.fail('本栏目暂时未能加载，请重试。'); runtimeTicket = null;
+    status.hidden = false; statusText.classList.remove('visually-hidden');
+    statusText.textContent = '本栏目暂时未能加载，请重试。'; retryLoading.hidden = false;
+    console.warn('directory workspace load failed', error);
+  }
+}
 function navigate(route) {
   if (!isHome() && route === '#home') lastWorkspaceRoute = location.hash;
   dialog.close();
   if (location.hash === route) {
     syncHome();
-    if (route !== '#home') void ensureRuntime().catch(() => {});
+    if (route !== '#home') void ensureRoute().catch(() => {});
     return;
   }
   location.hash = route;
@@ -200,9 +248,9 @@ document.addEventListener('click', event => {
 });
 window.addEventListener('hashchange', () => {
   syncHome();
-  if (!isHome()) void ensureRuntime().catch(() => {});
+  if (!isHome()) void ensureRoute().catch(() => {});
 });
-window.addEventListener('popstate', syncHome);
+window.addEventListener('popstate', () => { syncHome(); if (!isHome()) void ensureRoute().catch(() => {}); });
 
 let handbook;
 let handbookLoad;
@@ -247,4 +295,4 @@ fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (
   document.querySelector('#home-snapshot').textContent = `${snapshot.date} 快照`;
 }).catch(() => { document.querySelector('#home-snapshot').textContent = '收录统计暂不可用'; });
 syncHome();
-if (!isHome()) void ensureRuntime().catch(() => {});
+if (!isHome()) void ensureRoute().catch(() => {});

@@ -8,6 +8,9 @@ import {
   prepareBackendBetaFixture
 } from './lib/backend-beta-fixture.js';
 import { createHistory } from './lib/history.js';
+import { mergeVndbAdmissionsIntoFixture } from './lib/catalog-admissions.js';
+import { loadRuntimeSource } from './lib/runtime-source-cache.js';
+import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
 import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
@@ -114,7 +117,6 @@ import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
 import { createPersonDirectoryView } from './views/person-directory-view.js?v=20260903-person-role-model-v5';
 import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-identity-character-image-v1';
-import { createM2PersonPerformanceRuntime } from './lib/m2-person-performance-runtime.js?v=20260904-m2-identity-character-image-v1';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createStickerEditorView } from './views/sticker-editor-view.js';
@@ -692,44 +694,6 @@ export function prepareRuntimeSample(candidate, authorities = {}) {
   };
 }
 
-function mergeVndbAdmissionsIntoFixture(source, admissions) {
-  if (admissions === null || admissions.works.length === 0) return { source, admissionCount: 0 };
-  const merged = JSON.parse(JSON.stringify(source));
-  // The backend indexes are position-bound to the 6,799-work core export.
-  // Admissions are merged in memory, so discard those stale indexes and let
-  // the runtime build its own query state for the expanded presentation pool.
-  merged.indexes = null;
-  const existingWorkIds = new Set(merged.works.map(work => work.workId));
-  const companies = new Map(merged.companies.map(company => [company.companyId, company]));
-  for (const item of admissions.works) {
-    if (existingWorkIds.has(item.workId)) throw new TypeError(`VNDB admission overlaps catalog work ${item.workId}`);
-    existingWorkIds.add(item.workId);
-    const companyId = item.companyId || `vndb-${item.vndbId}`;
-    if (!companies.has(companyId)) {
-      const company = { companyId, name: `未收录会社 (${companyId})`, aliases: [] };
-      merged.companies.push(company);
-      companies.set(companyId, company);
-    }
-    merged.works.push({
-      workId: item.workId,
-      title: item.title,
-      furigana: item.furigana,
-      releaseDate: item.releaseDate || '1900-01-01',
-      companyId,
-      median: item.median,
-      voteCount: item.voteCount,
-      isCrossSourceAdmission: true,
-      filterIds: [],
-      genreIds: [],
-      platformId: 'platform-pc',
-      workGroupId: null,
-      isNukige: false,
-      thumbnail: item.thumbnail,
-      preview: item.preview
-    });
-  }
-  return { source: merged, admissionCount: admissions.works.length };
-}
 
 function restrictAssetsManifestToCatalog(assetsManifest, catalogWorkIds) {
   if (assetsManifest === null || assetsManifest === undefined) return assetsManifest;
@@ -748,17 +712,7 @@ async function fetchJson(url, label) {
 }
 
 async function fetchJsonWithSha256(url, label) {
-  const response = await fetch(url, { cache: RUNTIME_DATA_CACHE_MODE });
-  if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
-  const bytes = await response.arrayBuffer();
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  const sha256 = [...new Uint8Array(digest)]
-    .map(value => value.toString(16).padStart(2, '0'))
-    .join('');
-  return {
-    value: JSON.parse(new TextDecoder().decode(bytes)),
-    sha256
-  };
+  return loadRuntimeSource(url, label);
 }
 
 async function fetchOptionalJsonWithSha256(url, label) {
@@ -1270,13 +1224,7 @@ async function initialize() {
   if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
     if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
       && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
-      personPerformanceRuntime = createM2PersonPerformanceRuntime({
-        manifestUrl: DATA_URLS.m2PersonPerformanceManifest,
-        indexUrl: DATA_URLS.m2PersonPerformanceIndex,
-        fetchImpl: fetch,
-        cryptoRef: crypto,
-        cacheMode: RUNTIME_DATA_CACHE_MODE
-      });
+      personPerformanceRuntime = getPersonWorkspaceRuntime();
     }
     personRuntime = createM2PersonRuntime({
       manifestUrl: DATA_URLS.m2PersonManifest,

@@ -1,6 +1,7 @@
 const PAGE_SIZE = 48;
 
 import { filterPersonsBySearch } from '../lib/person-search.js';
+import { createViewLifetime } from '../lib/view-lifetime.js';
 import { personNameVariantCount, personNameVariantLabels } from '../lib/person-name-variants.js';
 import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
 import { syncLocalFeedback } from '../lib/ui-page-heading.js';
@@ -49,9 +50,10 @@ function directoryRole(person) {
     .sort((left, right) => (counts[right] ?? 0) - (counts[left] ?? 0) || DIRECTORY_ROLE_ORDER.indexOf(left) - DIRECTORY_ROLE_ORDER.indexOf(right))[0] ?? 'unknown';
 }
 
-export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSelect, onLoadPerson, onOpenWork, onOpenPerson, onOpenCompany, imageUrlForWork, currentYear = new Date().getFullYear() } = {}) {
+export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSelect, onLoadPerson, onOpenWork, onOpenPerson, onOpenCompany, onPageChange, imageUrlForWork, currentYear = new Date().getFullYear() } = {}) {
   if (!root) throw new TypeError('person directory root is required');
   const documentRef = root.ownerDocument;
+  const lifetime = createViewLifetime();
   const search = root.querySelector('#person-directory-search');
   const list = root.querySelector('#person-directory-list');
   const empty = root.querySelector('#person-directory-empty');
@@ -210,11 +212,11 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     // the same closed state for both the button and intercepted Escape paths.
     onSelect?.(null);
   }
-  dialog?.addEventListener('cancel', event => {
+  lifetime.listen(dialog, 'cancel', event => {
     event.preventDefault();
     closeDetailFromUser();
   });
-  dialog?.addEventListener('close', () => {
+  lifetime.listen(dialog, 'close', () => {
     // A native close event can be queued after a new detail has reopened the
     // same dialog. Do not let that stale event invalidate the new request.
     if (dialog.open) return;
@@ -582,20 +584,19 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       row.append(faces, cell, metrics, node(documentRef, 'span', 'person-directory-role', roleLabel(primaryRole)), activity, span);
       row.addEventListener('click', () => {
         selectedId = person.entityId;
-        onSelect?.(person.entityId);
-        void loadDetail(person);
+        if (onSelect?.(person.entityId) !== false) void loadDetail(person);
       }); list.append(row);
     }
     markCurrentRows();
   }
 
-  search?.addEventListener('input', () => { pageIndex = 0; onSearch?.(search.value); });
-  previous?.addEventListener('click', () => { pageIndex = Math.max(0, pageIndex - 1); render(); });
-  next?.addEventListener('click', () => { pageIndex += 1; render(); });
-  close?.addEventListener('click', closeDetailFromUser);
+  lifetime.listen(search, 'input', () => { pageIndex = 0; onSearch?.(search.value); });
+  lifetime.listen(previous, 'click', () => { pageIndex = Math.max(0, pageIndex - 1); render(); onPageChange?.(pageIndex + 1); });
+  lifetime.listen(next, 'click', () => { pageIndex += 1; render(); onPageChange?.(pageIndex + 1); });
+  lifetime.listen(close, 'click', closeDetailFromUser);
   roleTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); item.setAttribute('aria-pressed', String(active)); item.tabIndex = active ? 0 : -1; }); pageIndex = 0; render(); onRoleChange?.(roleFilter); });
-    tab.addEventListener('keydown', event => {
+    lifetime.listen(tab, 'click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); item.setAttribute('aria-pressed', String(active)); item.tabIndex = active ? 0 : -1; }); pageIndex = 0; render(); onRoleChange?.(roleFilter); });
+    lifetime.listen(tab, 'keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
       const targetIndex = event.key === 'Home' ? 0 : event.key === 'End' ? roleTabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + roleTabs.length) % roleTabs.length;
@@ -604,6 +605,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   });
 
   return Object.freeze({
+    dispose() { lifetime.dispose(); invalidateDetailRequest(); list.replaceChildren(); },
     render({ persons = [], totalPersonCount = null, selectedPersonId = null, activityAxis: nextActivityAxis = null } = {}) {
       model = Array.isArray(persons) ? persons : [];
       populationCount = totalPersonCount;
@@ -628,6 +630,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     filter(query = '') {
       return filterPersonsBySearch(model, query);
     },
-    getPageNumber() { return pageIndex + 1; }
+    getPageNumber() { return pageIndex + 1; },
+    setPageNumber(value) { const requested = Number(value); if (!Number.isSafeInteger(requested) || requested < 1) return; pageIndex = requested - 1; render(); }
   });
 }
