@@ -1088,7 +1088,8 @@ export function createFilterView({
       // on the following bar so neither vertical handle covers a selected
       // year's data column.
       const offset = endpoint === 'start' ? -0.5 : 1.5;
-      return Math.max(0, Math.min(100, ((index + offset) / yearCount) * 100));
+      const edgeAllowance = 100 / yearCount;
+      return Math.max(-edgeAllowance, Math.min(100 + edgeAllowance, ((index + offset) / yearCount) * 100));
     };
     const startHandlePosition = handlePosition(values.releaseYearStart, 'start');
     const endHandlePosition = handlePosition(values.releaseYearEnd, 'end');
@@ -1123,8 +1124,8 @@ export function createFilterView({
       elements.releaseYearRangeSelection.style.setProperty('--year-range-start', `${startPercent}%`);
       elements.releaseYearRangeSelection.style.setProperty('--year-range-end', `${endPercent}%`);
     }
-    elements.releaseYearSlider?.style.setProperty('--year-start-position', `${startHandlePosition}%`);
-    elements.releaseYearSlider?.style.setProperty('--year-end-position', `${endHandlePosition}%`);
+    elements.releaseYearSlider?.style.setProperty('--year-start-position', `${Math.max(0, Math.min(100, startHandlePosition))}%`);
+    elements.releaseYearSlider?.style.setProperty('--year-end-position', `${Math.max(0, Math.min(100, endHandlePosition))}%`);
     for (const [handle, position, value, label] of [
       [elements.releaseYearStartHandle, startHandlePosition, startText, `最早发行年份边界 ${startText}`],
       [elements.releaseYearEndHandle, endHandlePosition, endText, `最晚发行年份边界 ${endText}`]
