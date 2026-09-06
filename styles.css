@@ -1342,35 +1342,53 @@ h3 {
 .numeric-filters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 .numeric-filters legend {
   grid-column: 1 / -1;
 }
 
+.numeric-filters legend,
+.year-range-filter legend {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
 .numeric-filters label,
 .select-field {
   display: grid;
-  gap: 5px;
+  gap: 3px;
   color: var(--text-muted);
   font-size: 11px;
 }
 
+.numeric-filters input[type="number"],
+.year-number-inputs input[type="number"] {
+  min-height: 34px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 .year-range-filter {
   display: grid;
-  gap: 8px;
+  position: relative;
+  gap: 4px;
+  padding-top: 9px;
+  padding-bottom: 7px;
 }
 
 .year-number-inputs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .year-number-inputs label {
   display: grid;
-  gap: 5px;
+  gap: 3px;
   color: var(--text-muted);
   font-size: 11px;
 }
@@ -1378,11 +1396,17 @@ h3 {
 #release-year-result-preview {
   color: var(--text-muted);
   font-size: 12px;
+  position: absolute;
+  top: 9px;
+  right: 12px;
+  padding-left: 8px;
+  background: var(--surface);
+  font-size: 11px;
 }
 
 .year-range-slider {
   position: relative;
-  height: 44px;
+  height: 36px;
   cursor: pointer;
 }
 
@@ -1411,7 +1435,7 @@ h3 {
   position: absolute;
   z-index: 1;
   inset: 0;
-  min-height: 44px;
+  min-height: 36px;
   margin: 0;
   appearance: none;
   pointer-events: none;
