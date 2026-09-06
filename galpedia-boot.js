@@ -31,6 +31,10 @@ const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
 let lastWorkspaceRoute = '#works';
+const isLocalPreview = location.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+const localLoadingMinimumMs = isLocalPreview ? 900 : 0;
+let loadingStartedAt = 0;
+let loadingFinishTimer = null;
 const runtimeLoading = globalThis.GalpediaDial && loadIndicator
   ? globalThis.GalpediaDial.createLoadingController({
     host: loadIndicator,
@@ -84,14 +88,21 @@ paintTheme();
 async function ensureRuntime() {
   if (!runtimePromise) {
     status.hidden = false;
+    loadingStartedAt = performance.now();
     runtimeTicket = runtimeLoading?.begin('正在准备资料库…') ?? null;
     if (!runtimeLoading && statusText) statusText.textContent = '正在准备资料库…';
     runtimePromise = import('./main.js').then(module => module.ready).then(api => {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;
-      runtimeTicket?.finish();
-      runtimeTicket = null;
-      status.hidden = true;
+      const finish = () => {
+        loadingFinishTimer = null;
+        runtimeTicket?.finish();
+        runtimeTicket = null;
+        status.hidden = true;
+      };
+      const remaining = Math.max(0, localLoadingMinimumMs - (performance.now() - loadingStartedAt));
+      if (remaining > 0) loadingFinishTimer = setTimeout(finish, remaining);
+      else finish();
       paintTheme();
       syncHome();
       return api;

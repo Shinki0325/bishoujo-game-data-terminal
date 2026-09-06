@@ -88,6 +88,19 @@ html.galpedia .galpedia-load-status {
 .gp-loading-view[hidden] { display: none !important; }
 .gp-loading-view__label { color: inherit; font: inherit; }
 .gp-loading-view--stack { flex-direction: column; gap: 14px; }
+/* Keep the standard dial observable on narrow local/mobile previews instead of
+ * letting the live label squeeze the host into a tall, empty-looking sliver. */
+@media (max-width: 360px) {
+  html.galpedia .galpedia-load-status {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    min-height: 128px;
+    box-sizing: border-box;
+    justify-content: center;
+  }
+  .gp-loading-view { flex-direction: column; gap: 8px; }
+  .gp-loading-view__label { white-space: nowrap; }
+}
 /* Explicit pause for previews; background tabs pause without changing request state. */
 .gp-dial[data-paused="true"] .gp-dial__rotor,
 html[data-gp-dials-suspended] .gp-dial__rotor { animation-play-state: paused; }
