@@ -200,6 +200,10 @@
           </div>
 
           <div class="filter-scroll">
+            <div id="filter-draft-summary" class="filter-draft-summary" aria-live="polite">
+              <output id="filter-draft-summary-text">当前范围</output>
+              <button id="filter-clear-all" class="filter-clear-all" type="button" hidden>清除全部</button>
+            </div>
             <h3 class="filter-foundation-title">基础条件</h3>
             <fieldset class="filter-section numeric-filters">
               <legend class="visually-hidden">评分与票数</legend>
@@ -215,16 +219,19 @@
 
             <fieldset class="filter-section year-range-filter">
               <legend class="visually-hidden">发行年份</legend>
-              <div class="year-number-inputs">
-                <label for="release-year-start-number">
-                  <span>最早年份</span>
-                  <input id="release-year-start-number" type="number" min="1987" max="2026" step="1" inputmode="numeric">
-                </label>
-                <label for="release-year-end-number">
-                  <span>最晚年份</span>
-                  <input id="release-year-end-number" type="number" min="1987" max="2026" step="1" inputmode="numeric">
-                </label>
-              </div>
+              <details class="year-precise-inputs">
+                <summary>精确输入年份</summary>
+                <div class="year-number-inputs">
+                  <label for="release-year-start-number">
+                    <span>最早年份</span>
+                    <input id="release-year-start-number" type="number" min="1987" max="2026" step="1" inputmode="numeric">
+                  </label>
+                  <label for="release-year-end-number">
+                    <span>最晚年份</span>
+                    <input id="release-year-end-number" type="number" min="1987" max="2026" step="1" inputmode="numeric">
+                  </label>
+                </div>
+              </details>
               <div
                 id="release-year-slider"
                 class="year-range-slider"
@@ -238,6 +245,7 @@
                   <span id="release-year-range-selection" class="year-range-selection"></span>
                 </span>
                 <span class="year-range-bound year-range-bound-start" aria-hidden="true">1987</span>
+                <span class="year-range-bound year-range-bound-middle" aria-hidden="true">2000</span>
                 <span class="year-range-bound year-range-bound-end" aria-hidden="true">2026</span>
                 <output id="release-year-start-tooltip" class="year-range-value year-range-value-start" aria-hidden="true"></output>
                 <output id="release-year-end-tooltip" class="year-range-value year-range-value-end" aria-hidden="true"></output>
@@ -270,20 +278,28 @@
 
             <section class="filter-section" aria-labelledby="company-filter-title">
               <h3 id="company-filter-title">会社</h3>
-              <label class="search-field" for="company-search">
-                <span class="visually-hidden">搜索会社</span>
-                <input id="company-search" type="search" placeholder="搜索会社" autocomplete="off">
-              </label>
+              <div class="search-field-clearable">
+                <label class="search-field" for="company-search">
+                  <span class="visually-hidden">搜索会社</span>
+                  <input id="company-search" type="search" placeholder="搜索会社" autocomplete="off">
+                </label>
+                <button id="company-filter-search-clear" class="search-clear-button" type="button" aria-label="清除会社搜索" title="清除搜索" hidden>×</button>
+              </div>
+              <div class="filter-selection-meta"><output id="company-selected-count" aria-live="polite"></output></div>
               <div id="company-selected" class="company-selected" aria-live="polite"></div>
               <div id="company-options" class="checkbox-list" role="group" aria-label="会社多选"></div>
             </section>
 
             <section class="filter-section person-filter-section" aria-labelledby="person-filter-title">
               <h3 id="person-filter-title">人物参与</h3>
-              <label class="search-field" for="person-filter-search">
-                <span class="visually-hidden">搜索人物</span>
-                <input id="person-filter-search" type="search" placeholder="搜索人物名义或拼音" autocomplete="off">
-              </label>
+              <div class="search-field-clearable">
+                <label class="search-field" for="person-filter-search">
+                  <span class="visually-hidden">搜索人物</span>
+                  <input id="person-filter-search" type="search" placeholder="搜索人物名义或拼音" autocomplete="off">
+                </label>
+                <button id="person-filter-search-clear" class="search-clear-button" type="button" aria-label="清除人物搜索" title="清除搜索" hidden>×</button>
+              </div>
+              <div class="filter-selection-meta"><output id="person-selected-count" aria-live="polite"></output></div>
               <div id="person-filter-selected" class="person-filter-selected" aria-live="polite"></div>
               <div id="person-filter-options" class="person-filter-options" role="listbox" aria-label="人物多选" hidden></div>
             </section>
@@ -318,7 +334,8 @@
 
           <div class="filter-footer gp-dialog-footer">
             <output id="filter-result-count" aria-live="polite">-- / -- 项</output>
-            <button data-ui="primary" id="filter-apply" type="button">应用</button>
+            <span id="filter-result-status" class="filter-result-status" aria-live="polite">已更新</span>
+            <button data-ui="primary" id="filter-apply" type="button">查看结果</button>
           </div>
         </aside>
 

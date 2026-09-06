@@ -141,6 +141,50 @@ function activeFilterCount(state) {
     + Number(state.selectedOnly);
 }
 
+function drawerFilterCount(state) {
+  return Number(state.minimumScore > DEFAULT_FILTER_STATE.minimumScore)
+    + Number(state.minimumVoteCount !== DEFAULT_FILTER_STATE.minimumVoteCount)
+    + Number(
+      state.releaseYearStart !== DEFAULT_FILTER_STATE.releaseYearStart
+      || state.releaseYearEnd !== DEFAULT_FILTER_STATE.releaseYearEnd
+    )
+    + state.brandIds.length
+    + (state.personIds?.length ?? 0)
+    + ATTRIBUTE_GROUP_IDS.reduce((count, groupId) => {
+      const selected = state.attributeSelections?.[groupId] ?? DEFAULT_ATTRIBUTE_SELECTIONS[groupId];
+      const defaults = DEFAULT_ATTRIBUTE_SELECTIONS[groupId];
+      return count + Number(
+        selected.length !== defaults.length
+        || selected.some((filterId, index) => filterId !== defaults[index])
+      );
+    }, 0)
+    + (state.mode === 'advanced'
+      ? Number(state.advancedExpression.trim().length > 0)
+      : state.positiveFilterIds.length + state.excludedFilterIds.length);
+}
+
+function resetDrawerFilterState(state) {
+  return {
+    ...state,
+    mode: DEFAULT_FILTER_STATE.mode,
+    minimumScore: DEFAULT_FILTER_STATE.minimumScore,
+    minimumVoteCount: DEFAULT_FILTER_STATE.minimumVoteCount,
+    brandIds: [],
+    attributeSelections: Object.fromEntries(ATTRIBUTE_GROUP_IDS.map(groupId => [
+      groupId,
+      [...DEFAULT_ATTRIBUTE_SELECTIONS[groupId]]
+    ])),
+    basicOperator: DEFAULT_FILTER_STATE.basicOperator,
+    positiveFilterIds: [],
+    excludedFilterIds: [],
+    advancedExpression: DEFAULT_FILTER_STATE.advancedExpression,
+    releaseYearStart: DEFAULT_FILTER_STATE.releaseYearStart,
+    releaseYearEnd: DEFAULT_FILTER_STATE.releaseYearEnd,
+    personIds: [],
+    personRole: DEFAULT_FILTER_STATE.personRole
+  };
+}
+
 function orderedGroups(filters) {
   const groups = new Map();
   for (const filter of filters) {
@@ -228,10 +272,14 @@ export function createFilterView({
     releaseYearHistogram: optionalElement(root, 'release-year-histogram'),
     releaseYearPreview: optionalElement(root, 'release-year-result-preview'),
     companySearch: requiredElement(root, 'company-search'),
+    companySearchClear: optionalElement(root, 'company-filter-search-clear'),
     companySelected: requiredElement(root, 'company-selected'),
+    companySelectedCount: optionalElement(root, 'company-selected-count'),
     companyOptions: requiredElement(root, 'company-options'),
     personSearch: optionalElement(root, 'person-filter-search'),
+    personSearchClear: optionalElement(root, 'person-filter-search-clear'),
     personSelected: optionalElement(root, 'person-filter-selected'),
+    personSelectedCount: optionalElement(root, 'person-selected-count'),
     personOptions: optionalElement(root, 'person-filter-options'),
     personRole: optionalElement(root, 'person-filter-role'),
     attributeGroups: requiredElement(root, 'attribute-filter-groups'),
@@ -245,6 +293,9 @@ export function createFilterView({
     tagSelected: requiredElement(root, 'tag-selected'),
     summary: requiredElement(root, 'active-filter-summary'),
     activeChips: requiredElement(root, 'active-filter-chips'),
+    draftSummary: optionalElement(root, 'filter-draft-summary-text'),
+    clearAll: optionalElement(root, 'filter-clear-all'),
+    resultStatus: optionalElement(root, 'filter-result-status'),
     modeBasic: requiredElement(root, 'mode-basic'),
     modeAdvanced: requiredElement(root, 'mode-advanced'),
     advancedPanel: requiredElement(root, 'advanced-panel'),
@@ -293,7 +344,14 @@ export function createFilterView({
     yearCounts.set(year, count);
   }
 
+  function markResultPending() {
+    if (!elements.resultStatus) return;
+    elements.resultStatus.textContent = '正在更新…';
+    elements.resultStatus.dataset.state = 'pending';
+  }
+
   function emit(nextState) {
+    markResultPending();
     currentState = cloneFilterState(nextState);
     onFilterChange(cloneFilterState(currentState));
   }
@@ -304,6 +362,7 @@ export function createFilterView({
   }
 
   function requestCounts() {
+    markResultPending();
     onRequestCounts(cloneFilterState(currentState), visibleCompanySuggestions().map(brand => ({ ...brand })));
   }
 
@@ -431,6 +490,13 @@ export function createFilterView({
   }
 
   function renderSelectedCompanies() {
+    if (elements.companySelectedCount) {
+      const count = currentState.brandIds.length;
+      elements.companySelectedCount.textContent = count > 0 ? `已选 ${count} 家会社` : '';
+    }
+    if (elements.companySearchClear) {
+      elements.companySearchClear.hidden = elements.companySearch.value.length === 0;
+    }
     const selectedChips = currentState.brandIds.flatMap(brandId => {
       const brand = brands.find(item => item.brandId === brandId);
       if (!brand) return [];
@@ -630,6 +696,13 @@ export function createFilterView({
   }
 
   function renderPersons() {
+    if (elements.personSelectedCount) {
+      const count = currentState.personIds?.length ?? 0;
+      elements.personSelectedCount.textContent = count > 0 ? `已选 ${count} 位人物` : '';
+    }
+    if (elements.personSearchClear) {
+      elements.personSearchClear.hidden = (elements.personSearch?.value ?? '').length === 0;
+    }
     renderSelectedPersons();
     if (elements.personRole && elements.personRole.value !== (currentState.personRole ?? 'all')) {
       elements.personRole.value = currentState.personRole ?? 'all';
@@ -1069,16 +1142,35 @@ export function createFilterView({
     const fragment = documentRef.createDocumentFragment();
     for (const year of years) {
       const count = yearCounts.get(year) ?? 0;
-      const bar = documentRef.createElement('span');
+      const bar = documentRef.createElement('button');
+      bar.type = 'button';
       bar.className = 'year-histogram-bar';
       bar.style.setProperty('--year-height', `${(count / maximum) * 100}%`);
       bar.dataset.year = String(year);
       bar.dataset.inRange = String(year >= values.releaseYearStart && year <= values.releaseYearEnd);
       bar.title = `${year}：${count} 部作品`;
-      bar.setAttribute('aria-hidden', 'true');
+      bar.setAttribute('aria-label', `${year} 年，${count} 部作品，点击调整年份范围`);
+      bar.addEventListener('click', () => {
+        const start = Number(elements.releaseYearStart?.value ?? currentState.releaseYearStart);
+        const end = Number(elements.releaseYearEnd?.value ?? currentState.releaseYearEnd);
+        const endpoint = Math.abs(year - start) <= Math.abs(year - end) ? 'start' : 'end';
+        commitYearEndpoint(endpoint, year);
+      });
       fragment.append(bar);
     }
     elements.releaseYearHistogram.replaceChildren(fragment);
+  }
+
+  function commitYearEndpoint(endpoint, value) {
+    const input = endpoint === 'start' ? elements.releaseYearStart : elements.releaseYearEnd;
+    if (!input) return;
+    input.value = String(value);
+    const values = normalizeYearValues(endpoint, input);
+    renderYearLabels(values);
+    renderYearPreview(values);
+    emitYear(values);
+    emitYear.flush();
+    input.focus({ preventScroll: true });
   }
 
   function flushPendingEdits() {
@@ -1147,19 +1239,22 @@ export function createFilterView({
     const endpoint = Math.abs(year - start) <= Math.abs(year - end) ? 'start' : 'end';
     const input = endpoint === 'start' ? elements.releaseYearStart : elements.releaseYearEnd;
     if (!input) return;
-    input.value = String(year);
-    const values = normalizeYearValues(endpoint, input);
-    renderYearLabels(values);
-    renderYearPreview(values);
-    emitYear(values);
-    emitYear.flush();
-    input.focus({ preventScroll: true });
+    commitYearEndpoint(endpoint, year);
   });
   elements.companySearch.setAttribute('aria-controls', 'company-options');
   elements.companySearch.addEventListener('input', () => {
     companyPopupActive = true;
     renderCompanyOptions();
+    renderSelectedCompanies();
     requestCounts();
+  });
+  elements.companySearchClear?.addEventListener('click', () => {
+    elements.companySearch.value = '';
+    companyPopupActive = true;
+    renderCompanyOptions();
+    renderSelectedCompanies();
+    requestCounts();
+    elements.companySearch.focus();
   });
   companyRegion.addEventListener('focusin', () => {
     if (suppressCompanyFocusOpen || companyPopupActive) return;
@@ -1184,6 +1279,14 @@ export function createFilterView({
       personPopupActive = true;
       onPersonFilterFocus();
       renderPersonOptions();
+      renderPersons();
+    });
+    elements.personSearchClear?.addEventListener('click', () => {
+      elements.personSearch.value = '';
+      personPopupActive = true;
+      onPersonFilterFocus();
+      renderPersons();
+      elements.personSearch.focus();
     });
     elements.personSearch.addEventListener('keydown', event => {
       if (event.key !== 'Escape') return;
@@ -1197,6 +1300,14 @@ export function createFilterView({
       renderPersonOptions();
     });
   }
+  elements.clearAll?.addEventListener('click', () => {
+    flushPendingEdits();
+    pendingFocus = { type: 'clear' };
+    advancedDraft = '';
+    advancedDraftInvalid = false;
+    clearFormulaError();
+    emit(resetDrawerFilterState(currentState));
+  });
   elements.tagActionAnd.addEventListener('click', () => {
     flushPendingEdits();
     tagAction = 'and';
@@ -1380,6 +1491,17 @@ export function createFilterView({
         badge.textContent = String(appliedCount);
         badge.setAttribute('aria-label', `已应用 ${appliedCount} 项筛选`);
         badge.parentElement.setAttribute('aria-label', appliedCount ? `筛选，已应用 ${appliedCount} 项` : '筛选');
+      }
+      const drawerCount = drawerFilterCount(currentState);
+      if (elements.draftSummary) {
+        elements.draftSummary.textContent = drawerCount === 0
+          ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`
+          : `${drawerCount} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+      }
+      if (elements.clearAll) elements.clearAll.hidden = drawerCount === 0;
+      if (elements.resultStatus) {
+        elements.resultStatus.textContent = '已更新';
+        elements.resultStatus.dataset.state = 'ready';
       }
       elements.summary.textContent = appliedCount === 0
         ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`

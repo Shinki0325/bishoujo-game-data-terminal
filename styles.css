@@ -1073,20 +1073,62 @@ h3 {
   overscroll-behavior: contain;
 }
 
+.filter-draft-summary {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.filter-clear-all {
+  min-height: 24px;
+  padding: 2px 7px;
+  color: var(--accent);
+  background: transparent;
+  border-color: transparent;
+  font-size: 11px;
+}
+
+.filter-clear-all:hover,
+.filter-clear-all:focus-visible {
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
 .filter-footer {
   flex: 0 0 auto;
   min-height: 56px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
   background: var(--surface-muted);
   border-top: 1px solid var(--border);
+  box-shadow: 0 -5px 14px rgb(32 37 44 / 8%);
 }
 
 .filter-footer output {
   color: var(--text-muted);
+}
+
+.filter-result-status {
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.filter-result-status[data-state="pending"] {
+  color: var(--accent);
 }
 
 .company-selected,
@@ -1098,6 +1140,12 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.filter-selection-meta {
+  min-height: 15px;
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 .company-selected:not(:empty),
@@ -1400,6 +1448,19 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+  padding: 8px 0 2px;
+}
+
+.year-precise-inputs {
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.year-precise-inputs summary {
+  width: fit-content;
+  padding: 2px 0;
+  cursor: pointer;
 }
 
 .year-number-inputs label {
@@ -1512,6 +1573,7 @@ h3 {
 }
 
 .year-range-bound-start { left: 10px; }
+.year-range-bound-middle { left: 33.333%; transform: translateX(-50%); }
 .year-range-bound-end { right: 10px; }
 
 .year-range-value {
@@ -1553,16 +1615,30 @@ h3 {
 
 .year-histogram-bar {
   flex: 1 1 0;
+  min-height: 2px;
   min-width: 1px;
   height: max(2px, var(--year-height));
+  margin: 0;
+  padding: 0;
   background: var(--border-strong);
+  border: 0;
+  border-radius: 2px 2px 0 0;
   opacity: .42;
+  appearance: none;
+  cursor: pointer;
   transition: height 100ms ease-out, opacity 100ms ease-out, background 100ms ease-out;
 }
 
 .year-histogram-bar[data-in-range="true"] {
   background: var(--accent);
   opacity: .86;
+}
+
+.year-histogram-bar:hover,
+.year-histogram-bar:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
 }
 
 .year-range-slider[data-year-handles="coincident"][data-year-boundary="middle"]
