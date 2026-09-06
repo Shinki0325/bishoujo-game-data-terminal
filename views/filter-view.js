@@ -541,6 +541,23 @@ export function createFilterView({
       .slice(0, 12);
   }
 
+  const PERSON_ROLE_LABELS = Object.freeze({
+    'voice-actor': '声优',
+    voice: '声优',
+    scenario: '剧本',
+    artwork: '原画',
+    music: '音乐',
+    unknown: '其他'
+  });
+
+  function personRoleLabel(person) {
+    const roles = Object.keys(person?.roles ?? {})
+      .filter(role => PERSON_ROLE_LABELS[role])
+      .map(role => PERSON_ROLE_LABELS[role]);
+    if (roles.length > 0) return [...new Set(roles)].join(' / ');
+    return PERSON_ROLE_LABELS[person?.primaryRole] ?? '人物参与';
+  }
+
   function renderSelectedPersons() {
     if (!elements.personSelected) return;
     const chips = (currentState.personIds ?? []).map(personId => {
@@ -550,8 +567,9 @@ export function createFilterView({
       button.className = 'filter-chip person-chip';
       button.dataset.personId = personId;
       const label = person ? personNameOf(person) : personId;
-      button.textContent = `${label} ×`;
-      button.setAttribute('aria-label', `移除人物 ${label}`);
+      const role = person ? personRoleLabel(person) : '人物参与';
+      button.textContent = `${label} · ${role} ×`;
+      button.setAttribute('aria-label', `移除人物 ${label}（${role}）`);
       button.addEventListener('click', () => {
         flushPendingEdits();
         emit({ ...currentState, personIds: currentState.personIds.filter(id => id !== personId) });
@@ -581,7 +599,7 @@ export function createFilterView({
       const name = documentRef.createElement('span');
       name.textContent = personNameOf(person);
       const meta = documentRef.createElement('small');
-      meta.textContent = active ? '已选' : (person?.primaryRole === 'voice-actor' ? '声优' : '');
+      meta.textContent = active ? `已选 · ${personRoleLabel(person)}` : personRoleLabel(person);
       button.append(name, meta);
       button.addEventListener('click', () => {
         flushPendingEdits();
@@ -1177,10 +1195,6 @@ export function createFilterView({
       if (event.relatedTarget && elements.personOptions.contains(event.relatedTarget)) return;
       personPopupActive = false;
       renderPersonOptions();
-    });
-    elements.personRole?.addEventListener('change', () => {
-      flushPendingEdits();
-      emit({ ...currentState, personRole: elements.personRole.value });
     });
   }
   elements.tagActionAnd.addEventListener('click', () => {

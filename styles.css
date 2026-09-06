@@ -1729,14 +1729,6 @@ input[type="range"] {
   font-size: 11px;
 }
 
-.person-filter-role-label {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.8fr);
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
 .person-filter-options {
   max-height: 210px;
   margin-top: 5px;
