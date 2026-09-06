@@ -1639,7 +1639,7 @@ h3 {
 .year-range-value {
   position: absolute;
   top: -1px;
-  z-index: 3;
+  z-index: 6;
   min-width: 32px;
   padding: 2px 5px;
   color: var(--text);
