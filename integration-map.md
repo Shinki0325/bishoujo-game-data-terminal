@@ -4,7 +4,7 @@
 
 ## 本轮范围
 
-先接入一个真实、可取消且不会阻塞内容展示的场景：从首页进入作品库/会社库/人物库/排榜时，`galpedia-boot.js` 动态导入 `main.js` 的初始运行时准备过程。轮盘只负责加载状态呈现，不创建新的数据 store、不发起请求、不延长任务等待。
+先接入一个真实、可取消且不会阻塞内容展示的场景：从首页进入作品库/会社库/人物库/排榜时，`galpedia-boot.js` 动态导入 `main.js` 的初始运行时准备过程。这个阶段包含作品首屏 worker、人物目录和直接 hash 路由的首次准备，是目前最慢的首次进入路径，因此使用 `standard` 大轮盘；轮盘只负责加载状态呈现，不创建新的数据 store、不发起请求、不延长任务等待。
 
 ## 现有状态映射
 
@@ -19,7 +19,7 @@
 ## 主题与可访问性
 
 - 轮盘使用 `theme: 'inherit'`，由 `--gp-host-dial-*` 映射到现有 GALPEDIA 明暗主题；不根据背景猜主题。
-- `#galpedia-load-status-text` 是唯一 `role="status"` / `aria-live` 播报节点；SVG 轮盘本身 `aria-hidden`。
+- `#galpedia-load-status-text` 是唯一 `role="status"` / `aria-live` 播报节点；SVG 轮盘本身 `aria-hidden`。候选 boot 会在旧壳层的空状态节点内补建这两个 span，因此不要求原 immutable HTML 先被原地修改。
 - `#workspace` 由控制器维护 `aria-busy`，内容不会被清空、遮罩或锁定；首页壳层仍按既有 `inert` 规则工作。
 - 160ms 延迟只防止快任务闪现；ready/error 立即结束，不等待一轮动画。
 - `prefers-reduced-motion` 和页面不可见时由轮盘 CSS/适配器暂停，不改变真实任务状态。

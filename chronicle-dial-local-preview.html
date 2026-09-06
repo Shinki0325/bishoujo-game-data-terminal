@@ -59,7 +59,7 @@
       const host = document.querySelector('#loader-host');
       const region = document.querySelector('#runtime-region');
       const announcement = document.querySelector('#announcement');
-      const loader = window.GalpediaDial.createLoadingController({ host, region, announcer: announcement, variant: 'compact', theme: 'inherit', delay: 160, slowAfter: 8000 });
+      const loader = window.GalpediaDial.createLoadingController({ host, region, announcer: announcement, variant: 'standard', theme: 'inherit', delay: 160, slowAfter: 8000 });
       for (const [id, variant, options] of [['standard-dial', 'standard', { size: 96 }], ['compact-dial', 'compact'], ['inline-dial', 'inline'], ['reduced-dial', 'compact', { reducedMotion: true }]]) document.querySelector('#' + id).append(window.GalpediaDial.createDial({ variant, theme: 'inherit', ...(options ?? {}) }));
       let ticket = null;
       function start(duration, label, outcome = 'finish') { ticket?.cancel(); ticket = loader.begin(label); window.setTimeout(() => { if (outcome === 'fail') ticket?.fail('本次任务失败，保留原有内容。'); else ticket?.finish('任务已结束。'); ticket = null; }, duration); }

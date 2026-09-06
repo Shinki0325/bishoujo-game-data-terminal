@@ -9,9 +9,9 @@ html.galpedia {
 html.galpedia .galpedia-load-status {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 54px;
-  padding: 6px 16px;
+  gap: 14px;
+  min-height: 112px;
+  padding: 8px 18px;
 }
 
 .gp-dial {

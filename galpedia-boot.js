@@ -5,11 +5,25 @@ import { createCommandSearch } from './lib/galpedia-command-search.js';
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
 const status = document.querySelector('#galpedia-load-status');
-const statusText = document.querySelector('#galpedia-load-status-text');
-const loadIndicator = document.querySelector('#galpedia-load-indicator');
 const workspace = document.querySelector('#workspace');
 const dialog = document.querySelector('#galpedia-search-dialog');
 const themeButton = document.querySelector('#theme-toggle');
+// Keep the immutable shell markup backward-compatible: a future release can
+// add these spans explicitly, while a candidate boot can also create them in
+// the existing status node without changing the loading contract.
+const statusText = status?.querySelector('#galpedia-load-status-text') ?? document.createElement('span');
+const loadIndicator = status?.querySelector('#galpedia-load-indicator') ?? document.createElement('span');
+if (status) {
+  loadIndicator.id = 'galpedia-load-indicator';
+  loadIndicator.setAttribute('aria-hidden', 'true');
+  statusText.id = 'galpedia-load-status-text';
+  statusText.setAttribute('role', 'status');
+  statusText.setAttribute('aria-live', 'polite');
+  statusText.setAttribute('aria-atomic', 'true');
+  if (!loadIndicator.parentElement) status.append(loadIndicator);
+  if (!statusText.parentElement) status.append(statusText);
+  status.removeAttribute('role');
+}
 document.querySelector('#global-search-open').replaceChildren(createActionIcon(document, 'search'));
 document.querySelector('#site-info-button svg').replaceWith(createActionIcon(document, 'book'));
 const themeKey = 'egs-tier-terminal:theme-v1';
@@ -21,7 +35,7 @@ const runtimeLoading = globalThis.GalpediaDial && loadIndicator
     host: loadIndicator,
     region: workspace,
     announcer: statusText,
-    variant: 'compact',
+    variant: 'standard',
     theme: 'inherit',
     delay: 160,
     slowAfter: 8000
