@@ -29,7 +29,7 @@ import { prepareVndbAdmissionsSidecar } from './lib/vndb-admissions.js';
 import { createRuntimePopulationContract } from './lib/population-contract.js';
 import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js?v=20260824-selection-source-sorting-v1';
 import { projectWorkWithBangumiRating } from './lib/bangumi-rating-view.js?v=20260824-selection-source-sorting-v1';
-import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany } from './lib/company-directory.js';
+import { buildCompanyDirectory, searchCompanyDirectory, worksForCompany, restoreCompanySummary } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import { createStickerDocument, STICKER_TYPES } from './lib/sticker-document.js';
@@ -1475,7 +1475,8 @@ async function initialize() {
       characterRolesUrl: DATA_URLS.m2PersonCharacterRoles,
       namePreferencesUrl: DATA_URLS.m2PersonNamePreferences,
       crossSourceCrosswalkUrl: DATA_URLS.m2PersonCrossSourceCrosswalk,
-      catalogWorks: sampleSource.works,
+      catalogWorks: preparedWorkbench.workerOwned ? [] : sampleSource.works,
+      loadCatalogWorks: preparedWorkbench.workerOwned ? () => filterWorkerClient.personCatalog() : null,
       fetchImpl: fetch,
       cryptoRef: crypto,
       cacheMode: RUNTIME_DATA_CACHE_MODE
@@ -1518,7 +1519,7 @@ async function initialize() {
       throw new TypeError('presentation families sidecar rejected', { cause: error });
     }
   }
-  const companyDirectory = buildCompanyDirectory({
+  const companyDirectory = preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
@@ -1573,7 +1574,7 @@ async function initialize() {
       genreFilters: sample.genreFilters, platformFilters: sample.platformFilters
     } : sortableSample,
     ...(preparedWorkbench.workerOwned ? {
-      catalogAuthority: {
+      catalogAuthority: preparedWorkbench.uiSummary ?? {
         workIds: ratedDisplayWorks.map(work => work.workId),
         workGroupByEditionWorkId: Object.fromEntries(ratedDisplayWorks.map(work => [work.workId, work.workGroupId || work.workId]))
       },
@@ -1677,7 +1678,7 @@ async function initialize() {
     indexUrl: DATA_URLS.workDetailCreditsIndex,
     catalogSnapshotId: sampleSource.snapshot?.snapshotId,
     catalogSha256: catalogSource.sha256,
-    workIds: new Set(sample.works.map(work => work.workId)),
+    workIds: new Set(preparedWorkbench.uiSummary?.workIds ?? sample.works.map(work => work.workId)),
     fetchImpl: fetch,
     cryptoRef: crypto,
     cacheMode: RUNTIME_DATA_CACHE_MODE,
@@ -3296,7 +3297,10 @@ async function initialize() {
     personDirectoryView.render({ persons, totalPersonCount: personRuntimeState.length, selectedPersonId: selectedPersonId ?? null, activityAxis: personActivityAxis });
   }
 
-  function renderCompanyDirectory() {
+  let companyRenderGeneration = 0;
+  let loadedCompanyWorks = null;
+  async function renderCompanyDirectory() {
+    const generation = ++companyRenderGeneration;
     if (elements.companySearch.value !== companyQuery) elements.companySearch.value = companyQuery;
     localSearchClears.forEach(sync => sync());
     const [sortKey, direction] = companySort.split('-');
@@ -3312,27 +3316,45 @@ async function initialize() {
       ?? companyDirectory.companies.find(company => company.companyId === selectedCompanyId)
       ?? null;
     selectedCompanyId = selected?.companyId ?? null;
-    companyDirectoryView.render({
-      sortValue: companySort,
-      companies,
-      selectedCompanyId,
-      selectedWorks: selected ? worksForCompany(companyDirectory, selected.companyId, {
-        sortKey: companyDetailSortKey,
-        direction: companyDetailSortDirection
-      }) : [],
+    const renderDetail = (selectedWorks, detailState = 'ready') => companyDirectoryView.render({
+      sortValue: companySort, companies, selectedCompanyId, selectedWorks, detailState,
+      onRetryDetail: () => renderCompanyDirectory(),
       detailWorkSortKey: companyDetailSortKey,
       detailWorkSortDirection: companyDetailSortDirection,
       selectedCompanyIds: companyRanking.inspect().selectedSet,
       selectionMode: companySelectionMode,
       imageUrlForCompany: company => companyImageUrl(company, assetBase),
-      // Match the backend-selected media used by the work library and ranking.
       imageUrlForWork: work => Object.freeze({
         thumbnailUrl: resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase),
         previewUrl: highDensityPreviewsEnabled && typeof work.projectedPreviewPath === 'string'
-          ? resolveAssetUrl(work.projectedPreviewPath, assetBase)
-          : null
+          ? resolveAssetUrl(work.projectedPreviewPath, assetBase) : null
       })
     });
+    let selectedWorks = [];
+    if (selected && preparedWorkbench.workerOwned) {
+      const key=JSON.stringify([selected.companyId,companyDetailSortKey,companyDetailSortDirection]);
+      try {
+        if(loadedCompanyWorks?.key===key)selectedWorks=loadedCompanyWorks.works;
+        else {
+          // Render the selected company immediately, never label old works as
+          // the new company while its IDs/cards are still being fetched.
+          renderDetail([], 'loading');
+          const ids=await filterWorkerClient.companyWorkIds(selected.companyId,{sortKey:companyDetailSortKey,direction:companyDetailSortDirection});
+          if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+          const rows=await workData.get(ids);
+          if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+          selectedWorks=ids.map(id=>rows.get(id));
+          loadedCompanyWorks={key,works:selectedWorks};
+        }
+      } catch(error) {
+        if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+        renderDetail([], 'error');
+        announce('会社作品加载失败，可在详情中重试。','error');
+        console.warn('company works request failed',error);
+        return;
+      }
+    } else if(selected) selectedWorks=worksForCompany(companyDirectory,selected.companyId,{sortKey:companyDetailSortKey,direction:companyDetailSortDirection});
+    renderDetail(selectedWorks);
   }
 
   function companyRankingItems() {
@@ -4323,7 +4345,7 @@ async function initialize() {
     root: document,
     filters: sample.filters,
     brands,
-    releaseYearCounts: sample.works.reduce((counts, work) => {
+    releaseYearCounts: preparedWorkbench.uiSummary?.releaseYearCounts ?? sample.works.reduce((counts, work) => {
       const year = Number(work.releaseDate.slice(0, 4));
       counts[year] = (counts[year] ?? 0) + 1;
       return counts;
@@ -4885,7 +4907,7 @@ async function initialize() {
       }
       const plan = planSharedSelectionImport({
         sharedWorkIds: decoded.workIds,
-        authorityWorkIds: sample.works.map(work => work.workId),
+        authorityWorkIds: preparedWorkbench.uiSummary?.workIds ?? sample.works.map(work => work.workId),
         currentSelectedWorkIds: controller.inspectState().selectedWorkIds,
         mode: 'append'
       });

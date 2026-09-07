@@ -156,6 +156,8 @@ export function createCompanyDirectoryView({
     selectedCompanyId = null,
     selectedCompanyIds = new Set(),
     selectedWorks = [],
+    detailState = 'ready',
+    onRetryDetail = null,
     sortValue = 'totalVoteCount-desc',
     detailWorkSortKey = 'releaseDate',
     detailWorkSortDirection = 'asc',
@@ -179,6 +181,8 @@ export function createCompanyDirectoryView({
       selectedCompanyId,
       selectedCompanyIds,
       selectedWorks,
+      detailState,
+      onRetryDetail,
       sortValue: normalizedSortValue,
       detailWorkSortKey,
       detailWorkSortDirection,
@@ -275,6 +279,7 @@ export function createCompanyDirectoryView({
     const isMobile = Boolean(root.ownerDocument?.defaultView?.matchMedia?.('(max-width: 899px)')?.matches);
     if (!isMobile && layout && detail.parentElement !== layout) layout.append(detail);
     detail.hidden = selected === null;
+    detail.setAttribute('aria-busy', String(selected !== null && detailState === 'loading'));
     if (!selected) return;
     detailTitle.textContent = selected.brandName;
     detailAvatar.replaceChildren();
@@ -289,7 +294,15 @@ export function createCompanyDirectoryView({
       documentRef
     });
     detailWorks.replaceChildren();
-    for (const work of selectedWorks) {
+    if (detailState !== 'ready') {
+      const status = text(documentRef, 'div', 'list-state', '');
+      status.setAttribute('role', 'status');
+      setListState({status, state: detailState,
+        message: detailState === 'loading' ? '正在载入会社作品…' : '会社作品加载失败，请重试。',
+        retry: onRetryDetail});
+      detailWorks.append(status);
+    }
+    for (const work of detailState === 'ready' ? selectedWorks : []) {
       const item = documentRef.createElement('button');
       item.type = 'button';
       item.className = 'company-directory-work';
