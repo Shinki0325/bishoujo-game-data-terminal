@@ -24,6 +24,10 @@ html.galpedia .galpedia-load-status {
   pointer-events: none;
   flex-direction: column;
 }
+/* Loading remains non-blocking; its explicit retry action must be clickable. */
+html.galpedia .galpedia-load-status > button {
+  pointer-events: auto;
+}
 html.galpedia #catalog-results,
 html.galpedia #company-directory-layout,
 html.galpedia .company-directory-layout,
