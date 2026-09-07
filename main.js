@@ -3208,9 +3208,10 @@ async function initialize() {
           personRuntimeState = directory.records.map(withCjkPersonSearchKey);
           return personRuntimeState;
         } catch (error) {
-          console.warn('person performance directory unavailable; falling back to the core person directory', error);
-          personPerformanceRuntime = null;
-          personActivityAxis = null;
+          // A configured source owns this directory. A transient failure must
+          // remain retryable, not switch to a different legacy data snapshot.
+          console.warn('person directory temporarily unavailable; retry the configured source', error);
+          throw error;
         }
       }
       // Stage 1: make the directory usable as soon as the person graph is
@@ -3531,9 +3532,10 @@ async function initialize() {
         try {
           detail = await personPerformanceRuntime.loadPerson(personId);
         } catch (error) {
-          console.warn('person performance detail unavailable; showing the core person record', error);
-          personPerformanceRuntime = null;
-          return summary;
+          // Keep the shared service available: one failed shard must not
+          // disable every person's details until a full-page reload.
+          console.warn('person detail temporarily unavailable; summary remains visible', error);
+          throw error;
         }
           let resolved=detail??summary;
           if (preparedWorkbench.workerOwned && resolved?.credits?.length) {
@@ -4085,7 +4087,7 @@ async function initialize() {
     elements.companySelectionModeToggle.disabled = importBusy;
     elements.selectionModeToggle.setAttribute('aria-pressed', String(selectionMode));
     elements.selectionModeToggle.textContent = selectionMode ? '退出选择' : '选择作品';
-    elements.selectionModeToggle.setAttribute('aria-label', selectionMode ? '退出排榜选片' : '进入排榜选片模式');
+    elements.selectionModeToggle.setAttribute('aria-label', selectionMode ? '退出选择，返回作品浏览' : '选择作品，进入排榜选片模式');
     elements.selectionModeToggle.title = selectionMode ? '退出排榜选片' : '进入排榜选片模式';
     elements.compareModeToggle.setAttribute('aria-pressed', String(compareMode));
     elements.compareModeToggle.textContent = compareMode ? '退出比较' : '比较作品';
