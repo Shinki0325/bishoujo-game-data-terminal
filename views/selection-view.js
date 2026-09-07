@@ -468,6 +468,7 @@ export function createSelectionView({
   onFilterChange,
   onInteractionStart = () => null,
   onPageChange = () => {},
+  prepareWorks = null,
   assetBase,
   cardSurfaceSelection = false
 }) {
@@ -625,7 +626,36 @@ export function createSelectionView({
     setPage(requested - 1);
   });
 
+  let hydrationGeneration = 0;
   function renderLatest() {
+    if (prepareWorks === null || latestModel === null) return renderLatestReady();
+    const generation = ++hydrationGeneration;
+    const model = latestModel;
+    const pages = selectionPages(model.works.length);
+    pageIndex = Math.min(pageIndex, pages.length - 1);
+    const page = pages[pageIndex];
+    elements.grid.setAttribute('aria-busy', 'true');
+    elements.grid.inert = true;
+    elements.selectCurrentPage.disabled = true;
+    setListState({status:elements.listState,state:'loading',message:'正在载入作品资料…'});
+    return Promise.resolve(prepareWorks(model.works.slice(page.start,page.end))).then(works => {
+      if (generation !== hydrationGeneration || latestModel !== model) return;
+      elements.grid.setAttribute('aria-busy', 'false');
+      elements.grid.inert = false;
+      renderLatestReady(works);
+    }).catch(error => {
+      if (generation !== hydrationGeneration) return;
+      elements.grid.setAttribute('aria-busy', 'false');
+      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
+      const retry = documentRef.createElement('button');
+      retry.type = 'button'; retry.textContent = '重新载入';
+      retry.addEventListener('click', () => renderLatest(), {once:true});
+      elements.listState.append(retry);
+      console.warn('work card hydration failed', error);
+    });
+  }
+
+  function renderLatestReady(hydratedWorks = null) {
     const model = latestModel;
     if (model === null) return;
       const activeElement = documentRef.activeElement;
@@ -640,7 +670,7 @@ export function createSelectionView({
       const pages = selectionPages(model.works.length);
       pageIndex = Math.min(pageIndex, pages.length - 1);
       const page = pages[pageIndex];
-      const visibleWorks = model.works.slice(page.start, page.end);
+      const visibleWorks = hydratedWorks ?? model.works.slice(page.start, page.end);
       activeVisibleWorkIds = new Set(visibleWorks.map(work => work.workId));
       latestWorksById = new Map(visibleWorks.map(work => [work.workId, work]));
       latestSelectedWorkIds = selected;
@@ -818,7 +848,7 @@ export function createSelectionView({
       if (selectionModeActive !== latestModel.selectionMode) selectionModeEpoch += 1;
       selectionModeActive = latestModel.selectionMode;
       latestCoverUrls = coverUrls;
-      renderLatest();
+      return renderLatest();
     },
 
     captureScroll() {

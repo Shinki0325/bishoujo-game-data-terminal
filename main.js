@@ -1,3 +1,4 @@
+import { loadWorkbenchData, workbenchQueryWork } from './lib/workbench-demand-data.js';
 import {
   installExternalCoverImageRecovery,
   resolveAssetUrl,
@@ -1040,6 +1041,7 @@ async function initialize() {
     )
   });
   assertRuntimeContracts();
+  async function loadLegacyWorkbenchData() {
   const [
     coreSources,
     [
@@ -1152,118 +1154,6 @@ async function initialize() {
   let workAliasesById = enrichment?.workAliasesById ?? null;
   const workPinyinById = enrichment?.workPinyinById ?? null;
   let workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
-  let characterImageMapPromise = null;
-  const loadCharacterImageMap = () => {
-    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.characterImages)) {
-      return Promise.resolve(null);
-    }
-    if (characterImageMapPromise === null) {
-      characterImageMapPromise = Promise.all([
-        fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射'),
-        fetchJsonWithSha256(DATA_URLS.characterImageAliasMap, '角色图片别名映射')
-      ])
-        .then(([source, aliasSource]) => {
-          if (source.sha256 !== CHARACTER_IMAGE_MAP_SHA256) {
-            throw new TypeError('character image map hash does not match the runtime pin');
-          }
-          if (aliasSource.sha256 !== CHARACTER_IMAGE_ALIAS_MAP_SHA256) {
-            throw new TypeError('character image alias map hash does not match the runtime pin');
-          }
-          return prepareCharacterImageMap(source.value, {
-            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
-            aliases: aliasSource.value,
-            sourceMapSha256: source.sha256
-          });
-        })
-        .catch(error => {
-          console.warn('character image map unavailable; keeping character images disabled', error);
-          characterImageMapPromise = null;
-          return null;
-        });
-    }
-    return characterImageMapPromise;
-  };
-  let projectIdentityCrosswalkPromise = null;
-  const loadProjectIdentityCrosswalk = () => {
-    if (projectIdentityCrosswalkPromise === null) {
-      projectIdentityCrosswalkPromise = fetchJsonWithSha256(DATA_URLS.m2PersonCrossSourceCrosswalk, '人物角色身份映射')
-        .then(source => {
-          if (source.sha256 !== M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256) {
-            throw new TypeError('project identity crosswalk hash does not match the runtime pin');
-          }
-          return prepareProjectIdentityCrosswalk(source.value);
-        })
-        .catch(error => {
-          console.warn('project identity crosswalk unavailable; keeping source rows separate', error);
-          projectIdentityCrosswalkPromise = null;
-          return null;
-        });
-    }
-    return projectIdentityCrosswalkPromise;
-  };
-  let projectEntityRuntime = null;
-  let applyProjectedMediaToWork;
-  const ensureProjectEntityRuntime = createLazyResource(async attempt => {
-    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance)) return null;
-    try {
-      const [mediaClearanceBridgeSource, module] = await Promise.all([
-        fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'),
-        attempt === 0 ? import('./lib/project-entity-runtime.js') : import(`./lib/project-entity-runtime.js?retry=${attempt}`)
-      ]);
-      if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
-        throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
-      }
-      projectEntityRuntime = await module.createProjectEntityRuntime({
-        bridge: mediaClearanceBridgeSource.value,
-        catalog: { ...catalogSource.value, catalogSha256: catalogSource.sha256 },
-        dataRevision: DATA_REVISION,
-        cryptoRef: crypto
-      });
-      console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
-      applyProjectedMediaToWork = module.applyProjectedMediaToWork;
-      return projectEntityRuntime;
-    } catch (error) {
-      throw new TypeError('G1 media clearance bridge rejected', { cause: error });
-    }
-  });
-  // The validated final fanout already covers every core work's display media.
-  // Keep the original eager proof path when that authority is not enabled.
-  if (!RUNTIME_FEATURES.authorityFanoutV1.enabled) await ensureProjectEntityRuntime();
-  let personRuntime = null;
-  let personPerformanceRuntime = null;
-  let personWorkIndexRuntime = null;
-  if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
-    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
-      && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
-      personPerformanceRuntime = getPersonWorkspaceRuntime();
-    }
-    personRuntime = createM2PersonRuntime({
-      manifestUrl: DATA_URLS.m2PersonManifest,
-      entitiesUrl: DATA_URLS.m2PersonEntities,
-      relationsUrl: DATA_URLS.m2PersonRelations,
-      baseEntitiesUrl: DATA_URLS.m1PersonEntities,
-      baseEntitiesSha256: M1_PERSON_ONLY_ENTITIES_SHA256,
-      baseRelationsUrl: DATA_URLS.m1PersonVoiceRelations,
-      baseRelationsSha256: M1_PERSON_VOICE_RELATIONS_SHA256,
-      variantsUrl: DATA_URLS.m2PersonNameVariants,
-      characterRolesUrl: DATA_URLS.m2PersonCharacterRoles,
-      namePreferencesUrl: DATA_URLS.m2PersonNamePreferences,
-      crossSourceCrosswalkUrl: DATA_URLS.m2PersonCrossSourceCrosswalk,
-      catalogWorks: sampleSource.works,
-      fetchImpl: fetch,
-      cryptoRef: crypto,
-      cacheMode: RUNTIME_DATA_CACHE_MODE
-    });
-    if (RUNTIME_FEATURES.personFilterV1?.enabled === true) {
-      personWorkIndexRuntime = createPersonWorkIndexRuntime({
-        indexUrl: DATA_URLS.personWorkIndex,
-        sha256: PERSON_WORK_INDEX_SHA256,
-        fetchImpl: fetch,
-        cryptoRef: crypto,
-        cacheMode: RUNTIME_DATA_CACHE_MODE
-      });
-    }
-  }
   let vndbRatings = null;
   if (vndbRatingsSource !== null) {
     try {
@@ -1389,10 +1279,17 @@ async function initialize() {
     }])),
     scoreField: 'score'
   });
+  let legacyEntityRuntime = null, legacyApplyMedia;
+  if (!RUNTIME_FEATURES.authorityFanoutV1.enabled) {
+    const [bridge, module] = await Promise.all([fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'), import('./lib/project-entity-runtime.js')]);
+    if (bridge.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) throw new TypeError('G1 media clearance bridge hash mismatch');
+    legacyEntityRuntime = await module.createProjectEntityRuntime({bridge:bridge.value,catalog:{...catalogSource.value,catalogSha256:catalogSource.sha256},dataRevision:DATA_REVISION,cryptoRef:crypto});
+    legacyApplyMedia = module.applyProjectedMediaToWork;
+  }
   const ratedDisplayWorks = displayWorks.map(work => {
     const vndbRated = projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId);
     const rated = projectWorkWithBangumiRating(vndbRated, bangumiRatings?.ratingByWorkId);
-    const clearanceProjected = projectEntityRuntime === null ? rated : applyProjectedMediaToWork(rated, projectEntityRuntime.selectedMediaByWorkId);
+    const clearanceProjected = legacyEntityRuntime === null ? rated : legacyApplyMedia(rated, legacyEntityRuntime.selectedMediaByWorkId);
     const authorityProjected = authorityFanout === null
       ? clearanceProjected
       : applyAuthorityFanoutMediaToWork(clearanceProjected, authorityFanout.selectedMediaByWorkId);
@@ -1417,8 +1314,150 @@ async function initialize() {
       bangumiVoteCount: authorityProjected.bangumiRating?.sortVoteCount ?? null
     };
   });
+  const brands = projectBrandsWithAliases(
+    sample.brands,
+    enrichment?.companyAliasesById,
+    enrichment?.companyPinyinById
+  );
+  let companyProfile = null;
+  if (companyProfileSource !== null) {
+    try {
+      companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
+        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+        catalogSha256: catalogSource.sha256,
+        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
+      });
+    } catch (error) {
+      throw new TypeError('company profile sidecar rejected', { cause: error });
+    }
+  }
+    return { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile };
+  }
+  const preparedWorkbench = await loadWorkbenchData({ legacyLoader: loadLegacyWorkbenchData });
+  // Workbench export boundary: all legacy inputs have passed their original validators.
+  const { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile, workData = null } = preparedWorkbench;
+  document.documentElement.dataset.runtimePopulation = 'full';
+  globalThis.__EGS_TIER_STARTUP_DIAGNOSTICS__ = runtimeDiagnostics;
   const sortableSample = { ...sample, works: ratedDisplayWorks };
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
+  let activeHydratedWorks = new Map();
+  if (workData) {
+    const baseGet = worksById.get.bind(worksById);
+    worksById.get = id => activeHydratedWorks.get(id) ?? workData.peek(id) ?? baseGet(id);
+  }
+  let characterImageMapPromise = null;
+  const loadCharacterImageMap = () => {
+    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.characterImages)) {
+      return Promise.resolve(null);
+    }
+    if (characterImageMapPromise === null) {
+      characterImageMapPromise = Promise.all([
+        fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射'),
+        fetchJsonWithSha256(DATA_URLS.characterImageAliasMap, '角色图片别名映射')
+      ])
+        .then(([source, aliasSource]) => {
+          if (source.sha256 !== CHARACTER_IMAGE_MAP_SHA256) {
+            throw new TypeError('character image map hash does not match the runtime pin');
+          }
+          if (aliasSource.sha256 !== CHARACTER_IMAGE_ALIAS_MAP_SHA256) {
+            throw new TypeError('character image alias map hash does not match the runtime pin');
+          }
+          return prepareCharacterImageMap(source.value, {
+            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
+            aliases: aliasSource.value,
+            sourceMapSha256: source.sha256
+          });
+        })
+        .catch(error => {
+          console.warn('character image map unavailable; keeping character images disabled', error);
+          characterImageMapPromise = null;
+          return null;
+        });
+    }
+    return characterImageMapPromise;
+  };
+  let projectIdentityCrosswalkPromise = null;
+  const loadProjectIdentityCrosswalk = () => {
+    if (projectIdentityCrosswalkPromise === null) {
+      projectIdentityCrosswalkPromise = fetchJsonWithSha256(DATA_URLS.m2PersonCrossSourceCrosswalk, '人物角色身份映射')
+        .then(source => {
+          if (source.sha256 !== M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256) {
+            throw new TypeError('project identity crosswalk hash does not match the runtime pin');
+          }
+          return prepareProjectIdentityCrosswalk(source.value);
+        })
+        .catch(error => {
+          console.warn('project identity crosswalk unavailable; keeping source rows separate', error);
+          projectIdentityCrosswalkPromise = null;
+          return null;
+        });
+    }
+    return projectIdentityCrosswalkPromise;
+  };
+  let projectEntityRuntime = null;
+  let applyProjectedMediaToWork;
+  const ensureProjectEntityRuntime = createLazyResource(async attempt => {
+    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance)) return null;
+    try {
+      const [mediaClearanceBridgeSource, module, proofCatalog] = await Promise.all([
+        fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'),
+        attempt === 0 ? import('./lib/project-entity-runtime.js') : import(`./lib/project-entity-runtime.js?retry=${attempt}`),
+        workData ? fetchJsonWithSha256(DATA_URLS.catalog, '作品详情校验目录') : Promise.resolve(catalogSource)
+      ]);
+      if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
+        throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
+      }
+      if (proofCatalog.sha256 !== catalogSource.sha256) throw new TypeError('workbench detail catalog hash mismatch');
+      projectEntityRuntime = await module.createProjectEntityRuntime({
+        bridge: mediaClearanceBridgeSource.value,
+        catalog: { ...proofCatalog.value, catalogSha256: proofCatalog.sha256 },
+        dataRevision: DATA_REVISION,
+        cryptoRef: crypto
+      });
+      console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
+      applyProjectedMediaToWork = module.applyProjectedMediaToWork;
+      return projectEntityRuntime;
+    } catch (error) {
+      throw new TypeError('G1 media clearance bridge rejected', { cause: error });
+    }
+  });
+  // The validated final fanout already covers every core work's display media.
+  // Keep the original eager proof path when that authority is not enabled.
+  let personRuntime = null;
+  let personPerformanceRuntime = null;
+  let personWorkIndexRuntime = null;
+  if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
+    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
+      && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
+      personPerformanceRuntime = getPersonWorkspaceRuntime();
+    }
+    personRuntime = createM2PersonRuntime({
+      manifestUrl: DATA_URLS.m2PersonManifest,
+      entitiesUrl: DATA_URLS.m2PersonEntities,
+      relationsUrl: DATA_URLS.m2PersonRelations,
+      baseEntitiesUrl: DATA_URLS.m1PersonEntities,
+      baseEntitiesSha256: M1_PERSON_ONLY_ENTITIES_SHA256,
+      baseRelationsUrl: DATA_URLS.m1PersonVoiceRelations,
+      baseRelationsSha256: M1_PERSON_VOICE_RELATIONS_SHA256,
+      variantsUrl: DATA_URLS.m2PersonNameVariants,
+      characterRolesUrl: DATA_URLS.m2PersonCharacterRoles,
+      namePreferencesUrl: DATA_URLS.m2PersonNamePreferences,
+      crossSourceCrosswalkUrl: DATA_URLS.m2PersonCrossSourceCrosswalk,
+      catalogWorks: sampleSource.works,
+      fetchImpl: fetch,
+      cryptoRef: crypto,
+      cacheMode: RUNTIME_DATA_CACHE_MODE
+    });
+    if (RUNTIME_FEATURES.personFilterV1?.enabled === true) {
+      personWorkIndexRuntime = createPersonWorkIndexRuntime({
+        indexUrl: DATA_URLS.personWorkIndex,
+        sha256: PERSON_WORK_INDEX_SHA256,
+        fetchImpl: fetch,
+        cryptoRef: crypto,
+        cacheMode: RUNTIME_DATA_CACHE_MODE
+      });
+    }
+  }
   let presentationFamilies = null;
   // Catalog projection may split a VNDB version family at independent
   // Bangumi subjects. Person representative works are a compact summary and
@@ -1459,23 +1498,6 @@ async function initialize() {
   const workerCompanyPinyinById = enrichment?.companyPinyinById === null || enrichment?.companyPinyinById === undefined
     ? null
     : new Map(enrichment.companyPinyinById);
-  const brands = projectBrandsWithAliases(
-    sample.brands,
-    enrichment?.companyAliasesById,
-    enrichment?.companyPinyinById
-  );
-  let companyProfile = null;
-  if (companyProfileSource !== null) {
-    try {
-      companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
-      });
-    } catch (error) {
-      throw new TypeError('company profile sidecar rejected', { cause: error });
-    }
-  }
   const companyDirectory = buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
@@ -1542,7 +1564,7 @@ async function initialize() {
     timeoutMs: 10000
   });
   const filterWorkerPayload = {
-    works: sortableSample.works,
+    works: workData ? sortableSample.works.map(workbenchQueryWork) : sortableSample.works,
     knownFilterIds: sample.filters.map(filter => filter.filterId),
     brands,
     backendIndexes: sample.backendIndexes,
@@ -2466,6 +2488,7 @@ async function initialize() {
   }
 
   async function resolveCoverUrls(works) {
+    if (workData) works = await workData.hydrate(works);
     const entries = await Promise.all(works.map(async work => [work.workId, await coverSourcesForWork(work)]));
     return new Map(entries);
   }
@@ -2878,6 +2901,7 @@ async function initialize() {
   }
 
   const selectionView = createSelectionView({
+    prepareWorks: workData ? works => workData.hydrate(works) : null,
     // Contract marker: createSelectionView({ root, onToggleWork, onToggleCurrentPage, onToggleCurrentResults, onToggleSelectedOnly, onOpenDetails, onFilterChange, assetBase })
     root: elements.catalogResults,
     onToggleWork(work, selected) {
@@ -4104,6 +4128,11 @@ async function initialize() {
     let outcome;
     const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
     try {
+      if (workData) {
+        const hydrated = await workData.get([...new Set([...state.selectedWorkIds, ...compareWorkIds])]);
+        if (generation !== renderGeneration) return false;
+        activeHydratedWorks = hydrated;
+      }
       const needsFiltering = state.workspaceMode !== 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
       if (state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen) await ensureRankingView();
       if (needsFiltering) await ensureFilterWorker();
@@ -4205,7 +4234,7 @@ async function initialize() {
       rankingView.setMobileDragEnabled(true);
       interactionMetrics.stage(interaction, 'dom-updated');
     } else {
-      selectionView.render({
+      await selectionView.render({
         works: visiblePresentationWorks,
         view: 'full',
         selectedWorkIds: model.state.selectedWorkIds,
@@ -4218,6 +4247,7 @@ async function initialize() {
         compareMode,
         comparedWorkIds: compareWorkIds
       }, renderCoverUrls);
+      if (generation !== renderGeneration) return false;
       interactionMetrics.stage(interaction, 'dom-updated');
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
@@ -4673,7 +4703,23 @@ async function initialize() {
     elements.detailsVersionList.replaceChildren(...rows);
   }
 
-  function openWorkDetails(work, { push = true, keepVersionShelf = false } = {}) {
+  let detailHydrationSequence = 0;
+  async function openWorkDetails(work, options = {}) {
+    const sequence = ++detailHydrationSequence;
+    const workspace = controller.inspectState().workspaceMode;
+    const directories = `${personDirectoryOpen}:${companyDirectoryOpen}`;
+    const home = document.documentElement.dataset.home;
+    try {
+      if (workData) [work] = await workData.hydrate([work]);
+      if (sequence !== detailHydrationSequence || workspace !== controller.inspectState().workspaceMode || directories !== `${personDirectoryOpen}:${companyDirectoryOpen}` || home !== document.documentElement.dataset.home) return;
+      return showWorkDetailsReady(work, options);
+    } catch (error) {
+      announce('作品详情资料加载失败，请再次打开重试。', 'error');
+      console.error(error);
+    }
+  }
+
+  function showWorkDetailsReady(work, { push = true, keepVersionShelf = false } = {}) {
     if (!keepVersionShelf) detailsVersionShelfExpanded = false;
     if (!keepVersionShelf) {
       const activeElement = document.activeElement;
@@ -4925,6 +4971,7 @@ async function initialize() {
   window.addEventListener('popstate', () => { void applyUiLocation(); });
   window.addEventListener('hashchange', () => { void applyUiLocation(); });
   elements.detailsDialog.addEventListener('close', () => {
+    detailHydrationSequence += 1;
     unlockDetailsPageScroll();
     workDetailCreditsRequest += 1;
     workDetailCreditsView.clear();
