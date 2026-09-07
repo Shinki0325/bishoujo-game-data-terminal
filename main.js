@@ -1568,7 +1568,17 @@ async function initialize() {
     }
   });
   const controller = createAppController({
-    sample: sortableSample,
+    sample: preparedWorkbench.workerOwned ? {
+      sampleId: sample.sampleId, filters: sample.filters,
+      genreFilters: sample.genreFilters, platformFilters: sample.platformFilters
+    } : sortableSample,
+    ...(preparedWorkbench.workerOwned ? {
+      catalogAuthority: {
+        workIds: ratedDisplayWorks.map(work => work.workId),
+        workGroupByEditionWorkId: Object.fromEntries(ratedDisplayWorks.map(work => [work.workId, work.workGroupId || work.workId]))
+      },
+      resolveWork: id => worksById.get(id)
+    } : {}),
     localWorks: customWorks,
     storage: browserStorage(),
     confirm: message => window.confirm(message),
@@ -2922,7 +2932,18 @@ async function initialize() {
     onToggleCurrentPage(workIds) {
       return runStateChange(() => controller.toggleCurrentResults(workIds));
     },
-    onToggleCurrentResults(workIds) {
+    async onToggleCurrentResults(workIds) {
+      if (workIds === null) {
+        const revision = lastResultPage?.resultRevision;
+        const generation = renderGeneration;
+        try {
+          workIds = await filterWorkerClient.resultIds(revision);
+          if (lastResultPage?.resultRevision !== revision || generation !== renderGeneration) return;
+        } catch (error) {
+          announce('结果已更新，请重新选择。', 'warning');
+          return;
+        }
+      }
       return runStateChange(() => controller.toggleCurrentResults(workIds));
     },
     onToggleSelectedOnly(selectedOnly) {
@@ -2953,6 +2974,7 @@ async function initialize() {
     onPageChange() {
       replaceUiLocation();
     },
+    onPageRequest() { return render(); },
     assetBase,
     cardSurfaceSelection: true
   });
@@ -4126,8 +4148,10 @@ async function initialize() {
     return result;
   }
 
+  let lastResultPage = null;
   async function render(visibleBrands = [], interaction = null) {
     const generation = ++renderGeneration;
+    lastResultPage = null;
     captureWorkspaceScroll();
     const state = controller.inspectState();
     let outcome;
@@ -4146,6 +4170,7 @@ async function initialize() {
         return false;
       }
       outcome = needsFiltering ? await filterWorkerClient.query({
+        ...(preparedWorkbench.workerOwned ? {paged: true, pageNumber: selectionView.getPageNumber()} : {}),
         filterState: state.filterState,
         selectedWorkIds: state.selectedWorkIds,
         includeProjectedCounts: includeFilterCounts,
@@ -4176,7 +4201,8 @@ async function initialize() {
     // Keep the filtered result distinct from the full catalog size. This is
     // especially important on mobile, where the compact header used to make
     // 3788 look like the total number of works.
-    const visiblePresentationWorks = presentationFamilies === null
+    lastResultPage = outcome.page ?? null;
+    const visiblePresentationWorks = outcome.page || presentationFamilies === null
       ? model.visibleWorks.map(work => worksById.get(work.workId) ?? work)
       : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
         sortKey: model.state.filterState.sortKey,
@@ -4215,9 +4241,10 @@ async function initialize() {
     elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
     syncLocalFeedback(document.querySelector('#ranking-heading-count'), `已排 ${new Intl.NumberFormat('zh-CN').format(companyState?.rankedCount ?? model.rankedCount)} · 候选 ${new Intl.NumberFormat('zh-CN').format(companyState?.candidateCompanyIds.length ?? model.unrankedCount)}`);
     syncHeadingCount(document.querySelector('#catalog-total-count'), catalogTotal, '部作品');
-    elements.filterResultCount.textContent = `${visiblePresentationWorks.length} / ${catalogTotal} 项`;
-    syncLocalFeedback(elements.catalogResultCount, `${visiblePresentationWorks.length} / ${catalogTotal} 项`);
-    elements.catalogResultCount.parentElement.hidden = visiblePresentationWorks.length === catalogTotal;
+    const resultTotal = outcome.page?.total ?? visiblePresentationWorks.length;
+    elements.filterResultCount.textContent = `${resultTotal} / ${catalogTotal} 项`;
+    syncLocalFeedback(elements.catalogResultCount, `${resultTotal} / ${catalogTotal} 项`);
+    elements.catalogResultCount.parentElement.hidden = resultTotal === catalogTotal;
     renderWorkspace(model);
     if (personDirectoryOpen) {
       renderPersonDirectory();
@@ -4246,9 +4273,10 @@ async function initialize() {
     } else {
       await selectionView.render({
         works: visiblePresentationWorks,
+        ...(outcome.page ? {page: outcome.page} : {}),
         view: 'full',
         selectedWorkIds: model.state.selectedWorkIds,
-        selectAllState: presentationFamilies === null
+        selectAllState: outcome.page ? outcome.page.selectAllState : presentationFamilies === null
           ? model.selectAllState
           : presentationFamilies.presentationSelectionState(visiblePresentationWorks, model.state.selectedWorkIds),
         selectionCapacity: Math.max(0, USER_WORK_LIMIT - model.selectedCount),
@@ -4263,14 +4291,14 @@ async function initialize() {
     const nextFilterKey = filterRenderKey(model, visibleBrands);
     if (includeFilterCounts && outcome.counts && nextFilterKey !== renderedFilterKey) {
       filterView.render(model.state.filterState, {
-        current: visiblePresentationWorks.length,
+        current: resultTotal,
         filters: outcome.counts.filters,
         brands: outcome.counts.brands,
         yearCounts: outcome.counts.yearCounts
       });
       renderedFilterKey = nextFilterKey;
     } else if (!ranking && !personDirectoryOpen && !companyDirectoryOpen) {
-      filterView.renderSummary(model.state.filterState, visiblePresentationWorks.length);
+      filterView.renderSummary(model.state.filterState, resultTotal);
     }
     renderControlStates(model);
     if (companyDirectoryOpen) {
@@ -5512,7 +5540,8 @@ async function initialize() {
   let globalSearch = null;
   return { search: query => {
     globalSearch ??= createGalpediaSearch({
-      works: ratedDisplayWorks,
+      works: preparedWorkbench.workerOwned ? [] : ratedDisplayWorks,
+      searchWorks: preparedWorkbench.workerOwned ? query => filterWorkerClient.searchWorks(query) : null,
       companyDirectory,
       enrichment: { workAliasesById: workerWorkAliasesById, workPinyinById: workerWorkPinyinById, workDisplayTitlesById },
       loadPersons: async () => {

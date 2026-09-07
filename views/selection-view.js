@@ -5,6 +5,7 @@ import { setListState } from '../lib/list-state.js';
 import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
 import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
 import { createActionIcon } from '../lib/action-icons.js';
+import { selectionPages } from '../lib/selection-pages.js';
 
 const CARD_VIEWS = new Set(['full', 'compact']);
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
@@ -17,8 +18,6 @@ const FILTER_SORT_KEYS = new Set([
 ]);
 const FILTER_SORT_DIRECTIONS = new Set(['asc', 'desc']);
 const DEBOUNCE_MS = 150;
-const SELECTION_WINDOW_TARGET = 100;
-const SELECTION_WINDOW_MIN = 60;
 const VNDB_SORT_KEYS = new Set(['vndbScore', 'vndbVoteCount']);
 const BANGUMI_SORT_KEYS = new Set(['bangumiScore', 'bangumiVoteCount']);
 
@@ -79,24 +78,6 @@ function requiredOwnedElement(root, id) {
   const element = root.querySelector?.(`#${id}`);
   if (!element) throw new Error(`Selection view root is missing #${id}`);
   return element;
-}
-
-function selectionPages(total) {
-  if (total <= 0) return [{ start: 0, end: 0 }];
-  let pageCount = Math.ceil(total / SELECTION_WINDOW_TARGET);
-  while (pageCount > 1 && Math.floor(total / pageCount) < SELECTION_WINDOW_MIN) {
-    pageCount -= 1;
-  }
-  const baseSize = Math.floor(total / pageCount);
-  const extra = total % pageCount;
-  const pages = [];
-  let start = 0;
-  for (let index = 0; index < pageCount; index += 1) {
-    const size = baseSize + (index < extra ? 1 : 0);
-    pages.push({ start, end: start + size });
-    start += size;
-  }
-  return pages;
 }
 
 export function selectionInitialWorks(works) {
@@ -483,6 +464,7 @@ export function createSelectionView({
   onFilterChange,
   onInteractionStart = () => null,
   onPageChange = () => {},
+  onPageRequest = null,
   prepareWorks = null,
   assetBase,
   cardSurfaceSelection = false
@@ -527,6 +509,7 @@ export function createSelectionView({
   let renderedWorkKey = '';
   let pageIndex = 0;
   let latestModel = null;
+  let remotePagePending = false;
   let latestCoverUrls = null;
   let cardDisplay = DEFAULT_SELECTION_CARD_DISPLAY;
   const defaultSelectionMode = true;
@@ -563,7 +546,7 @@ export function createSelectionView({
   elements.selectCurrentPage.addEventListener('click', () => {
     if (latestModel === null) return;
     if (elements.selectCurrentPage.disabled) return;
-    const page = selectionPages(latestModel.works.length)[pageIndex];
+    const page = selectionPages(latestModel.works.length)[latestModel.page ? 0 : pageIndex];
     if (page === undefined) return;
     onToggleCurrentPage(latestModel.works
       .slice(page.start, page.end)
@@ -571,7 +554,7 @@ export function createSelectionView({
   });
   elements.selectAllResults.addEventListener('click', () => {
     if (latestModel === null) return;
-    onToggleCurrentResults(latestModel.works.map(work => work.workId));
+    onToggleCurrentResults(latestModel.page ? null : latestModel.works.map(work => work.workId));
   });
   elements.selectedWorksToggle.addEventListener('click', () => {
     if (latestModel === null) return;
@@ -605,17 +588,42 @@ export function createSelectionView({
   }
 
   function pageCountFor(model) {
-    return selectionPages(model?.works?.length ?? 0).length;
+    return model?.page?.pageCount ?? selectionPages(model?.works?.length ?? 0).length;
+  }
+
+  function requestRemotePage() {
+    const generation = ++hydrationGeneration;
+    remotePagePending = true;
+    elements.grid.setAttribute('aria-busy', 'true');
+    elements.grid.inert = true;
+    elements.selectCurrentPage.disabled = true;
+    elements.pageInput.value = String(pageIndex + 1);
+    Promise.resolve().then(() => onPageRequest(pageIndex + 1)).then(success => {
+      if (success === false) throw new Error('page request did not complete');
+    }).catch(error => {
+      if (generation !== hydrationGeneration) return;
+      elements.grid.setAttribute('aria-busy', 'false');
+      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
+      const retry = documentRef.createElement('button');
+      retry.type = 'button'; retry.textContent = '重新载入';
+      retry.addEventListener('click', requestRemotePage, {once:true});
+      elements.listState.append(retry);
+      console.warn('work result page failed', error);
+    });
   }
 
   function setPage(nextIndex, { scroll = true, notify = true } = {}) {
     if (latestModel === null) return;
-    const pages = selectionPages(latestModel.works.length);
     const previousIndex = pageIndex;
-    pageIndex = Math.max(0, Math.min(nextIndex, pages.length - 1));
+    pageIndex = Math.max(0, Math.min(nextIndex, pageCountFor(latestModel) - 1));
     clearPageError();
     if (scroll && pageIndex !== previousIndex) restorePageScroll({ top: 0, left: 0 });
-    renderLatest();
+    if (latestModel.page) {
+      if (pageIndex !== previousIndex) {
+        // Keep the current cards while the Worker prepares the next page.
+        requestRemotePage();
+      }
+    } else renderLatest();
     if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
   }
 
@@ -642,13 +650,16 @@ export function createSelectionView({
   let hydrationGeneration = 0;
   let hydratedInputs = null, hydratedPage = null;
   function renderLatest() {
+    // Display settings may change while the next page is in flight. They
+    // must not relabel the previous page's cards as the requested new page.
+    if (remotePagePending) return;
     if (prepareWorks === null || latestModel === null) return renderLatestReady();
     const generation = ++hydrationGeneration;
     const model = latestModel;
-    const pages = selectionPages(model.works.length);
+    const pages = selectionPages(model.page?.total ?? model.works.length);
     pageIndex = Math.min(pageIndex, pages.length - 1);
     const page = pages[pageIndex];
-    const inputs=model.works.slice(page.start,page.end);
+    const inputs=model.page ? model.works : model.works.slice(page.start,page.end);
     if(hydratedInputs&&inputs.length===hydratedInputs.length&&inputs.every((work,i)=>work===hydratedInputs[i])) {
       elements.grid.setAttribute('aria-busy','false');elements.grid.inert=false;
       return renderLatestReady(hydratedPage);
@@ -687,10 +698,10 @@ export function createSelectionView({
           }
         : null;
       const selected = new Set(model.selectedWorkIds);
-      const pages = selectionPages(model.works.length);
+      const pages = selectionPages(model.page?.total ?? model.works.length);
       pageIndex = Math.min(pageIndex, pages.length - 1);
       const page = pages[pageIndex];
-      const visibleWorks = hydratedWorks ?? model.works.slice(page.start, page.end);
+      const visibleWorks = hydratedWorks ?? (model.page ? model.works : model.works.slice(page.start, page.end));
       activeVisibleWorkIds = new Set(visibleWorks.map(work => work.workId));
       latestWorksById = new Map(visibleWorks.map(work => [work.workId, work]));
       latestSelectedWorkIds = selected;
@@ -856,11 +867,14 @@ export function createSelectionView({
       ) {
         throw new TypeError('model must contain works, selectedWorkIds, and filterState');
       }
-      const workKey = model.works.map(work => work.workId).join('\u001f');
+      const workKey = model.page ? String(model.page.resultRevision) : model.works.map(work => work.workId).join('\u001f');
       if (workKey !== renderedWorkKey) {
         renderedWorkKey = workKey;
         pageIndex = 0;
       }
+      if (model.page) pageIndex = model.page.pageNumber - 1;
+      if (model.page && typeof onPageRequest !== 'function') throw new TypeError('paged view requires onPageRequest');
+      remotePagePending = false;
       latestModel = {
         ...model,
         selectionMode: typeof model.selectionMode === 'boolean' ? model.selectionMode : defaultSelectionMode

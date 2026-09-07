@@ -9,7 +9,7 @@ async function handle(message) {
       .catch(error=>{sourceHandler=null;throw error;});
     return (await sourceHandler)(message);
   }
-  return runtime.handle(message);
+  return sourceHandler ? (await sourceHandler)(message) : runtime.handle(message);
 }
 
 self.addEventListener('message', event => {
