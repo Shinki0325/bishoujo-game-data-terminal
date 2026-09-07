@@ -5,7 +5,7 @@ let sourceHandler=null,queue=Promise.resolve();
 async function handle(message) {
   if(message?.payload?.workbenchSource){
     sourceHandler??=Promise.all([import('../lib/workbench-worker-handler.js'),import('../lib/workbench-demand-data.js')])
-      .then(([handler,data])=>handler.createWorkbenchWorkerHandler({runtime,loadSource:data.loadWorkerWorkbenchBundle,projectWork:data.workbenchQueryWork,onData:message=>self.postMessage(message,[message.workbenchBytes])}))
+      .then(([handler,data])=>handler.createWorkbenchWorkerHandler({runtime,loadSource:data.loadWorkerWorkbenchBundle,projectWork:data.workbenchQueryWork,onData:message=>self.postMessage(message)}))
       .catch(error=>{sourceHandler=null;throw error;});
     return (await sourceHandler)(message);
   }

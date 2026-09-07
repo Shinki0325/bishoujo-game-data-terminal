@@ -1350,6 +1350,8 @@ async function initialize() {
   globalThis.__EGS_TIER_STARTUP_DIAGNOSTICS__ = runtimeDiagnostics;
   const sortableSample = { ...sample, works: ratedDisplayWorks };
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
+  const catalogWorkIds = new Set(preparedWorkbench.uiSummary?.workIds ?? ratedDisplayWorks.map(work=>work.workId));
+  const workReference = id => worksById.get(String(id)) ?? (catalogWorkIds.has(String(id)) ? {workId:String(id)} : null);
   let activeHydratedWorks = new Map();
   if (workData) {
     const baseGet = worksById.get.bind(worksById);
@@ -2984,10 +2986,12 @@ async function initialize() {
   elements.titleSearchClear.addEventListener('click', clearTitleQuery);
   elements.mobileTitleSearchClear.addEventListener('click', clearTitleQuery);
   let companyDirectoryView;
+  let personWorkMetadata = null;
   function buildPersonRecords(state, characterImageMap = null) {
+    const personWorks = personWorkMetadata ?? worksById;
     const records = Array.isArray(state?.records) ? state.records : [];
     const personCreditYears = records.flatMap(person => (person.credits ?? []).map(credit => {
-      const work = worksById.get(String(credit.workId ?? ''));
+      const work = personWorks.get(String(credit.workId ?? ''));
       return Number(String(credit.releaseDate ?? work?.releaseDate ?? '').slice(0, 4));
     })).filter(year => Number.isInteger(year) && year > 1900);
     const personActivityBounds = resolvePersonActivityBounds(personCreditYears.length ? [{
@@ -3013,12 +3017,12 @@ async function initialize() {
     const companyNameById = new Map(companyDirectory.companies.map(company => [String(company.companyId), company.brandName]));
     return records.map(person => {
       const credits = [...(person.credits ?? [])].map(credit => {
-        const work = worksById.get(String(credit.workId ?? ''));
+        const work = personWorks.get(String(credit.workId ?? ''));
         const characterImage = imageByCharacterId.get(String(credit.characterId ?? ''))
           ?? imageBySourceCharacterId.get(String(credit.sourceCharacterId ?? ''));
         return {
         ...credit,
-        displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? credit.title,
+        displayTitle: workDisplayTitlesById?.get?.(String(credit.workId)) ?? work?.displayTitle ?? credit.title,
         releaseDate: credit.releaseDate ?? work?.releaseDate ?? '',
         bangumiScore: Number.isFinite(work?.bangumiScore) ? work.bangumiScore : null,
         bangumiVoteCount: Number.isSafeInteger(work?.bangumiVoteCount) ? work.bangumiVoteCount : null,
@@ -3058,7 +3062,7 @@ async function initialize() {
         if (coCompanies !== null) return coCompanies;
         const companyWorks = new Map();
         for (const workId of workIds) {
-          const work = worksById.get(workId);
+          const work = personWorks.get(workId);
           const companyId = String(work?.brandId ?? work?.companyId ?? '');
           if (!companyId) continue;
           const bucket = companyWorks.get(companyId) ?? new Set();
@@ -3098,12 +3102,12 @@ async function initialize() {
       for (const credit of credits) {
         const workId = String(credit.workId ?? credit.workEntityId ?? '');
         if (!workId || representativeWorkById.has(workId)) continue;
-        const work = worksById.get(workId);
+        const work = personWorks.get(workId);
         if (!work) continue;
         const thumbnailPath = work.projectedThumbnailPath ?? work.coverPath;
         representativeWorkById.set(workId, {
           workId,
-          title: workDisplayTitlesById?.get?.(workId) ?? credit.displayTitle ?? work.title ?? credit.title ?? `作品 ${workId}`,
+          title: workDisplayTitlesById?.get?.(workId) ?? work.displayTitle ?? credit.displayTitle ?? work.title ?? credit.title ?? `作品 ${workId}`,
           releaseDate: work.releaseDate ?? credit.releaseDate ?? '',
           median: Number.isFinite(work.median) ? work.median : null,
           voteCount: Number.isSafeInteger(work.voteCount) ? work.voteCount : null,
@@ -3160,7 +3164,7 @@ async function initialize() {
           const bMain = ['main', 'primary', 'メイン'].includes(String(b.characterRole ?? '')) ? 1 : 0;
           return bMain - aMain
             || Number(Boolean(b.characterImageUrl)) - Number(Boolean(a.characterImageUrl))
-            || (Number(worksById.get(String(b.workId))?.bangumiVoteCount) || 0) - (Number(worksById.get(String(a.workId))?.bangumiVoteCount) || 0)
+            || (Number(personWorks.get(String(b.workId))?.bangumiVoteCount) || 0) - (Number(personWorks.get(String(a.workId))?.bangumiVoteCount) || 0)
             || String(b.releaseDate ?? '').localeCompare(String(a.releaseDate ?? ''))
             || String(a.characterName ?? '').localeCompare(String(b.characterName ?? ''), 'zh-Hans');
         });
@@ -3209,6 +3213,10 @@ async function initialize() {
       // ready. The 16MB character-image map is hydrated in the background so
       // image decoding never blocks the first interactive render.
       personRuntimeSourceState = await personRuntime.load();
+      if (preparedWorkbench.workerOwned && personWorkMetadata === null) {
+        const ids=[...new Set(personRuntimeSourceState.records.flatMap(person=>(person.credits??[]).map(c=>String(c.workId??''))).filter(id=>catalogWorkIds.has(id)))];
+        personWorkMetadata = new Map((await filterWorkerClient.workMetadata(ids,'person')).map(work=>[work.workId,work]));
+      }
       personRuntimeState = buildPersonRecords(personRuntimeSourceState, null);
       if (new URLSearchParams(window.location.search).has('dumpPersonIndex')) {
         globalThis.__EGS_PERSON_ACTIVITY_AXIS__ = personActivityAxis;
@@ -3496,6 +3504,7 @@ async function initialize() {
   personDirectoryView = createPersonDirectoryView({
     root: elements.personView,
     imageUrlForWork: credit => {
+      if (credit.workThumbnailPath) return resolveAssetUrl(credit.workThumbnailPath, assetBase);
       const work = worksById.get(String(credit?.workId ?? ''));
       const path = work?.projectedThumbnailPath ?? work?.coverPath;
       return path ? resolveAssetUrl(path, assetBase) : null;
@@ -3512,14 +3521,25 @@ async function initialize() {
     async onLoadPerson(personId, summary) {
       if (personDetailCache.has(personId)) return personDetailCache.get(personId);
       if (personPerformanceRuntime !== null) {
+        let detail;
         try {
-          const detail = await personPerformanceRuntime.loadPerson(personId);
-          if (detail) personDetailCache.set(personId, detail);
-          return detail ?? summary;
+          detail = await personPerformanceRuntime.loadPerson(personId);
         } catch (error) {
           console.warn('person performance detail unavailable; showing the core person record', error);
           personPerformanceRuntime = null;
+          return summary;
         }
+          let resolved=detail??summary;
+          if (preparedWorkbench.workerOwned && resolved?.credits?.length) {
+            const ids=[...new Set(resolved.credits.map(c=>String(c.workId??'')).filter(id=>catalogWorkIds.has(id)))];
+            const metadata=new Map((await filterWorkerClient.workMetadata(ids,'person')).map(work=>[work.workId,work]));
+            resolved={...resolved,credits:resolved.credits.map(credit=>{
+              const work=metadata.get(String(credit.workId));
+              return {...credit,workThumbnailPath:work?.projectedThumbnailPath??work?.coverPath??null};
+            })};
+          }
+          if (detail) personDetailCache.set(personId, resolved);
+          return resolved;
       }
       return summary;
     },
@@ -3549,7 +3569,7 @@ async function initialize() {
       } else pushUiLocation();
     },
     onOpenWork(workId) {
-      const work = worksById.get(String(workId));
+      const work = workReference(workId);
       if (!work) return;
       personDetailReturnId = selectedPersonId;
       selectedPersonId = null;
@@ -4179,7 +4199,7 @@ async function initialize() {
     let outcome;
     const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
     try {
-      if (workData) {
+      if (workData && !preparedWorkbench.workerOwned) {
         const hydrated = await workData.get([...new Set([...state.selectedWorkIds, ...compareWorkIds])]);
         if (generation !== renderGeneration) return false;
         activeHydratedWorks = hydrated;
@@ -4199,6 +4219,11 @@ async function initialize() {
         visibleBrands,
         companyLimit: 24
       }) : { status: 'success', workIds: [], counts: null };
+      if (preparedWorkbench.workerOwned && outcome.status !== 'stale') {
+        const hydrated=await workData.get([...new Set([...state.selectedWorkIds,...compareWorkIds,...outcome.workIds])]);
+        if(generation!==renderGeneration)return false;
+        activeHydratedWorks=hydrated;
+      }
     } catch (error) {
       interactionMetrics.cancel(interaction, 'worker-error');
       announce(state.workspaceMode === 'ranking' ? '排榜暂时未能加载，请重新进入排榜重试。' : '筛选计算失败，可继续调整条件重试。', 'error');
@@ -4235,9 +4260,10 @@ async function initialize() {
         decorate: workData === null
       });
     interactionMetrics.stage(interaction, 'presentation-ready');
+    const catalogSize=preparedWorkbench.uiSummary?.workIds.length??sample.works.length;
     const catalogTotal = presentationFamilies === null
-      ? sample.works.length
-      : sample.works.length - presentationFamilies.memberCount + presentationFamilies.familyCount;
+      ? catalogSize
+      : catalogSize - presentationFamilies.memberCount + presentationFamilies.familyCount;
     if (ranking) {
       rankingModel = rankingSubject === 'company'
         ? buildCompanyRankingModel()
@@ -4414,6 +4440,7 @@ async function initialize() {
 
   let pendingShareImport = null;
   let pendingBangumiPublicImport = null;
+  let bangumiImportTitles = new Map();
   let bangumiPublicImportRequest = 0;
   let bangumiPublicImportAbort = null;
 
@@ -4498,6 +4525,7 @@ async function initialize() {
   }
 
   function resetBangumiPublicImportDialog({ keepInput = true } = {}) {
+    bangumiImportTitles = new Map();
     bangumiKeeperPhase = 'input';
     pendingBangumiPublicImport = null;
     elements.bangumiPublicImportResults.hidden = true;
@@ -4535,14 +4563,14 @@ async function initialize() {
     checkbox.checked = checked || alreadySelected;
     checkbox.disabled = alreadySelected;
     const variantLabel = variant === 'primary' ? '主作品' : '可选版本';
-    checkbox.setAttribute('aria-label', `${worksById.get(workId)?.title ?? workId} ${alreadySelected ? '已在候选池' : `选择${variantLabel}导入`}`);
+    checkbox.setAttribute('aria-label', `${bangumiImportTitles.get(workId) ?? worksById.get(workId)?.title ?? workId} ${alreadySelected ? '已在候选池' : `选择${variantLabel}导入`}`);
     checkbox.addEventListener('change', syncBangumiPublicImportSelection);
 
     const copy = document.createElement('span');
     copy.className = 'bangumi-import-item-copy';
     const title = document.createElement('strong');
     title.className = 'bangumi-import-item-title';
-    title.textContent = worksById.get(workId)?.title ?? `EGS #${workId}`;
+    title.textContent = bangumiImportTitles.get(workId) ?? worksById.get(workId)?.title ?? `EGS #${workId}`;
     const meta = document.createElement('span');
     meta.className = 'bangumi-import-item-meta';
     const details = [`Bangumi #${collection.subjectId}`, bangumiImport.collectionTypeLabel(collection.collectionType)];
@@ -4640,6 +4668,13 @@ async function initialize() {
         workLimit: USER_WORK_LIMIT,
         presentationFamilyForWork: workId => presentationFamilies?.familyForWork(workId) ?? null
       });
+      if(preparedWorkbench.workerOwned) {
+        const ids=[...new Set(plan.matched.flatMap(row=>[...row.primaryWorkIds,...row.optionalWorkIds]))];
+        const titles=await filterWorkerClient.workMetadata(ids,'titles');
+        if(request!==bangumiPublicImportRequest)return;
+        if(titles.length!==ids.length)throw new Error('导入作品名称资料缺失');
+        bangumiImportTitles=new Map(titles.map(row=>[row.workId,row.title]));
+      }
       pendingBangumiPublicImport = plan;
       renderBangumiPublicImportPlan(plan, result.reportedTotal);
       bangumiKeeperPhase = 'result';
@@ -4755,8 +4790,8 @@ async function initialize() {
       note.textContent = member.default ? '默认' : '';
       row.append(radio, copy, note);
       row.addEventListener('click', () => {
-        const target = worksById.get(member.workId);
-        if (target !== undefined) openWorkDetails(target, { keepVersionShelf: true });
+        const target = workReference(member.workId);
+        if (target) openWorkDetails(target, { keepVersionShelf: true });
       });
       return row;
     });
@@ -4771,6 +4806,11 @@ async function initialize() {
     const home = document.documentElement.dataset.home;
     try {
       if (workData) [work] = await workData.hydrate([work]);
+      if (preparedWorkbench.workerOwned) {
+        const rows=await filterWorkerClient.workMetadata([work.workId],'aliases');
+        if(rows.length!==1)throw new Error('作品名称资料缺失');
+        options={...options,aliases:new Map(rows.map(row=>[row.workId,row.aliases]))};
+      }
       if (sequence !== detailHydrationSequence || workspace !== controller.inspectState().workspaceMode || directories !== `${personDirectoryOpen}:${companyDirectoryOpen}` || home !== document.documentElement.dataset.home) return;
       return showWorkDetailsReady(work, options);
     } catch (error) {
@@ -4779,7 +4819,7 @@ async function initialize() {
     }
   }
 
-  function showWorkDetailsReady(work, { push = true, keepVersionShelf = false } = {}) {
+  function showWorkDetailsReady(work, { push = true, keepVersionShelf = false, aliases = workAliasesById } = {}) {
     if (!keepVersionShelf) detailsVersionShelfExpanded = false;
     if (!keepVersionShelf) {
       const activeElement = document.activeElement;
@@ -4791,7 +4831,7 @@ async function initialize() {
     telemetry.recordWorkOpen(work.workId);
     const request = ++workDetailCreditsRequest;
     workDetailCreditsView.renderLoading();
-    showDetails(work, filterById, workAliasesById, openCompanyDirectory, projectEntityRuntime, {
+    showDetails(work, filterById, aliases, openCompanyDirectory, projectEntityRuntime, {
       coverSources: coverSourcesForWork,
       fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
       open: detailWork => openMediaPreview(detailWork, { immersive: true }).catch(error => {
@@ -5015,7 +5055,7 @@ async function initialize() {
       if (!isCurrentLocation()) return true;
       selectionView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
       if (location.workId !== null) {
-        const work = worksById.get(location.workId);
+        const work = workReference(location.workId);
         if (work) {
           openWorkDetails(work, { push: false });
           if (window.location.hash.startsWith('#works/work/')) replaceUiLocation();
