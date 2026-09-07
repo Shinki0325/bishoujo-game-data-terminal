@@ -1,4 +1,5 @@
 import { loadWorkbenchData, workbenchQueryWork } from './lib/workbench-demand-data.js';
+import {getOwnedWorkbenchClient,ownedWorkbenchEnabled,workbenchSourceDescriptor} from './lib/workbench-worker-session.js';
 import {
   installExternalCoverImageRecovery,
   resolveAssetUrl,
@@ -1027,7 +1028,7 @@ async function initialize() {
     renderThemeToggle();
   });
   const startupMetrics = createStartupMetrics();
-  const filterWorkerClient = createFilterWorkerClient({
+  let filterWorkerClient = ownedWorkbenchEnabled() ? getOwnedWorkbenchClient() : createFilterWorkerClient({
     workerFactory: () => new Worker(
       new URL('./workers/filter-worker.js?v=20260824-selection-source-sorting-v1', import.meta.url),
       { type: 'module' }
@@ -1342,6 +1343,7 @@ async function initialize() {
     return { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile };
   }
   const preparedWorkbench = await loadWorkbenchData({ legacyLoader: loadLegacyWorkbenchData });
+  if(preparedWorkbench.workerOwned)filterWorkerClient=getOwnedWorkbenchClient();
   // Workbench export boundary: all legacy inputs have passed their original validators.
   const { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile, workData = null } = preparedWorkbench;
   document.documentElement.dataset.runtimePopulation = 'full';
@@ -1353,11 +1355,11 @@ async function initialize() {
     const baseGet = worksById.get.bind(worksById);
     worksById.get = id => activeHydratedWorks.get(id) ?? workData.peek(id) ?? baseGet(id);
   }
-  const workerWorkAliasesById = workAliasesById === null ? null : new Map(workAliasesById);
-  const workerWorkPinyinById = workPinyinById === null ? null : new Map(workPinyinById);
-  const workerCompanyAliasesById = enrichment?.companyAliasesById == null ? null : new Map(enrichment.companyAliasesById);
-  const workerCompanyPinyinById = enrichment?.companyPinyinById == null ? null : new Map(enrichment.companyPinyinById);
-  const filterWorkerPayload = {
+  const workerWorkAliasesById = workAliasesById;
+  const workerWorkPinyinById = workPinyinById;
+  const workerCompanyAliasesById = enrichment?.companyAliasesById??null;
+  const workerCompanyPinyinById = enrichment?.companyPinyinById??null;
+  const filterWorkerPayload = preparedWorkbench.workerOwned ? workbenchSourceDescriptor() : {
     searchText: preparedWorkbench.searchText ?? null,
     prepareSearch: Boolean(workData),
     works: workData ? sortableSample.works.map(workbenchQueryWork) : sortableSample.works,
