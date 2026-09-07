@@ -16,7 +16,7 @@ async function handle(message) {
       sourceHandler=Promise.all([import('../lib/workbench-worker-handler.js'),dataModule,runtimeReady])
         .then(([handler,data,runtime])=>handler.createWorkbenchWorkerHandler({runtime,
           loadSource:next=>{
-            if(firstBundle&&next.sha256===source.sha256){const bundle=firstBundle;firstBundle=null;return bundle;}
+            if(firstBundle&&next.sha256===source.sha256&&next.media===source.media){const bundle=firstBundle;firstBundle=null;return bundle;}
             return data.loadWorkerWorkbenchBundle(next);
           },projectWork:data.workbenchQueryWork,onData:message=>self.postMessage(message)}))
         .catch(error=>{sourceHandler=null;throw error;});

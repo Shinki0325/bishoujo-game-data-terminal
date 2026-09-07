@@ -6,6 +6,7 @@ import {WORKBENCH_SCHEMA,WORKBENCH_COLUMNS,serializeWorkbench,reviveWorkbench,wo
 import {DATA_REVISION} from '../lib/runtime-config.js';
 import {encodeWorkbenchTable} from '../lib/workbench-table.js';
 import {encodeWorkbenchContext} from '../lib/workbench-context.js';
+import {createMediaDeferredBootstrap} from '../lib/workbench-media-bootstrap.js';
 import {createQueryIndex,createSearchTextCarrier} from '../lib/query-index.js';
 // Reuse the actual validated runtime preparation, not a second copy of its source-merge rules.
 // Browser tooling is supplied by the local verification environment, not a production dependency.
@@ -52,15 +53,17 @@ async function emit(name,value){const bytes=Buffer.from(JSON.stringify(value,ser
 const fallbackMedia=Object.fromEntries(works.filter(w=>!w.projectedThumbnailPath).map(w=>[w.workId,{coverPath:w.coverPath,thumbnailPath:w.thumbnailPath,previewPath:w.previewPath,coverFallback:w.coverFallback}]));
 const searchText=createSearchTextCarrier(createQueryIndex({works,knownFilterIds:sample.filters.map(f=>f.filterId),brands:context.brands,workAliasesById:context.workAliasesById,workPinyinById:context.workPinyinById,companyAliasesById:context.enrichment?.companyAliasesById,companyPinyinById:context.enrichment?.companyPinyinById}));
 const searchTextFile=await emit('search-text',searchText);
-const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),fallbackMedia,sample:sampleHeader,context:encodeWorkbenchContext(context,works)});
+const bootstrapBody={schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),fallbackMedia,sample:sampleHeader,context:encodeWorkbenchContext(context,works)};
+const bootstrap=await emit('bootstrap',bootstrapBody);
+const workerBootstrap=await emit('worker-bootstrap',createMediaDeferredBootstrap(bootstrapBody));
 const blockSize=16,shards=[];
 for(let i=0;i<works.length;i+=blockSize)shards.push(await emit('cards-'+i/blockSize,works.slice(i,i+blockSize)));
 const byId=new Map(works.map(w=>[w.workId,w]));
 const firstPage={...await emit('first-page',firstIds.map(id=>byId.get(id))),ids:firstIds};
 const sourceDigest=hash(Buffer.from(JSON.stringify({context,sample:sampleHeader,works},serializeWorkbench)));
-const manifest={schema:WORKBENCH_SCHEMA,dataRevision:`wb-${sourceDigest}`,sourcePins:workbenchSourcePins(),sourceDigest,count:works.length,blockSize,bootstrap,searchText:searchTextFile,shards,firstPage};
+const manifest={schema:WORKBENCH_SCHEMA,dataRevision:`wb-${sourceDigest}`,sourcePins:workbenchSourcePins(),sourceDigest,count:works.length,blockSize,bootstrap,workerBootstrap,searchText:searchTextFile,shards,firstPage};
 const bytes=Buffer.from(JSON.stringify(manifest));await writeFile(resolve(out,'manifest.json'),bytes);
-const config=`// Derived from validated public runtime inputs. Data revision is independent of UI commits.\nexport const WORKBENCH_DEMAND = Object.freeze(${JSON.stringify({enabled:true,manifestPath:'../runtime-data/workbench-demand/manifest.json',sha256:hash(bytes)})});\n`;
+const config=`// Derived from validated public runtime inputs. Data revision is independent of UI commits.\nexport const WORKBENCH_DEMAND = Object.freeze(${JSON.stringify({enabled:true,manifestPath:'../runtime-data/workbench-demand/manifest.json',sha256:hash(bytes),firstPage:{path:firstPage.path,sha256:firstPage.sha256}})});\n`;
 const current=await readFile(resolve(root,'lib/workbench-demand-config.js'),'utf8');
 await writeFile(resolve(out,'config.patch'),'*** Begin Patch\n*** Update File: '+resolve(root,'lib/workbench-demand-config.js').replaceAll('\\','/')+'\n@@\n'+current.trimEnd().split('\n').map(l=>'-'+l).join('\n')+'\n'+config.trimEnd().split('\n').map(l=>'+'+l).join('\n')+'\n*** End Patch');
 await writeFile(resolve(out,'build-proof.json'),JSON.stringify({dataRevision:DATA_REVISION,sourceDigest,catalogSha256:catalogSource.sha256,count:works.length,bootstrapBytes:bootstrap.bytes,shardBytes:shards.reduce((n,s)=>n+s.bytes,0),firstPageCount:firstIds.length,firstPageBytes:firstPage.bytes,note:'Real legacy runtime validators completed; header/family projection also completed before capture accepted. No source data or old release overwritten.'},null,2));
