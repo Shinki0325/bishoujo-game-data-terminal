@@ -1353,6 +1353,28 @@ async function initialize() {
     const baseGet = worksById.get.bind(worksById);
     worksById.get = id => activeHydratedWorks.get(id) ?? workData.peek(id) ?? baseGet(id);
   }
+  const workerWorkAliasesById = workAliasesById === null ? null : new Map(workAliasesById);
+  const workerWorkPinyinById = workPinyinById === null ? null : new Map(workPinyinById);
+  const workerCompanyAliasesById = enrichment?.companyAliasesById == null ? null : new Map(enrichment.companyAliasesById);
+  const workerCompanyPinyinById = enrichment?.companyPinyinById == null ? null : new Map(enrichment.companyPinyinById);
+  const filterWorkerPayload = {
+    searchText: preparedWorkbench.searchText ?? null,
+    prepareSearch: Boolean(workData),
+    works: workData ? sortableSample.works.map(workbenchQueryWork) : sortableSample.works,
+    knownFilterIds: sample.filters.map(filter => filter.filterId),
+    brands,
+    backendIndexes: sample.backendIndexes,
+    workAliasesById: workerWorkAliasesById,
+    workPinyinById: workerWorkPinyinById,
+    companyAliasesById: workerCompanyAliasesById,
+    companyPinyinById: workerCompanyPinyinById
+  };
+  const ensureFilterWorker = createLazyResource(() => startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload)));
+  if (/^#works(?:[/?]|$)/u.test(window.location.hash)) {
+    void ensureFilterWorker().catch(() => {});
+    // Let the initialization message leave before preparing directory/UI models.
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
   let characterImageMapPromise = null;
   const loadCharacterImageMap = () => {
     if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.characterImages)) {
@@ -1494,18 +1516,6 @@ async function initialize() {
       throw new TypeError('presentation families sidecar rejected', { cause: error });
     }
   }
-  const workerWorkAliasesById = workAliasesById === null
-    ? null
-    : new Map(workAliasesById);
-  const workerWorkPinyinById = workPinyinById === null
-    ? null
-    : new Map(workPinyinById);
-  const workerCompanyAliasesById = enrichment?.companyAliasesById === null || enrichment?.companyAliasesById === undefined
-    ? null
-    : new Map(enrichment.companyAliasesById);
-  const workerCompanyPinyinById = enrichment?.companyPinyinById === null || enrichment?.companyPinyinById === undefined
-    ? null
-    : new Map(enrichment.companyPinyinById);
   const companyDirectory = buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
@@ -1564,18 +1574,6 @@ async function initialize() {
     now: () => new Date(),
     downloadJson
   });
-  const filterWorkerPayload = {
-    searchText: preparedWorkbench.searchText ?? null,
-    works: workData ? sortableSample.works.map(workbenchQueryWork) : sortableSample.works,
-    knownFilterIds: sample.filters.map(filter => filter.filterId),
-    brands,
-    backendIndexes: sample.backendIndexes,
-    workAliasesById: workerWorkAliasesById,
-    workPinyinById: workerWorkPinyinById,
-    companyAliasesById: workerCompanyAliasesById,
-    companyPinyinById: workerCompanyPinyinById
-  };
-  const ensureFilterWorker = createLazyResource(() => startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload)));
   let personWorkIndex = null;
   let personWorkIndexPromise = null;
   async function ensurePersonFilterIndex() {
@@ -4141,6 +4139,10 @@ async function initialize() {
       const needsFiltering = state.workspaceMode !== 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
       if (state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen) await ensureRankingView();
       if (needsFiltering) await ensureFilterWorker();
+      if (generation !== renderGeneration) {
+        interactionMetrics.cancel(interaction, 'superseded-search-load');
+        return false;
+      }
       outcome = needsFiltering ? await filterWorkerClient.query({
         filterState: state.filterState,
         selectedWorkIds: state.selectedWorkIds,

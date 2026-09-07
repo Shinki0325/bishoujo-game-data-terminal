@@ -50,13 +50,14 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function emit(name,value){const bytes=Buffer.from(JSON.stringify(value,serializeWorkbench));const sha256=hash(bytes),path=name+'.'+sha256.slice(0,16)+'.json';await writeFile(resolve(out,path),bytes);return {path,sha256,bytes:bytes.length};}
 const fallbackMedia=Object.fromEntries(works.filter(w=>!w.projectedThumbnailPath).map(w=>[w.workId,{coverPath:w.coverPath,thumbnailPath:w.thumbnailPath,previewPath:w.previewPath,coverFallback:w.coverFallback}]));
 const searchText=createSearchTextCarrier(createQueryIndex({works,knownFilterIds:sample.filters.map(f=>f.filterId),brands:context.brands,workAliasesById:context.workAliasesById,workPinyinById:context.workPinyinById,companyAliasesById:context.enrichment?.companyAliasesById,companyPinyinById:context.enrichment?.companyPinyinById}));
-const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),searchText,fallbackMedia,sample:sampleHeader,context});
+const searchTextFile=await emit('search-text',searchText);
+const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),fallbackMedia,sample:sampleHeader,context});
 const blockSize=16,shards=[];
 for(let i=0;i<works.length;i+=blockSize)shards.push(await emit('cards-'+i/blockSize,works.slice(i,i+blockSize)));
 const byId=new Map(works.map(w=>[w.workId,w]));
 const firstPage={...await emit('first-page',firstIds.map(id=>byId.get(id))),ids:firstIds};
 const sourceDigest=hash(Buffer.from(JSON.stringify({context,sample:sampleHeader,works},serializeWorkbench)));
-const manifest={schema:WORKBENCH_SCHEMA,dataRevision:`wb-${sourceDigest}`,sourcePins:workbenchSourcePins(),sourceDigest,count:works.length,blockSize,bootstrap,shards,firstPage};
+const manifest={schema:WORKBENCH_SCHEMA,dataRevision:`wb-${sourceDigest}`,sourcePins:workbenchSourcePins(),sourceDigest,count:works.length,blockSize,bootstrap,searchText:searchTextFile,shards,firstPage};
 const bytes=Buffer.from(JSON.stringify(manifest));await writeFile(resolve(out,'manifest.json'),bytes);
 const config=`// Derived from validated public runtime inputs. Data revision is independent of UI commits.\nexport const WORKBENCH_DEMAND = Object.freeze(${JSON.stringify({enabled:true,manifestPath:'../runtime-data/workbench-demand/manifest.json',sha256:hash(bytes)})});\n`;
 const current=await readFile(resolve(root,'lib/workbench-demand-config.js'),'utf8');
