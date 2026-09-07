@@ -792,6 +792,12 @@ export function createSelectionView({
           mobileSortKey: model.filterState?.sortKey
         });
         nextCardCache.set(workId, entry);
+        // Cached cards can change position after sorting/filtering.
+        const image = entry.card.querySelector('.selection-card-cover img');
+        if (image) {
+          image.loading = index < 12 ? 'eager' : 'lazy';
+          image.fetchPriority = index === 0 ? 'high' : 'auto';
+        }
         return entry.card;
       });
       for (const [workId, entry] of cardCache) {
