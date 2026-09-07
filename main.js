@@ -17,6 +17,9 @@ import { createPersonWorkspaceController } from './lib/person-workspace-controll
 import { createCompanyWorkspaceController } from './lib/company-workspace-controller.js';
 import { createBangumiImportController } from './lib/bangumi-import-controller.js';
 import { createWorkCreditsController, createWorkStatsController } from './lib/work-detail-resources-controller.js';
+import { createWorkDetailController } from './lib/work-detail-controller.js';
+import { createWorkDetailView } from './views/work-detail-view.js';
+import { createWorkVersionView } from './views/work-version-view.js';
 import { createLazyResource } from './lib/lazy-resource.js';
 import { createWorkspaceSession } from './lib/workspace-session.js';
 import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
@@ -64,7 +67,7 @@ import {
   prepareAuthorityFanoutMediaProjection,
   prepareAuthorityFanoutPageBindings
 } from './lib/authority-fanout.js';
-import { canUseHighDensityPreview, applyAdaptiveImageSource } from './lib/adaptive-image-source.js';
+import { canUseHighDensityPreview } from './lib/adaptive-image-source.js';
 import {
   configuredAssetBase,
   DATA_URLS,
@@ -839,140 +842,6 @@ function filterRenderKey(model, visibleBrands) {
   ]);
 }
 
-function formatSnapshotDate(value) {
-  if (typeof value !== 'string') return '未返回';
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
-  return match?.[1] ?? '未返回';
-}
-
-function showDetails(work, filterById, workAliasesById = null, onOpenCompany = null, projectEntityRuntime = null, detailMedia = null, egsSnapshotAt = null) {
-  const detailVm = projectEntityRuntime?.adaptWorkDetail?.(work.workId, work) ?? work;
-  elements.detailsDialog.dataset.projectEntitySource = detailVm.source ?? 'legacy';
-  elements.detailsDialog.dataset.mediaClearanceStatus = work.mediaProjection?.clearanceStatus ?? 'legacy-fallback';
-  elements.detailsTitle.textContent = work.title;
-  elements.detailsBrand.replaceChildren();
-  const brandButton = document.createElement('button');
-  brandButton.type = 'button';
-  brandButton.className = 'details-company-link';
-  brandButton.textContent = work.brandName;
-  brandButton.addEventListener('click', () => onOpenCompany?.(work.brandId));
-  elements.detailsBrand.append(brandButton);
-  const aliases = workAliasesById?.get?.(work.workId) ?? [];
-  elements.detailsAliases.hidden = aliases.length === 0;
-  elements.detailsAliases.textContent = aliases.join(' / ');
-  const coverToken = `${work.workId}:${Date.now()}`;
-  elements.detailsCover.dataset.coverToken = coverToken;
-  elements.detailsCover.disabled = true;
-  elements.detailsCoverImage.hidden = true;
-  elements.detailsCoverImage.alt = '';
-  elements.detailsCoverImage.removeAttribute('src');
-  elements.detailsCover.onclick = () => {
-    void detailMedia?.open?.(work);
-  };
-  const coverUrlRequest = detailMedia?.coverSources?.(work);
-  if (coverUrlRequest !== undefined) {
-    void coverUrlRequest.then(({ thumbnailUrl, previewUrl }) => {
-      if (elements.detailsCover.dataset.coverToken !== coverToken) return;
-      applyAdaptiveImageSource(elements.detailsCoverImage, { thumbnailUrl, previewUrl });
-      elements.detailsCoverImage.alt = `${work.title} 作品图片`;
-      elements.detailsCoverImage.hidden = false;
-      elements.detailsCover.disabled = false;
-    }).catch(() => {
-      if (elements.detailsCover.dataset.coverToken !== coverToken) return;
-      applyAdaptiveImageSource(elements.detailsCoverImage, { thumbnailUrl: detailMedia.fallbackUrl });
-      elements.detailsCoverImage.alt = `${work.title} 图片不可用`;
-      elements.detailsCoverImage.hidden = false;
-    });
-  }
-  elements.detailsRelease.textContent = work.releaseDate || '未记录';
-  const createScoreSource = (label, value, snapshotText, href = null) => {
-    const source = document.createElement('div');
-    source.className = `details-score-source details-score-source-${label.toLowerCase()}`;
-    const rating = href ? document.createElement('a') : document.createElement('span');
-    rating.className = `details-rating-line${href ? ' details-rating-link' : ''}`;
-    if (href) {
-      rating.href = href;
-      rating.target = '_blank';
-      rating.rel = 'noopener noreferrer';
-    }
-    rating.textContent = `${label} ${value}`;
-    const snapshot = document.createElement('small');
-    snapshot.className = 'details-rating-snapshot';
-    snapshot.textContent = snapshotText;
-    source.append(rating, snapshot);
-    return source;
-  };
-  const ratingSources = [];
-  const egsValue = Number.isFinite(work.median) && Number.isInteger(work.voteCount)
-    ? `${work.median} / ${work.voteCount} 票`
-    : '暂无评分';
-  ratingSources.push(createScoreSource('EGS', egsValue, `数据快照：${formatSnapshotDate(egsSnapshotAt)}`));
-  if (work.vndbRating !== undefined) {
-    const voteCount = work.vndbRating.detailVotes === null
-      ? null
-      : String(work.vndbRating.detailVotes).replace(/\s*人评分$/u, '').trim();
-    const value = work.vndbRating.detailVotes === null
-      ? `${work.vndbRating.detailScore}（${work.vndbRating.statusLabel}）`
-      : `${work.vndbRating.detailScore} / ${voteCount} 票`;
-    ratingSources.push(createScoreSource('VNDB', value, `数据快照：${formatSnapshotDate(work.vndbRating.retrievedAt)}`));
-  }
-  if (work.bangumiRating !== undefined) {
-    const voteCount = work.bangumiRating.detailVotes === null
-      ? null
-      : String(work.bangumiRating.detailVotes).replace(/\s*人评分$/u, '').trim();
-    const value = work.bangumiRating.detailVotes === null
-      ? `${work.bangumiRating.detailScore} ↗`
-      : `${work.bangumiRating.detailScore} / ${voteCount} 票 ↗`;
-    ratingSources.push(createScoreSource('Bangumi', value, `数据快照：${formatSnapshotDate(work.bangumiRating.retrievedAt)}`, work.bangumiRating.subjectUrl));
-  }
-  elements.detailsScore.replaceChildren(...ratingSources);
-  const createTag = (filter, hidden = false) => {
-    const item = document.createElement('li');
-    item.className = filter.groupId === 'character'
-      ? 'details-tag-character'
-      : filter.groupId === 'adult'
-        ? 'details-tag-adult'
-        : ATTRIBUTE_GROUP_IDS.has(filter.groupId)
-          ? 'details-tag-attribute'
-          : 'details-tag-content';
-    item.textContent = filter.displayTitle;
-    item.hidden = hidden;
-    return item;
-  };
-  const { visible, collapsed } = partitionWorkDetailFilters(work, filterById);
-  const visibleTags = visible.map(filter => createTag(filter));
-  if (collapsed.length === 0) {
-    elements.detailsTags.replaceChildren(...visibleTags);
-  } else {
-    const collapsedTags = collapsed.map(filter => createTag(filter, true));
-    const controlItem = document.createElement('li');
-    controlItem.className = 'details-sensitive-control';
-    const toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'details-sensitive-toggle';
-    toggle.textContent = '+';
-    toggle.title = '显示角色属性与成人内容标签';
-    toggle.setAttribute('aria-label', toggle.title);
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.addEventListener('click', () => {
-      const expanded = toggle.getAttribute('aria-expanded') !== 'true';
-      toggle.setAttribute('aria-expanded', String(expanded));
-      toggle.textContent = expanded ? '\u2212' : '+';
-      toggle.title = expanded
-        ? '收起角色属性与成人内容标签'
-        : '显示角色属性与成人内容标签';
-      toggle.setAttribute('aria-label', toggle.title);
-      for (const item of collapsedTags) item.hidden = !expanded;
-    });
-    controlItem.append(toggle);
-    elements.detailsTags.replaceChildren(
-      ...visibleTags,
-      controlItem,
-      ...collapsedTags
-    );
-  }
-  if (typeof elements.detailsDialog.showModal === 'function') elements.detailsDialog.showModal();
-}
 
 async function initialize() {
   const localSearchClears = [...document.querySelectorAll('[data-clear-input]')].map(button => {
@@ -1654,7 +1523,6 @@ async function initialize() {
   const compareRenderSession = createWorkspaceSession();
   const compareCreditsCache = new Map();
   const compareCreditsLoaded = new Set();
-  let detailsVersionShelfExpanded = false;
   const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
   let applyingUiLocation = false;
   let locationScrollTimer = null;
@@ -3612,7 +3480,7 @@ async function initialize() {
     if (key !== activeWorkspaceKey) {
       activeWorkspaceKey = key;
       companyWorkspace.suspend();
-      detailHydrationSession.suspend();
+      detailOpening.suspend();
       cancelRankingPreload();
       if (key !== 'selection') selectionView.suspend();
       if (key !== 'persons') personDirectoryView?.suspend?.();
@@ -4223,80 +4091,54 @@ async function initialize() {
   function replaceUiLocation() { updateUiLocation('replaceState'); }
   function pushUiLocation() { updateUiLocation('pushState'); }
 
-  function renderDetailsVersions(work) {
-    const family = presentationFamilies?.familyForWork(work.workId) ?? null;
-    elements.detailsVersionToggle.hidden = family === null;
-    elements.detailsVersionShelf.hidden = family === null || !detailsVersionShelfExpanded;
-    elements.detailsVersionList.replaceChildren();
-    if (family === null) return;
-    elements.detailsVersionToggle.replaceChildren(
-      createActionIcon(document, 'layers-2'),
-      document.createTextNode(`${family.members.length} 个版本`),
-      document.createTextNode(detailsVersionShelfExpanded ? '⌃' : '⌄')
-    );
-    elements.detailsVersionToggle.setAttribute('aria-expanded', String(detailsVersionShelfExpanded));
-    elements.detailsVersionToggle.onclick = () => {
-      detailsVersionShelfExpanded = !detailsVersionShelfExpanded;
-      renderDetailsVersions(work);
-    };
-    elements.detailsVersionCurrent.replaceChildren(
-      document.createTextNode('当前版本：'),
-      Object.assign(document.createElement('strong'), { textContent: family.members.find(member => member.workId === work.workId)?.label ?? work.title })
-    );
-    const rows = family.members.map(member => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'details-version-row';
-      row.setAttribute('aria-current', String(member.workId === work.workId));
-      const radio = document.createElement('span');
-      radio.className = 'details-version-radio';
-      const copy = document.createElement('span');
-      copy.className = 'details-version-copy';
-      const label = document.createElement('strong');
-      label.textContent = member.label;
-      const title = document.createElement('small');
-      title.textContent = member.title;
-      copy.append(label, title);
-      const note = document.createElement('span');
-      note.className = 'details-version-default';
-      note.textContent = member.default ? '默认' : '';
-      row.append(radio, copy, note);
-      row.addEventListener('click', () => {
-        const target = workReference(member.workId);
-        if (target) openWorkDetails(target, { keepVersionShelf: true });
-      });
-      return row;
-    });
-    elements.detailsVersionList.replaceChildren(...rows);
-  }
-
-  const detailHydrationSession = createWorkspaceSession();
-  async function openWorkDetails(work, options = {}) {
-    const sequence = detailHydrationSession.begin('work-detail');
-    const workspace = controller.inspectState().workspaceMode;
-    const directories = `${personDirectoryOpen}:${companyDirectoryOpen}`;
-    const home = document.documentElement.dataset.home;
-    try {
-      if (workData) [work] = await workData.hydrate([work]);
-      if (!sequence.isCurrent()) return;
-      if (preparedWorkbench.workerOwned) {
-        const rows=await filterWorkerClient.workMetadata([work.workId],'aliases');
-        if(rows.length!==1)throw new Error('作品名称资料缺失');
-        options={...options,aliases:new Map(rows.map(row=>[row.workId,row.aliases]))};
-      }
-      if (!sequence.isCurrent() || workspace !== controller.inspectState().workspaceMode || directories !== `${personDirectoryOpen}:${companyDirectoryOpen}` || home !== document.documentElement.dataset.home) return;
-      sequence.complete();
-      return showWorkDetailsReady(work, options);
-    } catch (error) {
-      if (!sequence.isCurrent()) return;
-      sequence.fail(error);
+  const detailPresentation = createWorkDetailView({
+    elements: {
+      detailsDialog: elements.detailsDialog,
+      detailsTitle: elements.detailsTitle,
+      detailsBrand: elements.detailsBrand,
+      detailsAliases: elements.detailsAliases,
+      detailsCover: elements.detailsCover,
+      detailsCoverImage: elements.detailsCoverImage,
+      detailsRelease: elements.detailsRelease,
+      detailsScore: elements.detailsScore,
+      detailsTags: elements.detailsTags
+    },
+    documentRef: document,
+    partitionFilters: work => partitionWorkDetailFilters(work, filterById),
+    attributeGroupIds: ATTRIBUTE_GROUP_IDS
+  });
+  const detailVersions = createWorkVersionView({
+    elements: {
+      detailsVersionToggle: elements.detailsVersionToggle,
+      detailsVersionShelf: elements.detailsVersionShelf,
+      detailsVersionList: elements.detailsVersionList,
+      detailsVersionCurrent: elements.detailsVersionCurrent
+    },
+    documentRef: document,
+    familyForWork: id => presentationFamilies?.familyForWork(id) ?? null,
+    onSelectWork(id) {
+      const target = workReference(id);
+      if (target) void openWorkDetails(target, { keepVersionShelf: true });
+    }
+  });
+  const detailOpening = createWorkDetailController({
+    hydrateWork: workData ? async work => (await workData.hydrate([work]))[0] : null,
+    readAliases: preparedWorkbench.workerOwned
+      ? ids => filterWorkerClient.workMetadata(ids, 'aliases') : null,
+    readLocation: () => ({
+      workspace: controller.inspectState().workspaceMode,
+      personDirectoryOpen, companyDirectoryOpen,
+      home: document.documentElement.dataset.home
+    }),
+    showReady: showWorkDetailsReady,
+    onError(error) {
       announce('作品详情资料加载失败，请再次打开重试。', 'error');
       console.error(error);
     }
-  }
+  });
+  function openWorkDetails(work, options = {}) { return detailOpening.open(work, options); }
 
   function showWorkDetailsReady(work, { push = true, keepVersionShelf = false, aliases = workAliasesById } = {}) {
-    if (!keepVersionShelf) detailsVersionShelfExpanded = false;
     if (!keepVersionShelf) {
       const activeElement = document.activeElement;
       detailsReturnFocus = activeElement instanceof HTMLElement && !elements.detailsDialog.contains(activeElement)
@@ -4306,14 +4148,14 @@ async function initialize() {
     currentWorkDetailId = work.workId;
     telemetry.recordWorkOpen(work.workId);
     void workDetailResources.start(work);
-    showDetails(work, filterById, aliases, openCompanyDirectory, projectEntityRuntime, {
+    detailPresentation.render(work, { workAliasesById: aliases, onOpenCompany: openCompanyDirectory, projectEntityRuntime, detailMedia: {
       coverSources: coverSourcesForWork,
       fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
       open: detailWork => openMediaPreview(detailWork, { immersive: true }).catch(error => {
         announce('图片预览加载失败。', 'error');
         console.error(error);
       })
-    }, catalogSource.value.snapshot?.generatedAt);
+    }, egsSnapshotAt: catalogSource.value.snapshot?.generatedAt });
     void workDetailStats.load(work);
     const workId = String(work.workId);
     const alreadyCompared = compareWorkIds.includes(workId);
@@ -4327,7 +4169,7 @@ async function initialize() {
       if (active && elements.detailsDialog.open) elements.detailsDialog.close();
     };
     lockDetailsPageScroll();
-    renderDetailsVersions(work);
+    detailVersions.render(work, { keepExpanded: keepVersionShelf });
     if (push) pushUiLocation();
   }
 
@@ -4386,7 +4228,7 @@ async function initialize() {
     // Invalidate UI observers before any asynchronous route preparation.
     renderSession.suspend();
     companyWorkspace.suspend();
-    detailHydrationSession.suspend();
+    detailOpening.suspend();
     selectionView.suspend();
     cancelRankingPreload();
     return ticket;
@@ -4488,7 +4330,8 @@ async function initialize() {
   elements.detailsDialog.addEventListener('close', () => {
     if (elements.detailsDialog.open) return; // Ignore a queued close from the previous visit.
     workDetailStats.suspend();
-    detailHydrationSession.suspend();
+    detailOpening.suspend();
+    detailPresentation.suspend();
     unlockDetailsPageScroll();
     workDetailResources.suspend();
     workDetailCreditsView.clear();
