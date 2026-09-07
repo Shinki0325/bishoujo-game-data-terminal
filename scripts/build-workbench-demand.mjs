@@ -5,6 +5,7 @@ import {resolve} from 'node:path';
 import {WORKBENCH_SCHEMA,WORKBENCH_COLUMNS,serializeWorkbench,reviveWorkbench,workbenchSourcePins} from '../lib/workbench-demand-data.js';
 import {DATA_REVISION} from '../lib/runtime-config.js';
 import {encodeWorkbenchTable} from '../lib/workbench-table.js';
+import {encodeWorkbenchContext} from '../lib/workbench-context.js';
 import {createQueryIndex,createSearchTextCarrier} from '../lib/query-index.js';
 // Reuse the actual validated runtime preparation, not a second copy of its source-merge rules.
 // Browser tooling is supplied by the local verification environment, not a production dependency.
@@ -51,7 +52,7 @@ async function emit(name,value){const bytes=Buffer.from(JSON.stringify(value,ser
 const fallbackMedia=Object.fromEntries(works.filter(w=>!w.projectedThumbnailPath).map(w=>[w.workId,{coverPath:w.coverPath,thumbnailPath:w.thumbnailPath,previewPath:w.previewPath,coverFallback:w.coverFallback}]));
 const searchText=createSearchTextCarrier(createQueryIndex({works,knownFilterIds:sample.filters.map(f=>f.filterId),brands:context.brands,workAliasesById:context.workAliasesById,workPinyinById:context.workPinyinById,companyAliasesById:context.enrichment?.companyAliasesById,companyPinyinById:context.enrichment?.companyPinyinById}));
 const searchTextFile=await emit('search-text',searchText);
-const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),fallbackMedia,sample:sampleHeader,context});
+const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),fallbackMedia,sample:sampleHeader,context:encodeWorkbenchContext(context,works)});
 const blockSize=16,shards=[];
 for(let i=0;i<works.length;i+=blockSize)shards.push(await emit('cards-'+i/blockSize,works.slice(i,i+blockSize)));
 const byId=new Map(works.map(w=>[w.workId,w]));
