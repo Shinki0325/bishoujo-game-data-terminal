@@ -108,6 +108,12 @@ function syncHome() {
   const active = isHome();
   root.dataset.home = String(active);
   home.hidden = !active;
+  if (active) {
+    for (const image of home.querySelectorAll('img[data-home-src]')) {
+      image.src = image.dataset.homeSrc;
+      delete image.dataset.homeSrc;
+    }
+  }
   document.querySelector('#workspace').inert = active;
   if (active) {
     routeSession.suspend();

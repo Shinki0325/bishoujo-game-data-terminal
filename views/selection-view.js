@@ -165,6 +165,8 @@ export function createSelectionCard(documentRef, work, {
   assetBase,
   coverUrl = null,
   previewUrl = null,
+  eagerCover = false,
+  priorityCover = false,
   display = DEFAULT_SELECTION_CARD_DISPLAY,
   mobileSortKey = 'median',
   selectionEnabled = true,
@@ -218,9 +220,15 @@ export function createSelectionCard(documentRef, work, {
   });
 
   const image = documentRef.createElement('img');
+  image.loading = eagerCover ? 'eager' : 'lazy';
+  image.fetchPriority = priorityCover ? 'high' : 'auto';
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
     if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl });
+    const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
+      .getPropertyValue('--selection-card-size')?.trim() || '180px';
+    applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl,
+      thumbnailWidth: work.coverWidth, previewWidth: work.previewWidth,
+      sizes: `${eagerCover ? '' : 'auto, '}(max-width: 720px) calc((100vw - 44px) / 3), ${cardSize}` });
   } else {
     try {
       applyImageAsset(image, work, assetBase);
@@ -232,7 +240,6 @@ export function createSelectionCard(documentRef, work, {
     }
   }
   image.alt = '';
-  image.loading = 'lazy';
   image.decoding = 'async';
   installMissingImageFallback(documentRef, card, image);
 
@@ -715,7 +722,7 @@ export function createSelectionView({
         message: '没有匹配的作品。'
       });
       const nextCardCache = new Map();
-      const cards = visibleWorks.map(work => {
+      const cards = visibleWorks.map((work, index) => {
         const workId = work.workId;
         const coverUrl = latestCoverUrls?.get?.(workId)?.thumbnailUrl ?? null;
         const previewUrl = latestCoverUrls?.get?.(workId)?.previewUrl ?? null;
@@ -734,6 +741,8 @@ export function createSelectionView({
           const cardEpoch = selectionModeEpoch;
           const currentWork = () => latestWorksById.get(workId) ?? null;
           const card = createSelectionCard(documentRef, work, {
+            eagerCover: index < 12,
+            priorityCover: index === 0,
             view: model.view,
             selected: selected.has(workId),
             selectionEnabled: Boolean(model.selectionMode),
