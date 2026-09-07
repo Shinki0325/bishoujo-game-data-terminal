@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {WORKBENCH_SCHEMA,WORKBENCH_COLUMNS,serializeWorkbench,reviveWorkbench,workbenchSourcePins} from '../lib/workbench-demand-data.js';
 import {DATA_REVISION} from '../lib/runtime-config.js';
+import {encodeWorkbenchTable} from '../lib/workbench-table.js';
+import {createQueryIndex,createSearchTextCarrier} from '../lib/query-index.js';
 // Reuse the actual validated runtime preparation, not a second copy of its source-merge rules.
 // Browser tooling is supplied by the local verification environment, not a production dependency.
 const {chromium}=await import(process.env.GALPEDIA_PLAYWRIGHT_URL??'file:///C:/Users/linru/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs');
@@ -47,7 +49,8 @@ await mkdir(out,{recursive:true});
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function emit(name,value){const bytes=Buffer.from(JSON.stringify(value,serializeWorkbench));const sha256=hash(bytes),path=name+'.'+sha256.slice(0,16)+'.json';await writeFile(resolve(out,path),bytes);return {path,sha256,bytes:bytes.length};}
 const fallbackMedia=Object.fromEntries(works.filter(w=>!w.projectedThumbnailPath).map(w=>[w.workId,{coverPath:w.coverPath,thumbnailPath:w.thumbnailPath,previewPath:w.previewPath,coverFallback:w.coverFallback}]));
-const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,rows:works.map(w=>WORKBENCH_COLUMNS.map(k=>w[k]??null)),fallbackMedia,sample:sampleHeader,context});
+const searchText=createSearchTextCarrier(createQueryIndex({works,knownFilterIds:sample.filters.map(f=>f.filterId),brands:context.brands,workAliasesById:context.workAliasesById,workPinyinById:context.workPinyinById,companyAliasesById:context.enrichment?.companyAliasesById,companyPinyinById:context.enrichment?.companyPinyinById}));
+const bootstrap=await emit('bootstrap',{schema:WORKBENCH_SCHEMA,columns:WORKBENCH_COLUMNS,table:encodeWorkbenchTable(works,WORKBENCH_COLUMNS),searchText,fallbackMedia,sample:sampleHeader,context});
 const blockSize=16,shards=[];
 for(let i=0;i<works.length;i+=blockSize)shards.push(await emit('cards-'+i/blockSize,works.slice(i,i+blockSize)));
 const byId=new Map(works.map(w=>[w.workId,w]));

@@ -133,6 +133,11 @@ async function ensureRuntime() {
     prepareLoadingRegion();
     placeLoadingStatus();
     if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
+    // Start validated data alongside the module graph, only when the full
+    // workbench is requested. Home and independent directories remain lazy.
+    void import('./lib/workbench-demand-data.js').then(module=>module.preloadWorkbenchData()).catch(()=>{});
+    const mainReady = import('./main.js');
+    mainReady.catch(()=>{});
     const dialReady = globalThis.GalpediaDial
       ? Promise.resolve()
       : import('./lib/chronicle-dial.js?v=chronicle-dial-0.1.2').catch(() => null);
@@ -151,7 +156,7 @@ async function ensureRuntime() {
         statusText.classList.remove('visually-hidden');
         statusText.textContent = '正在准备资料库…';
       }
-      return import('./main.js');
+      return mainReady;
     }).then(module => module.ready).then(api => {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;

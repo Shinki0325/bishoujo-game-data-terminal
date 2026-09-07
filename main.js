@@ -1027,6 +1027,14 @@ async function initialize() {
     renderThemeToggle();
   });
   const startupMetrics = createStartupMetrics();
+  const filterWorkerClient = createFilterWorkerClient({
+    workerFactory: () => new Worker(
+      new URL('./workers/filter-worker.js?v=20260824-selection-source-sorting-v1', import.meta.url),
+      { type: 'module' }
+    ),
+    timeoutMs: 10000
+  });
+  if (/^#works(?:[/?]|$)/u.test(window.location.hash)) filterWorkerClient.preload();
   const interactionMetrics = createInteractionMetrics();
   const assetBase = configuredAssetBase();
   const highDensityPreviewsEnabled = canUseHighDensityPreview({
@@ -1556,14 +1564,8 @@ async function initialize() {
     now: () => new Date(),
     downloadJson
   });
-  const filterWorkerClient = createFilterWorkerClient({
-    workerFactory: () => new Worker(
-      new URL('./workers/filter-worker.js?v=20260824-selection-source-sorting-v1', import.meta.url),
-      { type: 'module' }
-    ),
-    timeoutMs: 10000
-  });
   const filterWorkerPayload = {
+    searchText: preparedWorkbench.searchText ?? null,
     works: workData ? sortableSample.works.map(workbenchQueryWork) : sortableSample.works,
     knownFilterIds: sample.filters.map(filter => filter.filterId),
     brands,
