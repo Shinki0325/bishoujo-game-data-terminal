@@ -1,3 +1,4 @@
+import { createWorkspaceSession } from '../lib/workspace-session.js';
 const PAGE_SIZE = 48;
 
 import { filterPersonsBySearch } from '../lib/person-search.js';
@@ -74,7 +75,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   const roleTabs = [...root.querySelectorAll('[data-person-role]')];
   let model = [];
   let populationCount = null;
-  let detailRequest = 0;
+  const detailSession = createWorkspaceSession();
   let detailInFlight = null;
   let detailDisplayedId = null;
   let filtered = [];
@@ -154,7 +155,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   }
 
   function invalidateDetailRequest() {
-    detailRequest += 1;
+    detailSession.suspend();
     detailInFlight = null;
     detailDisplayedId = null;
     dialog?.setAttribute('aria-busy', 'false');
@@ -163,7 +164,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   function loadDetail(person) {
     const personId = person?.entityId;
     if (!personId) return Promise.resolve();
-    if (dialog?.open && detailInFlight?.personId === personId && detailInFlight.request === detailRequest) {
+    if (dialog?.open && detailInFlight?.personId === personId && detailInFlight.request.isCurrent()) {
       markCurrentRows();
       return detailInFlight.promise;
     }
@@ -171,7 +172,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       markCurrentRows();
       return Promise.resolve();
     }
-    const request = ++detailRequest;
+    const request = detailSession.begin('person-detail');
     detailDisplayedId = null;
     const status = documentRef.querySelector('#person-detail-load-status');
     renderDetail(person);
@@ -184,20 +185,22 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     const promise = (async () => {
       try {
         const detail = await onLoadPerson?.(personId, person) ?? person;
-        if (request !== detailRequest || selectedId !== personId || !dialog?.open) return;
+        if (!request.isCurrent() || selectedId !== personId || !dialog?.open) return;
         // Preserve the tab, timeline sort, and focus choice made while detail loads.
         const viewState = captureDetailViewState();
         renderDetail(detail);
         restoreDetailViewState(viewState);
         detailDisplayedId = personId;
+        request.complete();
         if (status) status.hidden = true;
-      } catch {
-        if (request === detailRequest) {
+      } catch (error) {
+        if (request.isCurrent()) {
+          request.fail(error);
           detailDisplayedId = personId;
           if (status) syncLocalFeedback(status, '完整资料暂时未能加载，先显示已收录摘要。');
         }
       } finally {
-        if (request === detailRequest) dialog?.setAttribute('aria-busy', 'false');
+        if (request.isCurrent()) dialog?.setAttribute('aria-busy', 'false');
         if (detailInFlight?.request === request) detailInFlight = null;
       }
     })();
@@ -605,7 +608,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   });
 
   return Object.freeze({
-    dispose() { lifetime.dispose(); invalidateDetailRequest(); list.replaceChildren(); },
+    suspend() { invalidateDetailRequest(); },
+    dispose() { detailSession.dispose(); lifetime.dispose(); invalidateDetailRequest(); list.replaceChildren(); },
     render({ persons = [], totalPersonCount = null, selectedPersonId = null, activityAxis: nextActivityAxis = null } = {}) {
       model = Array.isArray(persons) ? persons : [];
       populationCount = totalPersonCount;

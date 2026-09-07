@@ -1,3 +1,4 @@
+import { createWorkspaceSession } from '../lib/workspace-session.js';
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { reconcileKeyedChildren } from '../lib/keyed-dom.js';
@@ -592,16 +593,17 @@ export function createSelectionView({
   }
 
   function requestRemotePage() {
-    const generation = ++hydrationGeneration;
+    const generation = hydrationSession.begin('result-page');
     remotePagePending = true;
     elements.grid.setAttribute('aria-busy', 'true');
     elements.grid.inert = true;
     elements.selectCurrentPage.disabled = true;
     elements.pageInput.value = String(pageIndex + 1);
-    Promise.resolve().then(() => onPageRequest(pageIndex + 1)).then(success => {
+    Promise.resolve().then(() => generation.isCurrent() ? onPageRequest(pageIndex + 1) : undefined).then(success => {
       if (success === false) throw new Error('page request did not complete');
     }).catch(error => {
-      if (generation !== hydrationGeneration) return;
+      if (!generation.isCurrent()) return;
+      generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
       setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
       const retry = documentRef.createElement('button');
@@ -647,14 +649,14 @@ export function createSelectionView({
     setPage(requested - 1);
   });
 
-  let hydrationGeneration = 0;
+  const hydrationSession = createWorkspaceSession();
   let hydratedInputs = null, hydratedPage = null;
   function renderLatest() {
     // Display settings may change while the next page is in flight. They
     // must not relabel the previous page's cards as the requested new page.
     if (remotePagePending) return;
-    if (prepareWorks === null || latestModel === null) return renderLatestReady();
-    const generation = ++hydrationGeneration;
+    const generation = hydrationSession.begin('result-page');
+    if (prepareWorks === null || latestModel === null) { generation.complete(); return renderLatestReady(); }
     const model = latestModel;
     const pages = selectionPages(model.page?.total ?? model.works.length);
     pageIndex = Math.min(pageIndex, pages.length - 1);
@@ -669,13 +671,15 @@ export function createSelectionView({
     elements.selectCurrentPage.disabled = true;
     setListState({status:elements.listState,state:'loading',message:'正在载入作品资料…'});
     return Promise.resolve(prepareWorks(inputs)).then(works => {
-      if (generation !== hydrationGeneration || latestModel !== model) return;
+      if (!generation.isCurrent() || latestModel !== model) return;
       hydratedInputs=inputs;hydratedPage=works;
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
       renderLatestReady(works);
+      generation.complete({ empty: works.length === 0 });
     }).catch(error => {
-      if (generation !== hydrationGeneration) return;
+      if (!generation.isCurrent()) return;
+      generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
       setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
       const retry = documentRef.createElement('button');
@@ -883,6 +887,14 @@ export function createSelectionView({
       selectionModeActive = latestModel.selectionMode;
       latestCoverUrls = coverUrls;
       return renderLatest();
+    },
+
+    // Keep pagination/model ownership; only pending visual updates are suspended.
+    suspend() {
+      hydrationSession.suspend();
+      remotePagePending = false;
+      elements.grid.setAttribute('aria-busy', 'false');
+      elements.grid.inert = false;
     },
 
     captureScroll() {

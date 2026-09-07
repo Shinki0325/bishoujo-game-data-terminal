@@ -1,3 +1,4 @@
+import { createWorkspaceSession } from './lib/workspace-session.js';
 // Small home shell: the data workspace is loaded only for a route or a search.
 import { createActionIcon } from './lib/action-icons.js';
 import { createCommandSearch } from './lib/galpedia-command-search.js';
@@ -34,7 +35,9 @@ let runtimeFailed = false;
 let landing;
 function finishLanding() { landing?.dispose();landing=null; }
 let directoryController;
-let routeRequest = 0;
+const routeSession = createWorkspaceSession();
+const helpSession = createWorkspaceSession();
+const focusSession = createWorkspaceSession();
 const retryLoading = document.createElement('button');
 retryLoading.type = 'button'; retryLoading.textContent = '重试'; retryLoading.hidden = true;
 retryLoading.className = 'toolbar-button toolbar-button-neutral';
@@ -100,12 +103,14 @@ for (const [id, iconName] of [['mode-selection', 'library'], ['mode-company', 'b
 
 function isHome() { return !location.hash || location.hash === '#home'; }
 function syncHome() {
+  if (focusSession.inspect().key !== location.hash) focusSession.suspend();
+  helpSession.suspend();
   const active = isHome();
   root.dataset.home = String(active);
   home.hidden = !active;
   document.querySelector('#workspace').inert = active;
   if (active) {
-    routeRequest += 1;
+    routeSession.suspend();
     directoryController?.suspend();
     runtimeTicket?.finish(); runtimeTicket = null;
     clearTimeout(statusRevealTimer); status.hidden = true;
@@ -130,7 +135,7 @@ paintTheme();
 
 async function ensureRuntime() {
   if (!runtimePromise) {
-    routeRequest += 1;
+    routeSession.suspend();
     directoryController?.dispose(); directoryController = null;
     retryLoading.hidden = true;
     prepareLoadingRegion();
@@ -153,15 +158,15 @@ async function ensureRuntime() {
       : import('./lib/chronicle-dial.js?v=chronicle-dial-0.1.2').catch(() => null);
     runtimePromise = dialReady.then(() => {
       createRuntimeLoading();
-      if (runtimeLoading) {
+      if (runtimeLoading && !isHome()) {
         status.hidden = true;
         runtimeTicket = runtimeLoading.begin('正在准备资料库…');
         clearTimeout(statusRevealTimer);
         statusRevealTimer = setTimeout(() => {
           statusRevealTimer = null;
-          if (runtimeTicket && runtimeLoading.isActive && !root.dataset.workbenchPreview) status.hidden = false;
+          if (!isHome() && runtimeTicket && runtimeLoading.isActive && !root.dataset.workbenchPreview) status.hidden = false;
         }, dialRevealDelay);
-      } else if (statusText) {
+      } else if (!isHome() && statusText) {
         status.hidden = false;
         statusText.classList.remove('visually-hidden');
         statusText.textContent = '正在准备资料库…';
@@ -188,7 +193,7 @@ async function ensureRuntime() {
       finishLanding();
       clearTimeout(statusRevealTimer);
       statusRevealTimer = null;
-      status.hidden = false;
+      status.hidden = isHome();
       runtimeTicket?.fail('资料库暂时未能加载，请刷新页面重试。');
       runtimeTicket = null;
       if (!runtimeLoading && statusText) statusText.textContent = '资料库暂时未能加载，请刷新页面重试。';
@@ -206,7 +211,7 @@ async function ensureRoute() {
   // Detail/editing routes still use the existing complete workbench. Directory
   // browsing is independent and never imports that workbench speculatively.
   if (!/^#companies(?:[/?]|$)/u.test(hash) && !/^#persons(?:\?|$)/u.test(hash)) return ensureRuntime();
-  const request = ++routeRequest;
+  const request = routeSession.begin(hash);
   retryLoading.hidden = true;
   if (createRuntimeLoading()) {
     status.hidden = false;
@@ -214,13 +219,15 @@ async function ensureRoute() {
   } else { status.hidden = false; statusText.classList.remove('visually-hidden'); statusText.textContent = '正在载入资料…'; }
   try {
     const { createDirectoryWorkspaces } = await import('./lib/directory-workspaces.js');
-    if (request !== routeRequest || runtimePromise) return;
+    if (!request.isCurrent() || runtimePromise) return;
     directoryController ??= createDirectoryWorkspaces({ navigate, activateFull: ensureRuntime });
     await directoryController.show(hash);
-    if (request !== routeRequest || runtimePromise) return;
+    if (!request.isCurrent() || runtimePromise) return;
+    request.complete();
     runtimeTicket?.finish(); runtimeTicket = null; status.hidden = true;
   } catch (error) {
-    if (request !== routeRequest || runtimePromise) return;
+    if (!request.isCurrent() || runtimePromise) return;
+    request.fail(error);
     runtimeTicket?.fail('本栏目暂时未能加载，请重试。'); runtimeTicket = null;
     status.hidden = false; statusText.classList.remove('visually-hidden');
     statusText.textContent = '本栏目暂时未能加载，请重试。'; retryLoading.hidden = false;
@@ -273,40 +280,43 @@ window.addEventListener('popstate', () => { syncHome(); if (!isHome()) void ensu
 
 let handbook;
 let handbookLoad;
-let helpRequest = 0;
+
 const helpTargets = { 'mobile-help-button': 'works.mobile', 'ranking-help-button': 'tier.overview', 'ranking-coachmark-help': 'tier.overview', 'ranking-immersive-help': 'tier.live', 'company-help-button': 'companies.overview' };
 document.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button || button.disabled) return;
   if (button.id !== 'site-info-button' && !helpTargets[button.id] && !button.dataset.helpArticle) return;
   event.preventDefault(); event.stopImmediatePropagation();
-  const token = ++helpRequest;
+  const token = helpSession.begin('handbook');
   handbookLoad ??= import('./lib/galpedia-help.js').then(module => { handbook = module.createHelpDrawer(); return { handbook, context: module.currentHelpArticle }; }).catch(error => { handbookLoad = null; throw error; });
   void handbookLoad.then(({ handbook, context }) => {
-    if (token !== helpRequest) return;
+    if (!token.isCurrent()) return;
     handbook.open(button.dataset.helpArticle || helpTargets[button.id] || context(), button);
-  }).catch(() => { status.hidden = false; if (statusText) statusText.textContent = '手册暂时无法加载，请重试。'; });
+    token.complete();
+  }).catch(error => { if (!token.fail(error)) return; status.hidden = false; if (statusText) statusText.textContent = '手册暂时无法加载，请重试。'; });
 }, true);
-let focusObserver;
-let focusTimeout;
 function focusDestination(route) {
-  focusObserver?.disconnect(); clearTimeout(focusTimeout);
+  if (location.hash !== route) return;
+  const ticket = focusSession.begin(route);
+  let focusObserver;
+  let focusTimeout;
   const selector = route.startsWith('#work/') ? '#work-details[open] h2' : route.startsWith('#persons/person/') ? '#person-detail-dialog[open] h2, #person-detail h2' : route.startsWith('#companies/company/') ? '#company-detail h2' : '#workspace > section:not([hidden]) h1, #workspace > section:not([hidden]) h2';
   const focus = () => {
-    if (location.hash !== route) return false;
+    if (!ticket.isCurrent() || location.hash !== route) return false;
     const heading = [...document.querySelectorAll(selector)].find(node => node.getClientRects().length && !node.closest('[hidden], [inert]'));
     if (!heading) return false;
-    heading.tabIndex = -1; heading.focus({ preventScroll: true }); focusObserver?.disconnect(); clearTimeout(focusTimeout); return true;
+    heading.tabIndex = -1; heading.focus({ preventScroll: true }); focusObserver?.disconnect(); clearTimeout(focusTimeout); ticket.complete(); return true;
   };
   if (focus()) return;
   focusObserver = new MutationObserver(focus); focusObserver.observe(document.querySelector('#workspace'), { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'open'] });
   // Details dialogs live outside workspace.
   for (const node of document.querySelectorAll('dialog')) focusObserver.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
-  focusTimeout = setTimeout(() => { focusObserver?.disconnect(); }, 15000);
+  ticket.scope.add(() => { focusObserver.disconnect(); clearTimeout(focusTimeout); });
+  focusTimeout = setTimeout(() => { focusObserver.disconnect(); }, 15000);
 }
 createCommandSearch({
   ensureRuntime,
-  beforeOpen: () => { helpRequest += 1; handbook?.close({ restore: false, immediate: true }); },
+  beforeOpen: () => { helpSession.suspend(); handbook?.close({ restore: false, immediate: true }); },
   navigate: route => { navigate(route); void ensureRuntime().then(() => focusDestination(route)).catch(() => {}); }
 });
 fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {

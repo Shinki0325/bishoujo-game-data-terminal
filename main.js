@@ -14,6 +14,7 @@ import { mergeVndbAdmissionsIntoFixture } from './lib/catalog-admissions.js';
 import { loadRuntimeSource } from './lib/runtime-source-cache.js';
 import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
 import { createLazyResource } from './lib/lazy-resource.js';
+import { createWorkspaceSession } from './lib/workspace-session.js';
 import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
@@ -1627,7 +1628,8 @@ async function initialize() {
   let rankingWorkspaceVisible = false;
   let renderedFilterKey = null;
   let lastRenderedModel = null;
-  let renderGeneration = 0;
+  const renderSession = createWorkspaceSession();
+  let renderTicket = null;
   let replacementWork = null;
   let companyDirectoryOpen = false;
   let personDirectoryOpen = false;
@@ -1661,12 +1663,12 @@ async function initialize() {
   let compareSortDirection = 'desc';
   const MIN_COMPARE_WORKS = 2;
   const MAX_COMPARE_WORKS = 20;
-  let compareRenderRequest = 0;
+  const compareRenderSession = createWorkspaceSession();
   const compareCreditsCache = new Map();
   const compareCreditsLoaded = new Set();
   let detailsVersionShelfExpanded = false;
-  let workDetailCreditsRequest = 0;
-  let detailViewsRequest = 0;
+  const workDetailCreditsSession = createWorkspaceSession();
+  const detailViewsSession = createWorkspaceSession();
   const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
   let applyingUiLocation = false;
   let locationScrollTimer = null;
@@ -1690,7 +1692,7 @@ async function initialize() {
   });
 
   function loadDetailViewCount(work) {
-    const request = ++detailViewsRequest;
+    const request = detailViewsSession.begin('work-statistics');
     elements.detailsViewsRow.hidden = true;
     elements.detailsViews.textContent = '加载中…';
     let endpoint;
@@ -1705,7 +1707,7 @@ async function initialize() {
     });
     if (viewCountMode === 'local-preview') {
       if (
-        request !== detailViewsRequest
+        !request.isCurrent()
         || currentWorkDetailId !== work.workId
         || !elements.detailsDialog.open
       ) return;
@@ -1719,14 +1721,14 @@ async function initialize() {
     endpoint.searchParams.set('entityType', 'work');
     endpoint.searchParams.set('entityId', String(work.workId));
     elements.detailsViewsRow.hidden = false;
-    void fetch(endpoint, { cache: 'default', credentials: 'omit' })
+    void fetch(endpoint, { cache: 'default', credentials: 'omit', signal: request.signal })
       .then(async response => {
         if (!response.ok) throw new Error(`public stats rejected: ${response.status}`);
         return response.json();
       })
       .then(result => {
         if (
-          request !== detailViewsRequest
+          !request.isCurrent()
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
           || result?.entityType !== 'work'
@@ -1737,7 +1739,7 @@ async function initialize() {
         elements.detailsViews.textContent = `${result.views.toLocaleString('en-US')} 次`;
       })
       .catch(() => {
-        if (request !== detailViewsRequest || currentWorkDetailId !== work.workId) return;
+        if (!request.isCurrent() || currentWorkDetailId !== work.workId) return;
         elements.detailsViewsRow.hidden = true;
       });
   }
@@ -2115,7 +2117,7 @@ async function initialize() {
   function renderWorkCompare() {
     const works = compareWorkIds.map(id => worksById.get(id)).filter(Boolean);
     if (works.length < MIN_COMPARE_WORKS) return;
-    const request = ++compareRenderRequest;
+    const request = compareRenderSession.begin('compare');
     elements.workCompareDialogSubtitle.textContent = works.length === 2
       ? '两部作品的评分与核心资料并列展示'
       : `${works.length} 部作品 · 当前列表仅展示核心比较字段`;
@@ -2388,11 +2390,11 @@ async function initialize() {
       const pendingCredits = works.filter(work => !compareCreditsLoaded.has(work.workId));
       if (pendingCredits.length > 0) {
         void Promise.all(pendingCredits.map(loadCompareCredits)).then(() => {
-          if (request === compareRenderRequest && elements.workCompareDialog.open) renderWorkCompare();
+          if (request.isCurrent() && elements.workCompareDialog.open) renderWorkCompare();
         });
       }
     }
-    if (request !== compareRenderRequest) return;
+    if (!request.isCurrent()) return;
   }
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
@@ -2403,6 +2405,7 @@ async function initialize() {
   elements.companyRankingClose.textContent = '返回会社';
 
   function openCompanyDirectory(companyId = null, { push = true, interaction = null } = {}) {
+    if (push) beginUiNavigation('company-navigation');
     const activeInteraction = interaction ?? (push ? interactionMetrics.begin('company-directory') : null);
     interactionMetrics.stage(activeInteraction, 'debounce-complete');
     interactionMetrics.stage(activeInteraction, 'worker-return');
@@ -2524,15 +2527,15 @@ async function initialize() {
   }
 
   const rankingPreloader = createRankingPreloader({ load: preloadImage, concurrency: 4 });
-  let rankingPreloadGeneration = 0;
+  const rankingPreloadSession = createWorkspaceSession();
 
   function cancelRankingPreload() {
-    rankingPreloadGeneration += 1;
+    rankingPreloadSession.suspend();
     rankingPreloader.cancel();
   }
 
   async function refreshRankingPreload(rankingModel) {
-    const generation = ++rankingPreloadGeneration;
+    const generation = rankingPreloadSession.begin('ranking-media');
     const visibleWorkIds = new Set(rankingView.visibleWorkIds());
     const selectedWorks = [
       ...rankingModel.tiers.flatMap(tier => tier.works),
@@ -2543,10 +2546,11 @@ async function initialize() {
       visible: visibleWorkIds.has(work.workId)
     })));
     if (
-      generation !== rankingPreloadGeneration
+      !generation.isCurrent()
       || lastRenderedModel?.state.workspaceMode !== 'ranking'
     ) return false;
     rankingPreloader.replace(entries);
+    generation.complete();
     return true;
   }
 
@@ -2938,10 +2942,10 @@ async function initialize() {
     async onToggleCurrentResults(workIds) {
       if (workIds === null) {
         const revision = lastResultPage?.resultRevision;
-        const generation = renderGeneration;
+        const generation = renderTicket;
         try {
           workIds = await filterWorkerClient.resultIds(revision);
-          if (lastResultPage?.resultRevision !== revision || generation !== renderGeneration) return;
+          if (lastResultPage?.resultRevision !== revision || !generation.isCurrent()) return;
         } catch (error) {
           announce('结果已更新，请重新选择。', 'warning');
           return;
@@ -3305,10 +3309,10 @@ async function initialize() {
     personDirectoryView.render({ persons, totalPersonCount: personRuntimeState.length, selectedPersonId: selectedPersonId ?? null, activityAxis: personActivityAxis });
   }
 
-  let companyRenderGeneration = 0;
+  const companyRenderSession = createWorkspaceSession();
   let loadedCompanyWorks = null;
   async function renderCompanyDirectory() {
-    const generation = ++companyRenderGeneration;
+    const generation = companyRenderSession.begin('company-detail');
     if (elements.companySearch.value !== companyQuery) elements.companySearch.value = companyQuery;
     localSearchClears.forEach(sync => sync());
     const [sortKey, direction] = companySort.split('-');
@@ -3348,14 +3352,15 @@ async function initialize() {
           // the new company while its IDs/cards are still being fetched.
           renderDetail([], 'loading');
           const ids=await filterWorkerClient.companyWorkIds(selected.companyId,{sortKey:companyDetailSortKey,direction:companyDetailSortDirection});
-          if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+          if(!generation.isCurrent()||!companyDirectoryOpen)return;
           const rows=await workData.get(ids);
-          if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+          if(!generation.isCurrent()||!companyDirectoryOpen)return;
           selectedWorks=ids.map(id=>rows.get(id));
           loadedCompanyWorks={key,works:selectedWorks};
         }
       } catch(error) {
-        if(generation!==companyRenderGeneration||!companyDirectoryOpen)return;
+        if(!generation.isCurrent()||!companyDirectoryOpen)return;
+        generation.fail(error);
         renderDetail([], 'error');
         announce('会社作品加载失败，可在详情中重试。','error');
         console.warn('company works request failed',error);
@@ -3363,6 +3368,7 @@ async function initialize() {
       }
     } else if(selected) selectedWorks=worksForCompany(companyDirectory,selected.companyId,{sortKey:companyDetailSortKey,direction:companyDetailSortDirection});
     renderDetail(selectedWorks);
+    generation.complete({ empty: companies.length === 0 });
   }
 
   function companyRankingItems() {
@@ -3972,7 +3978,17 @@ async function initialize() {
     }
   }
 
+  let activeWorkspaceKey = null;
   function renderWorkspace(model) {
+    const key = personDirectoryOpen ? 'persons' : companyDirectoryOpen ? 'companies' : model.state.workspaceMode;
+    if (key !== activeWorkspaceKey) {
+      activeWorkspaceKey = key;
+      companyRenderSession.suspend();
+      detailHydrationSession.suspend();
+      cancelRankingPreload();
+      if (key !== 'selection') selectionView.suspend();
+      if (key !== 'persons') personDirectoryView?.suspend?.();
+    }
     if (personDirectoryOpen) {
       rankingWorkspaceVisible = false;
       closeMobileRankingCandidates();
@@ -4192,7 +4208,8 @@ async function initialize() {
 
   let lastResultPage = null;
   async function render(visibleBrands = [], interaction = null) {
-    const generation = ++renderGeneration;
+    const generation = renderSession.begin('workbench-render');
+    renderTicket = generation;
     lastResultPage = null;
     captureWorkspaceScroll();
     const state = controller.inspectState();
@@ -4201,13 +4218,13 @@ async function initialize() {
     try {
       if (workData && !preparedWorkbench.workerOwned) {
         const hydrated = await workData.get([...new Set([...state.selectedWorkIds, ...compareWorkIds])]);
-        if (generation !== renderGeneration) return false;
+        if (!generation.isCurrent()) return false;
         activeHydratedWorks = hydrated;
       }
       const needsFiltering = state.workspaceMode !== 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
       if (state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen) await ensureRankingView();
       if (needsFiltering) await ensureFilterWorker();
-      if (generation !== renderGeneration) {
+      if (!generation.isCurrent()) {
         interactionMetrics.cancel(interaction, 'superseded-search-load');
         return false;
       }
@@ -4221,10 +4238,12 @@ async function initialize() {
       }) : { status: 'success', workIds: [], counts: null };
       if (preparedWorkbench.workerOwned && outcome.status !== 'stale') {
         const hydrated=await workData.get([...new Set([...state.selectedWorkIds,...compareWorkIds,...outcome.workIds])]);
-        if(generation!==renderGeneration)return false;
+        if(!generation.isCurrent())return false;
         activeHydratedWorks=hydrated;
       }
     } catch (error) {
+      if (!generation.isCurrent()) return false;
+      generation.fail(error);
       interactionMetrics.cancel(interaction, 'worker-error');
       announce(state.workspaceMode === 'ranking' ? '排榜暂时未能加载，请重新进入排榜重试。' : '筛选计算失败，可继续调整条件重试。', 'error');
       console.error(error);
@@ -4234,7 +4253,7 @@ async function initialize() {
       interactionMetrics.cancel(interaction, 'stale-query');
       return false;
     }
-    if (generation !== renderGeneration) {
+    if (!generation.isCurrent()) {
       interactionMetrics.cancel(interaction, 'superseded-render');
       return false;
     }
@@ -4279,7 +4298,7 @@ async function initialize() {
     } else if (!companyDirectoryOpen && !ranking) {
       renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks));
     }
-    if (generation !== renderGeneration) {
+    if (!generation.isCurrent()) {
       interactionMetrics.cancel(interaction, 'superseded-media');
       return false;
     }
@@ -4333,7 +4352,7 @@ async function initialize() {
         compareMode,
         comparedWorkIds: compareWorkIds
       }, renderCoverUrls);
-      if (generation !== renderGeneration) return false;
+      if (!generation.isCurrent()) return false;
       interactionMetrics.stage(interaction, 'dom-updated');
     }
     const nextFilterKey = filterRenderKey(model, visibleBrands);
@@ -4360,9 +4379,10 @@ async function initialize() {
     lastRenderedModel = model;
     renderKeeperGuidance();
     if (rankingModel !== null && rankingSubject === 'work') {
-      void refreshRankingPreload(rankingModel);
+      void refreshRankingPreload(rankingModel).catch(error => console.warn('ranking media preload unavailable', error));
     }
     else cancelRankingPreload();
+    generation.complete({ empty: !ranking && !personDirectoryOpen && !companyDirectoryOpen && resultTotal === 0 });
     interactionMetrics.completeAfterFrame(interaction);
     return true;
   }
@@ -4798,22 +4818,26 @@ async function initialize() {
     elements.detailsVersionList.replaceChildren(...rows);
   }
 
-  let detailHydrationSequence = 0;
+  const detailHydrationSession = createWorkspaceSession();
   async function openWorkDetails(work, options = {}) {
-    const sequence = ++detailHydrationSequence;
+    const sequence = detailHydrationSession.begin('work-detail');
     const workspace = controller.inspectState().workspaceMode;
     const directories = `${personDirectoryOpen}:${companyDirectoryOpen}`;
     const home = document.documentElement.dataset.home;
     try {
       if (workData) [work] = await workData.hydrate([work]);
+      if (!sequence.isCurrent()) return;
       if (preparedWorkbench.workerOwned) {
         const rows=await filterWorkerClient.workMetadata([work.workId],'aliases');
         if(rows.length!==1)throw new Error('作品名称资料缺失');
         options={...options,aliases:new Map(rows.map(row=>[row.workId,row.aliases]))};
       }
-      if (sequence !== detailHydrationSequence || workspace !== controller.inspectState().workspaceMode || directories !== `${personDirectoryOpen}:${companyDirectoryOpen}` || home !== document.documentElement.dataset.home) return;
+      if (!sequence.isCurrent() || workspace !== controller.inspectState().workspaceMode || directories !== `${personDirectoryOpen}:${companyDirectoryOpen}` || home !== document.documentElement.dataset.home) return;
+      sequence.complete();
       return showWorkDetailsReady(work, options);
     } catch (error) {
+      if (!sequence.isCurrent()) return;
+      sequence.fail(error);
       announce('作品详情资料加载失败，请再次打开重试。', 'error');
       console.error(error);
     }
@@ -4829,7 +4853,7 @@ async function initialize() {
     }
     currentWorkDetailId = work.workId;
     telemetry.recordWorkOpen(work.workId);
-    const request = ++workDetailCreditsRequest;
+    const request = workDetailCreditsSession.begin('work-credits');
     workDetailCreditsView.renderLoading();
     showDetails(work, filterById, aliases, openCompanyDirectory, projectEntityRuntime, {
       coverSources: coverSourcesForWork,
@@ -4859,7 +4883,7 @@ async function initialize() {
           workDetailCreditsLoader.load(work.workId), ensureProjectEntityRuntime()
         ]);
         if (
-          request !== workDetailCreditsRequest
+          !request.isCurrent()
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
         ) return;
@@ -4890,7 +4914,7 @@ async function initialize() {
             loadProjectIdentityCrosswalk()
           ]);
           if (
-            request !== workDetailCreditsRequest
+            !request.isCurrent()
             || currentWorkDetailId !== work.workId
             || !elements.detailsDialog.open
           ) return;
@@ -4910,13 +4934,13 @@ async function initialize() {
         }
       } catch (error) {
         if (
-          request !== workDetailCreditsRequest
+          !request.isCurrent()
           || currentWorkDetailId !== work.workId
           || !elements.detailsDialog.open
         ) return;
         console.warn('work-detail credits unavailable; keeping the base details usable', error);
         workDetailCreditsView.renderError(() => {
-          if (currentWorkDetailId !== work.workId || request !== workDetailCreditsRequest) return;
+          if (currentWorkDetailId !== work.workId || !request.isCurrent()) return;
           workDetailCreditsView.renderLoading();
           void loadCredits();
         });
@@ -4974,12 +4998,22 @@ async function initialize() {
     return true;
   }
 
-  let uiLocationGeneration = 0;
-  async function applyUiLocation() {
-    const generation = ++uiLocationGeneration;
+  const uiLocationSession = createWorkspaceSession();
+  function beginUiNavigation(key) {
+    const ticket = uiLocationSession.begin(key);
     applyingUiLocation = false;
+    // Invalidate UI observers before any asynchronous route preparation.
+    renderSession.suspend();
+    companyRenderSession.suspend();
+    detailHydrationSession.suspend();
+    selectionView.suspend();
+    cancelRankingPreload();
+    return ticket;
+  }
+  async function applyUiLocation() {
+    const generation = beginUiNavigation('location');
     const sourceHash = window.location.hash;
-    const isCurrentLocation = () => generation === uiLocationGeneration && window.location.hash === sourceHash;
+    const isCurrentLocation = () => generation.isCurrent() && window.location.hash === sourceHash;
     if (parseSelectionShare(window.location) !== null) return false;
     if (document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home')) {
       currentWorkDetailId = null;
@@ -5064,16 +5098,18 @@ async function initialize() {
       }
       return true;
     } finally {
-      if (generation === uiLocationGeneration) applyingUiLocation = false;
+      if (generation.isCurrent()) applyingUiLocation = false;
     }
   }
 
   window.addEventListener('popstate', () => { void applyUiLocation(); });
   window.addEventListener('hashchange', () => { void applyUiLocation(); });
   elements.detailsDialog.addEventListener('close', () => {
-    detailHydrationSequence += 1;
+    if (elements.detailsDialog.open) return; // Ignore a queued close from the previous visit.
+    detailViewsSession.suspend();
+    detailHydrationSession.suspend();
     unlockDetailsPageScroll();
-    workDetailCreditsRequest += 1;
+    workDetailCreditsSession.suspend();
     workDetailCreditsView.clear();
     const returnFocus = detailsReturnFocus;
     detailsReturnFocus = null;
@@ -5084,7 +5120,9 @@ async function initialize() {
     if (returnPersonId !== null && returnPersonId !== undefined) {
       personDirectoryOpen = true;
       selectedPersonId = returnPersonId;
+      const returnTicket = beginUiNavigation('person-return');
       void ensurePersonRuntime().then(() => {
+        if (!returnTicket.isCurrent() || !personDirectoryOpen || selectedPersonId !== returnPersonId) return;
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         personDirectoryView?.setSelected?.(returnPersonId);
         replaceUiLocation();
@@ -5096,6 +5134,9 @@ async function initialize() {
   elements.detailsDialog.addEventListener('toggle', () => {
     if (elements.detailsDialog.open) lockDetailsPageScroll();
     else unlockDetailsPageScroll();
+  });
+  elements.workCompareDialog.addEventListener('close', () => {
+    if (!elements.workCompareDialog.open) compareRenderSession.suspend();
   });
   elements.workCompareDialog.addEventListener('toggle', () => {
     document.documentElement.classList.toggle('work-compare-open', elements.workCompareDialog.open);
@@ -5182,6 +5223,7 @@ async function initialize() {
   });
 
   elements.modeSelection.addEventListener('click', () => {
+    beginUiNavigation('modeSelection');
     closeMobileRankingCandidates();
     companyDirectoryOpen = false;
     personDirectoryOpen = false;
@@ -5197,6 +5239,7 @@ async function initialize() {
     return result;
   });
   elements.modeRanking.addEventListener('click', () => {
+    beginUiNavigation('modeRanking');
     companyDirectoryOpen = false;
     personDirectoryOpen = false;
     selectedPersonId = null;
@@ -5209,6 +5252,7 @@ async function initialize() {
     return result;
   });
   elements.modeCompany.addEventListener('click', () => {
+    const navigation = beginUiNavigation('modeCompany');
     const interaction = interactionMetrics.begin('company-directory');
     closeMobileRankingCandidates();
     closeToolbarMenus();
@@ -5217,8 +5261,10 @@ async function initialize() {
     companySelectionMode = false;
     personDetailReturnId = null;
     const open = () => {
+      if (!navigation.isCurrent()) return;
       if (lastRenderedModel === null) {
-        window.setTimeout(open, 0);
+        const timer = window.setTimeout(open, 0);
+        navigation.scope.add(() => window.clearTimeout(timer));
         return;
       }
       openCompanyDirectory(null, { interaction });
@@ -5226,6 +5272,7 @@ async function initialize() {
     open();
   });
   elements.modePerson.addEventListener('click', () => {
+    const navigation = beginUiNavigation('modePerson');
     const interaction = interactionMetrics.begin('person-directory');
     closeMobileRankingCandidates();
     closeToolbarMenus();
@@ -5244,12 +5291,14 @@ async function initialize() {
       renderPersonDirectory();
       try {
         await ensurePersonRuntime();
+        if (!navigation.isCurrent() || !personDirectoryOpen) return;
         personDirectoryView.setRoleFilter?.(personRole);
         renderPersonDirectory();
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         replaceUiLocation();
         interactionMetrics.stage(interaction, 'person-ready');
       } catch (error) {
+        if (!navigation.fail(error)) return;
         announce('人物目录加载失败，请稍后重试。', 'error');
         console.error(error);
       }
@@ -5257,6 +5306,7 @@ async function initialize() {
     void open();
   });
   elements.companyBack.addEventListener('click', () => {
+    beginUiNavigation('companyBack');
     companyDirectoryOpen = false;
     rankingSubject = 'work';
     if (lastRenderedModel !== null) renderWorkspace(lastRenderedModel);
@@ -5264,6 +5314,7 @@ async function initialize() {
     pushUiLocation();
   });
   elements.companyRankingToggle.addEventListener('click', () => {
+    beginUiNavigation('companyRankingToggle');
     companyDirectoryOpen = false;
     rankingSubject = 'company';
     const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
@@ -5348,8 +5399,10 @@ async function initialize() {
     setWorkSelectionMode(false);
     companySelectionMode = false;
     const open = () => {
+      if (!navigation.isCurrent()) return;
       if (lastRenderedModel === null) {
-        window.setTimeout(open, 0);
+        const timer = window.setTimeout(open, 0);
+        navigation.scope.add(() => window.clearTimeout(timer));
         return;
       }
       openCompanyDirectory();
