@@ -558,7 +558,7 @@ html.galpedia[data-theme] .filter-heading-actions > .icon-button {
 }
 
 /* Library cards only: ranking artwork and user tier colours stay untouched. */
-html.galpedia #catalog-grid.catalog-grid > .selection-card {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card {
   height: auto;
   aspect-ratio: auto;
   min-height: 0;
@@ -570,18 +570,18 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card {
   box-shadow: none;
 }
 
-html.galpedia #catalog-grid > .selection-card:hover,
-html.galpedia #catalog-grid > .selection-card:focus-within {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) > .selection-card:hover,
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) > .selection-card:focus-within {
   border-color: var(--accent);
   box-shadow: 0 3px 10px rgb(37 32 48 / 10%);
 }
 
-html.galpedia #catalog-grid > .selection-card.is-selected {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) > .selection-card.is-selected {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-cover {
   position: relative;
   inset: auto;
   flex: 0 0 var(--selection-card-size);
@@ -592,7 +592,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover
   background: var(--bg);
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover > img {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-cover > img {
   inset: 0;
   width: 100%;
   height: 100%;
@@ -601,7 +601,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-cover
   background: var(--bg);
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-overlay {
   position: relative;
   inset: auto;
   flex: 1 0 auto;
@@ -615,7 +615,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overl
   border: 0;
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-title {
   flex: 0 0 auto;
   display: -webkit-box;
   min-height: 36px;
@@ -631,7 +631,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title
   color: var(--text);
 }
 
-html.galpedia #catalog-grid .selection-card-metadata {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-metadata {
   display: flex;
   align-items: baseline;
   gap: 5px;
@@ -641,7 +641,7 @@ html.galpedia #catalog-grid .selection-card-metadata {
   color: var(--text-muted);
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-company {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-company {
   display: block;
   flex: 0 1 auto;
   min-width: 0;
@@ -652,7 +652,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-compa
   color: inherit;
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-year {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-year {
   position: static;
   flex: 0 0 auto;
   padding: 0;
@@ -665,12 +665,12 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-year 
   font-weight: 400;
 }
 
-html.galpedia #catalog-grid .selection-card-company + .selection-card-year::before {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-company + .selection-card-year::before {
   content: '·';
   margin-right: 5px;
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-lines {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-rating-lines {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -678,7 +678,7 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-ratin
   margin-top: auto;
 }
 
-html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-line {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-rating-line {
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
@@ -690,29 +690,29 @@ html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-ratin
   line-height: 16px;
 }
 
-html.galpedia #catalog-grid .selection-card-rating-source {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-rating-source {
   color: var(--text-muted);
   font-size: 10px;
   font-weight: 400;
 }
 
-html.galpedia #catalog-grid .selection-card-rating-value {
+html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-rating-value {
   font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 899px) {
-  html.galpedia #catalog-grid.catalog-grid > .selection-card {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card {
     padding-bottom: 27px;
   }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-overlay {
     flex: 0 0 auto;
     gap: 0;
     padding: 7px 6px 0;
   }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-title {
     display: block;
     min-height: 17px;
     font-size: 11px;
@@ -721,15 +721,15 @@ html.galpedia #catalog-grid .selection-card-rating-value {
     text-overflow: ellipsis;
   }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-company,
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-rating-lines {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-company,
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-rating-lines {
     display: none;
   }
 
-  html.galpedia #catalog-grid .selection-card-metadata { display: contents; }
-  html.galpedia #catalog-grid .selection-card-company + .selection-card-year::before { content: none; }
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-metadata { display: contents; }
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid) .selection-card-company + .selection-card-year::before { content: none; }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-year {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-year {
     position: absolute;
     inset: auto 6px 7px auto;
     font-size: 10px;
@@ -737,9 +737,9 @@ html.galpedia #catalog-grid .selection-card-rating-value {
   }
 
   /* Year is positioned against the card, not against its metadata band. */
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-overlay { position: static; }
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-overlay { position: static; }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-mobile-rating {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-mobile-rating {
     display: inline-flex;
     bottom: 7px;
     left: 6px;
@@ -756,7 +756,7 @@ html.galpedia #catalog-grid .selection-card-rating-value {
     font-weight: 600;
   }
 
-  html.galpedia #catalog-grid.catalog-grid > .selection-card.has-selection-card-year .selection-card-mobile-rating {
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card.has-selection-card-year .selection-card-mobile-rating {
     max-width: calc(100% - 43px);
   }
 }
@@ -823,7 +823,7 @@ html.galpedia #catalog-results .catalog-controls {
   html.galpedia #catalog-results #filter-toggle { grid-column: 1; grid-row: 1; }
   html.galpedia #catalog-results .catalog-controls .select-field { grid-column: 3; grid-row: 1; }
   html.galpedia #catalog-results #sort-direction-toggle { grid-column: 4; grid-row: 1; }
-  html.galpedia #catalog-grid.catalog-grid > .selection-card .selection-card-title { font-size: 13px; line-height: 19px; }
+  html.galpedia :is(#catalog-grid, #workbench-first-page-grid).catalog-grid > .selection-card .selection-card-title { font-size: 13px; line-height: 19px; }
 }
 
 /* Company list/detail cards use the same surface vocabulary without touching

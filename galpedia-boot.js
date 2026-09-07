@@ -30,6 +30,9 @@ document.querySelector('#site-info-button svg').replaceWith(createActionIcon(doc
 const themeKey = 'egs-tier-terminal:theme-v1';
 let runtimePromise;
 let runtimeReady = false;
+let runtimeFailed = false;
+let landing;
+function finishLanding() { landing?.dispose();landing=null; }
 let directoryController;
 let routeRequest = 0;
 const retryLoading = document.createElement('button');
@@ -138,6 +141,13 @@ async function ensureRuntime() {
     void import('./lib/workbench-demand-data.js').then(module=>module.preloadWorkbenchData()).catch(()=>{});
     const mainReady = import('./main.js');
     mainReady.catch(()=>{});
+    void import('./lib/workbench-landing.js').then(module=>{
+      if(runtimeReady||runtimeFailed)return;
+      landing=module.createWorkbenchLanding({isReady:()=>runtimeReady||runtimeFailed,navigate,onVisible:()=>{
+        clearTimeout(statusRevealTimer);runtimeTicket?.finish();runtimeTicket=null;status.hidden=true;
+      }});
+      return landing.show();
+    }).catch(()=>{});
     const dialReady = globalThis.GalpediaDial
       ? Promise.resolve()
       : import('./lib/chronicle-dial.js?v=chronicle-dial-0.1.2').catch(() => null);
@@ -149,7 +159,7 @@ async function ensureRuntime() {
         clearTimeout(statusRevealTimer);
         statusRevealTimer = setTimeout(() => {
           statusRevealTimer = null;
-          if (runtimeTicket && runtimeLoading.isActive) status.hidden = false;
+          if (runtimeTicket && runtimeLoading.isActive && !root.dataset.workbenchPreview) status.hidden = false;
         }, dialRevealDelay);
       } else if (statusText) {
         status.hidden = false;
@@ -160,6 +170,8 @@ async function ensureRuntime() {
     }).then(module => module.ready).then(api => {
       if (!api) throw new Error('runtime unavailable');
       runtimeReady = true;
+      root.dataset.workbenchReady='true';
+      finishLanding();
       const finish = () => {
         clearTimeout(statusRevealTimer);
         statusRevealTimer = null;
@@ -172,6 +184,8 @@ async function ensureRuntime() {
       syncHome();
       return api;
     }).catch(error => {
+      runtimeFailed=true;
+      finishLanding();
       clearTimeout(statusRevealTimer);
       statusRevealTimer = null;
       status.hidden = false;

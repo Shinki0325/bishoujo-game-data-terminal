@@ -160,6 +160,21 @@ function createDebouncedCommit(callback) {
   return schedule;
 }
 
+export function bindTitleQueryInput(input, commit, startInteraction) {
+  let composing=false;
+  const schedule=()=>{
+    commit(input.value,startInteraction('title-search'));
+    if(input.value==='')commit.flush();
+  };
+  input.addEventListener('compositionstart',()=>{composing=true;commit.cancel();});
+  input.addEventListener('compositionend',()=>{composing=false;schedule();});
+  input.addEventListener('input',event=>{if(!composing&&!event.isComposing)schedule();});
+  input.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'||composing||event.isComposing)return;
+    event.preventDefault();commit.flush();
+  });
+}
+
 export function createSelectionCard(documentRef, work, {
   view,
   selected,
@@ -576,9 +591,7 @@ export function createSelectionView({
     titleCommit.flush();
     onFilterChange({ sortKey }, interaction);
   });
-  elements.title.addEventListener('input', () => {
-    titleCommit(elements.title.value, onInteractionStart('title-search'));
-  });
+  bindTitleQueryInput(elements.title,titleCommit,onInteractionStart);
 
   function showPageError(message = '请输入有效的页码') {
     elements.pageError.textContent = message;
@@ -627,6 +640,7 @@ export function createSelectionView({
   });
 
   let hydrationGeneration = 0;
+  let hydratedInputs = null, hydratedPage = null;
   function renderLatest() {
     if (prepareWorks === null || latestModel === null) return renderLatestReady();
     const generation = ++hydrationGeneration;
@@ -634,12 +648,18 @@ export function createSelectionView({
     const pages = selectionPages(model.works.length);
     pageIndex = Math.min(pageIndex, pages.length - 1);
     const page = pages[pageIndex];
+    const inputs=model.works.slice(page.start,page.end);
+    if(hydratedInputs&&inputs.length===hydratedInputs.length&&inputs.every((work,i)=>work===hydratedInputs[i])) {
+      elements.grid.setAttribute('aria-busy','false');elements.grid.inert=false;
+      return renderLatestReady(hydratedPage);
+    }
     elements.grid.setAttribute('aria-busy', 'true');
     elements.grid.inert = true;
     elements.selectCurrentPage.disabled = true;
     setListState({status:elements.listState,state:'loading',message:'正在载入作品资料…'});
-    return Promise.resolve(prepareWorks(model.works.slice(page.start,page.end))).then(works => {
+    return Promise.resolve(prepareWorks(inputs)).then(works => {
       if (generation !== hydrationGeneration || latestModel !== model) return;
+      hydratedInputs=inputs;hydratedPage=works;
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
       renderLatestReady(works);
