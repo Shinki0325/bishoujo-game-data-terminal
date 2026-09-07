@@ -16,6 +16,7 @@ import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
 import { createPersonWorkspaceController } from './lib/person-workspace-controller.js';
 import { createCompanyWorkspaceController } from './lib/company-workspace-controller.js';
 import { createBangumiImportController } from './lib/bangumi-import-controller.js';
+import { createWorkCreditsController, createWorkStatsController } from './lib/work-detail-resources-controller.js';
 import { createLazyResource } from './lib/lazy-resource.js';
 import { createWorkspaceSession } from './lib/workspace-session.js';
 import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
@@ -56,7 +57,6 @@ import { createSelectionCardPresentation } from './lib/selection-card-presentati
 import { createWeightedRatingSort } from './lib/rating-sort.js?v=20260824-source-weighted-rating-sort-v1';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
-import { resolveDetailViewCountMode } from './lib/detail-view-stats.js';
 import { prepareCharacterImageMap } from './lib/character-image-map.js';
 import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
 import {
@@ -1655,8 +1655,6 @@ async function initialize() {
   const compareCreditsCache = new Map();
   const compareCreditsLoaded = new Set();
   let detailsVersionShelfExpanded = false;
-  const workDetailCreditsSession = createWorkspaceSession();
-  const detailViewsSession = createWorkspaceSession();
   const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
   let applyingUiLocation = false;
   let locationScrollTimer = null;
@@ -1679,58 +1677,20 @@ async function initialize() {
     characterImageAliasMapSha256: CHARACTER_IMAGE_ALIAS_MAP_SHA256
   });
 
-  function loadDetailViewCount(work) {
-    const request = detailViewsSession.begin('work-statistics');
-    elements.detailsViewsRow.hidden = true;
-    elements.detailsViews.textContent = '加载中…';
-    let endpoint;
-    try {
-      endpoint = new URL(TELEMETRY_PUBLIC_STATS_ENDPOINT);
-    } catch {
-      return;
-    }
-    const viewCountMode = resolveDetailViewCountMode({
-      pageOrigin: window.location.origin,
-      endpointOrigin: endpoint.origin
-    });
-    if (viewCountMode === 'local-preview') {
-      if (
-        !request.isCurrent()
-        || currentWorkDetailId !== work.workId
-        || !elements.detailsDialog.open
-      ) return;
-      elements.detailsViews.textContent = '本地预览不显示统计';
-      elements.detailsViewsRow.hidden = false;
-      return;
-    }
-    // Only the public site calls its same-origin endpoint. Other different-
-    // origin previews intentionally keep the row hidden without telemetry.
-    if (viewCountMode !== 'same-origin') return;
-    endpoint.searchParams.set('entityType', 'work');
-    endpoint.searchParams.set('entityId', String(work.workId));
-    elements.detailsViewsRow.hidden = false;
-    void fetch(endpoint, { cache: 'default', credentials: 'omit', signal: request.signal })
-      .then(async response => {
-        if (!response.ok) throw new Error(`public stats rejected: ${response.status}`);
-        return response.json();
-      })
-      .then(result => {
-        if (
-          !request.isCurrent()
-          || currentWorkDetailId !== work.workId
-          || !elements.detailsDialog.open
-          || result?.entityType !== 'work'
-          || result?.entityId !== String(work.workId)
-          || !Number.isSafeInteger(result?.views)
-          || result.views < 0
-        ) return;
-        elements.detailsViews.textContent = `${result.views.toLocaleString('en-US')} 次`;
-      })
-      .catch(() => {
-        if (!request.isCurrent() || currentWorkDetailId !== work.workId) return;
-        elements.detailsViewsRow.hidden = true;
-      });
-  }
+  const workDetailResources = createWorkCreditsController({
+    loader: workDetailCreditsLoader, view: workDetailCreditsView,
+    dialog: elements.detailsDialog, contentRoot: elements.detailsCredits,
+    ensureProjectRuntime: ensureProjectEntityRuntime,
+    getProjectRuntime: () => projectEntityRuntime,
+    loadIdentityCrosswalk: loadProjectIdentityCrosswalk,
+    characterAssetBase: CHARACTER_IMAGE_ASSET_BASE,
+    characterAssetFallbackBase: CHARACTER_IMAGE_ASSET_FALLBACK_BASE
+  });
+  const workDetailStats = createWorkStatsController({
+    row: elements.detailsViewsRow, output: elements.detailsViews,
+    endpointUrl: TELEMETRY_PUBLIC_STATS_ENDPOINT, pageOrigin: window.location.origin,
+    isOpen: () => elements.detailsDialog.open, fetchImpl: fetch
+  });
 
   function lockDetailsPageScroll() {
     if (detailsPageScrollTop !== null) return;
@@ -4345,8 +4305,7 @@ async function initialize() {
     }
     currentWorkDetailId = work.workId;
     telemetry.recordWorkOpen(work.workId);
-    const request = workDetailCreditsSession.begin('work-credits');
-    workDetailCreditsView.renderLoading();
+    void workDetailResources.start(work);
     showDetails(work, filterById, aliases, openCompanyDirectory, projectEntityRuntime, {
       coverSources: coverSourcesForWork,
       fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
@@ -4355,7 +4314,7 @@ async function initialize() {
         console.error(error);
       })
     }, catalogSource.value.snapshot?.generatedAt);
-    loadDetailViewCount(work);
+    void workDetailStats.load(work);
     const workId = String(work.workId);
     const alreadyCompared = compareWorkIds.includes(workId);
     elements.detailsCompareButton.textContent = alreadyCompared ? '移出比较' : '加入比较';
@@ -4369,76 +4328,6 @@ async function initialize() {
     };
     lockDetailsPageScroll();
     renderDetailsVersions(work);
-    const loadCredits = async () => {
-      try {
-        const [credits] = await Promise.all([
-          workDetailCreditsLoader.load(work.workId), ensureProjectEntityRuntime()
-        ]);
-        if (
-          !request.isCurrent()
-          || currentWorkDetailId !== work.workId
-          || !elements.detailsDialog.open
-        ) return;
-        elements.detailsDialog.dataset.projectEntitySource = projectEntityRuntime?.adaptWorkDetail(work.workId, work)?.source ?? 'legacy';
-        const proofMedia = projectEntityRuntime?.selectedMediaByWorkId.get(work.workId);
-        elements.detailsDialog.dataset.mediaClearanceStatus = proofMedia?.availability === 'available' ? 'cleared' : 'legacy-fallback';
-        if (credits === null) {
-          workDetailCreditsView.clear();
-          elements.detailsCredits.dataset.projectEntityPeople = '0';
-          elements.detailsCredits.dataset.projectEntityCharacters = '0';
-        } else {
-          const scopedCredits = work.isCrossSourceAdmission === true
-            ? { ...credits, cast: credits.cast.map(entry => ({ ...entry, sourceScope: 'admission' })) }
-            : credits;
-          const initialProjection = projectEntityRuntime?.projectCredits?.(scopedCredits);
-          if (initialProjection !== undefined) {
-            workDetailCreditsView.renderWork(initialProjection.credits);
-            elements.detailsCredits.dataset.projectEntityPeople = String(initialProjection.statistics.confirmedPersonCount);
-            elements.detailsCredits.dataset.projectEntityCharacters = String(initialProjection.statistics.confirmedCharacterCount);
-          } else {
-            workDetailCreditsView.renderWork(scopedCredits);
-          }
-          const [characterImageMap, projectIdentityCrosswalk] = await Promise.all([
-            workDetailCreditsLoader.loadCharacterImages(work.workId).catch(error => {
-              console.warn('work-detail character images unavailable; keeping text credits visible', error);
-              return null;
-            }),
-            loadProjectIdentityCrosswalk()
-          ]);
-          if (
-            !request.isCurrent()
-            || currentWorkDetailId !== work.workId
-            || !elements.detailsDialog.open
-          ) return;
-          const personCharacter = projectEntityRuntime?.projectCredits?.(scopedCredits, {
-            characterImageMap,
-            characterAssetBase: CHARACTER_IMAGE_ASSET_BASE,
-            characterAssetFallbackBase: CHARACTER_IMAGE_ASSET_FALLBACK_BASE,
-            projectIdentityCrosswalk,
-          });
-          if (personCharacter !== undefined) {
-            workDetailCreditsView.renderWork(personCharacter.credits);
-            elements.detailsCredits.dataset.projectEntityPeople = String(personCharacter.statistics.confirmedPersonCount);
-            elements.detailsCredits.dataset.projectEntityCharacters = String(personCharacter.statistics.confirmedCharacterCount);
-          } else {
-            workDetailCreditsView.renderWork(credits);
-          }
-        }
-      } catch (error) {
-        if (
-          !request.isCurrent()
-          || currentWorkDetailId !== work.workId
-          || !elements.detailsDialog.open
-        ) return;
-        console.warn('work-detail credits unavailable; keeping the base details usable', error);
-        workDetailCreditsView.renderError(() => {
-          if (currentWorkDetailId !== work.workId || !request.isCurrent()) return;
-          workDetailCreditsView.renderLoading();
-          void loadCredits();
-        });
-      }
-    };
-    void loadCredits();
     if (push) pushUiLocation();
   }
 
@@ -4598,10 +4487,10 @@ async function initialize() {
   window.addEventListener('hashchange', () => { void applyUiLocation(); });
   elements.detailsDialog.addEventListener('close', () => {
     if (elements.detailsDialog.open) return; // Ignore a queued close from the previous visit.
-    detailViewsSession.suspend();
+    workDetailStats.suspend();
     detailHydrationSession.suspend();
     unlockDetailsPageScroll();
-    workDetailCreditsSession.suspend();
+    workDetailResources.suspend();
     workDetailCreditsView.clear();
     const returnFocus = detailsReturnFocus;
     detailsReturnFocus = null;
