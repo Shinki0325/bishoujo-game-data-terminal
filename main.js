@@ -2903,7 +2903,10 @@ async function initialize() {
   }
 
   const selectionView = createSelectionView({
-    prepareWorks: workData ? works => workData.hydrate(works) : null,
+    prepareWorks: workData ? async works => {
+      const hydrated = await workData.hydrate(works);
+      return presentationFamilies?.decorateWorks(hydrated) ?? hydrated;
+    } : null,
     // Contract marker: createSelectionView({ root, onToggleWork, onToggleCurrentPage, onToggleCurrentResults, onToggleSelectedOnly, onOpenDetails, onFilterChange, assetBase })
     root: elements.catalogResults,
     onToggleWork(work, selected) {
@@ -4169,14 +4172,15 @@ async function initialize() {
     // Keep the filtered result distinct from the full catalog size. This is
     // especially important on mobile, where the compact header used to make
     // 3788 look like the total number of works.
-    const visibleWorks = model.visibleWorks.map(work => worksById.get(work.workId) ?? work);
     const visiblePresentationWorks = presentationFamilies === null
-      ? visibleWorks
+      ? model.visibleWorks.map(work => worksById.get(work.workId) ?? work)
       : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
         sortKey: model.state.filterState.sortKey,
         sortDirection: model.state.filterState.sortDirection,
         workById: worksById,
-        presorted: true
+        presorted: true,
+        // Full family decoration belongs to the currently hydrated page only.
+        decorate: workData === null
       });
     interactionMetrics.stage(interaction, 'presentation-ready');
     const catalogTotal = presentationFamilies === null
