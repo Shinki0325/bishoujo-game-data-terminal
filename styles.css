@@ -9512,7 +9512,8 @@ dialog::backdrop {
 .ranking-export-body { padding: 16px; display: grid; gap: 12px; }
 .ranking-export-body h3, .ranking-export-body p { margin: 0; }
 .ranking-export-body p { color: var(--text-muted); font-size: 12px; line-height: 1.65; }
-.ranking-export-body output { display: block; min-height: 2.8em; color: var(--text-muted); font-size: 13px; }
+.ranking-export-body output { display: block; min-height: 4.5em; padding: 10px 12px; border-radius: 6px; background: var(--surface-muted); color: var(--text); font-size: 13px; line-height: 1.7; white-space: pre-line; }
+#ranking-export-dialog [hidden] { display: none !important; }
 .ranking-export-body label, .ranking-export-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .ranking-export-body hr { width: 100%; border: 0; border-top: 1px solid var(--border); }
 @media (min-width: 900px) {
