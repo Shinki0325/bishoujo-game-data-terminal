@@ -111,7 +111,8 @@ import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824
 import { createStartupMetrics } from './lib/startup-metrics.js';
 import { createInteractionMetrics } from './lib/interaction-metrics.js';
 import { createTelemetryClient } from './lib/telemetry-client.js';
-import { appendTier } from './lib/tier-config.js';
+import { createRankingWorkspaceController, projectCompanyRankingItems } from './lib/ranking-workspace-controller.js';
+import { createCompanyRankingCard } from './views/company-ranking-card.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
   FILTER_GROUP_ORDER
@@ -2198,95 +2199,8 @@ async function initialize() {
     });
   }
 
-  function companyRankingItems() {
-    return new Map(companyDirectory.companies.map(company => [
-      company.companyId,
-      {
-        workId: company.companyId,
-        title: company.brandName,
-        company,
-        companyImageUrl: companyImageUrl(company, assetBase),
-        coverPath: companyImageUrl(company, assetBase) ?? `company:${company.companyId}`,
-        coverWidth: 512,
-        coverHeight: 512
-      }
-    ]));
-  }
-
-  function createCompanyRankingCard(documentRef, companyItem, callbacks) {
-    const card = documentRef.createElement('article');
-    card.className = 'ranking-card is-company-card';
-    card.dataset.workId = companyItem.workId;
-    card.draggable = true;
-    card.tabIndex = 0;
-    card.setAttribute('aria-label', companyItem.title);
-    const cover = documentRef.createElement('button');
-    cover.type = 'button';
-    cover.className = 'ranking-card-cover';
-    cover.setAttribute('aria-label', `打开会社 ${companyItem.title}`);
-    cover.title = `打开会社 ${companyItem.title}`;
-    const image = documentRef.createElement('img');
-    image.alt = '';
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    image.draggable = false;
-    image.src = companyItem.companyImageUrl ?? '';
-    image.addEventListener('error', () => {
-      image.hidden = true;
-      card.classList.add('is-image-missing');
-    }, { once: true });
-    cover.append(image);
-    const title = documentRef.createElement('span');
-    title.className = 'ranking-card-title';
-    title.dataset.field = 'title';
-    title.textContent = companyItem.title;
-    const handle = documentRef.createElement('button');
-    handle.type = 'button';
-    handle.className = 'ranking-drag-handle';
-    handle.setAttribute('aria-label', `整理 ${companyItem.title}`);
-    handle.setAttribute('title', `整理 ${companyItem.title}`);
-    handle.textContent = '::';
-    handle.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-    });
-    card.append(cover, title, handle);
-    cover.addEventListener('click', event => {
-      if (!callbacks.isCardActivationEnabled?.(companyItem)
-        || callbacks.shouldSuppressMediaClick?.(companyItem)) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      event.stopPropagation();
-      callbacks.onOpenDetails(companyItem);
-    });
-    const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
-    card.addEventListener('contextmenu', event => {
-      event.preventDefault();
-      if (!desktopDetails || event.pointerType === 'touch') return;
-      callbacks.onContextMenu(companyItem, card, event);
-    });
-    card.addEventListener('dragstart', event => {
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData?.('text/plain', companyItem.workId);
-      }
-      callbacks.onDragStart(companyItem, card, event);
-    });
-    card.addEventListener('dragend', event => callbacks.onDragEnd(companyItem, card, event));
-    return card;
-  }
-
-  function buildCompanyRankingModel() {
-    const ranking = companyRanking.inspect();
-    const state = controller.inspectState();
-    return buildRankingModel({
-      selectedWorkIds: ranking.selectedCompanyIds,
-      tiers: state.tiers,
-      tierOrder: ranking.tierOrder
-    }, companyRankingItems(), '');
-  }
+  const companyRankingItems = () => projectCompanyRankingItems(companyDirectory.companies, company => companyImageUrl(company, assetBase));
+  const buildCompanyRankingModel = () => rankingActions.buildCompanyModel(buildRankingModel, companyRankingItems());
   companyDirectoryView = createCompanyDirectoryView({
     root: elements.companyView,
     onSearch(query) {
@@ -2498,49 +2412,23 @@ async function initialize() {
   }
 
   let rankingView = null, buildRankingModel, createRankingCard;
+  const rankingActions = createRankingWorkspaceController({
+    works: controller, companies: companyRanking, getSubject: () => rankingSubject,
+    commit: change => runStateChange(change),
+    confirm: message => window.confirm(message), createId: () => crypto.randomUUID(),
+    focusTier: id => rankingView.focusTier(id),
+    completeFirstDrag: () => keeperPreferencesStore.complete('tier.firstDrag')
+  });
   const rankingOptions = {
     root: elements.rankingView,
     createCard: (documentRef, item, callbacks) => rankingSubject === 'company'
       ? createCompanyRankingCard(documentRef, item, callbacks)
       : createRankingCard(documentRef, item, callbacks),
-    onMoveToTier(workId, tierId, insertionIndex) {
-      if (rankingSubject === 'company') {
-        return runStateChange(() => companyRanking.moveToTier(workId, tierId, insertionIndex));
-      }
-      const changed = runStateChange(() => controller.moveToTier(workId, tierId, insertionIndex));
-      if (changed) keeperPreferencesStore.complete('tier.firstDrag');
-      return changed;
-    },
-    onMoveToUnranked(workId) {
-      if (rankingSubject === 'company') {
-        return runStateChange(() => companyRanking.moveToCandidates(workId));
-      }
-      return runStateChange(() => controller.moveToUnranked(workId));
-    },
-    onTierConfigChange(nextTiers) {
-      companyRanking.setTiers(nextTiers);
-      return runStateChange(() => controller.saveTierConfig(nextTiers));
-    },
-    onTierDelete(tierId) {
-      const state = controller.inspectState();
-      const tier = state.tiers.find(item => item.id === tierId);
-      if (!tier || state.tiers.length <= 3) return false;
-      const count = rankingSubject === 'company'
-        ? companyRanking.inspect().tierOrder[tierId]?.length ?? 0
-        : state.tierOrder[tierId]?.length ?? 0;
-      if (count > 0 && !window.confirm(`等级“${tier.name}”中有 ${count} 部作品，删除后这些作品将移回候选区。是否继续？`)) {
-        return false;
-      }
-      const nextTiers = state.tiers.filter(item => item.id !== tierId);
-      companyRanking.setTiers(nextTiers);
-      return runStateChange(() => controller.saveTierConfig(nextTiers));
-    },
-    onAddTier() {
-      const appended = appendTier(controller.inspectState().tiers, () => crypto.randomUUID());
-      companyRanking.setTiers(appended);
-      rankingView.focusTier(appended.at(-1).id);
-      return runStateChange(() => controller.saveTierConfig(appended));
-    },
+    onMoveToTier: rankingActions.moveToTier,
+    onMoveToUnranked: rankingActions.moveToUnranked,
+    onTierConfigChange: rankingActions.setTiers,
+    onTierDelete: rankingActions.deleteTier,
+    onAddTier: rankingActions.addTier,
     onRequestMediaImport(files) {
       if (files === null) elements.mediaFiles.click();
       else openMediaUpload(files);
@@ -2572,28 +2460,9 @@ async function initialize() {
       rankingView.setAnnotations(activePresentation.inspect().annotations);
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
     },
-    onRemoveCandidate(workId) {
-      if (rankingSubject === 'company') {
-        return runStateChange(() => companyRanking.toggle(workId, false));
-      }
-      return runStateChange(() => controller.deselectWorks([workId]));
-    },
-    onRemoveCandidates(workIds) {
-      if (rankingSubject === 'company') {
-        return runStateChange(() => workIds.every(workId => companyRanking.toggle(workId, false)));
-      }
-      return runStateChange(() => controller.deselectWorks(workIds));
-    },
-    onMoveCandidatesToTier(workIds, tierId, insertionIndex) {
-      if (rankingSubject === 'company') {
-        return runStateChange(() => workIds.every((workId, offset) => (
-          companyRanking.moveToTier(workId, tierId, insertionIndex + offset)
-        )));
-      }
-      const changed = runStateChange(() => controller.moveCandidatesToTier(workIds, tierId, insertionIndex));
-      if (changed) keeperPreferencesStore.complete('tier.firstDrag');
-      return changed;
-    },
+    onRemoveCandidate: rankingActions.removeCandidate,
+    onRemoveCandidates: rankingActions.removeCandidates,
+    onMoveCandidatesToTier: rankingActions.moveCandidatesToTier,
     showImportTile: () => rankingSubject === 'work',
     isCardActivationEnabled: () => true,
     assetBase
@@ -3702,18 +3571,8 @@ async function initialize() {
     closeToolbarMenus();
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
   });
-  elements.undoEdit.addEventListener('click', () => {
-    if (rankingSubject === 'company') {
-      return runStateChange(() => companyRanking.undo());
-    }
-    return runStateChange(() => controller.undo());
-  });
-  elements.redoEdit.addEventListener('click', () => {
-    if (rankingSubject === 'company') {
-      return runStateChange(() => companyRanking.redo());
-    }
-    return runStateChange(() => controller.redo());
-  });
+  elements.undoEdit.addEventListener('click', rankingActions.undo);
+  elements.redoEdit.addEventListener('click', rankingActions.redo);
   elements.importState.addEventListener('click', () => {
     closeToolbarMenus();
     elements.stateFile.click();
