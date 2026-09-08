@@ -34,6 +34,11 @@ export function createCompanyRankingCard(documentRef, companyItem, callbacks) {
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
+    if (!callbacks.shouldSuppressMediaClick?.(companyItem)) callbacks.onArrange?.(companyItem, card);
+  });
+  card.addEventListener('keydown', event => {
+    if (event.target !== card || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault(); callbacks.onArrange?.(companyItem, card);
   });
   card.append(cover, title, handle);
   cover.addEventListener('click', event => {

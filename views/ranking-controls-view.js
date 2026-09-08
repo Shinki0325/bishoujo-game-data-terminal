@@ -4,6 +4,10 @@ import { createViewLifetime } from '../lib/view-lifetime.js';
 export function createRankingControlsView({ elements, scalePresentation, activePresentation, subject, getRankingView,
   enterImmersive, documentRef = document, windowRef = window }) {
   const lifetime = createViewLifetime();
+  const qualities = [...(documentRef.querySelectorAll?.('[data-ranking-export-quality]') ?? [])];
+  for (const select of qualities) lifetime.listen(select, 'change', () => {
+    for (const other of qualities) other.value = select.value;
+  });
   const scaleControls = [
     ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
     ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
@@ -61,6 +65,8 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   }
 
   function openMobileRankingMenu() {
+    const scale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
+    if (scale) scale.value = elements.rankingScaleCard.value;
     if (typeof elements.mobileRankingMenu.showModal === 'function') elements.mobileRankingMenu.showModal();
     else elements.mobileRankingMenu.open = true;
   }
@@ -79,6 +85,16 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   lifetime.listen(elements.mobileRankingRedo, 'click', () => elements.redoEdit.click());
   lifetime.listen(elements.mobileRankingCandidates, 'click', () => toggleMobileRankingCandidates());
   lifetime.listen(elements.mobileRankingMore, 'click', () => openMobileRankingMenu());
+  const quickExport = documentRef.getElementById?.('mobile-ranking-export-quick');
+  if (quickExport) lifetime.listen(quickExport, 'click', () => elements.exportPng.click());
+  const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
+  if (mobileScale) lifetime.listen(mobileScale, 'input', () => {
+    elements.rankingScaleCard.value = mobileScale.value;
+    elements.rankingScaleCard.dispatchEvent(new windowRef.Event('input', { bubbles: true }));
+  });
+  lifetime.listen(elements.mobileRankingMenu, 'click', event => {
+    if (event.target.closest?.('button') && elements.mobileRankingMenu.open) elements.mobileRankingMenu.close();
+  }, true);
   lifetime.listen(elements.mobileRankingShowCounts, 'change', () => {
     elements.rankingShowCounts.checked = elements.mobileRankingShowCounts.checked;
     elements.rankingShowCounts.dispatchEvent(new windowRef.Event('change'));

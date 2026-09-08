@@ -285,6 +285,7 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
   mobileRankingImport: requiredElement('mobile-ranking-import'),
   mobileRankingExport: requiredElement('mobile-ranking-export'),
   mobileRankingExportPng: requiredElement('mobile-ranking-export-png'),
+  mobileRankingExportQuick: requiredElement('mobile-ranking-export-quick'),
   mobileRankingClearBoard: requiredElement('mobile-ranking-clear-board'),
   mobileRankingClearCandidates: requiredElement('mobile-ranking-clear-candidates'),
   mobileRankingClearAnnotations: requiredElement('mobile-ranking-clear-annotations'),
@@ -691,8 +692,9 @@ async function initialize() {
       const company = rankingSubject === 'company';
       const model = company ? null : (lastRenderedModel ?? controller.inspect([]));
       const companyState = company ? companyRanking.inspect() : null;
-      const state = company ? controller.inspectState() : model.state;
+      const state = company ? companyState : model.state;
       return { company, state, rankedCount: company ? companyState.rankedCount : model.rankedCount,
+        exportQuality: document.querySelector('[data-ranking-export-quality]')?.value ?? 'standard',
         tierOrder: company ? companyState.tierOrder : state.tierOrder,
         worksById: company ? companyRankingItems() : worksById,
         presentation: (company ? companyPresentation : presentation).inspect() };
@@ -852,7 +854,7 @@ async function initialize() {
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
     tiers: controller.inspectState().tiers,
-    storage: browserStorage()
+    storage: browserStorage(), announce
   });
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
@@ -2156,7 +2158,9 @@ async function initialize() {
     companyDirectoryOpen = false;
     setWorkSelectionMode(false);
     rankingSubject = 'work';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
   });
   elements.clearSelectedCompanies.addEventListener('click', () => {
     if (companyRanking.inspect().selectedCompanyIds.length === 0) return;
@@ -2167,7 +2171,9 @@ async function initialize() {
     companyDirectoryOpen = false;
     companySelectionMode = false;
     rankingSubject = 'company';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
   });
   elements.companyRankingClose.addEventListener('click', () => {
     companyDirectoryOpen = true;
@@ -2261,7 +2267,10 @@ async function initialize() {
     if (file === null) return;
     if (rankingSubject === 'company') {
       try {
-        companyRanking.importState(JSON.parse(await file.text()));
+        if (file.size > 2000000) throw new TypeError('company JSON too large');
+        const data = JSON.parse(await file.text());
+        if (!window.confirm(`将恢复会社榜（${data.selectedCompanyIds?.length ?? 0} 家）。${data.tiers ? '同时恢复等级名称、颜色与顺序。' : '旧文件不含等级定义，沿用当前等级。'} 可通过撤销恢复导入前的榜单。`)) return;
+        companyRanking.importState(data);
         companyCandidateQuery = '';
         workspaceScroll.resetRanking();
         void render();

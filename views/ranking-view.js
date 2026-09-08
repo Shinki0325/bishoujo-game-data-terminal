@@ -149,6 +149,7 @@ export function createRankingCard(documentRef, work, callbacks) {
     onContextMenu = (item => onOpenDetails(item)),
     onDragStart,
     onDragEnd,
+    onArrange = () => {},
     shouldSuppressMediaClick = () => false,
     isCardActivationEnabled = () => true,
     assetBase,
@@ -225,6 +226,12 @@ export function createRankingCard(documentRef, work, callbacks) {
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
+    if (!shouldSuppressMediaClick(work)) onArrange(work, card);
+  });
+  card.addEventListener('keydown', event => {
+    if (event.target !== card || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    onArrange(work, card);
   });
   card.append(cover, title, handle);
   const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
@@ -723,6 +730,7 @@ export function createRankingView({
     if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
     if (!isTouchPointer(event) || touchDrag !== null) return;
     const card = rankingCardFromPointer(event);
+    if (!event.target?.closest?.('.ranking-drag-handle')) return;
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
     const pointerId = event.pointerId ?? 0;
@@ -731,12 +739,21 @@ export function createRankingView({
       pointerId,
       card,
       row: card.closest?.('.tier-row'),
-      started: true,
+      started: false,
       timer: null,
       startX: Number(event.clientX) || 0,
       startY: Number(event.clientY) || 0
     };
     touchDrag = gesture;
+    card.setPointerCapture?.(pointerId);
+    gesture.timer = scheduleHold(() => { if (touchDrag === gesture) activateTouchDrag(gesture, event); }, 320);
+  }
+
+  function activateTouchDrag(gesture, event) {
+    if (gesture.started) return;
+    gesture.started = true;
+    if (gesture.timer !== null) cancelHold(gesture.timer);
+    const card = gesture.card, pointerId = gesture.pointerId;
     clearCandidateHold();
     finishCandidateSelectionGesture();
     startDrag(card.dataset.workId, card, { includeCandidateSelection: false });
@@ -755,6 +772,10 @@ export function createRankingView({
   function updateTouchDrag(event) {
     const gesture = touchDrag;
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
+    if (!gesture.started) {
+      if (Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) < 8) return;
+      activateTouchDrag(gesture, event);
+    }
     const target = dropNodeForPointer(event);
     const tierId = tierIdFromPointer(event) ?? tierIdFromNode(target);
     const candidateTarget = pointerIsInsideCandidatePool(event);
@@ -770,7 +791,14 @@ export function createRankingView({
     const gesture = touchDrag;
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
     clearTouchDrag();
-    if (!gesture.started) return;
+    if (!gesture.started) {
+      if (event.type !== 'pointercancel') {
+        const work = [...(model?.candidateWorks ?? []), ...(model?.tiers ?? []).flatMap(tier => tier.works)].find(item => item.workId === gesture.card.dataset.workId);
+        suppressNextTouchClick(gesture.card.dataset.workId);
+        if (work) openArrangeMenu(work, gesture.card);
+      }
+      return;
+    }
     const cancelled = event.type === 'pointercancel';
     if (!cancelled) {
       const finalTarget = dropNodeForPointer(event);
@@ -1262,6 +1290,39 @@ export function createRankingView({
     onMoveToUnranked(workId);
   }
 
+  let arrangeDialog = null;
+  function closeArrangeMenu() {
+    if (!arrangeDialog) return;
+    if (arrangeDialog.open) arrangeDialog.close();
+    arrangeDialog.remove();
+    arrangeDialog = null;
+  }
+  function openArrangeMenu(work, card) {
+    if (immersive) return;
+    closeArrangeMenu();
+    const dialog = documentRef.createElement('dialog');
+    arrangeDialog = dialog;
+    dialog.id = 'ranking-item-menu';
+    dialog.className = 'ranking-item-menu';
+    const title = documentRef.createElement('h2');
+    title.id = 'ranking-item-menu-title'; title.textContent = `整理 ${work.title}`;
+    dialog.setAttribute('aria-labelledby', title.id); dialog.append(title);
+    const selected = candidateSelection.has(work.workId) ? candidateSelectionIds() : [work.workId];
+    const action = (text, callback) => {
+      const button = documentRef.createElement('button'); button.type = 'button'; button.textContent = text;
+      button.addEventListener('click', () => { closeArrangeMenu(); callback(); }); dialog.append(button);
+    };
+    for (const tier of model.tiers) action(`移至 ${tier.name}${selected.length > 1 ? `（${selected.length}项）` : ''}`, () => {
+      if (selected.length > 1) onMoveCandidatesToTier(selected, tier.id, tier.works.length);
+      else onMoveToTier(work.workId, tier.id, tier.works.length);
+    });
+    if (!model.candidateWorks.some(item => item.workId === work.workId)) action('移回候选', () => onMoveToUnranked(work.workId));
+    else action('移除候选', () => onRemoveCandidates(selected));
+    action('查看资料', () => onOpenDetails(work));
+    action('取消', () => card.isConnected && card.focus());
+    dialog.addEventListener('cancel', event => { event.preventDefault(); closeArrangeMenu(); if (card.isConnected) card.focus(); });
+    (documentRef.body ?? root).append(dialog); dialog.showModal();
+  }
   function cardCallbacks() {
     return {
       onOpenDetails(work) {
@@ -1272,16 +1333,11 @@ export function createRankingView({
         else onOpenDetails(work);
       },
       onOpenMedia,
+      onArrange: openArrangeMenu,
       onDragStart(work, card) {
         startDrag(work.workId, card);
       },
       onDragEnd(work, card) {
-        const shouldReturnToPool = draggedWorkId === work.workId && dragOrigin === 'tier';
-        if (shouldReturnToPool) {
-          draggedWorkId = null;
-          dragOrigin = null;
-          onMoveToUnranked(work.workId);
-        }
         clearDragCard(card);
         finishDrag();
       },
@@ -1476,7 +1532,7 @@ export function createRankingView({
     input.value = tier.name;
     input.maxLength = 24;
     input.hidden = true;
-    input.setAttribute('aria-label', `${tier.name} 绾у悕`);
+    input.setAttribute('aria-label', `${tier.name} 等级名称`);
     const count = documentRef.createElement('output');
     count.textContent = String(tier.works.length);
     count.hidden = !showCounts;
@@ -1590,7 +1646,7 @@ export function createRankingView({
     track.className = 'tier-track';
     track.dataset.destination = tier.id;
     track.setAttribute('role', 'list');
-    track.setAttribute('aria-label', `${tier.name} 级作品`);
+    track.setAttribute('aria-label', `${tier.name} 级条目`);
     track.tabIndex = 0;
     row.addEventListener('dragover', event => handleTierDragOver(tier.id, event));
     row.addEventListener('dragleave', event => {
@@ -1602,7 +1658,7 @@ export function createRankingView({
   }
 
   candidatePool.setAttribute('role', 'list');
-  candidatePool.setAttribute('aria-label', '未分级候选作品');
+  candidatePool.setAttribute('aria-label', '未分级候选条目');
   candidatePool.setAttribute('aria-dropeffect', 'move');
   candidatePool.tabIndex = 0;
   candidatePool.addEventListener('dragover', handlePoolDragOver);
@@ -1634,6 +1690,7 @@ export function createRankingView({
     onRemoveCandidates(selectedIds);
   });
   candidatePool.addEventListener('pointerdown', event => {
+    if (isTouchPointer(event)) return;
     const card = candidateCardFromNode(event.target);
     if (!card) return;
     if (event.target?.classList?.contains('ranking-candidate-select')
@@ -1698,6 +1755,7 @@ export function createRankingView({
 
   return Object.freeze({
     render(nextModel, coverUrls = null) {
+      closeArrangeMenu();
       if (nextModel === null || typeof nextModel !== 'object' || Array.isArray(nextModel)) {
         throw new TypeError('model must be an object');
       }
@@ -1770,8 +1828,8 @@ export function createRankingView({
         remove.type = 'button';
         remove.className = 'ranking-candidate-remove';
         remove.textContent = '×';
-        remove.setAttribute('aria-label', `移除候选作品：${item.title}`);
-        remove.setAttribute('title', `移除候选作品：${item.title}`);
+        remove.setAttribute('aria-label', `移除候选条目：${item.title}`);
+        remove.setAttribute('title', `移除候选条目：${item.title}`);
         remove.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
@@ -1782,7 +1840,7 @@ export function createRankingView({
         select.type = 'checkbox';
         select.className = 'ranking-candidate-select';
         select.checked = candidateSelection.has(item.workId);
-        select.setAttribute('aria-label', `选择候选作品：${item.title}`);
+        select.setAttribute('aria-label', `选择候选条目：${item.title}`);
         select.addEventListener('click', event => event.stopPropagation());
         select.addEventListener('change', event => {
           event.stopPropagation();

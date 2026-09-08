@@ -32,6 +32,7 @@ export const WORKBENCH_CONTROL_ELEMENTS = Object.freeze([
   "mobileRankingImport",
   "mobileRankingExport",
   "mobileRankingExportPng",
+  "mobileRankingExportQuick",
   "mobileRankingClearBoard",
   "mobileRankingClearCandidates",
   "mobileRankingClearAnnotations",
@@ -135,4 +136,3 @@ export function createWorkbenchControlsView({ elements, cardDisplayInputs, scale
   }
   return Object.freeze({ render, setBusy });
 }
-

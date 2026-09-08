@@ -7604,11 +7604,11 @@ dialog::backdrop {
     user-select: none;
   }
 
-  .ranking-drag-handle { display: none !important; }
+  .ranking-drag-handle { display: block; }
 
   .ranking-view.is-mobile-drag-enabled .ranking-card {
-    cursor: grab;
-    touch-action: none;
+    cursor: auto;
+    touch-action: pan-x pan-y;
   }
 
   .ranking-card.is-mobile-dragging > * {
@@ -7705,7 +7705,20 @@ dialog::backdrop {
     transform: rotate(225deg) translate(-2px, -1px);
   }
 
-  .mobile-ranking-dock { display: none !important; }
+  /* One mobile toolbar, above (not replacing) the global workspace navigation. */
+  .mobile-ranking-dock {
+    display: grid;
+    grid-template-columns: 44px 44px 1fr 1fr;
+    position: fixed;
+    inset-inline: 0;
+    bottom: var(--mobile-nav-height);
+    min-height: 48px;
+    padding: 4px 8px;
+    gap: 6px;
+    z-index: 42;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
   .ranking-toolbar { display: none !important; }
 
   .tier-board {
@@ -7820,7 +7833,7 @@ dialog::backdrop {
 
   .ranking-candidates {
     right: 0;
-    bottom: var(--mobile-nav-height);
+    bottom: calc(var(--mobile-nav-height) + 48px);
     left: 0;
     max-height: none;
     min-height: 0;
@@ -9408,4 +9421,33 @@ dialog::backdrop {
   .person-frequency-axis { justify-content:space-between; gap:0; }
   .person-frequency-year { flex:0 0 20px; min-width:20px; }
   .person-frequency-year.is-empty { flex:1 1 auto; min-width:0; }
+}
+
+/* Ranking repair: one arrangement surface for pointer, touch and keyboard. */
+.ranking-item-menu {
+  width: min(380px, calc(100vw - 32px)); max-height: 80dvh;
+  overflow: auto; padding: 18px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.ranking-item-menu h2 { font-size: 16px; margin: 0 0 12px; overflow-wrap: anywhere; }
+.ranking-item-menu button { display: block; width: 100%; min-height: 40px; margin-top: 6px; }
+.ranking-item-menu::backdrop { background: rgb(0 0 0 / 30%); }
+.ranking-advanced-settings > summary { cursor: pointer; padding: 8px 0; }
+.ranking-advanced-settings label { display: flex; justify-content: space-between; }
+.ranking-advanced-settings input { width: 100%; }
+.ranking-backup-note { max-width: 280px; color: var(--text-muted); font-size: 12px; line-height: 1.6; white-space: normal; }
+.ranking-drag-handle { touch-action: none; }
+@media (max-width: 899px) {
+  #ranking-view .ranking-drag-handle {
+    display: block; position: absolute; right: 0; bottom: 0;
+    width: 32px; height: 32px; min-width: 32px; min-height: 32px;
+    padding: 0; opacity: 1; z-index: 2; border-radius: 4px 0 0;
+    background: rgb(24 29 40 / 65%); color: #fff; border: 0; touch-action: none;
+  }
+  #ranking-view .ranking-card-cover { touch-action: pan-x pan-y; }
+  #mobile-ranking-candidates output { white-space: nowrap; flex-shrink: 0; }
+  #ranking-view .mobile-ranking-candidates-legacy { display: none; }
+  #ranking-view .ranking-candidates { bottom: calc(var(--mobile-nav-height) + 48px); }
+  body.is-ranking-immersive #ranking-view .mobile-ranking-dock { display: none; }
+  #ranking-view { padding-bottom: calc(var(--mobile-nav-height) + 54px); }
 }

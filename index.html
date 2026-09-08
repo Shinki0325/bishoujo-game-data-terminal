@@ -487,16 +487,18 @@
                 <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
                 <fieldset class="ranking-scale-controls">
                   <legend>排榜界面大小</legend>
+                  <label for="ranking-scale-card"><span>卡片大小</span><output id="ranking-scale-card-output">100%</output></label>
+                  <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
+                  <details class="ranking-advanced-settings"><summary>高级微调</summary>
                   <label for="ranking-scale-overall"><span>总体</span><output id="ranking-scale-overall-output">100%</output></label>
                   <input id="ranking-scale-overall" type="range" min="80" max="160" step="5" value="100">
-                  <label for="ranking-scale-card"><span>卡片</span><output id="ranking-scale-card-output">100%</output></label>
-                  <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
                   <label for="ranking-scale-rail"><span>行高/候选区</span><output id="ranking-scale-rail-output">100%</output></label>
                   <input id="ranking-scale-rail" type="range" min="80" max="160" step="5" value="100">
                   <label for="ranking-scale-annotation"><span>图片标注</span><output id="ranking-scale-annotation-output">100%</output></label>
                   <input id="ranking-scale-annotation" type="range" min="80" max="160" step="5" value="100">
                   <label for="ranking-scale-tier-name"><span>分级名称</span><output id="ranking-scale-tier-name-output">100%</output></label>
                   <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
+                  </details>
                   <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认</button>
                 </fieldset>
               </div>
@@ -508,6 +510,9 @@
                 <button id="bangumi-import-open" type="button">从 Bangumi 导入</button>
                 <button id="import-state" type="button">导入 JSON</button>
                 <button id="export-state" type="button">导出 JSON</button>
+                <p class="ranking-backup-note">JSON保存公开条目的等级与顺序，不含本地图片、替换封面、标注及显示设置。</p>
+                <label>图片清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
+                <p class="ranking-backup-note">图片使用深色排榜背景，导出后提示尺寸和文件大小。</p>
                 <strong class="toolbar-menu-section-title">清理</strong>
                 <button data-ui="danger" id="clear-board" type="button">清空分级</button>
                 <button data-ui="danger" id="clear-candidates" type="button">清空候选</button>
@@ -559,6 +564,7 @@
           <button id="mobile-ranking-redo" type="button" aria-label="重做">↷</button>
           <button class="mobile-ranking-candidates-legacy" type="button" tabindex="-1" aria-hidden="true">候选</button>
           <button id="mobile-ranking-more" type="button" aria-haspopup="dialog">更多操作</button>
+          <button id="mobile-ranking-export-quick" type="button" aria-label="导出当前排榜图片">导出图片</button>
         </div>
         <dialog id="mobile-ranking-menu" class="mobile-ranking-menu" aria-labelledby="mobile-ranking-menu-title">
           <div class="dialog-heading">
@@ -570,6 +576,7 @@
               <h3>显示</h3>
               <label><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
               <label><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
+              <label>卡片大小 <input data-ranking-mobile-scale type="range" min="80" max="160" step="5" value="100"></label>
             </section>
             <section>
               <h3>数据</h3>
@@ -577,6 +584,8 @@
               <button id="mobile-ranking-import" type="button">导入 JSON</button>
               <button id="mobile-ranking-export" type="button">导出 JSON</button>
               <button id="mobile-ranking-export-png" type="button">导出图片</button>
+              <label>图片清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
+              <p class="ranking-backup-note">JSON不含本地图片、替换封面、标注及显示设置。图片使用深色排榜背景。</p>
             </section>
             <section>
               <h3>清理</h3>
