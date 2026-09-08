@@ -1,3 +1,4 @@
+import { createProjectResources } from './lib/project-resources.js';
 import { loadLegacyWorkbenchData } from './lib/legacy-workbench-data.js';
 import { toWorkerLookup } from './lib/workbench-data-projection.js';
 export { assertSample, prepareRuntimeSample } from './lib/runtime-sample.js';
@@ -57,8 +58,6 @@ import { createImmersiveController, createRankingPresentation } from './lib/rank
 import { createSelectionCardPresentation } from './lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
-import { prepareCharacterImageMap } from './lib/character-image-map.js';
-import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
 import { canUseHighDensityPreview } from './lib/adaptive-image-source.js';
 import {
   configuredAssetBase,
@@ -67,7 +66,6 @@ import {
   RUNTIME_FEATURES,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE,
-  MEDIA_CLEARANCE_BRIDGE_SHA256,
   CHARACTER_IMAGE_MAP_SHA256,
   CHARACTER_IMAGE_ALIAS_MAP_SHA256,
   CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
@@ -79,7 +77,6 @@ import {
   M2_PERSON_NAME_VARIANTS_SHA256,
   M2_PERSON_CHARACTER_ROLES_SHA256,
   M2_PERSON_NAME_PREFERENCES_SHA256,
-  M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256,
   M1_PERSON_ONLY_ENTITIES_SHA256,
   M1_PERSON_VOICE_RELATIONS_SHA256,
   PERSON_WORK_INDEX_SHA256,
@@ -699,81 +696,8 @@ async function initialize() {
     // Let the initialization message leave before preparing directory/UI models.
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  let characterImageMapPromise = null;
-  const loadCharacterImageMap = () => {
-    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.characterImages)) {
-      return Promise.resolve(null);
-    }
-    if (characterImageMapPromise === null) {
-      characterImageMapPromise = Promise.all([
-        fetchJsonWithSha256(DATA_URLS.characterImageMap, '角色图片映射'),
-        fetchJsonWithSha256(DATA_URLS.characterImageAliasMap, '角色图片别名映射')
-      ])
-        .then(([source, aliasSource]) => {
-          if (source.sha256 !== CHARACTER_IMAGE_MAP_SHA256) {
-            throw new TypeError('character image map hash does not match the runtime pin');
-          }
-          if (aliasSource.sha256 !== CHARACTER_IMAGE_ALIAS_MAP_SHA256) {
-            throw new TypeError('character image alias map hash does not match the runtime pin');
-          }
-          return prepareCharacterImageMap(source.value, {
-            snapshotId: CHARACTER_IMAGE_MAP_SNAPSHOT_ID,
-            aliases: aliasSource.value,
-            sourceMapSha256: source.sha256
-          });
-        })
-        .catch(error => {
-          console.warn('character image map unavailable; keeping character images disabled', error);
-          characterImageMapPromise = null;
-          return null;
-        });
-    }
-    return characterImageMapPromise;
-  };
-  let projectIdentityCrosswalkPromise = null;
-  const loadProjectIdentityCrosswalk = () => {
-    if (projectIdentityCrosswalkPromise === null) {
-      projectIdentityCrosswalkPromise = fetchJsonWithSha256(DATA_URLS.m2PersonCrossSourceCrosswalk, '人物角色身份映射')
-        .then(source => {
-          if (source.sha256 !== M2_PERSON_CROSS_SOURCE_CROSSWALK_SHA256) {
-            throw new TypeError('project identity crosswalk hash does not match the runtime pin');
-          }
-          return prepareProjectIdentityCrosswalk(source.value);
-        })
-        .catch(error => {
-          console.warn('project identity crosswalk unavailable; keeping source rows separate', error);
-          projectIdentityCrosswalkPromise = null;
-          return null;
-        });
-    }
-    return projectIdentityCrosswalkPromise;
-  };
-  let projectEntityRuntime = null;
-  let applyProjectedMediaToWork;
-  const ensureProjectEntityRuntime = createLazyResource(async attempt => {
-    if (!(RUNTIME_FEATURES.projectEntitiesV1.enabled && RUNTIME_FEATURES.projectEntitiesV1.mediaClearance)) return null;
-    try {
-      const [mediaClearanceBridgeSource, module, proofCatalog] = await Promise.all([
-        fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'),
-        attempt === 0 ? import('./lib/project-entity-runtime.js') : import(`./lib/project-entity-runtime.js?retry=${attempt}`),
-        workData ? fetchJsonWithSha256(DATA_URLS.catalog, '作品详情校验目录') : Promise.resolve(catalogSource)
-      ]);
-      if (mediaClearanceBridgeSource.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) {
-        throw new TypeError('G1 media clearance bridge hash does not match the runtime pin');
-      }
-      if (proofCatalog.sha256 !== catalogSource.sha256) throw new TypeError('workbench detail catalog hash mismatch');
-      projectEntityRuntime = await module.createProjectEntityRuntime({
-        bridge: mediaClearanceBridgeSource.value,
-        catalog: { ...proofCatalog.value, catalogSha256: proofCatalog.sha256 },
-        dataRevision: DATA_REVISION,
-        cryptoRef: crypto
-      });
-      console.info('G1 media clearance bridge applied', projectEntityRuntime.audit);
-      applyProjectedMediaToWork = module.applyProjectedMediaToWork;
-      return projectEntityRuntime;
-    } catch (error) {
-      throw new TypeError('G1 media clearance bridge rejected', { cause: error });
-    }
+  const projectResources = createProjectResources({
+    catalogSource, requiresCatalogFetch: Boolean(workData)
   });
   // The validated final fanout already covers every core work's display media.
   // Keep the original eager proof path when that authority is not enabled.
@@ -1024,9 +948,9 @@ async function initialize() {
   const workDetailResources = createWorkCreditsController({
     loader: workDetailCreditsLoader, view: workDetailCreditsView,
     dialog: elements.detailsDialog, contentRoot: elements.detailsCredits,
-    ensureProjectRuntime: ensureProjectEntityRuntime,
-    getProjectRuntime: () => projectEntityRuntime,
-    loadIdentityCrosswalk: loadProjectIdentityCrosswalk,
+    ensureProjectRuntime: projectResources.ensureRuntime,
+    getProjectRuntime: () => projectResources.current,
+    loadIdentityCrosswalk: projectResources.loadIdentityCrosswalk,
     characterAssetBase: CHARACTER_IMAGE_ASSET_BASE,
     characterAssetFallbackBase: CHARACTER_IMAGE_ASSET_FALLBACK_BASE
   });
@@ -1606,7 +1530,7 @@ async function initialize() {
     model: { companies: companyDirectory.companies, workDisplayTitlesById,
       characterAssetBase: CHARACTER_IMAGE_ASSET_BASE, assetBase,
       representativeFamilyByWorkId, presentationFamilies },
-    loadCharacterImages: loadCharacterImageMap,
+    loadCharacterImages: projectResources.loadCharacterImages,
     onHydrated() {
       if (!personDirectoryOpen) return;
       renderPersonDirectory();
@@ -2447,7 +2371,7 @@ async function initialize() {
     currentWorkDetailId = work.workId;
     telemetry.recordWorkOpen(work.workId);
     void workDetailResources.start(work);
-    detailPresentation.render(work, { workAliasesById: aliases, onOpenCompany: openCompanyDirectory, projectEntityRuntime, detailMedia: {
+    detailPresentation.render(work, { workAliasesById: aliases, onOpenCompany: openCompanyDirectory, projectEntityRuntime: projectResources.current, detailMedia: {
       coverSources: coverSourcesForWork,
       fallbackUrl: resolveAssetUrl('assets/cover-unavailable.webp', assetBase),
       open: detailWork => openMediaPreview(detailWork, { immersive: true }).catch(error => {
