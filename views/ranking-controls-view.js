@@ -10,7 +10,8 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   const syncQuery = () => {
     if (!queryHint) return;
     queryHint.hidden = !search?.value.trim();
-    queryHint.querySelector('span').textContent = `筛选：${search?.value ?? ''}`;
+    const label = queryHint.querySelector?.('span');
+    if (label) label.textContent = `筛选：${search?.value ?? ''}`;
     workspace?.style.setProperty('--ranking-live-top', queryHint.hidden ? '54px' : '92px');
   };
   lifetime.listen(search, 'input', syncQuery);
@@ -56,17 +57,39 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   const trayButtons = [...(documentRef.querySelectorAll?.('[data-candidate-tray]') ?? [])];
   let trayMode = 'collapsed', pinned = false, live = false, beforeLive = null, restoreFrame = null;
   let liveTray = 'row', modeAnchor = null;
+  let trayRenderKey = null;
+  let layoutFrame = null;
+  let appliedScaleKey = null;
+  let appliedDisplayKey = null;
+
+  const requestFrame = callback => {
+    if (typeof windowRef.requestAnimationFrame === 'function') return windowRef.requestAnimationFrame(callback);
+    callback();
+    return null;
+  };
+  const cancelFrame = frame => {
+    if (frame !== null && typeof windowRef.cancelAnimationFrame === 'function') windowRef.cancelAnimationFrame(frame);
+  };
+
   function beginLive() {
     if (live) return;
-    windowRef.cancelAnimationFrame(restoreFrame);
+    cancelFrame(restoreFrame);
     return enterImmersive();
   }
   const measureTray = () => {
     const height = trayMode === 'collapsed' && windowRef.matchMedia?.('(max-width: 899px)').matches ? 0 : (tray?.getBoundingClientRect?.().height ?? 0);
     workspace?.style?.setProperty('--candidate-tray-height', `${Math.ceil(height)}px`);
   };
+  const scheduleLayout = () => {
+    if (layoutFrame !== null) return;
+    layoutFrame = requestFrame(() => {
+      layoutFrame = null;
+      measureTray();
+      getRankingView()?.refreshLayout();
+    });
+  };
   if (tray && typeof windowRef.ResizeObserver === 'function') {
-    const observer = new windowRef.ResizeObserver(measureTray);
+    const observer = new windowRef.ResizeObserver(scheduleLayout);
     observer.observe(tray); lifetime.add(() => observer.disconnect());
   }
   const scaleControls = [
@@ -78,8 +101,12 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   ];
 
   function applyUiScale(uiScale) {
+    const normalized = Object.fromEntries(scaleControls.map(([key]) => [key, Number(uiScale[key]) || 100]));
+    const scaleKey = JSON.stringify(normalized);
+    if (scaleKey === appliedScaleKey) return false;
+    appliedScaleKey = scaleKey;
     for (const [key, input, output] of scaleControls) {
-      const value = Number(uiScale[key]) || 100;
+      const value = normalized[key];
       const cssKey = key === 'tierName' ? 'tier-name' : key;
       input.value = String(value);
       input.style?.setProperty('--range-fill', `${(value - 80) / 80 * 100}%`);
@@ -95,22 +122,28 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     for (const button of documentRef.querySelectorAll?.('[data-scale-reset]') ?? []) button.disabled = uiScale[button.dataset.scaleReset] === 100;
     const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
     if (mobileScale) mobileScale.value = String(uiScale.card);
-    getRankingView()?.refreshLayout();
+    scheduleLayout();
+    return true;
   }
 
   function applyDisplay() {
     const state = scalePresentation.inspect();
     const display = state.display ?? { style: 'garden', shape: 'square' };
+    const displayKey = JSON.stringify({
+      display, showCounts: state.showCounts === true, showTitles: state.showTitles !== false, uiScale: state.uiScale
+    });
+    const modeLabel = documentRef.getElementById?.('ranking-display-mode');
+    if (modeLabel) modeLabel.textContent = live ? '直播显示 · 独立记住尺寸与内容' : '普通显示 · 独立记住尺寸与内容';
+    const sync = documentRef.getElementById?.('ranking-display-sync');
+    if (sync) sync.textContent = live ? '将当前显示同步到普通模式' : '将当前显示同步到直播模式';
+    if (displayKey === appliedDisplayKey) return false;
+    appliedDisplayKey = displayKey;
     documentRef.documentElement.setAttribute?.('data-ranking-style', display.style);
     documentRef.documentElement.setAttribute?.('data-ranking-shape', display.shape);
     if (styleSelect) styleSelect.value = display.style;
     if (shapeSelect) shapeSelect.value = display.shape;
     const shapeField = documentRef.getElementById?.('ranking-display-shape-field');
     if (shapeField) shapeField.hidden = display.style !== 'classic';
-    const modeLabel = documentRef.getElementById?.('ranking-display-mode');
-    if (modeLabel) modeLabel.textContent = live ? '直播显示 · 独立记住尺寸与内容' : '普通显示 · 独立记住尺寸与内容';
-    const sync = documentRef.getElementById?.('ranking-display-sync');
-    if (sync) sync.textContent = live ? '将当前显示同步到普通模式' : '将当前显示同步到直播模式';
     for (const input of [elements.rankingShowCounts, elements.mobileRankingShowCounts]) input.checked = state.showCounts;
     for (const input of [elements.rankingShowTitles, elements.mobileRankingShowTitles]) input.checked = state.showTitles;
     getRankingView()?.setShowCounts?.(state.showCounts);
@@ -122,15 +155,31 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       input.title = display.style === 'classic' ? '经典布局使用卡片大小控制尺寸，行高随内容变化' : '';
     }
     applyUiScale(state.uiScale);
+    // Style/shape and visibility changes can alter geometry even when the
+    // numeric scale profile is unchanged and therefore short-circuited above.
+    scheduleLayout();
+    return true;
   }
-  lifetime.listen(styleSelect, 'change', () => { scalePresentation.setDisplayStyle(styleSelect.value); applyDisplay(); });
-  lifetime.listen(shapeSelect, 'change', () => { scalePresentation.setDisplayShape(shapeSelect.value); applyDisplay(); });
+  lifetime.listen(styleSelect, 'change', () => {
+    if (scalePresentation.inspect().display?.style !== styleSelect.value) scalePresentation.setDisplayStyle(styleSelect.value);
+    applyDisplay();
+  });
+  lifetime.listen(shapeSelect, 'change', () => {
+    if (scalePresentation.inspect().display?.shape !== shapeSelect.value) scalePresentation.setDisplayShape(shapeSelect.value);
+    applyDisplay();
+  });
   lifetime.listen(documentRef.getElementById?.('ranking-display-sync'), 'click', event => {
     scalePresentation.syncViewMode?.();
+    applyDisplay();
     event.currentTarget.textContent = live ? '已同步到普通模式' : '已同步到直播模式';
   });
   for (const button of densityButtons) lifetime.listen(button, 'click', () => {
-    scalePresentation.setDensity(button.dataset.displayDensity); applyDisplay();
+    const size = { compact: 80, standard: 100, spacious: 130 }[button.dataset.displayDensity];
+    const current = scalePresentation.inspect().uiScale;
+    if (size && (current.card !== size || current.overall !== 100 || current.rail !== 100)) {
+      scalePresentation.setDensity(button.dataset.displayDensity);
+    }
+    applyDisplay();
   });
   for (const button of documentRef.querySelectorAll?.('[data-scale-reset]') ?? []) lifetime.listen(button, 'click', () => {
     scalePresentation.resetUiScale(button.dataset.scaleReset); applyUiScale(scalePresentation.inspect().uiScale);
@@ -148,19 +197,23 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     scalePresentation.resetUiScale();
     applyUiScale(scalePresentation.inspect().uiScale);
   });
-  let rankingLayoutFrame = null;
   lifetime.listen(windowRef, 'resize', () => {
-    windowRef.cancelAnimationFrame(rankingLayoutFrame);
-    rankingLayoutFrame = windowRef.requestAnimationFrame(() => {
-      rankingLayoutFrame = null;
-      getRankingView()?.refreshLayout();
-    });
+    setTrayMode(trayMode, { force: true });
+    scheduleLayout();
   });
 
-  function setTrayMode(mode) {
+  function setTrayMode(mode, { force = false } = {}) {
     // In live mode collapse only the tools, keeping the candidate strip available.
     if (live && mode === 'collapsed') mode = 'row';
-    trayMode = ['collapsed', 'row', 'expanded'].includes(mode) ? mode : 'row';
+    const nextMode = ['collapsed', 'row', 'expanded'].includes(mode) ? mode : 'row';
+    const mobile = Boolean(windowRef.matchMedia?.('(max-width: 899px)').matches);
+    const candidateName = subject() === 'company' ? '候选会社' : '候选作品';
+    const nextKey = `${nextMode}|${mobile}|${candidateName}`;
+    trayMode = nextMode;
+    if (!force && nextKey === trayRenderKey) {
+      return false;
+    }
+    trayRenderKey = nextKey;
     const open = trayMode !== 'collapsed';
     documentRef.body.setAttribute?.('data-ranking-tray', trayMode);
     documentRef.body.classList.toggle('is-mobile-ranking-candidates-open', open);
@@ -170,8 +223,9 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '显示'}${candidateLabel}`);
     for (const button of trayButtons) button.setAttribute('aria-pressed', String(button.dataset.candidateTray === trayMode));
     // Collapsed candidates cannot remain in the keyboard focus order on mobile.
-    if (tray) tray.inert = !open && Boolean(windowRef.matchMedia?.('(max-width: 899px)').matches);
-    measureTray();
+    if (tray) tray.inert = !open && mobile;
+    scheduleLayout();
+    return true;
   }
   function setMobileRankingCandidatesOpen(open) { setTrayMode(open ? 'row' : 'collapsed'); }
 
@@ -183,12 +237,15 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     setMobileRankingCandidatesOpen(trayMode === 'collapsed');
   }
   function setPinned(value) {
-    pinned = value;
-    workspace?.classList.toggle('is-candidates-pinned', value);
-    pinButton?.setAttribute('aria-pressed', String(value));
-    if (pinButton) pinButton.textContent = value ? '取消固定候选' : '固定候选区';
-    if (value && trayMode === 'collapsed') setTrayMode('row');
-    measureTray();
+    const next = value === true;
+    if (next === pinned) return false;
+    pinned = next;
+    workspace?.classList.toggle('is-candidates-pinned', next);
+    pinButton?.setAttribute('aria-pressed', String(next));
+    if (pinButton) pinButton.textContent = next ? '取消固定候选' : '固定候选区';
+    if (next && trayMode === 'collapsed') setTrayMode('row');
+    scheduleLayout();
+    return true;
   }
   for (const button of trayButtons) lifetime.listen(button, 'click', () => setTrayMode(button.dataset.candidateTray));
   lifetime.listen(pinButton, 'click', () => setPinned(!pinned));
@@ -211,8 +268,6 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   }
   syncLiveHistory();
   lifetime.listen(documentRef.getElementById?.('mobile-ranking-immersive'), 'click', () => void beginLive());
-  lifetime.listen(windowRef, 'resize', () => setTrayMode(trayMode));
-
   function openMobileRankingMenu() {
     const scale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
     if (scale) scale.value = elements.rankingScaleCard.value;
@@ -225,11 +280,17 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   });
   lifetime.listen(elements.rankingCoachmarkDismiss, 'click', () => { elements.rankingCoachmark.hidden = true; });
   lifetime.listen(elements.rankingShowCounts, 'change', () => {
-    getRankingView().setShowCounts(activePresentation().setShowCounts(elements.rankingShowCounts.checked));
+    const value = elements.rankingShowCounts.checked === true;
+    const presentation = activePresentation();
+    const current = presentation.inspect?.();
+    if (!current || current.showCounts !== value) getRankingView().setShowCounts(presentation.setShowCounts(value));
     elements.mobileRankingShowCounts.checked = elements.rankingShowCounts.checked;
   });
   lifetime.listen(elements.rankingShowTitles, 'change', () => {
-    getRankingView().setShowTitles(activePresentation().setShowTitles(elements.rankingShowTitles.checked));
+    const value = elements.rankingShowTitles.checked === true;
+    const presentation = activePresentation();
+    const current = presentation.inspect?.();
+    if (!current || current.showTitles !== value) getRankingView().setShowTitles(presentation.setShowTitles(value));
     elements.mobileRankingShowTitles.checked = elements.rankingShowTitles.checked;
   });
   lifetime.listen(elements.mobileRankingUndo, 'click', () => elements.undoEdit.click());
@@ -261,11 +322,11 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   lifetime.listen(elements.mobileRankingClearCandidates, 'click', () => elements.clearCandidates.click());
   lifetime.listen(elements.mobileRankingClearAnnotations, 'click', () => elements.clearAnnotations.click());
   lifetime.listen(elements.rankingImmersive, 'click', () => void beginLive());
-  lifetime.add(() => windowRef.cancelAnimationFrame(rankingLayoutFrame));
-  lifetime.add(() => windowRef.cancelAnimationFrame(restoreFrame));
+  lifetime.add(() => cancelFrame(layoutFrame));
+  lifetime.add(() => cancelFrame(restoreFrame));
   return Object.freeze({
     prepareMode(value) {
-      windowRef.cancelAnimationFrame(restoreFrame);
+      cancelFrame(restoreFrame);
       modeAnchor = getRankingView()?.captureAnchor?.();
       if (value) beforeLive = { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
       else liveTray = trayMode;
@@ -277,25 +338,26 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       if (value === live) return;
       if (displayMenu) displayMenu.hidden = true;
       documentRef.getElementById?.('display-menu-button')?.setAttribute('aria-expanded', 'false');
+      const scroll = beforeLive?.scroll;
       if (value) {
         beforeLive ??= { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
-        live = true; setTrayMode(liveTray);
+        live = true; setTrayMode(liveTray, { force: true });
       } else {
-        const scroll = beforeLive?.scroll;
-        live = false; setPinned(beforeLive?.pinned ?? false); setTrayMode(beforeLive?.trayMode ?? 'row');
-        if (!modeAnchor) getRankingView()?.restoreScroll?.(scroll);
+        live = false; setPinned(beforeLive?.pinned ?? false); setTrayMode(beforeLive?.trayMode ?? 'row', { force: true });
         beforeLive = null;
       }
       scalePresentation.setViewMode?.(value ? 'live' : 'normal');
       syncQuery();
-      applyDisplay(); measureTray(); getRankingView()?.refreshLayout();
+      applyDisplay(); scheduleLayout();
       const anchor = modeAnchor;
-      restoreFrame = windowRef.requestAnimationFrame(() => {
-        restoreFrame = windowRef.requestAnimationFrame(() => {
+      restoreFrame = requestFrame(() => {
+        restoreFrame = requestFrame(() => {
           restoreFrame = null;
           if (live === value && !workspace?.hidden) {
             workspace?.setAttribute('tabindex', '-1'); workspace?.focus?.({ preventScroll: true });
-            getRankingView()?.restoreAnchor?.(anchor);
+            if (anchor) getRankingView()?.restoreAnchor?.(anchor);
+            else getRankingView()?.restoreScroll?.(scroll);
+            if (modeAnchor === anchor) modeAnchor = null;
           }
         });
       });

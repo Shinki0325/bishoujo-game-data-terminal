@@ -14,6 +14,8 @@ import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
 
+const MAX_RANKING_CARD_CACHE = 256;
+
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
 }
@@ -124,8 +126,10 @@ function workFromMap(worksById, workId) {
   return item;
 }
 
-function installMissingImageFallback(documentRef, card, image) {
-  image.addEventListener('error', () => {
+function installMissingImageFallback(documentRef, card, image, fallbackText = '封面缺失') {
+  const imageToken = card.__rankingImageToken;
+  const onError = () => {
+    if (imageToken !== card.__rankingImageToken) return;
     if (card.classList.contains('is-image-missing')) return;
     image.src = '';
     image.removeAttribute?.('src');
@@ -133,10 +137,161 @@ function installMissingImageFallback(documentRef, card, image) {
     card.classList.add('is-image-missing');
     const fallback = documentRef.createElement('span');
     fallback.className = 'ranking-card-missing-image';
-    fallback.textContent = '封面缺失';
+    fallback.textContent = fallbackText;
     fallback.setAttribute('aria-hidden', 'true');
     card.append(fallback);
-  }, { once: true });
+  };
+  image.addEventListener('error', onError, { once: true });
+  return () => image.removeEventListener?.('error', onError);
+}
+
+function replaceMutableRecord(target, source) {
+  for (const key of Object.keys(target)) {
+    if (!Object.hasOwn(source, key)) delete target[key];
+  }
+  Object.assign(target, source);
+  return target;
+}
+
+function rankingDisplayTitle(work) {
+  return typeof work.displayTitle === 'string' && work.displayTitle.length > 0
+    ? work.displayTitle
+    : work.title;
+}
+
+function rankingEntityKey(work) {
+  // Work and company boards intentionally use the same card view and may
+  // receive an overlapping source ID. Keep their detached nodes isolated so a
+  // subject switch cannot reuse a card with the wrong image/activation path.
+  const kind = Object.hasOwn(work, 'companyImageUrl') || Object.hasOwn(work, 'company')
+    ? 'company'
+    : 'work';
+  return `${kind}:${work.workId}`;
+}
+
+function syncRankingCardImage(documentRef, card, image, work, {
+  coverUrl = null,
+  previewUrl = null,
+  assetBase
+} = {}) {
+  const isCompany = card.classList?.contains?.('is-company-card') === true;
+  const sourceUrl = isCompany
+    ? (typeof work.companyImageUrl === 'string' ? work.companyImageUrl.trim() : '')
+    : (typeof coverUrl === 'string' ? coverUrl : '');
+  const mediaKey = JSON.stringify([
+    sourceUrl,
+    typeof previewUrl === 'string' ? previewUrl : null,
+    work.coverPath,
+    work.coverWidth,
+    work.coverHeight,
+    assetBase ?? null
+  ]);
+  if (card.__rankingMediaKey === mediaKey) {
+    const fallback = card.querySelector?.('.ranking-card-missing-image');
+    if (isCompany && fallback) fallback.textContent = work.title;
+    return;
+  }
+  card.__rankingMediaKey = mediaKey;
+  card.__rankingImageToken = (card.__rankingImageToken ?? 0) + 1;
+  const imageToken = card.__rankingImageToken;
+  const previousCleanup = card.__rankingImageCleanup;
+  previousCleanup?.();
+  card.__rankingImageCleanup = null;
+  card.classList?.remove?.('is-image-missing');
+  card.querySelector?.('.ranking-card-missing-image')?.remove?.();
+  image.hidden = false;
+  image.removeAttribute?.('srcset');
+  image.removeAttribute?.('sizes');
+  if (isCompany) {
+    if (sourceUrl.length > 0) {
+      image.src = sourceUrl;
+    } else {
+      image.removeAttribute?.('src');
+      image.hidden = true;
+    }
+  } else if (sourceUrl.length > 0) {
+    if (!sourceUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
+    else {
+      image.crossOrigin = '';
+      image.removeAttribute?.('crossorigin');
+    }
+    applyAdaptiveImageSource(image, { thumbnailUrl: sourceUrl, previewUrl });
+  } else {
+    try {
+      applyImageAsset(image, work, assetBase);
+    } catch (error) {
+      if (error instanceof AssetUrlError) {
+        throw new TypeError('work.coverPath must use the approved public asset path');
+      }
+      throw error;
+    }
+  }
+  const hasSource = isCompany ? sourceUrl.length > 0
+    : sourceUrl.length > 0 || (typeof work.coverPath === 'string' && work.coverPath.length > 0);
+  const fallback = documentRef.createElement('span');
+  fallback.className = 'ranking-card-missing-image';
+  fallback.textContent = isCompany ? work.title : '封面缺失';
+  fallback.setAttribute('aria-hidden', 'true');
+  fallback.hidden = hasSource;
+  if (!hasSource) {
+    card.classList?.add?.('is-image-missing');
+    card.querySelector?.('.ranking-card-cover')?.append(fallback);
+  }
+  const onLoad = () => {
+    if (card.__rankingImageToken !== imageToken) return;
+    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+      card.style.setProperty('--ranking-cover-ratio', String(image.naturalWidth / image.naturalHeight));
+    }
+    image.hidden = false;
+    fallback.hidden = true;
+    card.classList?.remove?.('is-image-missing');
+  };
+  image.addEventListener('load', onLoad, { once: true });
+  const removeErrorListener = installMissingImageFallback(documentRef, card, image, isCompany ? work.title : '封面缺失');
+  const cleanup = () => {
+    image.removeEventListener?.('load', onLoad);
+    removeErrorListener?.();
+    if (card.__rankingImageCleanup === cleanup) card.__rankingImageCleanup = null;
+  };
+  card.__rankingImageCleanup = cleanup;
+}
+
+function syncRankingCardFields(documentRef, card, work, media = {}) {
+  const displayTitle = rankingDisplayTitle(work);
+  card.dataset.workId = work.workId;
+  card.setAttribute('aria-label', displayTitle);
+  const title = card.querySelector?.('.ranking-card-title');
+  if (title) title.textContent = displayTitle;
+  const cover = card.querySelector?.('.ranking-card-cover');
+  if (cover) {
+    const isCompany = card.classList?.contains?.('is-company-card') === true;
+    cover.setAttribute('aria-label', isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`);
+    cover.title = isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`;
+  }
+  const handle = card.querySelector?.('.ranking-drag-handle');
+  if (handle) {
+    handle.setAttribute('aria-label', `整理 ${displayTitle}`);
+    handle.title = '更多操作；按住可拖动';
+  }
+  let image = cover?.querySelector?.('img');
+  // Company cards are supplied by a separate card factory with its own
+  // one-shot image listeners. Replace only that nested image once before
+  // taking ownership of refresh listeners; the card, cover, fallback slot,
+  // annotation and focusable controls remain stable.
+  if (image && card.classList?.contains?.('is-company-card') === true && !card.__rankingImageReset) {
+    const replacement = image.cloneNode?.(false);
+    if (replacement && cover.replaceChild) {
+      cover.replaceChild(replacement, image);
+      image = replacement;
+      card.__rankingImageReset = true;
+    }
+  }
+  if (image) syncRankingCardImage(documentRef, card, image, work, media);
+  const coverRatio = Number(work.coverWidth) / Number(work.coverHeight);
+  if (Number.isFinite(coverRatio) && coverRatio > 0) {
+    card.style.setProperty('--ranking-cover-ratio', String(coverRatio));
+  } else card.style.removeProperty?.('--ranking-cover-ratio');
+  return card;
 }
 
 export function createRankingCard(documentRef, work, callbacks) {
@@ -152,34 +307,30 @@ export function createRankingCard(documentRef, work, callbacks) {
   if (callbacks === null || typeof callbacks !== 'object' || Array.isArray(callbacks)) {
     throw new TypeError('callbacks must be an object');
   }
-  const {
-    onOpenDetails,
-    onOpenMedia = () => {},
-    onContextMenu = (item => onOpenDetails(item)),
-    onDragStart,
-    onDragEnd,
-    onArrange = () => {},
-    shouldSuppressMediaClick = () => false,
-    isCardActivationEnabled = () => true,
-    assetBase,
-    coverUrl = null,
-    previewUrl = null
-  } = callbacks;
-  assertFunction(onOpenDetails, 'onOpenDetails');
-  assertFunction(onOpenMedia, 'onOpenMedia');
-  assertFunction(onContextMenu, 'onContextMenu');
-  assertFunction(onDragStart, 'onDragStart');
-  assertFunction(onDragEnd, 'onDragEnd');
-  assertFunction(shouldSuppressMediaClick, 'shouldSuppressMediaClick');
-  assertFunction(isCardActivationEnabled, 'isCardActivationEnabled');
+  const normalizedCallbacks = { ...callbacks };
+  normalizedCallbacks.onOpenMedia ??= () => {};
+  normalizedCallbacks.onArrange ??= () => {};
+  normalizedCallbacks.shouldSuppressMediaClick ??= () => false;
+  normalizedCallbacks.isCardActivationEnabled ??= () => true;
+  assertFunction(normalizedCallbacks.onOpenDetails, 'onOpenDetails');
+  assertFunction(normalizedCallbacks.onOpenMedia, 'onOpenMedia');
+  assertFunction(normalizedCallbacks.onDragStart, 'onDragStart');
+  assertFunction(normalizedCallbacks.onDragEnd, 'onDragEnd');
+  assertFunction(normalizedCallbacks.shouldSuppressMediaClick, 'shouldSuppressMediaClick');
+  assertFunction(normalizedCallbacks.isCardActivationEnabled, 'isCardActivationEnabled');
 
-  const displayTitle = typeof work.displayTitle === 'string' && work.displayTitle.length > 0
-    ? work.displayTitle
-    : work.title;
+  const currentWork = { ...work };
+  let currentCallbacks = normalizedCallbacks;
+  let currentMedia = {
+    assetBase: normalizedCallbacks.assetBase,
+    coverUrl: normalizedCallbacks.coverUrl ?? null,
+    previewUrl: normalizedCallbacks.previewUrl ?? null
+  };
+  const displayTitle = rankingDisplayTitle(currentWork);
   const card = documentRef.createElement('article');
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
-  const coverRatio = Number(work.coverWidth) / Number(work.coverHeight);
+  const coverRatio = Number(currentWork.coverWidth) / Number(currentWork.coverHeight);
   card.style.setProperty('--ranking-cover-ratio', String(Number.isFinite(coverRatio) && coverRatio > 0 ? coverRatio : 1));
   // Mobile uses the same pointer-capture drag path as the reference Tier
   // board. Keeping HTML5 draggable active here causes the browser to cancel
@@ -189,29 +340,10 @@ export function createRankingCard(documentRef, work, callbacks) {
   card.setAttribute('aria-label', displayTitle);
 
   const image = documentRef.createElement('img');
-  if (typeof coverUrl === 'string' && coverUrl.length > 0) {
-    if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl });
-  } else {
-    try {
-      applyImageAsset(image, work, assetBase);
-    } catch (error) {
-      if (error instanceof AssetUrlError) {
-        throw new TypeError('work.coverPath must use the approved public asset path');
-      }
-      throw error;
-    }
-  }
   image.alt = '';
   image.loading = 'lazy';
   image.decoding = 'async';
   image.draggable = false;
-  image.addEventListener('load', () => {
-    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-      card.style.setProperty('--ranking-cover-ratio', String(image.naturalWidth / image.naturalHeight));
-    }
-  });
-  installMissingImageFallback(documentRef, card, image);
 
   const cover = documentRef.createElement('button');
   cover.type = 'button';
@@ -219,13 +351,13 @@ export function createRankingCard(documentRef, work, callbacks) {
   cover.setAttribute('aria-label', `放大 ${displayTitle}`);
   cover.title = `放大 ${displayTitle}`;
   cover.addEventListener('click', event => {
-    if (!isCardActivationEnabled(work) || shouldSuppressMediaClick(work)) {
+    if (!currentCallbacks.isCardActivationEnabled(currentWork) || currentCallbacks.shouldSuppressMediaClick(currentWork)) {
       event.preventDefault();
       event.stopPropagation();
       return;
     }
     event.stopPropagation();
-    onOpenMedia(work);
+    currentCallbacks.onOpenMedia(currentWork);
   });
   cover.append(image);
 
@@ -243,28 +375,44 @@ export function createRankingCard(documentRef, work, callbacks) {
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
-    if (!shouldSuppressMediaClick(work)) onArrange(work, card);
+    if (!currentCallbacks.shouldSuppressMediaClick(currentWork)) currentCallbacks.onArrange(currentWork, card);
   });
   card.addEventListener('keydown', event => {
     if (event.target !== card || !['Enter', ' '].includes(event.key)) return;
     event.preventDefault();
-    onArrange(work, card);
+    currentCallbacks.onArrange(currentWork, card);
   });
   card.append(cover, title, handle);
   const desktopDetails = documentRef.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? true;
   card.addEventListener('contextmenu', event => {
     event.preventDefault();
     if (event.pointerType === 'touch' || !desktopDetails) return;
-    onContextMenu(work, card, event);
+    const onContextMenu = currentCallbacks.onContextMenu ?? (item => currentCallbacks.onOpenDetails(item));
+    onContextMenu(currentWork, card, event);
   });
   card.addEventListener('dragstart', event => {
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData?.('text/plain', work.workId);
+      event.dataTransfer.setData?.('text/plain', currentWork.workId);
     }
-    onDragStart(work, card, event);
+    currentCallbacks.onDragStart(currentWork, card, event);
   });
-  card.addEventListener('dragend', event => onDragEnd(work, card, event));
+  card.addEventListener('dragend', event => currentCallbacks.onDragEnd(currentWork, card, event));
+  card.__rankingUpdate = (nextWork, nextCallbacks, nextMedia = {}) => {
+    if (nextWork === null || typeof nextWork !== 'object') throw new TypeError('nextWork must be an object');
+    replaceMutableRecord(currentWork, nextWork);
+    if (nextCallbacks !== undefined) {
+      currentCallbacks = { ...currentCallbacks, ...nextCallbacks };
+      currentCallbacks.onOpenMedia ??= () => {};
+      currentCallbacks.onArrange ??= () => {};
+      currentCallbacks.shouldSuppressMediaClick ??= () => false;
+      currentCallbacks.isCardActivationEnabled ??= () => true;
+    }
+    currentMedia = { ...currentMedia, ...nextMedia };
+    return syncRankingCardFields(documentRef, card, currentWork, currentMedia);
+  };
+  card.__rankingWork = currentWork;
+  syncRankingCardFields(documentRef, card, currentWork, currentMedia);
   return card;
 }
 
@@ -379,6 +527,12 @@ export function createRankingView({
   const candidatePool = requireOwnedElement(root, '#ranking-candidate-grid', '#ranking-candidate-grid');
   const tierRows = new Map();
   const tierTracks = new Map();
+  // A ranking interaction moves entities between a tier track and the candidate
+  // pool. Keep one node per stable workId so a move only reconciles parents and
+  // does not reinstall 200 card listeners or replace their image elements.
+  const cardCache = new Map();
+  const tierRowCache = new Map();
+  let hiddenCandidateCacheKeys = new Set();
 
   const viewWindow = documentRef.defaultView ?? globalThis;
   const requestFrame = typeof viewWindow.requestAnimationFrame === 'function'
@@ -438,6 +592,121 @@ export function createRankingView({
   let suppressedTouchClickWorkId = null;
   let suppressedTouchClickTimer = null;
   const touchDragHoldDelayMs = 220;
+
+  function reconcileChildren(parent, desired) {
+    const wanted = new Set(desired);
+    for (const child of arrayFrom(parent.children)) {
+      if (wanted.has(child)) continue;
+      if (typeof child.remove === 'function') child.remove();
+      else parent.removeChild?.(child);
+    }
+    if (typeof parent.insertBefore !== 'function') {
+      parent.replaceChildren(...desired);
+      return;
+    }
+    for (let index = 0; index < desired.length; index += 1) {
+      const child = desired[index];
+      if (parent.children[index] !== child) {
+        parent.insertBefore(child, parent.children[index] ?? null);
+      }
+    }
+  }
+
+  function removeCandidateCardControls(card) {
+    for (const selector of ['.ranking-candidate-remove', '.ranking-candidate-select']) {
+      for (const control of arrayFrom(card.querySelectorAll?.(selector))) {
+        if (typeof control.remove === 'function') control.remove();
+        else card.removeChild?.(control);
+      }
+    }
+  }
+
+  function ensureCandidateCardControls(card, item) {
+    let remove = card.querySelector?.('.ranking-candidate-remove');
+    if (!remove) {
+      remove = documentRef.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ranking-candidate-remove';
+      remove.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!immersive) onRemoveCandidate(card.dataset.workId);
+      });
+      card.append(remove);
+    }
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', `移除候选条目：${item.title}`);
+    remove.setAttribute('title', `移除候选条目：${item.title}`);
+    let select = card.querySelector?.('.ranking-candidate-select');
+    if (!select) {
+      select = documentRef.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'ranking-candidate-select';
+      select.addEventListener('click', event => event.stopPropagation());
+      select.addEventListener('change', event => {
+        event.stopPropagation();
+        setCandidateSelected(card.dataset.workId, select.checked);
+      });
+      card.append(select);
+    }
+    select.checked = candidateSelection.has(item.workId);
+    select.setAttribute('aria-label', `选择候选条目：${item.title}`);
+    return card;
+  }
+
+  function cachedRankingCard(item, callbacks, media, { candidate = false } = {}) {
+    const cacheKey = rankingEntityKey(item);
+    let record = cardCache.get(cacheKey);
+    if (!record) {
+      record = {
+        work: { ...item },
+        callbacks: { ...callbacks },
+        card: null
+      };
+      Object.assign(record.callbacks, media);
+      // Keep one mutable callback object for custom card factories (notably
+      // company cards) whose listeners intentionally read callback properties
+      // later. The built-in work card additionally receives media via its
+      // explicit updater below.
+      record.card = createCard(documentRef, record.work, record.callbacks);
+      if (!record.card || typeof record.card !== 'object') throw new TypeError('createCard must return a card');
+      cardCache.set(cacheKey, record);
+    } else {
+      replaceMutableRecord(record.work, item);
+      Object.assign(record.callbacks, callbacks);
+      Object.assign(record.callbacks, media);
+      if (typeof record.card.__rankingUpdate === 'function') {
+        record.card.__rankingUpdate(record.work, record.callbacks, media);
+      } else {
+        syncRankingCardFields(documentRef, record.card, record.work, media);
+      }
+    }
+    if (candidate) ensureCandidateCardControls(record.card, record.work);
+    else removeCandidateCardControls(record.card);
+    // Map insertion order is the bounded cache's recency order. Active cards
+    // stay in the map regardless of its size; detached hidden candidates are
+    // evicted first when a user cycles through many searches/imports.
+    cardCache.delete(cacheKey);
+    cardCache.set(cacheKey, record);
+    return record.card;
+  }
+
+  function pruneRankingCaches(activeCardKeys, activeTierIds, previousCandidateKeys) {
+    // Without a search every current candidate is visible; detached nodes are
+    // removed selections, not hidden results, and should be released at once.
+    const retainedHidden = model.candidateTitleQuery.trim()
+      ? [...hiddenCandidateCacheKeys, ...previousCandidateKeys].filter(key => !activeCardKeys.has(key))
+      : [];
+    hiddenCandidateCacheKeys = new Set(retainedHidden.slice(-MAX_RANKING_CARD_CACHE));
+    for (const [key, record] of cardCache) {
+      if (activeCardKeys.has(key) || hiddenCandidateCacheKeys.has(key)) continue;
+      record.card?.__rankingImageCleanup?.();
+      cardCache.delete(key);
+    }
+    for (const tierId of tierRowCache.keys()) {
+      if (!activeTierIds.has(tierId)) tierRowCache.delete(tierId);
+    }
+  }
 
   function pageScrollTarget() {
     return immersive ? root : documentRef.scrollingElement ?? root;
@@ -1608,8 +1877,8 @@ export function createRankingView({
     nameInput.select?.();
   }
 
-  function createTierRow(tier) {
-    const tierIndex = model.tiers.findIndex(item => item.id === tier.id);
+  function createTierRow(tier, initialTierIndex = model.tiers.findIndex(item => item.id === tier.id)) {
+    let tierIndex = initialTierIndex;
     const color = tierColor(tier.colorId);
     const row = documentRef.createElement('section');
     row.className = 'tier-row';
@@ -1658,6 +1927,7 @@ export function createRankingView({
         onTierDelete(tier.id);
       }]
     ];
+    const controlButtons = new Map();
     for (const [action, glyph, accessibleLabel, disabled, callback] of controls) {
       const button = documentRef.createElement('button');
       button.type = 'button';
@@ -1672,6 +1942,7 @@ export function createRankingView({
         if (!button.disabled) callback();
       });
       editingState.append(button);
+      controlButtons.set(action, button);
     }
 
     const paletteTrigger = documentRef.createElement('button');
@@ -1760,6 +2031,7 @@ export function createRankingView({
     row.append(label, track);
     const classicActions = documentRef.createElement('div');
     classicActions.className = 'tier-classic-actions';
+    const classicButtons = [];
     for (const [glyph, title, disabled, callback] of [
       ['⚙', '等级设置', false, () => openMobileTierEditor(tier)],
       ['↑', '上移等级', tierIndex === 0, controls[0][4]],
@@ -1769,9 +2041,33 @@ export function createRankingView({
       button.type = 'button'; button.textContent = glyph; button.disabled = disabled;
       button.setAttribute('aria-label', title); button.title = title;
       button.addEventListener('click', callback); classicActions.append(button);
+      classicButtons.push(button);
     }
     row.append(classicActions);
-    return { row, track };
+    const update = (nextTier, nextTierIndex) => {
+      replaceMutableRecord(tier, nextTier);
+      tierIndex = nextTierIndex;
+      const nextColor = tierColor(tier.colorId);
+      row.id = `ranking-${tier.id}`;
+      row.dataset.tierId = tier.id;
+      row.setAttribute('aria-label', `${tier.name} 级`);
+      row.style.setProperty('--tier-background', nextColor.background);
+      row.style.setProperty('--tier-foreground', nextColor.foreground);
+      label.setAttribute('aria-label', tier.name);
+      label.setAttribute('title', tier.name);
+      name.textContent = tier.name;
+      input.value = tier.name;
+      input.setAttribute('aria-label', `${tier.name} 等级名称`);
+      count.textContent = String(tier.works?.length ?? 0);
+      track.setAttribute('aria-label', `${tier.name} 级条目`);
+      controlButtons.get('move-up').disabled = tierIndex === 0;
+      controlButtons.get('move-down').disabled = tierIndex === model.tiers.length - 1;
+      controlButtons.get('delete').disabled = model.tiers.length <= 3;
+      classicButtons[1].disabled = tierIndex === 0;
+      classicButtons[2].disabled = tierIndex === model.tiers.length - 1;
+    };
+    row.__rankingUpdateTier = update;
+    return { row, track, update, tier };
   }
 
   candidatePool.setAttribute('role', 'list');
@@ -1893,6 +2189,28 @@ export function createRankingView({
   }, true);
 
   return Object.freeze({
+    dispose() {
+      deferredRender = null;
+      if (deferredFrame !== null) {
+        cancelFrame(deferredFrame);
+        deferredFrame = null;
+      }
+      finishDrag();
+      closeArrangeMenu();
+      closeColorPalette();
+      closeTierEditing();
+      closeMobileTierEditor();
+      closeAnnotationEditor(false);
+      removeMobileDragVisuals();
+      for (const record of cardCache.values()) record.card?.__rankingImageCleanup?.();
+      cardCache.clear();
+      tierRowCache.clear();
+      hiddenCandidateCacheKeys.clear();
+      tierRows.clear();
+      tierTracks.clear();
+      candidateBatchActions.remove?.();
+      model = null;
+    },
     render: function render(nextModel, coverUrls = null) {
       renderModel = render;
       if (nextModel === null || typeof nextModel !== 'object' || Array.isArray(nextModel)) {
@@ -1904,6 +2222,9 @@ export function createRankingView({
       if (!Array.isArray(nextModel.candidateWorks) || typeof nextModel.candidateTitleQuery !== 'string') {
         throw new TypeError('model must contain candidateWorks and candidateTitleQuery');
       }
+      const previousCandidateKeys = new Set(
+        (model?.candidateWorks ?? []).map(item => rankingEntityKey(item))
+      );
       // Late cover hydration must not detach the card currently holding a pointer,
       // or close its dialog. A genuine board/search change still invalidates it.
       if ((arrangeDialog || touchDrag || draggedWorkId !== null)
@@ -1916,6 +2237,10 @@ export function createRankingView({
       const retainedTierScroll = Object.fromEntries(
         [...tierTracks].map(([tierId, track]) => [tierId, track.scrollLeft])
       );
+      const editingTierDraft = editingTierId === null ? null : {
+        tierId: editingTierId,
+        value: tierRows.get(editingTierId)?.querySelector?.('.tier-name-input')?.value ?? ''
+      };
       const focusedWorkId = isRankingCard(documentRef.activeElement)
         ? documentRef.activeElement.dataset.workId
         : null;
@@ -1944,14 +2269,20 @@ export function createRankingView({
         if (nextTierRows.has(tier.id)) {
           throw new TypeError(`model.tiers contains duplicate tier ID ${tier.id}`);
         }
-        const { row, track } = createTierRow(tier);
-        const cards = tier.works.map(item => createCard(documentRef, item, {
-          ...callbacks,
+        let tierRecord = tierRowCache.get(tier.id);
+        if (!tierRecord) {
+          tierRecord = createTierRow({ ...tier }, index);
+          tierRowCache.set(tier.id, tierRecord);
+        } else {
+          tierRecord.update(tier, index);
+        }
+        const { row, track } = tierRecord;
+        const cards = tier.works.map(item => cachedRankingCard(item, callbacks, {
           coverUrl: coverUrls?.get?.(item.workId)?.thumbnailUrl ?? null,
           previewUrl: coverUrls?.get?.(item.workId)?.previewUrl ?? null
         }));
         for (const card of cards) applyCardPresentation(card);
-        track.replaceChildren(...cards);
+        reconcileChildren(track, cards);
         nextTierRows.set(tier.id, row);
         nextTierTracks.set(tier.id, track);
         renderedRows.push(row);
@@ -1967,38 +2298,14 @@ export function createRankingView({
         if (!immersive && !addTier.disabled) onAddTier();
       });
       const candidates = model.candidateWorks.map(item => {
-        const card = createCard(documentRef, item, {
-          ...callbacks,
+        const card = cachedRankingCard(item, callbacks, {
           coverUrl: coverUrls?.get?.(item.workId)?.thumbnailUrl ?? null,
           previewUrl: coverUrls?.get?.(item.workId)?.previewUrl ?? null
-        });
-        const remove = documentRef.createElement('button');
-        remove.type = 'button';
-        remove.className = 'ranking-candidate-remove';
-        remove.textContent = '×';
-        remove.setAttribute('aria-label', `移除候选条目：${item.title}`);
-        remove.setAttribute('title', `移除候选条目：${item.title}`);
-        remove.addEventListener('click', event => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!immersive) onRemoveCandidate(item.workId);
-        });
-        card.append(remove);
-        const select = documentRef.createElement('input');
-        select.type = 'checkbox';
-        select.className = 'ranking-candidate-select';
-        select.checked = candidateSelection.has(item.workId);
-        select.setAttribute('aria-label', `选择候选条目：${item.title}`);
-        select.addEventListener('click', event => event.stopPropagation());
-        select.addEventListener('change', event => {
-          event.stopPropagation();
-          setCandidateSelected(item.workId, select.checked);
-        });
-        card.append(select);
+        }, { candidate: true });
         return card;
       });
       for (const card of candidates) applyCardPresentation(card);
-      tierBoard.replaceChildren(...renderedRows, addTier);
+      reconcileChildren(tierBoard, [...renderedRows, addTier]);
       tierBoard.dataset.tierCount = String(renderedRows.length);
       tierRows.clear();
       tierTracks.clear();
@@ -2008,7 +2315,26 @@ export function createRankingView({
         const retained = retainedTierScroll[tierId];
         track.scrollLeft = Number.isFinite(retained) ? retained : 0;
       }
-      candidatePool.replaceChildren(...candidates, ...(showImportTile() ? [uploadTile] : []));
+      if (editingTierDraft && tierRows.has(editingTierDraft.tierId)) {
+        const label = tierRows.get(editingTierDraft.tierId).querySelector?.('.tier-label');
+        const input = label?.querySelector?.('.tier-name-input');
+        const name = label?.querySelector?.('.tier-label-name');
+        const editingState = label?.querySelector?.('.tier-editing-state');
+        if (label && input && name && editingState) {
+          editingTierId = editingTierDraft.tierId;
+          label.classList.add('is-tier-editing');
+          name.hidden = true;
+          input.hidden = false;
+          input.value = editingTierDraft.value;
+          editingState.hidden = false;
+        }
+      }
+      reconcileChildren(candidatePool, [...candidates, ...(showImportTile() ? [uploadTile] : [])]);
+      const activeCardKeys = new Set([
+        ...model.tiers.flatMap(tier => tier.works.map(item => rankingEntityKey(item))),
+        ...model.candidateWorks.map(item => rankingEntityKey(item))
+      ]);
+      pruneRankingCaches(activeCardKeys, new Set(model.tiers.map(tier => tier.id)), previousCandidateKeys);
       updateCandidateSelection();
       updateTierTrackRows();
       candidateSearch.value = model.candidateTitleQuery;
