@@ -503,6 +503,11 @@
                   <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
                   <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
                 </section>
+                <section id="ranking-tier-width-field" class="ranking-display-section" hidden>
+                  <div class="ranking-setting-title"><label for="ranking-scale-tier-width">分级栏宽度</label><output id="ranking-scale-tier-width-output">100%</output><button type="button" data-scale-reset="tierWidth" aria-label="恢复默认分级栏宽度">复位</button></div>
+                  <input id="ranking-scale-tier-width" type="range" min="80" max="160" step="5" value="100">
+                  <p class="ranking-display-note">仅调整左侧分级栏，不随卡片大小变化。</p>
+                </section>
                 <section class="ranking-display-section" aria-label="高级设置">
                   <details class="ranking-advanced-settings"><summary>高级微调</summary>
                   <label for="ranking-scale-overall"><span>总体</span><output id="ranking-scale-overall-output">100%</output></label>
@@ -914,6 +919,7 @@
       <div class="ranking-export-body">
         <h3>图片分享 · PNG</h3>
         <label>清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
+        <label>画布 <select data-ranking-export-canvas><option value="base">基础画布 · 至少 960 × 540</option><option value="compact">紧凑自适应</option></select></label>
         <output data-export-summary aria-live="polite"></output>
         <p>使用深色排榜背景。体积仅为粗估，封面内容与压缩结果可能使实际大小超出区间；导出完成后显示实际大小。清晰度自动记住，工具栏“导出图片”可直接使用。</p>
         <div class="ranking-export-actions"><button type="button" data-export-confirm data-ui="primary">导出 PNG 图片</button><button type="button" data-export-retry hidden>重新计算</button></div>

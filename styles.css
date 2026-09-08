@@ -9742,12 +9742,12 @@ body.is-ranking-immersive #ranking-view #display-menu { top: 50px; }
 :root[data-ranking-style="classic"] .mobile-tier-edit-body > label { display: grid; gap: 6px; }
 :root[data-ranking-style="classic"] .mobile-tier-edit-body input { width: 100%; min-height: 40px; }
 :root[data-ranking-style="classic"] .mobile-tier-edit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-:root[data-ranking-style="classic"] #ranking-view { --classic-width: calc(80px * var(--ranking-ui-scale-card)); --classic-height: calc(80px * var(--ranking-ui-scale-card)); }
+:root[data-ranking-style="classic"] #ranking-view { --classic-label-width: calc(100px * var(--ranking-ui-scale-tier-width, 1)); --classic-width: calc(80px * var(--ranking-ui-scale-card)); --classic-height: calc(80px * var(--ranking-ui-scale-card)); }
 :root[data-ranking-style="classic"][data-ranking-shape="portrait"] #ranking-view { --classic-height: calc(120px * var(--ranking-ui-scale-card)); }
 :root[data-ranking-style="classic"][data-ranking-shape="landscape"] #ranking-view { --classic-width: calc(130px * var(--ranking-ui-scale-card)); }
 :root[data-ranking-style="classic"] #ranking-view .tier-board { gap: 0; padding: 0; background: #1a1a1a; border: 1px solid #000; border-radius: 0; }
 :root[data-ranking-style="classic"] #ranking-view .tier-row {
-  height: auto; block-size: auto; min-height: var(--classic-height); grid-template-columns: 100px minmax(0, 1fr) 42px;
+  height: auto; block-size: auto; min-height: var(--classic-height); grid-template-columns: var(--classic-label-width) minmax(0, 1fr) 42px;
   border: 0; border-bottom: 1px solid #000; border-radius: 0; background: #1a1a1a;
 }
 :root[data-ranking-style="classic"] #ranking-view .tier-label { border-radius: 0; font: 600 calc(20px * var(--ranking-ui-scale-tier-name)) sans-serif; }
@@ -9782,11 +9782,12 @@ body.is-ranking-immersive #ranking-view #display-menu { top: 50px; }
 :root[data-ranking-style="classic"] body:not(.is-ranking-immersive) #ranking-view:not(.is-candidates-pinned) .ranking-candidate-grid { display: flex; flex-wrap: wrap; max-height: none; overflow: visible; }
 :root[data-ranking-style="classic"] #ranking-view .ranking-upload-tile { width: var(--classic-width); min-width: var(--classic-width); flex-basis: var(--classic-width); height: var(--classic-height); }
 :root[data-ranking-style="classic"] body.is-ranking-immersive #ranking-view .tier-classic-actions { display: none; }
-:root[data-ranking-style="classic"] body.is-ranking-immersive #ranking-view .tier-row { grid-template-columns: 100px minmax(0, 1fr); }
+:root[data-ranking-style="classic"] body.is-ranking-immersive #ranking-view .tier-row { grid-template-columns: var(--classic-label-width) minmax(0, 1fr); }
 @media (max-width: 899px) {
   #ranking-view #display-menu, body.is-ranking-immersive #ranking-view #display-menu { inset: auto 8px calc(62px + var(--safe-bottom)) 8px; width: auto; max-width: none; max-height: 42dvh; }
-  :root[data-ranking-style="classic"] #ranking-view .tier-row { grid-template-columns: 58px minmax(0, 1fr) 34px !important; }
-  :root[data-ranking-style="classic"] body.is-ranking-immersive #ranking-view .tier-row { grid-template-columns: 58px minmax(0, 1fr) !important; }
+  :root[data-ranking-style="classic"] #ranking-view { --classic-label-width: calc(58px * var(--ranking-ui-scale-tier-width, 1)); }
+  :root[data-ranking-style="classic"] #ranking-view .tier-row { grid-template-columns: var(--classic-label-width) minmax(0, 1fr) 34px !important; }
+  :root[data-ranking-style="classic"] body.is-ranking-immersive #ranking-view .tier-row { grid-template-columns: var(--classic-label-width) minmax(0, 1fr) !important; }
   :root[data-ranking-style="classic"] body:not(.is-ranking-immersive) #ranking-view:not(.is-candidates-pinned) .ranking-candidate-grid { max-height: 32dvh; overflow-y: auto; }
 }
 

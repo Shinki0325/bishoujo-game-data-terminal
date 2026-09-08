@@ -698,6 +698,7 @@ async function initialize() {
       const state = company ? companyState : model.state;
       return { company, state, rankedCount: company ? companyState.rankedCount : model.rankedCount,
         exportQuality: document.querySelector('[data-ranking-export-quality]')?.value ?? 'standard',
+        exportCanvas: document.querySelector('[data-ranking-export-canvas]')?.value ?? 'base',
         tierOrder: company ? companyState.tierOrder : state.tierOrder,
         worksById: company ? companyRankingItems() : worksById,
         presentation: (company ? companyPresentation : presentation).inspect() };

@@ -96,8 +96,9 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
     ['rail', elements.rankingScaleRail, elements.rankingScaleRailOutput],
     ['annotation', elements.rankingScaleAnnotation, elements.rankingScaleAnnotationOutput],
-    ['tierName', elements.rankingScaleTierName, elements.rankingScaleTierNameOutput]
-  ];
+    ['tierName', elements.rankingScaleTierName, elements.rankingScaleTierNameOutput],
+    ['tierWidth', documentRef.getElementById?.('ranking-scale-tier-width'), documentRef.getElementById?.('ranking-scale-tier-width-output')]
+  ].filter(([,input,output])=>input && output);
 
   function applyUiScale(uiScale) {
     const normalized = Object.fromEntries(scaleControls.map(([key]) => [key, Number(uiScale[key]) || 100]));
@@ -106,7 +107,7 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     appliedScaleKey = scaleKey;
     for (const [key, input, output] of scaleControls) {
       const value = normalized[key];
-      const cssKey = key === 'tierName' ? 'tier-name' : key;
+      const cssKey = key === 'tierName' ? 'tier-name' : key === 'tierWidth' ? 'tier-width' : key;
       input.value = String(value);
       input.style?.setProperty('--range-fill', `${(value - 80) / 80 * 100}%`);
       output.value = `${value}%`;
@@ -135,7 +136,12 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     if (modeLabel) modeLabel.textContent = live ? '直播显示 · 独立记住尺寸与内容' : '普通显示 · 独立记住尺寸与内容';
     const sync = documentRef.getElementById?.('ranking-display-sync');
     if (sync) sync.textContent = live ? '将当前显示同步到普通模式' : '将当前显示同步到直播模式';
-    if (displayKey === appliedDisplayKey) return false;
+    if (displayKey === appliedDisplayKey) {
+      // Slider previews update CSS independently of the structural display cache.
+      // Returning to an unchanged mode must still restore that mode's scales.
+      applyUiScale(state.uiScale);
+      return false;
+    }
     appliedDisplayKey = displayKey;
     documentRef.documentElement.setAttribute?.('data-ranking-style', display.style);
     documentRef.documentElement.setAttribute?.('data-ranking-shape', display.shape);
@@ -143,6 +149,8 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     if (shapeSelect) shapeSelect.value = display.shape;
     const shapeField = documentRef.getElementById?.('ranking-display-shape-field');
     if (shapeField) shapeField.hidden = display.style !== 'classic';
+    const tierWidthField = documentRef.getElementById?.('ranking-tier-width-field');
+    if (tierWidthField) tierWidthField.hidden = display.style !== 'classic';
     for (const input of [elements.rankingShowCounts, elements.mobileRankingShowCounts]) input.checked = state.showCounts;
     for (const input of [elements.rankingShowTitles, elements.mobileRankingShowTitles]) input.checked = state.showTitles;
     getRankingView()?.setShowCounts?.(state.showCounts);

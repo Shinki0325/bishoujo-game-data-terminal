@@ -12,12 +12,15 @@ export function createRankingExportView({ documentRef = document, storage, previ
   const lifetime = createViewLifetime();
   const dialog = documentRef.getElementById('ranking-export-dialog');
   const quality = dialog.querySelector('[data-ranking-export-quality]');
+  const canvas = dialog.querySelector('[data-ranking-export-canvas]');
   const summary = dialog.querySelector('[data-export-summary]');
   const confirm = dialog.querySelector('[data-export-confirm]');
   const retry = dialog.querySelector('[data-export-retry]');
   const key = 'galpedia:ranking-export-quality-v1';
   let generation = 0, returnFocus = null;
   try { quality.value = storage?.getItem(key) === 'high' ? 'high' : 'standard'; } catch { quality.value = 'standard'; }
+  const canvasKey='galpedia:ranking-export-canvas-v1';
+  if(canvas) { try { canvas.value=storage?.getItem(canvasKey)==='compact'?'compact':'base'; } catch { canvas.value='base'; } }
   async function refresh() {
     const token = ++generation;
     confirm.disabled = true;
@@ -50,6 +53,10 @@ export function createRankingExportView({ documentRef = document, storage, previ
   }
   lifetime.listen(quality, 'change', () => {
     try { storage?.setItem(key, quality.value); } catch { /* Export still works without persistence. */ }
+    void refresh();
+  });
+  lifetime.listen(canvas, 'change', () => {
+    try { storage?.setItem(canvasKey,canvas.value); } catch { /* Export does not require storage. */ }
     void refresh();
   });
   lifetime.listen(dialog.querySelector('[data-export-close]'), 'click', close);
