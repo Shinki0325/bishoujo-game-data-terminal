@@ -1,3 +1,5 @@
+import { createPersonDirectoryServices } from './lib/person-directory-services.js';
+import { prepareWorkbenchDirectories } from './lib/workbench-directory-model.js';
 import { createProjectResources } from './lib/project-resources.js';
 import { loadLegacyWorkbenchData } from './lib/legacy-workbench-data.js';
 import { toWorkerLookup } from './lib/workbench-data-projection.js';
@@ -12,7 +14,6 @@ import {
 } from './lib/asset-url.js';
 import { createHistory } from './lib/history.js';
 import { loadRuntimeSource } from './lib/runtime-source-cache.js';
-import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
 import { createPersonWorkspaceController } from './lib/person-workspace-controller.js';
 import { createCompanyWorkspaceController } from './lib/company-workspace-controller.js';
 import { createBangumiImportController } from './lib/bangumi-import-controller.js';
@@ -34,8 +35,6 @@ import { createRankingWorkspaceView } from './views/ranking-workspace-view.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
 import { createCustomWork } from './lib/custom-work.js';
-import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
-import { buildCompanyDirectory, restoreCompanySummary } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
 import { createMediaEditController } from './lib/media-edit-controller.js';
@@ -48,7 +47,6 @@ import {
 } from './lib/browser-io.js';
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
-import { createPersonWorkIndexRuntime } from './lib/person-work-index-runtime.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
 import { applyTheme, readTheme, saveTheme } from './lib/theme-preference.js';
@@ -62,7 +60,6 @@ import { canUseHighDensityPreview } from './lib/adaptive-image-source.js';
 import {
   configuredAssetBase,
   DATA_URLS,
-  PRESENTATION_FAMILIES_SIDECAR_SHA256,
   RUNTIME_FEATURES,
   PREVIEW_MANIFEST_PATH,
   RUNTIME_DATA_CACHE_MODE,
@@ -77,9 +74,6 @@ import {
   M2_PERSON_NAME_VARIANTS_SHA256,
   M2_PERSON_CHARACTER_ROLES_SHA256,
   M2_PERSON_NAME_PREFERENCES_SHA256,
-  M1_PERSON_ONLY_ENTITIES_SHA256,
-  M1_PERSON_VOICE_RELATIONS_SHA256,
-  PERSON_WORK_INDEX_SHA256,
   BANGUMI_PUBLIC_BINDINGS_SHA256,
   DATA_REVISION,
   TELEMETRY_ENDPOINT,
@@ -103,7 +97,6 @@ import { createSelectionView, selectionInitialWorks } from './views/selection-vi
 import { createMobileSelectionView } from './views/mobile-selection-view.js';
 import { createCompanyDirectoryView, companyImageUrl } from './views/company-directory-view.js';
 import { createPersonDirectoryView } from './views/person-directory-view.js?v=20260903-person-role-model-v5';
-import { createM2PersonRuntime } from './lib/m2-person-runtime.js?v=20260904-m2-identity-character-image-v1';
 import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createWorkDetailCreditsView } from './views/work-detail-credits-view.js';
@@ -701,73 +694,21 @@ async function initialize() {
   });
   // The validated final fanout already covers every core work's display media.
   // Keep the original eager proof path when that authority is not enabled.
-  let personRuntime = null;
-  let personPerformanceRuntime = null;
-  let personWorkIndexRuntime = null;
-  if (RUNTIME_FEATURES.personDirectoryV1?.enabled === true) {
-    if (RUNTIME_FEATURES.personDirectoryV1.performanceCandidate === true
-      && !new URLSearchParams(window.location.search).has('skipPersonPerformance')) {
-      personPerformanceRuntime = getPersonWorkspaceRuntime();
-    }
-    personRuntime = createM2PersonRuntime({
-      manifestUrl: DATA_URLS.m2PersonManifest,
-      entitiesUrl: DATA_URLS.m2PersonEntities,
-      relationsUrl: DATA_URLS.m2PersonRelations,
-      baseEntitiesUrl: DATA_URLS.m1PersonEntities,
-      baseEntitiesSha256: M1_PERSON_ONLY_ENTITIES_SHA256,
-      baseRelationsUrl: DATA_URLS.m1PersonVoiceRelations,
-      baseRelationsSha256: M1_PERSON_VOICE_RELATIONS_SHA256,
-      variantsUrl: DATA_URLS.m2PersonNameVariants,
-      characterRolesUrl: DATA_URLS.m2PersonCharacterRoles,
-      namePreferencesUrl: DATA_URLS.m2PersonNamePreferences,
-      crossSourceCrosswalkUrl: DATA_URLS.m2PersonCrossSourceCrosswalk,
-      catalogWorks: preparedWorkbench.workerOwned ? [] : sampleSource.works,
-      loadCatalogWorks: preparedWorkbench.workerOwned ? () => filterWorkerClient.personCatalog() : null,
-      fetchImpl: fetch,
-      cryptoRef: crypto,
-      cacheMode: RUNTIME_DATA_CACHE_MODE
-    });
-    if (RUNTIME_FEATURES.personFilterV1?.enabled === true) {
-      personWorkIndexRuntime = createPersonWorkIndexRuntime({
-        indexUrl: DATA_URLS.personWorkIndex,
-        sha256: PERSON_WORK_INDEX_SHA256,
-        fetchImpl: fetch,
-        cryptoRef: crypto,
-        cacheMode: RUNTIME_DATA_CACHE_MODE
-      });
-    }
-  }
-  let presentationFamilies = null;
-  // Catalog projection may split a VNDB version family at independent
-  // Bangumi subjects. Person representative works are a compact summary and
-  // keep the raw version-family identity solely for slot de-duplication.
-  const representativeFamilyByWorkId = new Map();
-  for (const family of presentationFamiliesSource?.value?.families ?? []) {
-    if (typeof family?.presentationWorkId !== 'string' || !family.presentationWorkId) continue;
-    for (const workId of family.catalogMemberWorkIds ?? []) {
-      if (typeof workId === 'string' && workId) representativeFamilyByWorkId.set(workId, family.presentationWorkId);
-    }
-  }
-  if (presentationFamiliesSource !== null) {
-    try {
-      if (presentationFamiliesSource.sha256 !== PRESENTATION_FAMILIES_SIDECAR_SHA256) {
-        throw new TypeError('presentation families sidecar hash does not match the runtime pin');
-      }
-      presentationFamilies = preparePresentationFamiliesSidecar(presentationFamiliesSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: populationContract.presentation.workIds,
-        bangumiSubjectByWorkId: bangumiPublicBindings === null
-          ? null
-          : new Map(bangumiPublicBindings.bindings.map(binding => [binding.egsWorkId, binding.bangumiSubjectId]))
-      });
-    } catch (error) {
-      throw new TypeError('presentation families sidecar rejected', { cause: error });
-    }
-  }
-  const companyDirectory = preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
-    brands,
-    works: ratedDisplayWorks,
+  const personServices = createPersonDirectoryServices({
+    workerOwned: preparedWorkbench.workerOwned, catalogWorks: sampleSource.works,
+    loadCatalogWorks: () => filterWorkerClient.personCatalog(),
+    locationSearch: window.location.search, ensureWorker: ensureFilterWorker,
+    updateWorker: index => filterWorkerClient.update({ ...filterWorkerPayload, personWorkIndex: index })
+  });
+  const personRuntime = personServices.core;
+  let personPerformanceRuntime = personServices.performance;
+  const ensurePersonFilterIndex = personServices.ensureFilterIndex;
+  const { presentationFamilies, representativeFamilyByWorkId, companyDirectory } = prepareWorkbenchDirectories({
+    presentationFamiliesSource, catalogSnapshotId: sampleSource.snapshot?.snapshotId,
+    catalogSha256: catalogSource.sha256, presentationWorkIds: populationContract.presentation.workIds,
+    bangumiPublicBindings,
+    companySummary: preparedWorkbench.uiSummary ? preparedWorkbench.uiSummary.companies : null,
+    brands, works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
     companyPinyinById: enrichment?.companyPinyinById,
     avatarByCompanyId: companyProfile?.avatarByCompanyId
@@ -833,25 +774,6 @@ async function initialize() {
     now: () => new Date(),
     downloadJson
   });
-  let personWorkIndex = null;
-  let personWorkIndexPromise = null;
-  async function ensurePersonFilterIndex() {
-    if (personWorkIndex !== null) return personWorkIndex;
-    if (personWorkIndexRuntime === null) throw new Error('人物筛选索引不可用');
-    if (personWorkIndexPromise !== null) return personWorkIndexPromise;
-    personWorkIndexPromise = personWorkIndexRuntime.load()
-      .then(async index => {
-        await ensureFilterWorker();
-        await filterWorkerClient.update({ ...filterWorkerPayload, personWorkIndex: index });
-        personWorkIndex = index;
-        return index;
-      })
-      .catch(error => {
-        personWorkIndexPromise = null;
-        throw error;
-      });
-    return personWorkIndexPromise;
-  }
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
   let filterView;
@@ -1554,7 +1476,7 @@ async function initialize() {
         ensurePersonFilterIndex(),
         ensurePersonRuntime()
       ]);
-      const indexedPersonIds = new Set(Object.keys(personWorkIndex?.persons ?? {}));
+      const indexedPersonIds = new Set(Object.keys(personServices.filterIndex?.persons ?? {}));
       const options = (records ?? [])
         .map(person => ({
           ...person,
@@ -2152,7 +2074,7 @@ async function initialize() {
     onFilterChange(nextFilterState) {
       const interaction = interactionMetrics.begin('filter');
       interactionMetrics.stage(interaction, 'debounce-complete');
-      if (nextFilterState.personIds?.length > 0 && personWorkIndex === null) {
+      if (nextFilterState.personIds?.length > 0 && personServices.filterIndex === null) {
         const result = controller.setFilterState(nextFilterState);
         void ensurePersonFilterIndex()
           .then(() => render([], interaction))
