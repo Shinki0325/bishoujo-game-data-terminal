@@ -27,7 +27,10 @@ import { createWorkDetailView } from './views/work-detail-view.js';
 import { createWorkVersionView } from './views/work-version-view.js';
 import { createLazyResource } from './lib/lazy-resource.js';
 import { createWorkspaceSession } from './lib/workspace-session.js';
-import { syncHeadingCount, syncLocalFeedback } from './lib/ui-page-heading.js';
+import { createWorkbenchQueryController } from './lib/workbench-query-controller.js';
+import { projectWorkbenchResults } from './lib/workbench-results-model.js';
+import { createWorkbenchResultsView } from './views/workbench-results-view.js';
+import { createRankingWorkspaceView } from './views/ranking-workspace-view.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
 import { createCustomWork } from './lib/custom-work.js';
@@ -835,14 +838,6 @@ function downloadJson({ filename, text, mimeType }) {
   });
 }
 
-function filterRenderKey(model, visibleBrands) {
-  return JSON.stringify([
-    model.state.filterState,
-    model.state.filterState.selectedOnly ? model.state.selectedWorkIds : null,
-    visibleBrands.map(brand => brand.brandId)
-  ]);
-}
-
 
 async function initialize() {
   const localSearchClears = [...document.querySelectorAll('[data-clear-input]')].map(button => {
@@ -1216,10 +1211,17 @@ async function initialize() {
   const worksById = new Map(ratedDisplayWorks.map(work => [work.workId, work]));
   const catalogWorkIds = new Set(preparedWorkbench.uiSummary?.workIds ?? ratedDisplayWorks.map(work=>work.workId));
   const workReference = id => worksById.get(String(id)) ?? (catalogWorkIds.has(String(id)) ? {workId:String(id)} : null);
-  let activeHydratedWorks = new Map();
+  const workbenchQuery = createWorkbenchQueryController({
+    workData, workerOwned: preparedWorkbench.workerOwned,
+    ensureFilterWorker: () => ensureFilterWorker(),
+    ensureRankingView: () => ensureRankingView(),
+    query: request => filterWorkerClient.query(request),
+    resultIds: revision => filterWorkerClient.resultIds(revision),
+    metrics: interactionMetrics
+  });
   if (workData) {
     const baseGet = worksById.get.bind(worksById);
-    worksById.get = id => activeHydratedWorks.get(id) ?? workData.peek(id) ?? baseGet(id);
+    worksById.get = id => workbenchQuery.lookup(id) ?? baseGet(id);
   }
   const workerWorkAliasesById = workAliasesById;
   const workerWorkPinyinById = workPinyinById;
@@ -1488,10 +1490,7 @@ async function initialize() {
     poolLeft: 0
   };
   let renderedWorkspaceMode = null;
-  let renderedFilterKey = null;
   let lastRenderedModel = null;
-  const renderSession = createWorkspaceSession();
-  let renderTicket = null;
   let replacementWork = null;
   let companyDirectoryOpen = false;
   let personDirectoryOpen = false;
@@ -2067,11 +2066,9 @@ async function initialize() {
     },
     async onToggleCurrentResults(workIds) {
       if (workIds === null) {
-        const revision = lastResultPage?.resultRevision;
-        const generation = renderTicket;
         try {
-          workIds = await filterWorkerClient.resultIds(revision);
-          if (lastResultPage?.resultRevision !== revision || !generation.isCurrent()) return;
+          workIds = await workbenchQuery.currentResultIds();
+          if (workIds === null) return;
         } catch (error) {
           announce('结果已更新，请重新选择。', 'warning');
           return;
@@ -2808,183 +2805,98 @@ async function initialize() {
     return result;
   }
 
-  let lastResultPage = null;
+  const workbenchResults = createWorkbenchResultsView({
+    getFilterView: () => filterView,
+    elements: {
+      selectedCount: elements.selectedCount, rankedCount: elements.rankedCount,
+      unrankedCount: elements.unrankedCount, filterResultCount: elements.filterResultCount,
+      catalogResultCount: elements.catalogResultCount,
+      rankingHeadingCount: document.querySelector('#ranking-heading-count'),
+      catalogTotalCount: document.querySelector('#catalog-total-count')
+    }
+  });
+  const rankingWorkspace = createRankingWorkspaceView({
+    getView: () => rankingView,
+    syncCandidateTray: () => setMobileRankingCandidatesOpen(document.body.classList.contains('is-mobile-ranking-candidates-open')),
+    elements: {
+      root: elements.rankingView, showCounts: elements.rankingShowCounts, showTitles: elements.rankingShowTitles,
+      subjectWork: elements.rankingSubjectWork, subjectCompany: elements.rankingSubjectCompany,
+      candidatesTitle: elements.rankingCandidatesTitle, candidateSearch: elements.rankingCandidateSearch
+    }
+  });
+
   async function render(visibleBrands = [], interaction = null) {
-    const generation = renderSession.begin('workbench-render');
-    renderTicket = generation;
-    lastResultPage = null;
     captureWorkspaceScroll();
     const state = controller.inspectState();
-    let outcome;
     const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
-    try {
-      if (workData && !preparedWorkbench.workerOwned) {
-        const hydrated = await workData.get([...new Set([...state.selectedWorkIds, ...comparison.ids])]);
-        if (!generation.isCurrent()) return false;
-        activeHydratedWorks = hydrated;
-      }
-      const needsFiltering = state.workspaceMode !== 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
-      if (state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen) await ensureRankingView();
-      if (needsFiltering) await ensureFilterWorker();
-      if (!generation.isCurrent()) {
-        interactionMetrics.cancel(interaction, 'superseded-search-load');
-        return false;
-      }
-      outcome = needsFiltering ? await filterWorkerClient.query({
-        ...(preparedWorkbench.workerOwned ? {paged: true, pageNumber: selectionView.getPageNumber()} : {}),
-        filterState: state.filterState,
-        selectedWorkIds: state.selectedWorkIds,
-        includeProjectedCounts: includeFilterCounts,
-        visibleBrands,
-        companyLimit: 24
-      }) : { status: 'success', workIds: [], counts: null };
-      if (preparedWorkbench.workerOwned && outcome.status !== 'stale') {
-        const hydrated=await workData.get([...new Set([...state.selectedWorkIds,...comparison.ids,...outcome.workIds])]);
-        if(!generation.isCurrent())return false;
-        activeHydratedWorks=hydrated;
-      }
-    } catch (error) {
-      if (!generation.isCurrent()) return false;
-      generation.fail(error);
-      interactionMetrics.cancel(interaction, 'worker-error');
+    const queryResult = await workbenchQuery.run({
+      state, directoryOpen: personDirectoryOpen || companyDirectoryOpen,
+      comparisonIds: comparison.ids, pageNumber: selectionView.getPageNumber(),
+      includeFilterCounts, visibleBrands
+    }, interaction);
+    if (queryResult.status === 'error' && queryResult.generation.isCurrent()) {
       announce(state.workspaceMode === 'ranking' ? '排榜暂时未能加载，请重新进入排榜重试。' : '筛选计算失败，可继续调整条件重试。', 'error');
-      console.error(error);
-      return false;
+      console.error(queryResult.error);
     }
-    if (outcome.status === 'stale') {
-      interactionMetrics.cancel(interaction, 'stale-query');
-      return false;
-    }
-    if (!generation.isCurrent()) {
-      interactionMetrics.cancel(interaction, 'superseded-render');
-      return false;
-    }
-    interactionMetrics.stage(interaction, 'worker-return');
+    if (queryResult.status !== 'ready') return false;
+    const { outcome, generation } = queryResult;
+    if (!generation.isCurrent()) return false;
     const model = controller.inspect(outcome.workIds);
     interactionMetrics.stage(interaction, 'controller-ready');
     const ranking = model.state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
     const companyState = ranking && rankingSubject === 'company' ? companyRanking.inspect() : null;
     const activePresentation = companyState === null ? presentation : companyPresentation;
-    let rankingModel = null;
-    // Keep the filtered result distinct from the full catalog size. This is
-    // especially important on mobile, where the compact header used to make
-    // 3788 look like the total number of works.
-    lastResultPage = outcome.page ?? null;
-    const visiblePresentationWorks = outcome.page || presentationFamilies === null
-      ? model.visibleWorks.map(work => worksById.get(work.workId) ?? work)
-      : presentationFamilies.projectVisibleWorks(model.visibleWorks, {
-        sortKey: model.state.filterState.sortKey,
-        sortDirection: model.state.filterState.sortDirection,
-        workById: worksById,
-        presorted: true,
-        // Full family decoration belongs to the currently hydrated page only.
-        decorate: workData === null
-      });
+    const result = projectWorkbenchResults({
+      model, outcome, families: presentationFamilies, worksById,
+      catalogSize: preparedWorkbench.uiSummary?.workIds.length ?? sample.works.length,
+      decorate: workData === null, selectionLimit: USER_WORK_LIMIT,
+      selectionMode, compareMode, comparedWorkIds: comparison.ids
+    });
     interactionMetrics.stage(interaction, 'presentation-ready');
-    const catalogSize=preparedWorkbench.uiSummary?.workIds.length??sample.works.length;
-    const catalogTotal = presentationFamilies === null
-      ? catalogSize
-      : catalogSize - presentationFamilies.memberCount + presentationFamilies.familyCount;
-    if (ranking) {
-      rankingModel = rankingSubject === 'company'
-        ? buildCompanyRankingModel()
-        : buildRankingModel(model.state, worksById, candidateTitleQuery);
-    }
+    const rankingModel = !ranking ? null : rankingSubject === 'company'
+      ? buildCompanyRankingModel() : buildRankingModel(model.state, worksById, candidateTitleQuery);
     interactionMetrics.stage(interaction, 'model-ready');
     let renderCoverUrls = null;
     if (!companyDirectoryOpen && ranking && rankingSubject === 'work') {
       renderCoverUrls = await resolveCoverUrls([
-        ...rankingModel.candidateWorks,
-        ...rankingModel.tiers.flatMap(tier => tier.works)
+        ...rankingModel.candidateWorks, ...rankingModel.tiers.flatMap(tier => tier.works)
       ]);
     } else if (!companyDirectoryOpen && !ranking) {
-      renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(visiblePresentationWorks));
+      renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(result.works));
     }
     if (!generation.isCurrent()) {
       interactionMetrics.cancel(interaction, 'superseded-media');
       return false;
     }
     interactionMetrics.stage(interaction, 'media-ready');
-    elements.selectedCount.textContent = String(companyState?.selectedCompanyIds.length ?? model.selectedCount);
-    elements.rankedCount.textContent = String(companyState?.rankedCount ?? model.rankedCount);
-    elements.unrankedCount.textContent = String(companyState?.candidateCompanyIds.length ?? model.unrankedCount);
-    syncLocalFeedback(document.querySelector('#ranking-heading-count'), `已排 ${new Intl.NumberFormat('zh-CN').format(companyState?.rankedCount ?? model.rankedCount)} · 候选 ${new Intl.NumberFormat('zh-CN').format(companyState?.candidateCompanyIds.length ?? model.unrankedCount)}`);
-    syncHeadingCount(document.querySelector('#catalog-total-count'), catalogTotal, '部作品');
-    const resultTotal = outcome.page?.total ?? visiblePresentationWorks.length;
-    elements.filterResultCount.textContent = `${resultTotal} / ${catalogTotal} 项`;
-    syncLocalFeedback(elements.catalogResultCount, `${resultTotal} / ${catalogTotal} 项`);
-    elements.catalogResultCount.parentElement.hidden = resultTotal === catalogTotal;
+    workbenchResults.renderCounts({ model, companyState, ...result });
     renderWorkspace(model);
-    if (personDirectoryOpen) {
-      renderPersonDirectory();
-      interactionMetrics.stage(interaction, 'dom-updated');
-    } else if (companyDirectoryOpen) {
-      renderCompanyDirectory();
-      interactionMetrics.stage(interaction, 'dom-updated');
-    } else if (ranking) {
-      elements.rankingShowCounts.checked = activePresentation.inspect().showCounts;
-      elements.rankingShowTitles.checked = activePresentation.inspect().showTitles;
-      rankingView.setShowCounts(activePresentation.inspect().showCounts);
-      rankingView.setShowTitles(activePresentation.inspect().showTitles);
-      rankingView.setAnnotations(activePresentation.inspect().annotations);
-      elements.rankingView.classList.toggle('is-company-ranking', rankingSubject === 'company');
-      elements.rankingSubjectWork.setAttribute('aria-pressed', String(rankingSubject === 'work'));
-      elements.rankingSubjectCompany.setAttribute('aria-pressed', String(rankingSubject === 'company'));
-      const isCompanyRanking = rankingSubject === 'company';
-      const candidateLabel = isCompanyRanking ? '候选会社' : '候选作品';
-      elements.rankingCandidatesTitle.textContent = candidateLabel;
-      setMobileRankingCandidatesOpen(document.body.classList.contains('is-mobile-ranking-candidates-open'));
-      elements.rankingCandidateSearch.closest('.search-field').hidden = isCompanyRanking;
-      elements.rankingCandidateSearch.placeholder = '搜索候选标题';
-      rankingView.render(rankingModel, renderCoverUrls);
-      rankingView.setMobileDragEnabled(true);
-      interactionMetrics.stage(interaction, 'dom-updated');
-    } else {
-      await selectionView.render({
-        works: visiblePresentationWorks,
-        ...(outcome.page ? {page: outcome.page} : {}),
-        view: 'full',
-        selectedWorkIds: model.state.selectedWorkIds,
-        selectAllState: outcome.page ? outcome.page.selectAllState : presentationFamilies === null
-          ? model.selectAllState
-          : presentationFamilies.presentationSelectionState(visiblePresentationWorks, model.state.selectedWorkIds),
-        selectionCapacity: Math.max(0, USER_WORK_LIMIT - model.selectedCount),
-      filterState: model.state.filterState,
-        selectionMode: selectionMode && !compareMode,
-        compareMode,
-        comparedWorkIds: comparison.ids
-      }, renderCoverUrls);
+    if (personDirectoryOpen) renderPersonDirectory();
+    else if (companyDirectoryOpen) renderCompanyDirectory();
+    else if (ranking) rankingWorkspace.render({
+      model: rankingModel, subject: rankingSubject, presentation: activePresentation.inspect(), coverUrls: renderCoverUrls
+    });
+    else {
+      await selectionView.render(result.selection, renderCoverUrls);
       if (!generation.isCurrent()) return false;
-      interactionMetrics.stage(interaction, 'dom-updated');
     }
-    const nextFilterKey = filterRenderKey(model, visibleBrands);
-    if (includeFilterCounts && outcome.counts && nextFilterKey !== renderedFilterKey) {
-      filterView.render(model.state.filterState, {
-        current: resultTotal,
-        filters: outcome.counts.filters,
-        brands: outcome.counts.brands,
-        yearCounts: outcome.counts.yearCounts
-      });
-      renderedFilterKey = nextFilterKey;
-    } else if (!ranking && !personDirectoryOpen && !companyDirectoryOpen) {
-      filterView.renderSummary(model.state.filterState, resultTotal);
-    }
+    interactionMetrics.stage(interaction, 'dom-updated');
+    workbenchResults.renderFilters({
+      model, visibleBrands, includeFilterCounts, counts: outcome.counts,
+      resultTotal: result.resultTotal, selectionActive: !ranking && !personDirectoryOpen && !companyDirectoryOpen
+    });
     renderControlStates(model);
     if (companyDirectoryOpen) {
       // The directory owns its own scroll surface and is intentionally not persisted.
-    } else if (model.state.workspaceMode === 'ranking') {
-      rankingView?.restoreScroll(rankingScrollPosition);
-    } else {
-      selectionView.restoreScroll(selectionScrollPosition);
-    }
+    } else if (model.state.workspaceMode === 'ranking') rankingView?.restoreScroll(rankingScrollPosition);
+    else selectionView.restoreScroll(selectionScrollPosition);
     renderedWorkspaceMode = model.state.workspaceMode;
     lastRenderedModel = model;
     renderKeeperGuidance();
     if (rankingModel !== null && rankingSubject === 'work') {
       void refreshRankingPreload(rankingModel).catch(error => console.warn('ranking media preload unavailable', error));
-    }
-    else cancelRankingPreload();
-    generation.complete({ empty: !ranking && !personDirectoryOpen && !companyDirectoryOpen && resultTotal === 0 });
+    } else cancelRankingPreload();
+    generation.complete({ empty: !ranking && !personDirectoryOpen && !companyDirectoryOpen && result.resultTotal === 0 });
     interactionMetrics.completeAfterFrame(interaction);
     return true;
   }
@@ -3338,7 +3250,7 @@ async function initialize() {
     const ticket = uiLocationSession.begin(key);
     applyingUiLocation = false;
     // Invalidate UI observers before any asynchronous route preparation.
-    renderSession.suspend();
+    workbenchQuery.suspend();
     companyWorkspace.suspend();
     detailOpening.suspend();
     selectionView.suspend();
@@ -3844,7 +3756,7 @@ async function initialize() {
       poolLeft: 0
     };
     renderedWorkspaceMode = null;
-    renderedFilterKey = null;
+    workbenchResults.reset();
     lastRenderedModel = null;
     void render();
     announce('JSON 状态已导入。', 'success');
