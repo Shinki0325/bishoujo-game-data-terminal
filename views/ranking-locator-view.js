@@ -79,7 +79,7 @@ export function createRankingLocatorView({ documentRef, getModel, onLocate }) {
   clearButton.setAttribute('aria-label', '清空查找关键词');
   label.append(input);
   form.append(label, clearButton);
-  const closeButton = createElement(documentRef, 'button', 'ranking-locator-close', '关闭');
+  const closeButton = createElement(documentRef, 'button', 'ranking-locator-close', '×');
   closeButton.type = 'button';
   closeButton.setAttribute('aria-label', '关闭全榜查找');
   const resultStatus = createElement(documentRef, 'p', 'ranking-locator-status');
@@ -89,7 +89,7 @@ export function createRankingLocatorView({ documentRef, getModel, onLocate }) {
   resultList.setAttribute('role', 'listbox');
   resultList.setAttribute('aria-label', '全榜查找结果');
   const hint = createElement(documentRef, 'p', 'ranking-locator-hint', '↑↓ 选择，Enter 定位，Esc 关闭');
-  panel.append(context, form, closeButton, resultStatus, resultList, hint);
+  panel.append(closeButton, context, form, resultStatus, resultList, hint);
   dialog.append(panel);
   host.append(dialog);
 

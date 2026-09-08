@@ -514,17 +514,20 @@
                   <label for="ranking-scale-tier-name"><span>分级名称</span><output id="ranking-scale-tier-name-output">100%</output></label>
                   <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
                   </details>
-                  <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认大小</button>
                 </section>
                 <button id="ranking-display-sync" type="button">将当前显示同步到直播模式</button>
                 <p class="ranking-display-note">风格与封面形式共用，尺寸和内容显示分别记住。经典布局的行高随卡片变化；图片标注仅在直播中显示。</p>
+                <div class="ranking-display-reset-group">
+                  <button data-ui="utility" id="ranking-scale-reset" type="button" aria-describedby="ranking-scale-reset-note">恢复本模式全部尺寸</button>
+                  <p id="ranking-scale-reset-note" class="ranking-display-note">仅恢复尺寸，不改变风格、封面形式或标题与数量开关。</p>
+                </div>
                 </div>
               </div>
             </div>
             <div class="toolbar-menu-shell">
               <button data-ui="utility" id="cleanup-menu-button" type="button" aria-label="更多排榜操作" aria-expanded="false" aria-controls="cleanup-menu">更多操作 ▾</button>
               <div id="cleanup-menu" class="toolbar-menu" hidden>
-                <button id="ranking-locate-open" type="button">全榜查找与定位</button>
+                <button id="ranking-locate-open" type="button">全榜查找</button>
                 <strong class="toolbar-menu-section-title">数据</strong>
                 <button id="bangumi-import-open" type="button">从 Bangumi 导入</button>
                 <button id="import-state" type="button">导入 JSON</button>
@@ -609,7 +612,7 @@
             </section>
             <section>
               <h3>数据</h3>
-              <button id="mobile-ranking-locate" type="button">全榜查找与定位</button>
+              <button id="mobile-ranking-locate" type="button">全榜查找</button>
               <button id="mobile-bangumi-import-open" type="button">从 Bangumi 导入</button>
               <button id="mobile-ranking-import" type="button">导入 JSON</button>
               <button id="mobile-ranking-export" type="button">导出 JSON</button>
@@ -619,9 +622,9 @@
             </section>
             <section>
               <h3>清理</h3>
-              <button id="mobile-ranking-clear-board" type="button">清空分级</button>
-              <button id="mobile-ranking-clear-candidates" type="button">清空候选</button>
-              <button id="mobile-ranking-clear-annotations" type="button">清空标记</button>
+              <button data-ui="danger" id="mobile-ranking-clear-board" type="button">清空分级</button>
+              <button data-ui="danger" id="mobile-ranking-clear-candidates" type="button">清空候选</button>
+              <button data-ui="danger" id="mobile-ranking-clear-annotations" type="button">清空标记</button>
             </section>
           </div>
         </dialog>
@@ -892,17 +895,17 @@
       </div>
       <div id="ranking-live-query" class="ranking-live-query" hidden><span></span><button type="button">清除筛选</button></div>
       <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
-        <button id="ranking-live-locate" type="button">全榜查找与定位</button>
-        <p class="ranking-live-shortcut">Shift＋右键快捷标注</p>
-        <button id="ranking-live-export" type="button">导出图片</button>
+        <button id="ranking-live-locate" type="button">全榜查找</button>
         <button id="ranking-live-display" type="button">显示设置</button>
+        <button id="ranking-live-export" type="button">导出图片</button>
         <button
           id="ranking-immersive-help"
-          class="icon-button ranking-immersive-help"
+          class="ranking-immersive-help"
           type="button"
           aria-label="打开直播模式说明"
           title="打开直播模式说明"
-        >?</button>
+        >使用说明</button>
+        <p class="ranking-live-shortcut">快捷标注：Shift＋右键</p>
       </div>
     </div>
 

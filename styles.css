@@ -2887,8 +2887,8 @@ input[type="range"] {
   letter-spacing: .04em;
 }
 
-.ranking-toolbar .edit-actions::before { content: '编辑'; }
-.ranking-toolbar .state-actions::before { content: '视图与输出'; }
+.ranking-toolbar .edit-actions::before,
+.ranking-toolbar .state-actions::before { content: none; }
 
 .ranking-coachmark {
   display: flex;
@@ -5241,7 +5241,7 @@ dialog::backdrop {
 .ranking-locator-context,
 .ranking-locator-status,
 .ranking-locator-hint { grid-column: 1 / -1; margin: 0; color: var(--muted, #697080); font-size: 12px; line-height: 1.45; }
-.ranking-locator-form { grid-column: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; min-width: 0; gap: 5px 8px; }
+.ranking-locator-form { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; min-width: 0; gap: 5px 8px; }
 .ranking-locator-label { display: grid; gap: 5px; color: var(--text, #222); font-size: 12px; font-weight: 600; }
 .ranking-locator-input {
   width: 100%; min-height: 40px; box-sizing: border-box; padding: 8px 10px;
@@ -5254,8 +5254,8 @@ dialog::backdrop {
 .ranking-locator-close:focus-visible { outline: 2px solid var(--accent, #8066a8); outline-offset: 2px; }
 .ranking-locator-clear,
 .ranking-locator-close { align-self: end; min-height: 36px; padding: 6px 10px; border: 1px solid var(--border, #d7d9e0); border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.ranking-locator-clear { grid-column: 2; grid-row: 1; margin-top: 20px; }
-.ranking-locator-close { grid-column: 2; grid-row: 1; align-self: start; }
+.ranking-locator-clear { grid-column: 2; grid-row: 1; min-width: 44px; min-height: 44px; margin: 0; }
+.ranking-locator-close { grid-column: 2; grid-row: 1; align-self: start; width: 40px; min-height: 40px; padding: 0; border-color: transparent; font-size: 22px; }
 .ranking-locator-form + .ranking-locator-close { margin-top: 0; }
 .ranking-locator-results {
   grid-column: 1 / -1;
@@ -5289,11 +5289,7 @@ dialog::backdrop {
   .ranking-locator-results { max-height: 44dvh; }
 }
 @media (max-width: 320px) {
-  .ranking-locator-panel { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px; }
-  .ranking-locator-heading, .ranking-locator-context, .ranking-locator-status, .ranking-locator-hint, .ranking-locator-results { grid-column: 1; }
-  .ranking-locator-form { grid-column: 1; }
-  .ranking-locator-clear, .ranking-locator-close { grid-column: 1; grid-row: auto; width: 100%; margin: 0; }
-  .ranking-locator-clear { margin-top: 0; }
+  .ranking-locator-panel { gap: 8px; padding: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -9648,9 +9644,9 @@ body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate
 body.is-ranking-immersive .ranking-immersive-edge { z-index: 90; width: auto; height: auto; top: calc(var(--safe-top) + 8px); right: calc(var(--safe-right) + 8px); }
 #ranking-live-toggle { min-width: 40px; min-height: 36px; padding: 0 8px; opacity: .7; }
 #ranking-live-toggle:hover, #ranking-live-toggle:focus-visible { opacity: 1; }
-.ranking-immersive-controls { top: 40px; padding: 6px; width: 112px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.ranking-immersive-controls { top: 46px; padding: 6px; width: 208px; max-width: calc(100vw - 16px); border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: 0 6px 20px rgb(0 0 0 / 14%); }
 .ranking-live-primary { display: flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: 0 2px 10px rgb(0 0 0 / 8%); }
-.ranking-live-shortcut { margin: 4px; font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.ranking-live-shortcut { margin: 4px 6px 0; padding: 8px 0 4px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); line-height: 1.5; }
 .ranking-live-primary button { min-width: 32px; min-height: 36px; padding: 4px 7px; font-size: 12px; white-space: nowrap; color: var(--text); background: transparent; border: 0; border-radius: 5px; }
 .ranking-live-primary button:hover:not(:disabled) { background: var(--surface-muted); }
 .ranking-live-primary button[aria-pressed="true"] { color: var(--accent); background: var(--surface-muted); }
@@ -9658,7 +9654,7 @@ body.is-ranking-immersive .ranking-immersive-edge { z-index: 90; width: auto; he
 .ranking-live-query span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .ranking-live-query button { flex: none; min-height: 30px; padding: 2px 4px; font-size: 12px; }
 #ranking-immersive-edge [hidden] { display: none !important; }
-.ranking-immersive-controls button { min-height: 36px; width: 100%; font-size: 12px; }
+.ranking-immersive-controls button { min-height: 40px; width: 100%; padding: 8px 10px; font-size: 13px; text-align: left; white-space: nowrap; }
 @media (max-width: 899px) {
   #ranking-view .candidate-toolbar { display: none; }
   #ranking-view .ranking-page-heading { grid-template-columns: max-content minmax(0, 1fr); }
@@ -9723,6 +9719,8 @@ body.is-ranking-immersive .ranking-immersive-edge { z-index: 90; width: auto; he
 #display-menu .ranking-advanced-settings label { margin-top: 10px; }
 #display-menu [data-display-unavailable="true"] { opacity: .35; cursor: not-allowed; }
 #display-menu .ranking-display-note { margin: 10px 0 0; font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+#display-menu .ranking-display-reset-group { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+#display-menu .ranking-display-reset-group .ranking-display-note { margin-top: 4px; }
 #display-menu [hidden] { display: none !important; }
 body.is-ranking-immersive #ranking-view #display-menu { top: 50px; }
 .tier-classic-actions { display: none; }
