@@ -14,7 +14,23 @@ import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
 import { TIER_COLOR_IDS, tierColor } from '../lib/tier-palette.js';
 import { annotationLines } from '../lib/ranking-presentation.js';
 
+import { createRankingDragGeometry } from '../lib/ranking-drag-geometry.js';
+
 const MAX_RANKING_CARD_CACHE = 256;
+
+function syncAttribute(node, name, value) {
+  if (node.getAttribute(name) !== value) node.setAttribute(name, value);
+}
+
+function syncProperty(node, name, value) {
+  if (node[name] !== value) node[name] = value;
+}
+
+function syncStyle(node, name, value = '') {
+  if (node.style.getPropertyValue(name) === value) return;
+  if (value) node.style.setProperty(name, value);
+  else node.style.removeProperty(name);
+}
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -188,7 +204,7 @@ function syncRankingCardImage(documentRef, card, image, work, {
   ]);
   if (card.__rankingMediaKey === mediaKey) {
     const fallback = card.querySelector?.('.ranking-card-missing-image');
-    if (isCompany && fallback) fallback.textContent = work.title;
+    if (isCompany && fallback) syncProperty(fallback, 'textContent', work.title);
     return;
   }
   card.__rankingMediaKey = mediaKey;
@@ -258,20 +274,20 @@ function syncRankingCardImage(documentRef, card, image, work, {
 
 function syncRankingCardFields(documentRef, card, work, media = {}) {
   const displayTitle = rankingDisplayTitle(work);
-  card.dataset.workId = work.workId;
-  card.setAttribute('aria-label', displayTitle);
+  if (card.dataset.workId !== work.workId) card.dataset.workId = work.workId;
+  syncAttribute(card, 'aria-label', displayTitle);
   const title = card.querySelector?.('.ranking-card-title');
-  if (title) title.textContent = displayTitle;
+  if (title) syncProperty(title, 'textContent', displayTitle);
   const cover = card.querySelector?.('.ranking-card-cover');
   if (cover) {
     const isCompany = card.classList?.contains?.('is-company-card') === true;
-    cover.setAttribute('aria-label', isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`);
-    cover.title = isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`;
+    syncAttribute(cover, 'aria-label', isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`);
+    syncProperty(cover, 'title', isCompany ? `打开会社 ${displayTitle}` : `放大 ${displayTitle}`);
   }
   const handle = card.querySelector?.('.ranking-drag-handle');
   if (handle) {
-    handle.setAttribute('aria-label', `整理 ${displayTitle}`);
-    handle.title = '更多操作；按住可拖动';
+    syncAttribute(handle, 'aria-label', `整理 ${displayTitle}`);
+    syncProperty(handle, 'title', '更多操作；按住可拖动');
   }
   let image = cover?.querySelector?.('img');
   // Company cards are supplied by a separate card factory with its own
@@ -289,8 +305,8 @@ function syncRankingCardFields(documentRef, card, work, media = {}) {
   if (image) syncRankingCardImage(documentRef, card, image, work, media);
   const coverRatio = Number(work.coverWidth) / Number(work.coverHeight);
   if (Number.isFinite(coverRatio) && coverRatio > 0) {
-    card.style.setProperty('--ranking-cover-ratio', String(coverRatio));
-  } else card.style.removeProperty?.('--ranking-cover-ratio');
+    syncStyle(card, '--ranking-cover-ratio', String(coverRatio));
+  } else syncStyle(card, '--ranking-cover-ratio');
   return card;
 }
 
@@ -553,6 +569,7 @@ export function createRankingView({
   let mobileDragOffsetY = 0;
   let mobileTierEditor = null;
 
+  const dragGeometry = createRankingDragGeometry(viewWindow.ResizeObserver);
   let model = null;
   let draggedWorkId = null;
   let draggedWorkIds = [];
@@ -597,6 +614,8 @@ export function createRankingView({
   const touchDragHoldDelayMs = 220;
 
   function reconcileChildren(parent, desired) {
+    if (parent.children.length === desired.length
+      && desired.every((child, index) => parent.children[index] === child)) return;
     const wanted = new Set(desired);
     for (const child of arrayFrom(parent.children)) {
       if (wanted.has(child)) continue;
@@ -637,9 +656,9 @@ export function createRankingView({
       });
       card.append(remove);
     }
-    remove.textContent = '×';
-    remove.setAttribute('aria-label', `移除候选条目：${item.title}`);
-    remove.setAttribute('title', `移除候选条目：${item.title}`);
+    syncProperty(remove, 'textContent', '×');
+    syncAttribute(remove, 'aria-label', `移除候选条目：${item.title}`);
+    syncAttribute(remove, 'title', `移除候选条目：${item.title}`);
     let select = card.querySelector?.('.ranking-candidate-select');
     if (!select) {
       select = documentRef.createElement('input');
@@ -652,8 +671,8 @@ export function createRankingView({
       });
       card.append(select);
     }
-    select.checked = candidateSelection.has(item.workId);
-    select.setAttribute('aria-label', `选择候选条目：${item.title}`);
+    syncProperty(select, 'checked', candidateSelection.has(item.workId));
+    syncAttribute(select, 'aria-label', `选择候选条目：${item.title}`);
     return card;
   }
 
@@ -916,6 +935,7 @@ export function createRankingView({
   }
 
   function startDrag(workId, card, { includeCandidateSelection = true } = {}) {
+    dragGeometry.reset();
     clearDropState();
     draggedWorkId = workId;
     dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
@@ -1149,6 +1169,7 @@ export function createRankingView({
     const workId = draggedWorkId;
     const workIds = [...draggedWorkIds];
     const plan = cancelled ? null : dropPlan;
+    dragGeometry.reset();
     clearDropState();
     clearReturnTarget();
     root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
@@ -1201,13 +1222,14 @@ export function createRankingView({
   }
 
   function updateTierTrackRows() {
+    dragGeometry.reset();
     for (const [tierId, track] of tierTracks) {
       const row = tierRows.get(tierId);
       const cards = arrayFrom(track.children).filter(isRankingCard);
       if (documentRef.documentElement?.getAttribute?.('data-ranking-style') === 'classic') {
-        row.dataset.trackRows = '1';
+        if (row.dataset.trackRows !== '1') row.dataset.trackRows = '1';
         for (const card of cards) {
-          card.style.removeProperty('grid-row'); card.style.removeProperty('grid-column');
+          syncStyle(card, 'grid-row'); syncStyle(card, 'grid-column');
         }
         continue;
       }
@@ -1216,19 +1238,20 @@ export function createRankingView({
         || Number(track.getBoundingClientRect?.().width)
         || Math.max(1, (Number(viewWindow.innerWidth) || 390) - 128);
       const capacity = Math.max(1, Math.floor((trackWidth - 22 + 9) / (cardWidth + 9)));
-      row.dataset.trackRows = cards.length > capacity ? '2' : '1';
-      track.style.setProperty('--tier-track-columns', String(capacity));
+      const trackRows = cards.length > capacity ? '2' : '1';
+      if (row.dataset.trackRows !== trackRows) row.dataset.trackRows = trackRows;
+      syncStyle(track, '--tier-track-columns', String(capacity));
       for (const [index, card] of cards.entries()) {
         if (row.dataset.trackRows === '1') {
-          card.style.removeProperty('grid-row');
-          card.style.removeProperty('grid-column');
+          syncStyle(card, 'grid-row');
+          syncStyle(card, 'grid-column');
           continue;
         }
         const batchSize = capacity * 2;
         const batch = Math.floor(index / batchSize);
         const local = index % batchSize;
-        card.style.setProperty('grid-row', String(local < capacity ? 1 : 2));
-        card.style.setProperty(
+        syncStyle(card, 'grid-row', String(local < capacity ? 1 : 2));
+        syncStyle(card,
           'grid-column',
           String(batch * capacity + (local % capacity) + 1)
         );
@@ -1253,7 +1276,7 @@ export function createRankingView({
 
   function applyCardPresentation(card) {
     const title = card.querySelector?.('.ranking-card-title');
-    if (title) title.hidden = !showTitles;
+    if (title) syncProperty(title, 'hidden', !showTitles);
     const workId = card.dataset.workId;
     const value = annotations[workId] ?? '';
     let overlay = card.querySelector?.('.ranking-card-annotation');
@@ -1267,8 +1290,8 @@ export function createRankingView({
       overlay.setAttribute('aria-hidden', 'true');
       card.querySelector('.ranking-card-cover').append(overlay);
     }
-    overlay.textContent = annotationLines(value).join('\n');
-    overlay.hidden = !immersive;
+    syncProperty(overlay, 'textContent', annotationLines(value).join('\n'));
+    syncProperty(overlay, 'hidden', !immersive);
   }
 
   function beginAnnotationEdit(work, card) {
@@ -1367,6 +1390,7 @@ export function createRankingView({
     for (const key of ['position', 'left', 'top', 'height']) indicator.style.removeProperty(key);
     const parent = indicator.parentElement;
     if (!parent) return;
+    dragGeometry.invalidate(parent);
     if (typeof indicator.remove === 'function') indicator.remove();
     else parent.replaceChildren(...arrayFrom(parent.children).filter(child => child !== indicator));
   }
@@ -1481,6 +1505,7 @@ export function createRankingView({
   }
 
   function finishDrag() {
+    dragGeometry.reset();
     closeAnnotationEditor(false);
     clearDropState();
     removeMobileDragVisuals();
@@ -1510,8 +1535,10 @@ export function createRankingView({
     const usesTwoRows = track.parentElement?.dataset?.trackRows === '2';
     let insertionIndex;
     const classic = documentRef.documentElement?.getAttribute?.('data-ranking-style') === 'classic';
+    const entries = dragGeometry.read(track, allCards);
+    const destinationEntries = entries.filter(({ card }) => !draggedWorkIds.includes(card.dataset.workId));
     if (classic) {
-      const rects = destinationCards.map(card => card.getBoundingClientRect());
+      const rects = destinationEntries.map(({ rect }) => rect);
       insertionIndex = wrappedInsertionIndex(rects, pointerX, pointerY);
       const rect = rects[insertionIndex] ?? rects.at(-1);
       const bounds = track.getBoundingClientRect();
@@ -1520,16 +1547,13 @@ export function createRankingView({
       indicator.style.setProperty('top', `${rect ? rect.top - bounds.top + track.scrollTop : 0}px`);
       indicator.style.setProperty('height', `${rect ? rect.bottom - rect.top : 80}px`);
     } else if (usesTwoRows) {
-      const entries = allCards.map(card => {
-        const rect = card.getBoundingClientRect();
-        const row = Number(card.style.getPropertyValue('grid-row'));
+      entries.forEach(({ row, rect }) => {
         if ((row !== 1 && row !== 2)
           || !Number.isFinite(rect.left) || !Number.isFinite(rect.right)
           || !Number.isFinite(rect.top) || !Number.isFinite(rect.bottom)
           || rect.right < rect.left || rect.bottom < rect.top) {
           throw new TypeError('two-row cards must expose finite row-aware rectangles');
         }
-        return { card, row, rect };
       });
       const rowBounds = new Map();
       for (const { row, rect } of entries) {
@@ -1580,10 +1604,7 @@ export function createRankingView({
       );
       indicator.style.setProperty('justify-self', 'start');
     } else {
-      const rects = destinationCards.map(card => {
-        const rect = card.getBoundingClientRect();
-        return { left: rect.left, right: rect.right };
-      });
+      const rects = destinationEntries.map(({ rect }) => rect);
       insertionIndex = insertionIndexFromPoint(rects, pointerX);
       indicator.style.removeProperty('grid-row');
       indicator.style.removeProperty('grid-column');
@@ -1592,7 +1613,11 @@ export function createRankingView({
     const target = destinationCards[insertionIndex] ?? null;
     const domIndex = target === null ? allCards.length : allCards.indexOf(target);
     if (typeof track.insertBefore === 'function') {
-      if (indicator.parentElement !== track || indicator.nextElementSibling !== target) track.insertBefore(indicator, target);
+      if (indicator.parentElement !== track || indicator.nextElementSibling !== target) {
+        track.insertBefore(indicator, target);
+        // Garden's in-flow marker can shift cards; classic's absolute marker cannot.
+        if (!classic) dragGeometry.invalidate(track);
+      }
     } else track.replaceChildren(...allCards.slice(0, domIndex), indicator, ...allCards.slice(domIndex));
     return insertionIndex;
   }
@@ -1621,6 +1646,7 @@ export function createRankingView({
   }
 
   function handleTierDrop(tierId, event) {
+    dragGeometry.reset();
     const workId = draggedWorkId;
     const workIds = [...draggedWorkIds];
     const plan = dropPlan;
@@ -1652,6 +1678,7 @@ export function createRankingView({
   }
 
   function handlePoolDrop(event) {
+    dragGeometry.reset();
     const workId = draggedWorkId;
     const plan = dropPlan;
     clearDropState();
@@ -2087,23 +2114,23 @@ export function createRankingView({
       replaceMutableRecord(tier, nextTier);
       tierIndex = nextTierIndex;
       const nextColor = tierColor(tier.colorId);
-      row.id = `ranking-${tier.id}`;
-      row.dataset.tierId = tier.id;
-      row.setAttribute('aria-label', `${tier.name} 级`);
-      row.style.setProperty('--tier-background', nextColor.background);
-      row.style.setProperty('--tier-foreground', nextColor.foreground);
-      label.setAttribute('aria-label', tier.name);
-      label.setAttribute('title', tier.name);
-      name.textContent = tier.name;
-      input.value = tier.name;
-      input.setAttribute('aria-label', `${tier.name} 等级名称`);
-      count.textContent = String(tier.works?.length ?? 0);
-      track.setAttribute('aria-label', `${tier.name} 级条目`);
-      controlButtons.get('move-up').disabled = tierIndex === 0;
-      controlButtons.get('move-down').disabled = tierIndex === model.tiers.length - 1;
-      controlButtons.get('delete').disabled = model.tiers.length <= 3;
-      classicButtons[1].disabled = tierIndex === 0;
-      classicButtons[2].disabled = tierIndex === model.tiers.length - 1;
+      syncProperty(row, 'id', `ranking-${tier.id}`);
+      if (row.dataset.tierId !== tier.id) row.dataset.tierId = tier.id;
+      syncAttribute(row, 'aria-label', `${tier.name} 级`);
+      syncStyle(row, '--tier-background', nextColor.background);
+      syncStyle(row, '--tier-foreground', nextColor.foreground);
+      syncAttribute(label, 'aria-label', tier.name);
+      syncAttribute(label, 'title', tier.name);
+      syncProperty(name, 'textContent', tier.name);
+      syncProperty(input, 'value', tier.name);
+      syncAttribute(input, 'aria-label', `${tier.name} 等级名称`);
+      syncProperty(count, 'textContent', String(tier.works?.length ?? 0));
+      syncAttribute(track, 'aria-label', `${tier.name} 级条目`);
+      syncProperty(controlButtons.get('move-up'), 'disabled', tierIndex === 0);
+      syncProperty(controlButtons.get('move-down'), 'disabled', tierIndex === model.tiers.length - 1);
+      syncProperty(controlButtons.get('delete'), 'disabled', model.tiers.length <= 3);
+      syncProperty(classicButtons[1], 'disabled', tierIndex === 0);
+      syncProperty(classicButtons[2], 'disabled', tierIndex === model.tiers.length - 1);
     };
     row.__rankingUpdateTier = update;
     return { row, track, update, tier };
@@ -2349,16 +2376,19 @@ export function createRankingView({
         nextTierTracks.set(tier.id, track);
         renderedRows.push(row);
       }
-      const addTier = documentRef.createElement('button');
-      addTier.type = 'button';
-      addTier.className = 'tier-add-button';
-      addTier.textContent = '+';
-      addTier.disabled = model.tiers.length >= MAX_TIERS;
-      addTier.setAttribute('aria-label', '添加等级');
-      addTier.setAttribute('title', '添加等级');
-      addTier.addEventListener('click', () => {
-        if (!immersive && !addTier.disabled) onAddTier();
-      });
+      let addTier = tierBoard.querySelector?.('.tier-add-button');
+      if (!addTier) {
+        addTier = documentRef.createElement('button');
+        addTier.type = 'button';
+        addTier.className = 'tier-add-button';
+        addTier.textContent = '+';
+        addTier.setAttribute('aria-label', '添加等级');
+        addTier.setAttribute('title', '添加等级');
+        addTier.addEventListener('click', () => {
+          if (!immersive && !addTier.disabled) onAddTier();
+        });
+      }
+      syncProperty(addTier, 'disabled', model.tiers.length >= MAX_TIERS);
       const candidates = model.candidateWorks.map(item => {
         const card = cachedRankingCard(item, callbacks, {
           coverUrl: coverUrls?.get?.(item.workId)?.thumbnailUrl ?? null,
@@ -2506,7 +2536,7 @@ export function createRankingView({
       root.classList.toggle('is-mobile-drag-enabled', nextEnabled);
       const nativeDrag = supportsNativeDrag(viewWindow);
       for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card'))) {
-        card.draggable = nativeDrag;
+        syncProperty(card, 'draggable', nativeDrag);
       }
     },
 
