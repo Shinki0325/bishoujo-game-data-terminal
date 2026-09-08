@@ -112,6 +112,7 @@ import { createStartupMetrics } from './lib/startup-metrics.js';
 import { createInteractionMetrics } from './lib/interaction-metrics.js';
 import { createTelemetryClient } from './lib/telemetry-client.js';
 import { createRankingWorkspaceController, projectCompanyRankingItems } from './lib/ranking-workspace-controller.js';
+import { createRankingExportController } from './lib/ranking-export-controller.js';
 import { createCompanyRankingCard } from './views/company-ranking-card.js';
 import {
   ATTRIBUTE_GROUP_IDS as ATTRIBUTE_GROUP_ORDER,
@@ -128,12 +129,12 @@ import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createWorkDetailCreditsView } from './views/work-detail-credits-view.js';
 import {
   buildSelectionShareUrl,
-  decodeSelectionShare,
   parseSelectionShare
 } from './lib/share-selection.js';
-import { planSharedSelectionImport } from './lib/share-import.js';
+import { createSharedSelectionController } from './lib/shared-selection-controller.js';
+import { createShareImportView } from './views/share-import-view.js';
 import { createPopoverController } from './lib/ui-popover.js';
-import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
+import { createWorkbenchNavigationController, projectUiLocation } from './lib/workbench-navigation-controller.js';
 import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
 import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
 import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
@@ -388,7 +389,6 @@ const elements = typeof document === 'undefined' ? null : Object.freeze({
 });
 
 let statusTimer = null;
-let pngExportInProgress = false;
 
 function announce(message, kind = 'info') {
   window.clearTimeout(statusTimer);
@@ -503,18 +503,6 @@ function loadImageUrl(url, { crossOrigin = 'anonymous' } = {}) {
   });
 }
 
-function pngExportMessage(error) {
-  if (PngExportError && error instanceof PngExportError) {
-    if (error.code === 'COVER_LOAD_FAILED') {
-      return '封面加载失败，请检查已排榜作品的本地封面文件。';
-    }
-    if (error.code === 'CANVAS_BUDGET_EXCEEDED' || error.code === 'UNSAFE_DIMENSIONS') {
-      return '榜单尺寸超出浏览器可安全导出的画布限制，请减少已排榜作品。';
-    }
-    return `PNG 导出失败（${error.code}），请稍后重试。`;
-  }
-  return 'PNG 导出失败，请稍后重试。';
-}
 
 function jsonImportMessage(error) {
   if (!(error instanceof StateValidationError)) {
@@ -1479,6 +1467,38 @@ async function initialize() {
 
   let filterView;
   let importBusy = false;
+  const rankingExport = createRankingExportController({
+    isImportBusy: () => importBusy, getSubject: () => rankingSubject,
+    getCompanyState: () => companyRanking.inspect(), exportWorksJson: () => controller.exportJson(), downloadJson,
+    closeMenus: () => closeToolbarMenus(),
+    pngSnapshot() {
+      const company = rankingSubject === 'company';
+      const model = company ? null : (lastRenderedModel ?? controller.inspect([]));
+      const companyState = company ? companyRanking.inspect() : null;
+      const state = company ? controller.inspectState() : model.state;
+      return { company, state, rankedCount: company ? companyState.rankedCount : model.rankedCount,
+        tierOrder: company ? companyState.tierOrder : state.tierOrder,
+        worksById: company ? companyRankingItems() : worksById,
+        presentation: (company ? companyPresentation : presentation).inspect() };
+    },
+    exportPng: exportTierPng,
+    isPngError: error => Boolean(PngExportError && error instanceof PngExportError),
+    onBusyChange() { renderControlStates(lastRenderedModel ?? controller.inspect([])); renderKeeperGuidance(); },
+    announce, logError: error => console.error(error),
+    environment: {
+      createCanvas({ width, height }) {
+        const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; return canvas;
+      },
+      fontsReady: () => document.fonts?.ready ?? Promise.resolve(),
+      loadCover: async (path, record, company) => {
+        if (company) return loadImageUrl(path, { crossOrigin: 'anonymous' });
+        const work = record.work, url = await coverUrlForWork(work);
+        return loadImageUrl(url, { crossOrigin: work.localMediaKind === 'custom' ? null : 'anonymous' });
+      },
+      download: result => downloadBlob({ blob: result.blob, filename: result.filename, documentRef: document,
+        schedule: task => window.setTimeout(task, 0), onDeferredError: error => console.error(error) })
+    }
+  });
   let candidateTitleQuery = '';
   let selectionScrollPosition = { top: 0, left: 0 };
   // Mobile uses the same workspace as desktop. The companion view remains inert
@@ -1516,7 +1536,6 @@ async function initialize() {
   let detailsPageScrollTop = null;
   let detailsPageScrollStyles = null;
   const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
-  let applyingUiLocation = false;
   let locationScrollTimer = null;
   const workDetailCreditsView = createWorkDetailCreditsView({
     root: elements.detailsCredits,
@@ -1639,7 +1658,7 @@ async function initialize() {
   }
 
   function returnToWorkSelection() {
-    if (importBusy || pngExportInProgress) return;
+    if (importBusy || rankingExport.busy) return;
     closeMobileRankingCandidates();
     closeToolbarMenus();
     companyDirectoryOpen = false;
@@ -1668,7 +1687,7 @@ async function initialize() {
       ready: keeperReady,
       restored: keeperRestored,
       featureEnabled: RUNTIME_FEATURES.keeperGuide?.enabled !== false,
-      busy: importBusy || pngExportInProgress,
+      busy: importBusy || rankingExport.busy,
       live: document.body.classList.contains('is-ranking-immersive'),
       dialogOpen: keeperDialogOpen()
     };
@@ -2654,7 +2673,7 @@ async function initialize() {
       selectionMode, compareMode, companyDirectoryOpen, companySelectionMode,
       bangumiAvailable: confirmedBangumiImportBindings !== null,
       annotationCount: Object.keys(activePresentation.inspect().annotations).length,
-      pngExportInProgress,
+      pngExportInProgress: rankingExport.busy,
       showCounts: elements.rankingShowCounts.checked,
       showTitles: elements.rankingShowTitles.checked
     }));
@@ -2841,7 +2860,6 @@ async function initialize() {
     setBusy: setImportBusy
   });
 
-  let pendingShareImport = null;
 
   function closeDialog(dialog) {
     if (typeof dialog.close === 'function') dialog.close();
@@ -2919,7 +2937,7 @@ async function initialize() {
         p1Enabled: RUNTIME_FEATURES.keeperGuide?.p1 === true,
         importDialogOpen: elements.bangumiPublicImportDialog.open,
         importPhase: bangumiKeeperPhase,
-        busy: importBusy || pngExportInProgress,
+        busy: importBusy || rankingExport.busy,
         live: document.body.classList.contains('is-ranking-immersive'),
         topOverlay: otherDialog
       }, keeperPreferencesStore.get());
@@ -2941,48 +2959,9 @@ async function initialize() {
   }
 
 
-  function clearShareHash() {
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.hash = '';
-    window.history.replaceState({}, '', cleanUrl.href);
-  }
-
-  function currentUiLocation() {
-    const state = controller.inspectState();
-    if (personDirectoryOpen) {
-      if (selectedPersonId !== null) return { page: 'persons', personId: selectedPersonId };
-      return { page: 'persons', query: personQuery, role: personRole, pageNumber: personDirectoryView?.getPageNumber?.() ?? 1 };
-    }
-    if (companyDirectoryOpen) {
-      if (selectedCompanyId !== null) return { page: 'companies', companyId: selectedCompanyId };
-      return {
-        page: 'companies',
-        query: companyQuery,
-        sort: companySort,
-        hasImage: companyHasImage,
-        pageNumber: companyDirectoryView?.getPageNumber?.() ?? 1
-      };
-    }
-    if (state.workspaceMode === 'ranking') return { page: 'ranking', subject: rankingSubject };
-    if (currentWorkDetailId !== null) return { page: 'works', workId: currentWorkDetailId };
-    return {
-      page: 'works',
-      query: state.filterState.titleQuery,
-      sort: `${state.filterState.sortKey}-${state.filterState.sortDirection}`,
-      pageNumber: selectionView?.getPageNumber?.() ?? 1
-    };
-  }
-
-  function updateUiLocation(method = 'replaceState') {
-    if (applyingUiLocation) return;
-    if (document.documentElement.dataset.home === 'true' && method === 'replaceState') return;
-    const url = new URL(window.location.href);
-    url.hash = formatUiLocationHash(currentUiLocation()).slice(1);
-    window.history[method]({}, '', url.href);
-  }
-
-  function replaceUiLocation() { updateUiLocation('replaceState'); }
-  function pushUiLocation() { updateUiLocation('pushState'); }
+  function clearShareHash() { navigation.clearShareHash(); }
+  function replaceUiLocation() { navigation.update('replaceState'); }
+  function pushUiLocation() { navigation.update('pushState'); }
 
   const detailPresentation = createWorkDetailView({
     elements: {
@@ -3066,47 +3045,20 @@ async function initialize() {
     if (push) pushUiLocation();
   }
 
-  function resetShareImportDialog() {
-    pendingShareImport = null;
-    elements.shareImportMessage.hidden = true;
-    elements.shareImportMessage.textContent = '';
-    elements.shareImportCount.textContent = '0';
-    elements.shareImportMissing.textContent = '0';
-    elements.shareImportAppend.disabled = true;
-    elements.shareImportReplace.disabled = true;
-  }
-
-  function openShareImportDialog() {
-    const token = parseSelectionShare(window.location);
-    if (token === null) return false;
-    resetShareImportDialog();
-    try {
-      const decoded = decodeSelectionShare(token);
-      if (decoded.datasetVersion !== sample.sampleId) {
-        throw new Error('分享链接版本与当前目录不匹配。');
-      }
-      const plan = planSharedSelectionImport({
-        sharedWorkIds: decoded.workIds,
-        authorityWorkIds: preparedWorkbench.uiSummary?.workIds ?? sample.works.map(work => work.workId),
-        currentSelectedWorkIds: controller.inspectState().selectedWorkIds,
-        mode: 'append'
-      });
-      pendingShareImport = {
-        validWorkIds: [...plan.validWorkIds]
-      };
-      elements.shareImportCount.textContent = String(plan.validWorkIds.length);
-      elements.shareImportMissing.textContent = String(plan.missingWorkIds.length);
-      elements.shareImportAppend.disabled = false;
-      elements.shareImportReplace.disabled = false;
-    } catch (error) {
-      elements.shareImportMessage.hidden = false;
-      elements.shareImportMessage.textContent = error?.message === '分享链接版本与当前目录不匹配。'
-        ? error.message
-        : '分享链接无效，未修改当前工作区。';
-    }
-    showDialog(elements.shareImportDialog);
-    return true;
-  }
+  const sharedSelection = createSharedSelectionController({
+    locationRef: window.location, datasetVersion: sample.sampleId,
+    authorityWorkIds: preparedWorkbench.uiSummary?.workIds ?? sample.works.map(work => work.workId),
+    selectedIds: () => controller.inspectState().selectedWorkIds,
+    importWorks: (ids, options) => runStateChange(() => controller.importSharedWorks(ids, options)),
+    clearHash: clearShareHash, announce,
+    view: createShareImportView({
+      elements: { dialog: elements.shareImportDialog, message: elements.shareImportMessage,
+        count: elements.shareImportCount, missing: elements.shareImportMissing,
+        append: elements.shareImportAppend, replace: elements.shareImportReplace },
+      openDialog: showDialog, closeDialog
+    })
+  });
+  function openShareImportDialog() { return sharedSelection.open(); }
 
   function openMobileShareWarning() {
     if (parseSelectionShare(window.location) === null) return false;
@@ -3114,109 +3066,71 @@ async function initialize() {
     return true;
   }
 
-  const uiLocationSession = createWorkspaceSession();
-  function beginUiNavigation(key) {
-    const ticket = uiLocationSession.begin(key);
-    applyingUiLocation = false;
-    // Invalidate UI observers before any asynchronous route preparation.
-    workbenchQuery.suspend();
-    companyWorkspace.suspend();
-    detailOpening.suspend();
-    selectionView.suspend();
-    cancelRankingPreload();
-    return ticket;
-  }
-  async function applyUiLocation() {
-    const generation = beginUiNavigation('location');
-    const sourceHash = window.location.hash;
-    const isCurrentLocation = () => generation.isCurrent() && window.location.hash === sourceHash;
-    if (parseSelectionShare(window.location) !== null) return false;
-    if (document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home')) {
+  const navigation = createWorkbenchNavigationController({
+    locationRef: window.location, historyRef: window.history,
+    snapshot: () => projectUiLocation({
+      state: controller.inspectState(), workId: currentWorkDetailId, subject: rankingSubject,
+      workPage: selectionView?.getPageNumber?.() ?? 1,
+      person: { open: personDirectoryOpen, id: selectedPersonId, query: personQuery, role: personRole, page: personDirectoryView?.getPageNumber?.() ?? 1 },
+      company: { open: companyDirectoryOpen, id: selectedCompanyId, query: companyQuery, sort: companySort, hasImage: companyHasImage, page: companyDirectoryView?.getPageNumber?.() ?? 1 }
+    }),
+    isHome: () => document.documentElement.dataset.home === 'true',
+    isHomeRoute: () => document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home'),
+    invalidate() {
+      workbenchQuery.suspend(); companyWorkspace.suspend(); detailOpening.suspend();
+      selectionView.suspend(); cancelRankingPreload();
+    },
+    home() {
       currentWorkDetailId = null;
       if (elements.detailsDialog.open) elements.detailsDialog.close();
       if (elements.personDetailDialog.open) elements.personDetailDialog.close();
-      return true;
-    }
-    const location = parseUiLocationHash(window.location.hash);
-    if (location === null) {
-      replaceUiLocation();
-      return false;
-    }
-    applyingUiLocation = true;
-    try {
-      if (location.page === 'ranking') {
-        companyDirectoryOpen = false;
-        personDirectoryOpen = false;
+    },
+    ranking: { enter(route) {
+      companyDirectoryOpen = false; personDirectoryOpen = false; setWorkSelectionMode(false);
+      currentWorkDetailId = null; rankingSubject = route.subject; controller.setWorkspaceMode('ranking');
+    } },
+    companies: {
+      enter(route) {
         setWorkSelectionMode(false);
-        currentWorkDetailId = null;
-        rankingSubject = location.subject;
-        controller.setWorkspaceMode('ranking');
-        await render();
-        if (!isCurrentLocation()) return true;
-        return true;
-      }
-      if (location.page === 'companies') {
-        setWorkSelectionMode(false);
-        companyQuery = location.query;
-        companySort = location.sort;
-        companyHasImage = location.hasImage;
+        companyQuery = route.query; companySort = route.sort; companyHasImage = route.hasImage;
         elements.companyHasImage.checked = companyHasImage;
-        openCompanyDirectory(location.companyId, { push: false });
-        companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
-        await render();
-        if (!isCurrentLocation()) return true;
-        if (location.companyId === null) companyDirectoryView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
-        return true;
-      }
-      if (location.page === 'persons') {
-        personDetailReturnId = null;
-        companyDirectoryOpen = false;
-        personDirectoryOpen = true;
-        setWorkSelectionMode(false);
-        selectedPersonId = location.personId;
-        personQuery = location.query ?? '';
-        personRole = location.role ?? 'all';
-        elements.personSearch.value = personQuery;
+        openCompanyDirectory(route.companyId, { push: false });
+      },
+      setPage: page => companyDirectoryView.setPageNumber(page, { scroll: false, notify: false })
+    },
+    persons: {
+      enter(route) {
+        personDetailReturnId = null; companyDirectoryOpen = false; personDirectoryOpen = true;
+        setWorkSelectionMode(false); selectedPersonId = route.personId;
+        personQuery = route.query ?? ''; personRole = route.role ?? 'all'; elements.personSearch.value = personQuery;
+      },
+      show() { renderWorkspace(lastRenderedModel ?? controller.inspect([])); renderPersonDirectory(); },
+      ensureReady: () => ensurePersonRuntime(),
+      finish(route) {
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
-        renderPersonDirectory();
-        await ensurePersonRuntime();
-        if (!isCurrentLocation()) return true;
-        renderWorkspace(lastRenderedModel ?? controller.inspect([]));
-        personDirectoryView.setRoleFilter?.(personRole);
-        renderPersonDirectory();
-        if (location.personId !== null) personDirectoryView.setSelected(location.personId);
-        return true;
+        personDirectoryView.setRoleFilter?.(personRole); renderPersonDirectory();
+        if (route.personId !== null) personDirectoryView.setSelected(route.personId);
       }
-      companyDirectoryOpen = false;
-      personDirectoryOpen = false;
-      selectedPersonId = null;
-      setWorkSelectionMode(false);
-      rankingSubject = 'work';
-      const [sortKey, sortDirection] = location.sort.split('-');
-      controller.setWorkspaceMode('selection');
-      // A workspace route only serializes the lightweight title/sort state.
-      // Clear the rest of the previous filter draft before applying it; using
-      // setFilterState alone would merge stale tags/attributes/companies back
-      // into the works page after returning from a zero-result query.
-      controller.clearFilters();
-      controller.setFilterState({ titleQuery: location.query, sortKey, sortDirection });
-      currentWorkDetailId = null;
-      await render();
-      if (!isCurrentLocation()) return true;
-      selectionView.setPageNumber(location.pageNumber, { scroll: false, notify: false });
-      if (location.workId !== null) {
-        const work = workReference(location.workId);
-        if (work) {
-          openWorkDetails(work, { push: false });
-          if (window.location.hash.startsWith('#works/work/')) replaceUiLocation();
-        }
-        else replaceUiLocation();
-      }
-      return true;
-    } finally {
-      if (generation.isCurrent()) applyingUiLocation = false;
-    }
-  }
+    },
+    works: {
+      enter(route) {
+        companyDirectoryOpen = false; personDirectoryOpen = false; selectedPersonId = null;
+        setWorkSelectionMode(false); rankingSubject = 'work';
+        const [sortKey, sortDirection] = route.sort.split('-');
+        controller.setWorkspaceMode('selection');
+        // URL carries title/sort only: do not merge a previous tag/attribute draft.
+        controller.clearFilters();
+        controller.setFilterState({ titleQuery: route.query, sortKey, sortDirection });
+        currentWorkDetailId = null;
+      },
+      setPage: page => selectionView.setPageNumber(page, { scroll: false, notify: false }),
+      find: workReference,
+      open: work => openWorkDetails(work, { push: false })
+    },
+    render: () => render()
+  });
+  function beginUiNavigation(key) { return navigation.begin(key); }
+  function applyUiLocation() { return navigation.apply(); }
 
   window.addEventListener('popstate', () => { void applyUiLocation(); });
   window.addEventListener('hashchange', () => { void applyUiLocation(); });
@@ -3230,7 +3144,7 @@ async function initialize() {
     workDetailCreditsView.clear();
     const returnFocus = detailsReturnFocus;
     detailsReturnFocus = null;
-    if (currentWorkDetailId === null || applyingUiLocation) return;
+    if (currentWorkDetailId === null || navigation.applying) return;
     const returnPersonId = personDetailReturnId;
     personDetailReturnId = null;
     currentWorkDetailId = null;
@@ -3264,34 +3178,9 @@ async function initialize() {
   });
   renderCompareBar();
 
-  function commitShareImport(mode) {
-    if (pendingShareImport === null || pendingShareImport.validWorkIds.length === 0) return false;
-    try {
-      const imported = runStateChange(() => controller.importSharedWorks(
-        pendingShareImport.validWorkIds,
-        { mode }
-      ));
-      closeDialog(elements.shareImportDialog);
-      clearShareHash();
-      announce(
-        mode === 'replace' ? '候选池已替换。' : '作品已追加到候选池。',
-        'success'
-      );
-      pendingShareImport = null;
-      return imported;
-    } catch (error) {
-      announce(error instanceof Error ? error.message : '分享作品导入失败。', 'error');
-      return false;
-    }
-  }
-
-  elements.shareImportAppend.addEventListener('click', () => commitShareImport('append'));
-  elements.shareImportReplace.addEventListener('click', () => commitShareImport('replace'));
-  elements.shareImportCancel.addEventListener('click', () => {
-    closeDialog(elements.shareImportDialog);
-    clearShareHash();
-    resetShareImportDialog();
-  });
+  elements.shareImportAppend.addEventListener('click', () => sharedSelection.commit('append'));
+  elements.shareImportReplace.addEventListener('click', () => sharedSelection.commit('replace'));
+  elements.shareImportCancel.addEventListener('click', () => sharedSelection.cancel());
   elements.mobileShareWarningDismiss.addEventListener('click', () => {
     closeDialog(elements.mobileShareWarning);
     clearShareHash();
@@ -3620,93 +3509,8 @@ async function initialize() {
     void render();
     announce('JSON 状态已导入。', 'success');
   });
-  elements.exportState.addEventListener('click', () => {
-    if (importBusy) return;
-    closeToolbarMenus();
-    try {
-      if (rankingSubject === 'company') {
-        const ranking = companyRanking.inspect();
-        const result = downloadJson({
-          filename: 'company-ranking-v1.json',
-          text: JSON.stringify({
-            schemaVersion: 1,
-            selectedCompanyIds: ranking.selectedCompanyIds,
-            tierOrder: ranking.tierOrder
-          }, null, 2),
-          mimeType: 'application/json;charset=utf-8'
-        });
-        announce(`会社排榜 JSON 已导出：${result.filename}`, 'success');
-        return;
-      }
-      const result = controller.exportJson();
-      announce(`JSON 已导出：${result.filename}`, 'success');
-    } catch (error) {
-      announce('JSON 状态导出失败，请稍后重试。', 'error');
-      console.error(error);
-    }
-  });
-
-  elements.exportPng.addEventListener('click', async () => {
-    if (importBusy || pngExportInProgress) return;
-    const isCompanyRanking = rankingSubject === 'company';
-    const snapshot = isCompanyRanking ? null : (lastRenderedModel ?? controller.inspect([]));
-    const companySnapshot = isCompanyRanking ? companyRanking.inspect() : null;
-    const rankedCount = isCompanyRanking ? companySnapshot.rankedCount : snapshot.rankedCount;
-    if (rankedCount === 0) return;
-
-    pngExportInProgress = true;
-    renderControlStates(lastRenderedModel ?? controller.inspect([]));
-    renderKeeperGuidance();
-    try {
-      const exportState = isCompanyRanking
-        ? controller.inspectState()
-        : snapshot.state;
-      const exportTierOrder = isCompanyRanking ? companySnapshot.tierOrder : exportState.tierOrder;
-      const exportWorksById = isCompanyRanking ? companyRankingItems() : new Map();
-      for (const { id: tierId } of exportState.tiers) {
-        for (const workId of exportTierOrder[tierId]) {
-          if (!isCompanyRanking) {
-            const work = worksById.get(workId);
-            if (work) exportWorksById.set(workId, work);
-          }
-        }
-      }
-      const result = await exportTierPng({
-        tiers: exportState.tiers,
-        tierOrder: exportTierOrder,
-        worksById: exportWorksById,
-        presentation: (isCompanyRanking ? companyPresentation : presentation).inspect(),
-        createCanvas({ width, height }) {
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          return canvas;
-        },
-        fontsReady: document.fonts?.ready ?? Promise.resolve(),
-        loadCover: async (coverPath, record) => {
-          const work = record.work;
-          if (isCompanyRanking) return loadImageUrl(coverPath, { crossOrigin: 'anonymous' });
-          const url = await coverUrlForWork(work);
-          return loadImageUrl(url, { crossOrigin: work.localMediaKind === 'custom' ? null : 'anonymous' });
-        }
-      });
-      downloadBlob({
-        blob: result.blob,
-        filename: result.filename,
-        documentRef: document,
-        schedule: task => window.setTimeout(task, 0),
-        onDeferredError: error => console.error(error)
-      });
-      announce(`PNG 已导出：${result.filename}`, 'success');
-    } catch (error) {
-      announce(pngExportMessage(error), 'error');
-      if (!(PngExportError && error instanceof PngExportError)) console.error(error);
-    } finally {
-      pngExportInProgress = false;
-      renderControlStates(lastRenderedModel ?? controller.inspect([]));
-      renderKeeperGuidance();
-    }
-  });
+  elements.exportState.addEventListener('click', () => rankingExport.json());
+  elements.exportPng.addEventListener('click', () => { void rankingExport.png(); });
 
   let restoredLocation = false;
   await startupMetrics.measureAsync('first-render', async () => {
