@@ -109,9 +109,8 @@ import { createBrowserClipboard } from './lib/browser-clipboard.js';
 import { createShareImportView } from './views/share-import-view.js';
 import { createPopoverController } from './lib/ui-popover.js';
 import { createWorkbenchNavigationController, projectUiLocation } from './lib/workbench-navigation-controller.js';
-import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
-import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
-import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
+import { createKeeperGuidanceController } from './lib/keeper-guidance-controller.js';
+import { createKeeperGuidanceView } from './views/keeper-guidance-view.js';
 
 let PngExportError;
 const loadPngExport = createLazyResource(async attempt => {
@@ -718,32 +717,39 @@ async function initialize() {
   const replacementMetadataCache = new Map();
   const coverSourceCache = new Map();
   let customWorks = [];
-  const keeperPreferencesStore = createKeeperPreferences();
-  let keeperReady = false;
-  let keeperRestored = false;
-  let keeperInteractionBusy = false;
-  let bangumiKeeperPhase = 'input';
-  let bangumiOpenedFromEmpty = false;
-  keeperPreferencesStore.subscribe(() => renderKeeperGuidance());
-  const endKeeperInteraction = () => {
-    if (!keeperInteractionBusy) return;
-    keeperInteractionBusy = false;
-    renderKeeperGuidance();
-  };
-  document.addEventListener('dragstart', () => { keeperInteractionBusy = true; }, true);
-  document.addEventListener('dragend', endKeeperInteraction, true);
-  const keeperSurfaceObserver = new MutationObserver(records => {
-    const relevant = records.some(record => (
-      record.attributeName === 'class' && record.target === document.body
-    ) || (
-      record.attributeName === 'open' && record.target?.tagName === 'DIALOG'
-    ));
-    if (relevant) renderKeeperGuidance();
+  const keeperGuidanceView = createKeeperGuidanceView({
+    elements: {
+      workCompareBar: elements.workCompareBar,
+      keeperCompareGuide: elements.keeperCompareGuide,
+      compareModeToggle: elements.compareModeToggle,
+      rankingCoachmark: elements.rankingCoachmark,
+      rankingHelpButton: elements.rankingHelpButton,
+      modeRanking: elements.modeRanking,
+      modeSelection: elements.modeSelection,
+      titleSearch: elements.titleSearch,
+      bangumiPublicImportResults: elements.bangumiPublicImportResults,
+      bangumiPublicImportDialog: elements.bangumiPublicImportDialog,
+      keeperBangumiInput: elements.keeperBangumiInput,
+      keeperBangumiResult: elements.keeperBangumiResult,
+      bangumiInputNote: elements.bangumiInputNote,
+      bangumiResultNote: elements.bangumiResultNote,
+      bangumiPublicImportAppend: elements.bangumiPublicImportAppend,
+      bangumiPublicUserInput: elements.bangumiPublicUserInput
+    },
+    documentRef: document, windowRef: window,
+    onDismiss: (id, version) => keeperGuidance.dismiss(id, version),
+    onSelectWorks: returnToWorkSelection,
+    onCompareSelection: focusCompareSelection,
+    onImport: () => openBangumiPublicImportDialog({ fromEmpty: true })
   });
-  keeperSurfaceObserver.observe(document.body, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['open', 'class']
+  const keeperGuidance = createKeeperGuidanceController({
+    view: keeperGuidanceView, features: RUNTIME_FEATURES.keeperGuide,
+    readWorkbench: () => ({
+      busy: importBusy || rankingExport.busy, importBusy,
+      importAvailable: confirmedBangumiImportBindings !== null,
+      compareMode, compareIds: comparison.ids, compareMinimum: comparison.minimum,
+      model: lastRenderedModel, rankingSubject
+    })
   });
   await startupMetrics.measureAsync('local-media-hydration', async () => {
     try {
@@ -945,7 +951,7 @@ async function initialize() {
     renderDialog: snapshot => comparisonView.renderDialog(snapshot),
     isOpen: () => elements.workCompareDialog.open,
     onSelectionChanged: renderCompareBar,
-    onActivated() { keeperPreferencesStore.complete('compareActive'); renderKeeperGuidance(); },
+    onActivated() { keeperGuidance.complete('compareActive'); renderKeeperGuidance(); },
     onLimit: maximum => announce(`最多可同时比较 ${maximum} 部作品。`, 'error')
   });
   function renderCompareBar() {
@@ -954,10 +960,6 @@ async function initialize() {
   }
   function toggleCompareWork(work, include) { return comparison.toggle(work, include); }
   function renderWorkCompare() { void comparison.open(); }
-
-  function keeperDialogOpen() {
-    return Boolean(document.querySelector('dialog[open]'));
-  }
 
   function focusCompareSelection() {
     const target = elements.catalogResults.querySelector('.selection-card-compare');
@@ -982,120 +984,7 @@ async function initialize() {
     replaceUiLocation();
   }
 
-  function focusKeeperFallback(target) {
-    window.setTimeout(() => {
-      const node = [target, elements.rankingHelpButton, elements.modeRanking, elements.modeSelection, elements.titleSearch]
-        .find(candidate => candidate?.isConnected && !candidate.disabled && candidate.getClientRects().length && !candidate.closest('[hidden], [inert]'));
-      node?.focus?.({ preventScroll: true });
-    }, 0);
-  }
-
-  function renderKeeperGuidance() {
-    if (keeperInteractionBusy) return;
-    renderBangumiKeeperGuidance();
-    elements.workCompareBar.hidden = comparison.ids.length === 0 && !compareMode;
-    const base = {
-      ready: keeperReady,
-      restored: keeperRestored,
-      featureEnabled: RUNTIME_FEATURES.keeperGuide?.enabled !== false,
-      busy: importBusy || rankingExport.busy,
-      live: document.body.classList.contains('is-ranking-immersive'),
-      dialogOpen: keeperDialogOpen()
-    };
-    const resolveKeeperScene = snapshot => {
-      const result = resolveKeeperGuide({ ...snapshot, featureEnabled: true }, keeperPreferencesStore.get());
-      if (!result) return null;
-      const enabled = RUNTIME_FEATURES.keeperGuide?.enabled !== false;
-      return enabled ? result : { ...result, showEnhancement: false, showPortrait: false };
-    };
-    const compare = resolveKeeperScene({
-      ...base,
-      id: 'compareActive',
-      workspace: 'selection',
-      mode: compareMode ? 'compare' : 'browse',
-      compareActive: compareMode,
-      compareWorkIds: comparison.ids,
-      compareSelectedCount: comparison.ids.length,
-      compareMin: comparison.minimum
-    }, keeperPreferencesStore.get());
-    const keeperState = keeperPreferencesStore.get();
-    const isGuideCompleted = guide => Boolean(
-      guide && keeperState.completed?.[guide.id] === guide.contentVersion
-    );
-    elements.keeperCompareGuide.replaceChildren();
-    if (compare && compareMode) {
-      const card = createKeeperGuideCard({
-        documentRef: document,
-        guideId: compare.id,
-        domGuideId: 'compare.start',
-        title: compare.title,
-        body: compare.summary,
-        actionLabel: '在作品卡上加入比较',
-        helpArticleId: 'works.compare',
-        helpLabel: '查看比较说明',
-        onAction: focusCompareSelection,
-        dismissLabel: compare.showEnhancement && !isGuideCompleted(compare) ? '隐藏提示' : '',
-        onDismiss: compare.showEnhancement && !isGuideCompleted(compare) ? () => {
-          keeperPreferencesStore.dismiss(compare.id, compare.contentVersion);
-          renderKeeperGuidance();
-          focusKeeperFallback(elements.compareModeToggle);
-        } : undefined,
-        enhanced: compare.showEnhancement && !isGuideCompleted(compare),
-        portrait: resolveKeeperPortrait(compare, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true && !isGuideCompleted(compare), variant: 'bust' })
-      });
-      elements.keeperCompareGuide.append(card);
-      elements.keeperCompareGuide.hidden = false;
-    } else {
-      elements.keeperCompareGuide.hidden = true;
-    }
-
-    const model = lastRenderedModel;
-    const isWorkRanking = model?.state?.workspaceMode === 'ranking' && rankingSubject === 'work';
-    const rankingGuide = isWorkRanking ? resolveKeeperScene({
-      ...base,
-      id: model.rankedCount > 0 ? null : model.unrankedCount > 0 ? 'tier.firstDrag' : 'tier.start',
-      workspace: 'ranking',
-      subject: 'work',
-      selectedWorkIds: model.state.selectedWorkIds,
-      candidateTotal: model.unrankedCount,
-      rankedTotal: model.rankedCount
-    }, keeperPreferencesStore.get()) : null;
-    elements.rankingCoachmark.replaceChildren();
-    if (rankingGuide && (rankingGuide.id !== 'tier.firstDrag' || (rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide)))) {
-      const firstDrag = rankingGuide.id === 'tier.firstDrag';
-      const enhanced = rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
-      const card = createKeeperGuideCard({
-        documentRef: document,
-        guideId: rankingGuide.id,
-        domGuideId: firstDrag ? 'tier.first-drag' : 'tier.start',
-        title: firstDrag ? '' : rankingGuide.title,
-        eyebrow: firstDrag ? '' : '庭守提示',
-        body: rankingGuide.summary,
-        actionLabel: firstDrag ? '' : '前往作品库选择',
-        helpArticleId: firstDrag ? '' : 'tier.overview',
-        helpLabel: '查看排榜说明',
-        onAction: firstDrag ? undefined : returnToWorkSelection,
-        secondaryActionLabel: firstDrag ? '' : '从 Bangumi 导入',
-        onSecondaryAction: firstDrag ? undefined : () => openBangumiPublicImportDialog({ fromEmpty: true }),
-        secondaryActionDisabled: importBusy || confirmedBangumiImportBindings === null,
-        dismissLabel: enhanced ? (firstDrag ? '×' : '隐藏提示') : '',
-        onDismiss: enhanced ? () => {
-          keeperPreferencesStore.dismiss(rankingGuide.id, rankingGuide.contentVersion);
-          renderKeeperGuidance();
-          focusKeeperFallback(elements.rankingHelpButton);
-        } : undefined,
-        enhanced,
-        portrait: resolveKeeperPortrait(rankingGuide, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true && enhanced && !firstDrag })
-      });
-      if (firstDrag) card.classList.add('keeper-guide-card-compact');
-      elements.rankingCoachmark.append(card);
-      elements.rankingCoachmark.hidden = false;
-      elements.rankingCoachmark.dataset.keeperGuide = firstDrag ? 'tier.first-drag' : 'tier.start';
-    } else {
-      elements.rankingCoachmark.hidden = true;
-      elements.rankingCoachmark.removeAttribute('data-keeper-guide');
-    }
-  }
+  function renderKeeperGuidance() { keeperGuidance.render(); }
 
   const companyRanking = createCompanyRanking({
     companies: companyDirectory.companies,
@@ -1709,7 +1598,7 @@ async function initialize() {
     commit: change => runStateChange(change),
     confirm: message => window.confirm(message), createId: () => crypto.randomUUID(),
     focusTier: id => rankingView.focusTier(id),
-    completeFirstDrag: () => keeperPreferencesStore.complete('tier.firstDrag')
+    completeFirstDrag: () => keeperGuidance.complete('tier.firstDrag')
   });
   const rankingOptions = {
     root: elements.rankingView,
@@ -2173,64 +2062,20 @@ async function initialize() {
     readTitles: preparedWorkbench.workerOwned ? ids => filterWorkerClient.workMetadata(ids, 'titles') : null,
     familyForWork: id => presentationFamilies?.familyForWork(id) ?? null,
     isBusy: () => importBusy,
-    onPhase: phase => { bangumiKeeperPhase = phase; },
-    renderGuidance: renderBangumiKeeperGuidance,
-    completeGuide: id => keeperPreferencesStore.complete(id),
+    onPhase: phase => keeperGuidance.setImportPhase(phase),
+    renderGuidance: keeperGuidance.renderImport,
+    completeGuide: id => keeperGuidance.complete(id),
     appendWorks: ids => runStateChange(() => controller.selectWorks(ids)),
     onSuccess: announce,
     onOpen({ fromEmpty }) {
-      bangumiOpenedFromEmpty = fromEmpty;
+      keeperGuidance.openImport(fromEmpty);
       closeToolbarMenus();
       if (elements.mobileRankingMenu.open) closeDialog(elements.mobileRankingMenu);
     },
-    onClose() {
-      if (!bangumiOpenedFromEmpty) return;
-      bangumiOpenedFromEmpty = false;
-      window.setTimeout(() => focusKeeperFallback(document.querySelector('[data-keeper-secondary-action="tier.start"]')), 0);
-    },
+    onClose: keeperGuidance.closeImport,
     closeDialog, showDialog
   });
   function openBangumiPublicImportDialog(options) { return bangumiWorkspace.open(options); }
-
-  function renderBangumiKeeperGuidance() {
-    if (!keeperReady) return;
-    const activeStep = elements.bangumiPublicImportResults.hidden ? 0 : 1;
-    elements.bangumiPublicImportDialog.querySelectorAll('.bangumi-import-steps li').forEach((step, index) => {
-      step.classList.toggle('is-active', index === activeStep);
-      if (index === activeStep) step.setAttribute('aria-current', 'step');
-      else step.removeAttribute('aria-current');
-    });
-    const otherDialog = [...document.querySelectorAll('dialog[open]')].some(dialog => dialog !== elements.bangumiPublicImportDialog);
-    for (const phase of ['input', 'result']) {
-      const host = phase === 'input' ? elements.keeperBangumiInput : elements.keeperBangumiResult;
-      const note = phase === 'input' ? elements.bangumiInputNote : elements.bangumiResultNote;
-      const guide = resolveKeeperGuide({
-        id: `bangumi.${phase}`, ready: keeperReady, restored: keeperRestored,
-        featureEnabled: RUNTIME_FEATURES.keeperGuide?.enabled !== false,
-        p1Enabled: RUNTIME_FEATURES.keeperGuide?.p1 === true,
-        importDialogOpen: elements.bangumiPublicImportDialog.open,
-        importPhase: bangumiKeeperPhase,
-        busy: importBusy || rankingExport.busy,
-        live: document.body.classList.contains('is-ranking-immersive'),
-        topOverlay: otherDialog
-      }, keeperPreferencesStore.get());
-      host.replaceChildren(); host.hidden = true; note.hidden = false;
-      if (!guide?.showEnhancement) continue;
-      host.append(createKeeperGuideCard({
-        guideId: guide.id, title: guide.title, body: guide.summary,
-        portrait: resolveKeeperPortrait(guide, { enabled: RUNTIME_FEATURES.keeperGuide?.portraits === true }),
-        dismissLabel: '隐藏提示',
-        onDismiss: () => {
-          keeperPreferencesStore.dismiss(guide.id, guide.contentVersion);
-          const target = phase === 'input' || elements.bangumiPublicImportAppend.disabled
-            ? elements.bangumiPublicUserInput : elements.bangumiPublicImportAppend;
-          target.focus({ preventScroll: true });
-        }
-      }));
-      host.hidden = false; note.hidden = true;
-    }
-  }
-
 
   function clearShareHash() { navigation.clearShareHash(); }
   function replaceUiLocation() { navigation.update('replaceState'); }
@@ -2790,9 +2635,7 @@ async function initialize() {
     restoredLocation = await applyUiLocation();
     if (!restoredLocation) await render();
   });
-  keeperRestored = true;
-  keeperReady = true;
-  renderKeeperGuidance();
+  keeperGuidance.restore();
   openShareImportDialog();
   let globalSearch = null;
   return { search: query => {
