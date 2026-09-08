@@ -237,8 +237,9 @@ export function createRankingCard(documentRef, work, callbacks) {
   handle.type = 'button';
   handle.className = 'ranking-drag-handle';
   handle.setAttribute('aria-label', `整理 ${displayTitle}`);
-  handle.setAttribute('title', '点按整理，按住拖动');
-  handle.textContent = '⠿';
+  handle.setAttribute('title', '更多操作；按住可拖动');
+  handle.setAttribute('aria-haspopup', 'dialog');
+  handle.textContent = '⋯';
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
@@ -326,6 +327,9 @@ export function createRankingView({
   onMoveToUnranked,
   onOpenDetails,
   onOpenMedia = () => {},
+  onEditImage = () => {},
+  canEditImage = () => false,
+  onDiscoverActions = () => {},
   onCandidateSearch,
   onTierConfigChange = () => {},
   onTierDelete = () => {},
@@ -353,6 +357,9 @@ export function createRankingView({
   assertFunction(onOpenDetails, 'onOpenDetails');
   assertFunction(onOpenMedia, 'onOpenMedia');
   assertFunction(onCandidateSearch, 'onCandidateSearch');
+  assertFunction(onEditImage, 'onEditImage');
+  assertFunction(canEditImage, 'canEditImage');
+  assertFunction(onDiscoverActions, 'onDiscoverActions');
   assertFunction(onTierConfigChange, 'onTierConfigChange');
   assertFunction(onTierDelete, 'onTierDelete');
   assertFunction(onAddTier, 'onAddTier');
@@ -1360,6 +1367,7 @@ export function createRankingView({
   function openArrangeMenu(work, card) {
     if (!work) return;
     closeArrangeMenu();
+    onDiscoverActions();
     const dialog = documentRef.createElement('dialog');
     arrangeDialog = dialog;
     dialog.id = 'ranking-item-menu';
@@ -1379,7 +1387,7 @@ export function createRankingView({
     dialog.append(destinations);
     const action = (text, callback, host = dialog) => {
       const button = documentRef.createElement('button'); button.type = 'button'; button.textContent = text;
-      button.addEventListener('click', event => { event.stopPropagation(); closeArrangeMenu(); callback(); }); host.append(button);
+      button.addEventListener('click', event => { event.stopPropagation(); closeArrangeMenu(); if (card?.isConnected) card.focus(); callback(); }); host.append(button);
       return button;
     };
     for (const tier of model.tiers) {
@@ -1395,8 +1403,21 @@ export function createRankingView({
     }
     const secondary = documentRef.createElement('div'); secondary.className = 'ranking-arrange-secondary'; dialog.append(secondary);
     if (currentTier) action('移回候选', () => onMoveToUnranked(work.workId), secondary);
-    if (!immersive && selected.length === 1) action('查看资料', () => onOpenDetails(work), secondary);
+    if (!immersive && selected.length === 1 && work.localMediaKind !== 'custom') action('查看资料', () => onOpenDetails(work), secondary);
+    if (selected.length === 1) action('放大图片', () => onOpenMedia(work), secondary);
+    if (!immersive && selected.length === 1 && canEditImage(work)) {
+      const edit = action('编辑图片', () => onEditImage(work), secondary);
+      edit.setAttribute('aria-label', '编辑图片'); edit.setAttribute('aria-describedby', 'ranking-image-edit-description');
+      const detail = documentRef.createElement('small');
+      detail.id = 'ranking-image-edit-description';
+      detail.className = 'ranking-action-description'; detail.textContent = '贴纸 · 画笔 · 打码 · 文字';
+      edit.append(detail);
+    }
     if (selected.length === 1) action('编辑标注', () => beginAnnotationEdit(work, card), secondary);
+    if (selected.length === 1) {
+      const note = documentRef.createElement('p'); note.className = 'ranking-action-description';
+      note.textContent = '作品标注用于排榜展示，不改封面底图。'; secondary.append(note);
+    }
     if (!currentTier) {
       const remove = action(`移除候选${selected.length > 1 ? `（${selected.length}项）` : ''}`, () => onRemoveCandidates(selected), secondary);
       remove.className = 'ranking-arrange-remove';

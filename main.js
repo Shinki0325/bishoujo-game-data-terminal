@@ -1350,6 +1350,14 @@ async function initialize() {
     onMoveToTier: rankingActions.moveToTier,
     onMoveToUnranked: rankingActions.moveToUnranked,
     onTierConfigChange: rankingActions.setTiers,
+    canEditImage: () => rankingSubject === 'work' && mediaStore !== null && !importBusy,
+    onEditImage(work) {
+      void mediaEditing.editWork(work).catch(error => {
+        announce(error instanceof Error ? error.message : '图片编辑失败。', 'error');
+        console.error(error);
+      });
+    },
+    onDiscoverActions: () => keeperGuidance.complete('tier.firstDrag'),
     onTierDelete: rankingActions.deleteTier,
     onAddTier: rankingActions.addTier,
     onRequestMediaImport(files) {
