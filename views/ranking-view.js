@@ -179,6 +179,8 @@ export function createRankingCard(documentRef, work, callbacks) {
   const card = documentRef.createElement('article');
   card.className = 'ranking-card';
   card.dataset.workId = work.workId;
+  const coverRatio = Number(work.coverWidth) / Number(work.coverHeight);
+  card.style.setProperty('--ranking-cover-ratio', String(Number.isFinite(coverRatio) && coverRatio > 0 ? coverRatio : 1));
   // Mobile uses the same pointer-capture drag path as the reference Tier
   // board. Keeping HTML5 draggable active here causes the browser to cancel
   // the pointer stream before the custom drop-zone calculation can run.
@@ -204,6 +206,11 @@ export function createRankingCard(documentRef, work, callbacks) {
   image.loading = 'lazy';
   image.decoding = 'async';
   image.draggable = false;
+  image.addEventListener('load', () => {
+    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+      card.style.setProperty('--ranking-cover-ratio', String(image.naturalWidth / image.naturalHeight));
+    }
+  });
   installMissingImageFallback(documentRef, card, image);
 
   const cover = documentRef.createElement('button');
