@@ -2183,9 +2183,12 @@ export function createRankingView({
       cancelActiveDrag();
       return;
     }
-    if (annotationEditor !== null) closeAnnotationEditor(false);
-    if (editingTierId !== null) closeTierEditing();
-    else closeColorPalette();
+    if (annotationEditor !== null || editingTierId !== null || colorPalette !== null) {
+      event.preventDefault(); event.stopPropagation();
+      if (annotationEditor !== null) closeAnnotationEditor(false);
+      else if (colorPalette !== null) closeColorPalette();
+      else closeTierEditing();
+    }
   }, true);
 
   return Object.freeze({
@@ -2351,7 +2354,7 @@ export function createRankingView({
     },
 
     captureAnchor() {
-      const top = immersive ? 56 : 180;
+      const top = immersive ? 8 : 180;
       const candidates = [...root.querySelectorAll('.tier-track .ranking-card')];
       const visible = node => { const rect = node.getBoundingClientRect(); return rect.bottom > top && rect.top < (viewWindow.innerHeight ?? 900) - 120; };
       const card = candidates.find(visible);
@@ -2365,7 +2368,7 @@ export function createRankingView({
       const node = card ?? tierRows.get(anchor.tierId) ?? [...tierRows.values()][0];
       if (!node) return;
       const target = pageScrollTarget();
-      const top = (target.scrollTop ?? 0) + node.getBoundingClientRect().top - (immersive ? 56 : 180) - anchor.offset;
+      const top = (target.scrollTop ?? 0) + node.getBoundingClientRect().top - (immersive ? 8 : 180) - anchor.offset;
       if (typeof target.scrollTo === 'function') target.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
       else target.scrollTop = Math.max(0, top);
     },

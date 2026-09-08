@@ -12,7 +12,6 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     queryHint.hidden = !search?.value.trim();
     const label = queryHint.querySelector?.('span');
     if (label) label.textContent = `筛选：${search?.value ?? ''}`;
-    workspace?.style.setProperty('--ranking-live-top', queryHint.hidden ? '54px' : '92px');
   };
   lifetime.listen(search, 'input', syncQuery);
   lifetime.listen(queryHint?.querySelector('button'), 'click', () => {
@@ -276,8 +275,14 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   }
 
   lifetime.listen(documentRef, 'keydown', event => {
-    if (event.key === 'Escape' && !event.defaultPrevented && !documentRef.querySelector('dialog:modal')) closeMobileRankingCandidates();
+    if (!live && event.key === 'Escape' && !event.defaultPrevented && !documentRef.querySelector('dialog:modal')) closeMobileRankingCandidates();
   });
+  lifetime.listen(documentRef, 'keydown', event => {
+    if (event.key !== 'Escape' || event.defaultPrevented || event.cancelBubble || !live || trayMode !== 'expanded') return;
+    if (documentRef.querySelector('dialog[open], #display-menu:not([hidden]), #ranking-immersive-controls:not([hidden])')) return;
+    event.preventDefault(); setTrayMode('row');
+    documentRef.getElementById?.('ranking-live-toggle')?.focus?.({preventScroll:true});
+  }, true);
   lifetime.listen(elements.rankingCoachmarkDismiss, 'click', () => { elements.rankingCoachmark.hidden = true; });
   lifetime.listen(elements.rankingShowCounts, 'change', () => {
     const value = elements.rankingShowCounts.checked === true;

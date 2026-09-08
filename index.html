@@ -886,15 +886,15 @@
           type="button"
           aria-label="退出直播模式"
           title="退出直播模式"
-        >返回编辑</button>
-        <button id="ranking-live-fullscreen" type="button" aria-pressed="false">全屏</button>
-        <button id="ranking-live-candidates" type="button">候选</button>
-        <button id="ranking-live-undo" type="button" aria-label="撤销" title="撤销">↶</button>
-        <button id="ranking-live-redo" type="button" aria-label="重做" title="重做">↷</button>
+        >↩</button>
         <button id="ranking-live-toggle" type="button" aria-label="更多直播工具" aria-controls="ranking-immersive-controls" aria-expanded="false">⋯</button>
       </div>
       <div id="ranking-live-query" class="ranking-live-query" hidden><span></span><button type="button">清除筛选</button></div>
       <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
+        <button id="ranking-live-candidates" type="button">整理候选</button>
+        <button id="ranking-live-undo" type="button" aria-label="撤销">撤销</button>
+        <button id="ranking-live-redo" type="button" aria-label="重做">重做</button>
+        <button id="ranking-live-fullscreen" type="button" aria-pressed="false">全屏</button>
         <button id="ranking-live-locate" type="button">全榜查找</button>
         <button id="ranking-live-display" type="button">显示设置</button>
         <button id="ranking-live-export" type="button">导出图片</button>
@@ -932,11 +932,11 @@
     <dialog id="media-preview" aria-labelledby="media-preview-title">
       <div class="media-preview-tools" role="group" aria-label="图片缩放">
         <button type="button" data-preview-action="out" aria-label="缩小图片">−</button>
-        <output id="media-preview-scale" aria-label="图片缩放比例">100%</output>
         <button type="button" data-preview-action="in" aria-label="放大图片">＋</button>
         <button type="button" data-preview-action="reset">复位</button>
         <button type="button" data-preview-action="close" aria-label="关闭图片预览">×</button>
       </div>
+      <output id="media-preview-scale" aria-label="图片缩放比例">100%</output>
       <p class="media-preview-gesture-hint">滚轮缩放 · 拖动图片 · 双击复位 · Esc 关闭</p>
       <div class="dialog-heading">
         <h2 id="media-preview-title">图片预览</h2>

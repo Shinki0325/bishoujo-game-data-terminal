@@ -6,6 +6,20 @@ export function createMediaPreviewInteractionView({ dialog, image, windowRef = w
   const lifetime = createViewLifetime();
   const output = dialog.querySelector('#media-preview-scale');
   let state = { scale: 1, x: 0, y: 0 }, drag = null, suppressClickUntil = 0;
+  const touches = new Map();
+  let pinch = null, feedbackTimer = null;
+  function feedback() {
+    clearTimeout(feedbackTimer); dialog.classList.add('is-transforming');
+    feedbackTimer = setTimeout(() => dialog.classList.remove('is-transforming'), 900);
+  }
+  function clearTouches() {
+    const ids = [...touches.keys()]; touches.clear(); pinch = null;
+    for (const id of ids) if (image.hasPointerCapture?.(id)) image.releasePointerCapture(id);
+  }
+  function touchGeometry() {
+    const [a,b] = [...touches.values()];
+    return { distance: Math.max(1, Math.hypot(a.x-b.x,a.y-b.y)), x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+  }
   const active = () => dialog.open && dialog.classList.contains('is-immersive-preview');
   const bounds = () => ({ width: dialog.clientWidth, height: dialog.clientHeight,
     imageWidth: image.offsetWidth, imageHeight: image.offsetHeight });
@@ -24,11 +38,12 @@ export function createMediaPreviewInteractionView({ dialog, image, windowRef = w
     return previous;
   }
   function reset() {
-    finishDrag(); suppressClickUntil = 0;
+    finishDrag(); clearTouches(); suppressClickUntil = 0;
+    clearTimeout(feedbackTimer); dialog.classList.remove('is-transforming');
     state = { scale: 1, x: 0, y: 0 }; render();
   }
   function zoom(factor, anchor = { x: 0, y: 0 }) {
-    state = zoomPreview(state, factor, anchor, bounds()); render();
+    state = zoomPreview(state, factor, anchor, bounds()); render(); feedback();
   }
   lifetime.listen(dialog, 'wheel', event => {
     if (!active()) return;
@@ -41,18 +56,42 @@ export function createMediaPreviewInteractionView({ dialog, image, windowRef = w
   }, { passive: false });
   lifetime.listen(image, 'dragstart', event => { if (active()) event.preventDefault(); });
   lifetime.listen(image, 'pointerdown', event => {
+    if (active() && event.pointerType === 'touch') {
+      event.preventDefault(); event.stopPropagation();
+      if (touches.size >= 2) return;
+      touches.set(event.pointerId, {x:event.clientX,y:event.clientY});
+      image.setPointerCapture(event.pointerId);
+      if (touches.size === 2) {
+        drag = null; dialog.classList.remove('is-panning');
+        pinch = touchGeometry(); suppressClickUntil = Date.now()+350; return;
+      }
+    }
     if (!active() || event.button !== 0 || !event.isPrimary || drag) return;
     event.preventDefault(); event.stopPropagation();
     drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: state.x, y: state.y, moved: false };
     image.setPointerCapture(event.pointerId); dialog.classList.add('is-panning');
   });
   lifetime.listen(image, 'pointermove', event => {
+    if (touches.has(event.pointerId)) {
+      touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if (touches.size === 2 && pinch) {
+        const next=touchGeometry(), rect=dialog.getBoundingClientRect();
+        state=zoomPreview(state,next.distance/pinch.distance,{x:pinch.x-rect.left-rect.width/2,y:pinch.y-rect.top-rect.height/2},bounds());
+        state=boundPreviewTransform({...state,x:state.x+next.x-pinch.x,y:state.y+next.y-pinch.y},bounds());
+        pinch=next; render(); feedback(); suppressClickUntil=Date.now()+350; return;
+      }
+    }
     if (!drag || drag.id !== event.pointerId) return;
     const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
     drag.moved ||= Math.hypot(dx, dy) > 4;
     state = boundPreviewTransform({ scale: state.scale, x: drag.x + dx, y: drag.y + dy }, bounds()); render();
   });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) lifetime.listen(image, type, event => {
+    if (touches.has(event.pointerId)) {
+      touches.delete(event.pointerId);
+      if (pinch) { pinch=null; suppressClickUntil=Date.now()+350; }
+      if (image.hasPointerCapture?.(event.pointerId)) image.releasePointerCapture(event.pointerId);
+    }
     if (!drag || drag.id !== event.pointerId) return;
     if (finishDrag()?.moved) suppressClickUntil = Date.now() + 350;
   });
@@ -80,6 +119,6 @@ export function createMediaPreviewInteractionView({ dialog, image, windowRef = w
     }
   });
   lifetime.listen(dialog, 'close', reset);
-  lifetime.listen(windowRef, 'resize', () => { if (active()) { finishDrag(); state = boundPreviewTransform(state, bounds()); render(); } });
-  return { reset, dispose: () => { finishDrag(); lifetime.dispose(); } };
+  lifetime.listen(windowRef, 'resize', () => { if (active()) { finishDrag(); clearTouches(); state = boundPreviewTransform(state, bounds()); render(); } });
+  return { reset, dispose: () => { finishDrag(); clearTouches(); clearTimeout(feedbackTimer); lifetime.dispose(); } };
 }
