@@ -544,6 +544,9 @@ export function createRankingView({
   const indicator = documentRef.createElement('div');
   indicator.className = 'drop-indicator';
   indicator.setAttribute('aria-hidden', 'true');
+  const returnTarget = documentRef.createElement('div');
+  returnTarget.className = 'ranking-return-target';
+  returnTarget.textContent = '拖到这里，放回候选区';
   let mobileDragProxy = null;
   let mobileDropHint = null;
   let mobileDragOffsetX = 0;
@@ -916,6 +919,10 @@ export function createRankingView({
     clearDropState();
     draggedWorkId = workId;
     dragOrigin = card.parentElement?.classList.contains('tier-track') ? 'tier' : 'pool';
+    if (immersive && dragOrigin === 'tier' && !candidatePool.querySelector?.('.ranking-card')) {
+      root.classList.add('is-drag-return-visible');
+      candidatePool.append(returnTarget);
+    }
     draggedWorkIds = includeCandidateSelection && dragOrigin === 'pool' && candidateSelection.has(workId)
       ? candidateSelectionIds()
       : [workId];
@@ -936,6 +943,8 @@ export function createRankingView({
 
   function clearTouchDrag() {
     if (touchDrag?.timer != null) cancelHold(touchDrag.timer);
+    if (touchDrag?.frame != null) cancelFrame(touchDrag.frame);
+    if (touchDrag?.card?.hasPointerCapture?.(touchDrag.pointerId)) touchDrag.card.releasePointerCapture(touchDrag.pointerId);
     touchDrag = null;
     flushDeferredRender();
   }
@@ -1039,17 +1048,21 @@ export function createRankingView({
   }
 
   function beginTouchDrag(event) {
-    if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
-    if (!isTouchPointer(event) || touchDrag !== null) return;
+    const mouse = event.pointerType === 'mouse';
+    if ((!mouse && !viewWindow.matchMedia?.('(max-width: 899px)')?.matches)
+      || (!mouse && !isTouchPointer(event)) || touchDrag !== null || (mouse && event.button !== 0)) return;
     // A new finger contact is intentional, not the compatibility click from the previous drag.
     clearSuppressedTouchClick();
     const card = rankingCardFromPointer(event);
-    if (!event.target?.closest?.('.ranking-drag-handle')) return;
+    if (!mouse && !event.target?.closest?.('.ranking-drag-handle')) return;
+    const control = event.target?.closest?.('button, input, textarea, a');
+    if (mouse && control && !control.matches?.('.ranking-card-cover, .ranking-drag-handle')) return;
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
     const pointerId = event.pointerId ?? 0;
     const gesture = {
       pointerId,
+      mouse,
       card,
       row: card.closest?.('.tier-row'),
       started: false,
@@ -1058,6 +1071,13 @@ export function createRankingView({
       startY: Number(event.clientY) || 0
     };
     touchDrag = gesture;
+    if (mouse) {
+      // Keep the pointer stream and wheel events; HTML5 dragging captures both
+      // inside the browser and cannot reliably scroll our nested live surface.
+      card.draggable = false;
+      event.preventDefault?.();
+      return;
+    }
     // Capture only after dragging activates. A tap must keep its click on the handle.
     gesture.timer = scheduleHold(() => { if (touchDrag === gesture) activateTouchDrag(gesture, event); }, 320);
   }
@@ -1069,9 +1089,11 @@ export function createRankingView({
     const card = gesture.card, pointerId = gesture.pointerId;
     clearCandidateHold();
     finishCandidateSelectionGesture();
-    startDrag(card.dataset.workId, card, { includeCandidateSelection: false });
-    root.classList.add('is-mobile-ranking-dragging');
-    root.classList.toggle('is-mobile-ranking-dragging-from-pool', dragOrigin === 'pool');
+    startDrag(card.dataset.workId, card, { includeCandidateSelection: gesture.mouse });
+    if (!gesture.mouse) {
+      root.classList.add('is-mobile-ranking-dragging');
+      root.classList.toggle('is-mobile-ranking-dragging-from-pool', dragOrigin === 'pool');
+    }
     // The transient drag class hides the tray; its row/expanded preference is unchanged.
     card.classList.add('is-mobile-dragging');
     card.draggable = false;
@@ -1087,15 +1109,26 @@ export function createRankingView({
       if (Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) < 8) return;
       activateTouchDrag(gesture, event);
     }
-    const target = dropNodeForPointer(event);
-    const tierId = tierIdFromPointer(event) ?? tierIdFromNode(target);
-    const candidateTarget = pointerIsInsideCandidatePool(event);
-    if (candidateTarget) handlePoolDragOver(event);
-    else if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event);
-    else clearDropState();
-    updateMobileDragVisuals(event, candidateTarget ? null : tierId, candidateTarget);
-    startMobileRootAutoScroll(Number(event.clientY) || 0);
+    gesture.lastPoint = {clientX:event.clientX,clientY:event.clientY,preventDefault(){}};
+    if (gesture.frame == null) gesture.frame = requestFrame(() => {
+      gesture.frame = null;
+      if (touchDrag === gesture) refreshPointerDrop(gesture.lastPoint);
+    });
     event.preventDefault?.();
+  }
+
+  function refreshPointerDrop(event, updateScroll = true) {
+    const target = dropNodeForPointer(event);
+    // Hit testing must honor sticky controls, dialogs and the candidate tray.
+    const tierId = typeof documentRef.elementFromPoint === 'function'
+      ? tierIdFromNode(target) : tierIdFromPointer(event) ?? tierIdFromNode(target);
+    const candidateTarget = typeof documentRef.elementFromPoint === 'function'
+      ? isDescendant(candidatePool, target) : pointerIsInsideCandidatePool(event);
+    if (candidateTarget) handlePoolDragOver(event);
+    else if (tierId !== null && tierTracks.has(tierId)) handleTierDragOver(tierId, event, updateScroll);
+    else clearDropState({stopScroll:updateScroll});
+    updateMobileDragVisuals(event, candidateTarget ? null : tierId, candidateTarget);
+    if (updateScroll) startMobileRootAutoScroll(Number(event.clientY) || 0);
   }
 
   function finishTouchDrag(event) {
@@ -1103,7 +1136,8 @@ export function createRankingView({
     if (!gesture || (event.pointerId ?? 0) !== gesture.pointerId) return;
     clearTouchDrag();
     if (!gesture.started) {
-      if (event.type !== 'pointercancel') {
+      clearDragCard(gesture.card);
+      if (!gesture.mouse && event.type !== 'pointercancel') {
         const work = [...model.candidateWorks, ...model.tiers.flatMap(tier => tier.works)].find(item => item.workId === gesture.card.dataset.workId);
         suppressNextTouchClick(gesture.card.dataset.workId);
         if (work) openArrangeMenu(work, gesture.card);
@@ -1111,16 +1145,12 @@ export function createRankingView({
       return;
     }
     const cancelled = event.type === 'pointercancel';
-    if (!cancelled) {
-      const finalTarget = dropNodeForPointer(event);
-      const finalTierId = tierIdFromPointer(event) ?? tierIdFromNode(finalTarget);
-      if (pointerIsInsideCandidatePool(event)) handlePoolDragOver(event);
-      else if (finalTierId !== null && tierTracks.has(finalTierId)) handleTierDragOver(finalTierId, event);
-    }
+    if (!cancelled) refreshPointerDrop(event, false);
     const workId = draggedWorkId;
     const workIds = [...draggedWorkIds];
     const plan = cancelled ? null : dropPlan;
     clearDropState();
+    clearReturnTarget();
     root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
     flushDeferredRender();
     draggedWorkId = null;
@@ -1337,7 +1367,8 @@ export function createRankingView({
     for (const key of ['position', 'left', 'top', 'height']) indicator.style.removeProperty(key);
     const parent = indicator.parentElement;
     if (!parent) return;
-    parent.replaceChildren(...arrayFrom(parent.children).filter(child => child !== indicator));
+    if (typeof indicator.remove === 'function') indicator.remove();
+    else parent.replaceChildren(...arrayFrom(parent.children).filter(child => child !== indicator));
   }
 
   function stopAutoScroll() {
@@ -1408,7 +1439,10 @@ export function createRankingView({
       } else if (autoScrollRoot) {
         autoScrollRoot = false;
       }
-      if (shouldContinue) autoScrollFrame = requestFrame(runAutoScroll);
+      // The pointer may be stationary while content moves underneath it.
+      // Recompute the destination before the next frame or pointer release.
+      if (touchDrag?.started && touchDrag.lastPoint) refreshPointerDrop(touchDrag.lastPoint, false);
+      if (shouldContinue && autoScrollFrame === null) autoScrollFrame = requestFrame(runAutoScroll);
     } catch {
       autoScrollTrack = null;
       autoScrollRoot = false;
@@ -1438,11 +1472,11 @@ export function createRankingView({
     if (autoScrollFrame === null) autoScrollFrame = requestFrame(runAutoScroll);
   }
 
-  function clearDropState() {
+  function clearDropState({stopScroll = true} = {}) {
     for (const row of tierRows.values()) row.classList.remove('is-drop-target');
     candidatePool.classList.remove('is-drop-target');
     removeIndicator();
-    stopAutoScroll();
+    if (stopScroll) stopAutoScroll();
     dropPlan = null;
   }
 
@@ -1450,6 +1484,7 @@ export function createRankingView({
     closeAnnotationEditor(false);
     clearDropState();
     removeMobileDragVisuals();
+    clearReturnTarget();
     draggedWorkId = null;
     draggedWorkIds = [];
     dragOrigin = null;
@@ -1457,13 +1492,19 @@ export function createRankingView({
   }
 
   function cancelActiveDrag() {
+    if (touchDrag?.card) clearDragCard(touchDrag.card);
     if (touchDrag) clearTouchDrag();
     for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card.is-dragging'))) clearDragCard(card);
     finishDrag();
   }
 
+  function clearReturnTarget() {
+    root.classList.remove('is-drag-return-visible');
+    returnTarget.remove?.();
+  }
+
   function placeIndicator(track, pointerX, pointerY) {
-    removeIndicator();
+    if (indicator.parentElement !== track) removeIndicator();
     const allCards = arrayFrom(track.children).filter(isRankingCard);
     const destinationCards = allCards.filter(card => !draggedWorkIds.includes(card.dataset.workId));
     const usesTwoRows = track.parentElement?.dataset?.trackRows === '2';
@@ -1550,15 +1591,13 @@ export function createRankingView({
     }
     const target = destinationCards[insertionIndex] ?? null;
     const domIndex = target === null ? allCards.length : allCards.indexOf(target);
-    track.replaceChildren(
-      ...allCards.slice(0, domIndex),
-      indicator,
-      ...allCards.slice(domIndex)
-    );
+    if (typeof track.insertBefore === 'function') {
+      if (indicator.parentElement !== track || indicator.nextElementSibling !== target) track.insertBefore(indicator, target);
+    } else track.replaceChildren(...allCards.slice(0, domIndex), indicator, ...allCards.slice(domIndex));
     return insertionIndex;
   }
 
-  function handleTierDragOver(tierId, event) {
+  function handleTierDragOver(tierId, event, updateScroll = true) {
     if (draggedWorkId === null
       || typeof event.clientX !== 'number' || !Number.isFinite(event.clientX)
       || typeof event.clientY !== 'number' || !Number.isFinite(event.clientY)) {
@@ -1578,7 +1617,7 @@ export function createRankingView({
     for (const item of tierRows.values()) item.classList.toggle('is-drop-target', item === row);
     candidatePool.classList.remove('is-drop-target');
     dropPlan = { type: 'tier', tierId, insertionIndex };
-    startAutoScroll(track, event.clientX, event.clientY);
+    if (updateScroll) startAutoScroll(track, event.clientX, event.clientY);
   }
 
   function handleTierDrop(tierId, event) {
@@ -2119,6 +2158,24 @@ export function createRankingView({
   root.addEventListener('pointermove', updateTouchDrag);
   root.addEventListener('pointerup', finishTouchDrag);
   root.addEventListener('pointercancel', finishTouchDrag);
+  // Wheel events remain available during pointer-captured dragging. Scroll the
+  // surface under the cursor, not the source card that owns pointer capture.
+  function handleDragWheel(event) {
+    if (!touchDrag?.started || !touchDrag.mouse || event.ctrlKey) return;
+    const point = {clientX:event.clientX,clientY:event.clientY,preventDefault(){}};
+    touchDrag.lastPoint = point;
+    const target = scrollableAncestor(dropNodeForPointer(point), event.shiftKey ? 'x' : 'y') ?? pageScrollTarget();
+    const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? Number(viewWindow.innerHeight) || 390 : 1;
+    const before = target.scrollTop;
+    if (event.shiftKey) target.scrollLeft += (event.deltaX || event.deltaY) * factor;
+    else { target.scrollTop += event.deltaY * factor; target.scrollLeft += event.deltaX * factor; }
+    if (!event.shiftKey && target.scrollTop === before && target !== pageScrollTarget()) pageScrollTarget().scrollTop += event.deltaY * factor;
+    event.preventDefault();event.stopPropagation();
+    stopAutoScroll();refreshPointerDrop(point, false);
+  }
+  function cancelPointerOnBlur() { if (touchDrag !== null) cancelActiveDrag(); }
+  documentRef.addEventListener('wheel', handleDragWheel, {capture:true,passive:false});
+  viewWindow.addEventListener?.('blur', cancelPointerOnBlur);
   // Consume only the compatibility click of this touch gesture, even if opening
   // the dialog retargets that click to its Cancel button. Any new contact resets it.
   documentRef.addEventListener('pointerdown', clearSuppressedTouchClick, true);
@@ -2193,6 +2250,8 @@ export function createRankingView({
 
   return Object.freeze({
     dispose() {
+      documentRef.removeEventListener?.('wheel', handleDragWheel, true);
+      viewWindow.removeEventListener?.('blur', cancelPointerOnBlur);
       deferredRender = null;
       if (deferredFrame !== null) {
         cancelFrame(deferredFrame);

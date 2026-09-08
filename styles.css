@@ -3378,13 +3378,36 @@ body.is-ranking-immersive .ranking-immersive-edge {
 }
 
 .drop-indicator {
+  position: relative;
+  z-index: 5;
   align-self: stretch;
   flex: 0 0 3px;
   width: 3px;
   min-height: var(--ranking-card-size-scaled);
-  background: var(--focus);
+  background: var(--accent, #a889c8);
+  box-shadow: 0 0 0 1px #101010, 0 0 0 2px #ffffff;
   border-radius: 2px;
   pointer-events: none;
+}
+
+/* Desktop pointer dragging shares the touch preview without entering native
+   HTML drag mode, so wheel scrolling remains available while holding a card. */
+@media (min-width: 900px) {
+  .mobile-ranking-drag-proxy {
+    position: fixed; inset: 0 auto auto 0; z-index: 70; margin: 0;
+    pointer-events: none; opacity: .55; transform-origin: top left;
+    transition: none !important; will-change: transform;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 35%);
+  }
+  .mobile-ranking-drag-proxy :is(button, input) { pointer-events: none; }
+  .mobile-ranking-drag-proxy :is(.ranking-drag-handle, .ranking-candidate-remove, .ranking-candidate-select, .ranking-card-info) { display: none !important; }
+  .mobile-ranking-drop-hint {
+    position: fixed; inset: 0 auto auto 0; z-index: 71; pointer-events: none;
+    padding: 4px 8px; font-size: 12px; white-space: nowrap;
+    color: var(--text-muted); background: var(--surface-strong);
+    border: 1px solid var(--border-strong); border-radius: 4px;
+  }
+  .mobile-ranking-drop-hint.has-target { color: var(--accent); border-color: var(--accent); }
 }
 
 .tier-row.is-drop-target {
@@ -9649,6 +9672,18 @@ body.is-ranking-immersive #ranking-view .candidate-tray-controls,
 body.is-ranking-immersive #ranking-view .candidate-toolbar,
 body.is-ranking-immersive #ranking-view .candidate-gesture-hint { display: none; }
 body.is-ranking-immersive:not([data-ranking-tray="expanded"]) #ranking-candidates:not(:has(.ranking-card)) { display: none; }
+body.is-ranking-immersive #ranking-view.is-drag-return-visible #ranking-candidates {
+  display: block !important; transform: none !important;
+}
+body.is-ranking-immersive #ranking-view.is-drag-return-visible #ranking-candidate-grid {
+  min-height: 64px; padding: 8px; display: flex; overflow: visible;
+}
+body.is-ranking-immersive #ranking-view.is-drag-return-visible .ranking-upload-tile { display: none; }
+.ranking-return-target {
+  flex: 1; min-height: 48px; display: grid; place-items: center;
+  color: var(--text-muted); border: 2px dashed var(--accent); border-radius: 6px;
+}
+.is-drop-target > .ranking-return-target { color: var(--accent); background: var(--surface-muted); }
 body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
 body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate-batch-actions { display: flex !important; }
 body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .ranking-candidate-select { display: block !important; }
@@ -9757,6 +9792,7 @@ body.is-ranking-immersive #ranking-view #display-menu { top: 50px; }
   display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 0; padding: 0; height: auto;
   overflow: visible; min-height: var(--classic-height); background: #1a1a1a;
 }
+:root[data-ranking-style="classic"] #ranking-view .drop-indicator { min-height: 0; }
 :root[data-ranking-style="classic"] #ranking-view .ranking-card {
   flex: 0 0 var(--classic-width); width: var(--classic-width); min-width: var(--classic-width);
   height: var(--classic-height); min-height: var(--classic-height); aspect-ratio: auto;
