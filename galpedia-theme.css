@@ -866,7 +866,7 @@ html.galpedia #catalog-results .catalog-controls {
 }
 
 /* Dialogs and menus share one quiet paper/indigo frame. */
-dialog:not(#media-preview):not(#media-crop):not(#sticker-editor),
+dialog:not(#media-preview):not(#media-crop):not(#sticker-editor):not(#ranking-locator-dialog),
 .toolbar-menu,
 .tier-color-palette {
   color: var(--text);

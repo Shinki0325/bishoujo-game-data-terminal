@@ -5201,6 +5201,101 @@ dialog::backdrop {
   }
 }
 
+/* Full-board locator: intentionally isolated from ranking board/card styles. */
+.ranking-locator-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+.ranking-locator-dialog::backdrop {
+  background: rgb(12 14 22 / 48%);
+}
+.ranking-locator-dialog[hidden] { display: none; }
+.ranking-locator-panel {
+  width: min(560px, 100%);
+  max-height: min(680px, calc(100dvh - 32px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--border, #d7d9e0);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  color: var(--text, #222);
+  box-shadow: 0 18px 54px rgb(12 14 22 / 24%);
+}
+.ranking-locator-heading { grid-column: 1; margin: 0; font-size: 18px; line-height: 1.3; }
+.ranking-locator-context,
+.ranking-locator-status,
+.ranking-locator-hint { grid-column: 1 / -1; margin: 0; color: var(--muted, #697080); font-size: 12px; line-height: 1.45; }
+.ranking-locator-form { grid-column: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; min-width: 0; gap: 5px 8px; }
+.ranking-locator-label { display: grid; gap: 5px; color: var(--text, #222); font-size: 12px; font-weight: 600; }
+.ranking-locator-input {
+  width: 100%; min-height: 40px; box-sizing: border-box; padding: 8px 10px;
+  border: 1px solid var(--border, #d7d9e0); border-radius: 8px;
+  background: var(--surface, #fff); color: inherit; font: inherit;
+}
+.ranking-locator-input:focus-visible,
+.ranking-locator-result:focus-visible,
+.ranking-locator-clear:focus-visible,
+.ranking-locator-close:focus-visible { outline: 2px solid var(--accent, #8066a8); outline-offset: 2px; }
+.ranking-locator-clear,
+.ranking-locator-close { align-self: end; min-height: 36px; padding: 6px 10px; border: 1px solid var(--border, #d7d9e0); border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.ranking-locator-clear { grid-column: 2; grid-row: 1; margin-top: 20px; }
+.ranking-locator-close { grid-column: 2; grid-row: 1; align-self: start; }
+.ranking-locator-form + .ranking-locator-close { margin-top: 0; }
+.ranking-locator-results {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+  max-height: min(390px, 46dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+}
+.ranking-locator-result {
+  display: block; width: 100%; min-width: 0; padding: 9px 10px;
+  border: 1px solid transparent; border-radius: 8px; background: transparent;
+  color: inherit; text-align: left; font: inherit; cursor: pointer;
+}
+.ranking-locator-result:hover,
+.ranking-locator-result.is-active { border-color: var(--accent, #8066a8); background: var(--accent-soft, #f1edf7); }
+.ranking-locator-result-copy { display: grid; gap: 2px; min-width: 0; }
+.ranking-locator-result-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.ranking-locator-result-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted, #697080); font-size: 11px; font-weight: 400; }
+.ranking-locator-empty { margin: 12px 4px; color: var(--muted, #697080); font-size: 13px; }
+.ranking-locator-target {
+  outline: 3px solid var(--accent, #8066a8);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent, #8066a8) 24%, transparent);
+}
+@media (max-width: 390px) {
+  .ranking-locator-dialog { padding: 8px; }
+  .ranking-locator-panel { max-height: calc(100dvh - 16px); padding: 12px; border-radius: 11px; }
+  .ranking-locator-results { max-height: 44dvh; }
+}
+@media (max-width: 320px) {
+  .ranking-locator-panel { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px; }
+  .ranking-locator-heading, .ranking-locator-context, .ranking-locator-status, .ranking-locator-hint, .ranking-locator-results { grid-column: 1; }
+  .ranking-locator-form { grid-column: 1; }
+  .ranking-locator-clear, .ranking-locator-close { grid-column: 1; grid-row: auto; width: 100%; margin: 0; }
+  .ranking-locator-clear { margin-top: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .filter-drawer,
   #status-message {
@@ -5993,7 +6088,7 @@ button:hover:not(:disabled) {
   box-shadow: 0 14px 34px rgb(0 0 0 / 34%);
 }
 
-dialog:not(#media-preview):not(#media-crop):not(#sticker-editor) {
+dialog:not(#media-preview):not(#media-crop):not(#sticker-editor):not(#ranking-locator-dialog) {
   border-color: var(--border);
   background: #16212a;
   box-shadow: 0 22px 70px rgb(0 0 0 / 52%);
@@ -6193,7 +6288,7 @@ dialog::backdrop {
 :root[data-theme="light"] .company-directory-card { background: #edf2f3; }
 
 :root[data-theme="light"] .company-directory-detail,
-:root[data-theme="light"] dialog:not(#media-preview):not(#media-crop):not(#sticker-editor){
+:root[data-theme="light"] dialog:not(#media-preview):not(#media-crop):not(#sticker-editor):not(#ranking-locator-dialog){
   color: var(--text);
   border-color: #c5d1d5;
   background: #ffffff;
@@ -9737,4 +9832,14 @@ body.is-ranking-immersive #ranking-view #display-menu { top: 50px; }
   #sticker-editor .sticker-editor-history button { min-width: 36px; min-height: 36px; width: 36px; height: 36px; }
   .sticker-tools { min-height: 0; max-height: 100%; align-self: stretch; box-sizing: border-box; overflow-y: auto; gap: 9px; padding: 0 2px 8px; }
   .sticker-tools button { min-height: 44px; }
+}
+
+/* Keep the native locator dialog transparent even under the site's broad
+   dialog theme rules; the visible surface is the child panel. */
+dialog.ranking-locator-dialog[open][aria-modal="true"] {
+  width: 100%; max-width: none; height: 100%; max-height: none; margin: 0;
+  padding: 16px; border: 0; background: transparent; box-shadow: none; color: inherit;
+}
+dialog.ranking-locator-dialog[open][aria-modal="true"]::backdrop {
+  background: rgb(12 14 22 / 48%);
 }

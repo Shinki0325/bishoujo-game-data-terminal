@@ -15,12 +15,32 @@ export function createCompanyRankingCard(documentRef, companyItem, callbacks) {
   image.loading = 'lazy';
   image.decoding = 'async';
   image.draggable = false;
-  image.src = companyItem.companyImageUrl ?? '';
+  const imageUrl = typeof companyItem.companyImageUrl === 'string'
+    ? companyItem.companyImageUrl.trim()
+    : '';
+  const fallback = documentRef.createElement('span');
+  fallback.className = 'ranking-card-missing-image';
+  fallback.textContent = companyItem.title;
+  fallback.setAttribute('aria-hidden', 'true');
+  fallback.hidden = false;
+  image.addEventListener('load', () => {
+    if (imageUrl.length === 0) return;
+    image.hidden = false;
+    fallback.hidden = true;
+    card.classList.remove?.('is-image-missing');
+  }, { once: true });
   image.addEventListener('error', () => {
     image.hidden = true;
+    fallback.hidden = false;
     card.classList.add('is-image-missing');
   }, { once: true });
-  cover.append(image);
+  if (imageUrl.length > 0) {
+    image.src = imageUrl;
+  } else {
+    image.hidden = true;
+    card.classList.add('is-image-missing');
+  }
+  cover.append(image, fallback);
   const title = documentRef.createElement('span');
   title.className = 'ranking-card-title';
   title.dataset.field = 'title';
@@ -29,8 +49,9 @@ export function createCompanyRankingCard(documentRef, companyItem, callbacks) {
   handle.type = 'button';
   handle.className = 'ranking-drag-handle';
   handle.setAttribute('aria-label', `整理 ${companyItem.title}`);
-  handle.setAttribute('title', '点按整理，按住拖动');
-  handle.textContent = '⠿';
+  handle.setAttribute('title', '更多操作；按住可拖动');
+  handle.setAttribute('aria-haspopup', 'dialog');
+  handle.textContent = '⋯';
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();

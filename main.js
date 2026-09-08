@@ -89,6 +89,7 @@ import { createInteractionMetrics } from './lib/interaction-metrics.js';
 import { runtimeDiagnostics as localDiagnostics } from './lib/runtime-diagnostics.js';
 import { createTelemetryClient } from './lib/telemetry-client.js';
 import { createRankingWorkspaceController, projectCompanyRankingItems } from './lib/ranking-workspace-controller.js';
+import { createRankingCommandHistory } from './lib/ranking-command-history.js';
 import { createRankingExportController } from './lib/ranking-export-controller.js';
 import { createCompanyRankingCard } from './views/company-ranking-card.js';
 import {
@@ -754,6 +755,8 @@ async function initialize() {
   let companyDetailSortDirection = 'asc';
   let companyCandidateQuery = '';
   let selectedCompanyId = null;
+  let rankingCompanyReturn = null;
+  let restoreCompanyRankingPending = false;
   let selectionMode = false;
   let compareMode = false;
   let companySelectionMode = false;
@@ -862,10 +865,23 @@ async function initialize() {
     tiers: controller.inspectState().tiers,
     storage: browserStorage(), announce
   });
+  const rankingHistory = createRankingCommandHistory({
+    subjects: {
+      work: { read: () => controller.inspectState(), undo: () => controller.undo(), redo: () => controller.redo() },
+      company: { read: () => companyRanking.inspect(), undo: () => companyRanking.undo(), redo: () => companyRanking.redo() }
+    }, announce
+  });
   elements.companyRankingToggle.textContent = '进入排榜';
   elements.companyRankingClose.textContent = '返回会社';
 
   function openCompanyDirectory(companyId = null, { push = true, interaction = null } = {}) {
+    if (!companyDirectoryOpen && !personDirectoryOpen && controller.inspectState().workspaceMode === 'ranking') {
+      rankingCompanyReturn = { subject: rankingSubject,
+        live: document.body.classList.contains('is-ranking-immersive'),
+        anchor: rankingView?.captureAnchor(), scroll: rankingView?.captureScroll() };
+      // The directory is a separate workspace, never a child of the live board.
+      void immersive.exit();
+    }
     if (push) beginUiNavigation('company-navigation');
     const activeInteraction = interaction ?? (push ? interactionMetrics.begin('company-directory') : null);
     interactionMetrics.stage(activeInteraction, 'debounce-complete');
@@ -964,7 +980,7 @@ async function initialize() {
     store: mediaStore, environment: mediaEnvironment,
     previewUrlForWork, authorityThumbnailPathForWork,
     registerCustomWork(work) {
-      controller.registerLocalWorks([work]);
+      rankingHistory.board(() => controller.registerLocalWorks([work]), '添加本地图片');
       worksById.set(work.workId, work);
       customWorks = [...customWorks, work];
     },
@@ -1186,12 +1202,13 @@ async function initialize() {
       }
     },
     onCloseDetail() {
+      if (rankingCompanyReturn) { void returnFromCompanyToRanking(); return; }
       selectedCompanyId = null;
       renderCompanyDirectory();
       pushUiLocation();
     },
     onToggleCompany(companyId, selected) {
-      companyRanking.toggle(companyId, selected);
+      rankingHistory.board(() => companyRanking.toggle(companyId, selected));
       renderCompanyDirectory();
       if (lastRenderedModel !== null) renderControlStates(lastRenderedModel);
     },
@@ -1335,6 +1352,54 @@ async function initialize() {
   }
 
   let rankingView = null, buildRankingModel, createRankingCard;
+  const fullRankingModel = () => rankingSubject === 'company'
+    ? buildCompanyRankingModel() : buildRankingModel(controller.inspectState(), worksById, '');
+  async function locateRankingItem(workId) {
+    if (importBusy || companyDirectoryOpen || personDirectoryOpen || controller.inspectState().workspaceMode !== 'ranking') return;
+    const model = fullRankingModel();
+    const candidate = model.candidateWorks.some(item => item.workId === workId);
+    if (!candidate && !model.tiers.some(tier => tier.works.some(item => item.workId === workId))) {
+      announce('该条目已不在当前榜单中。'); return;
+    }
+    if (candidate) {
+      if (candidateTitleQuery && rankingSubject === 'work') {
+        candidateTitleQuery = '';
+        await render();
+      }
+      if (document.body.dataset.rankingTray === 'collapsed') rankingControls.setCandidatesOpen(true);
+    }
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
+    const card = [...elements.rankingView.querySelectorAll('.ranking-card')].find(node => node.dataset.workId === workId);
+    if (!card) return;
+    card.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+    card.focus({ preventScroll: true }); card.classList.add('ranking-locator-target');
+    window.setTimeout(() => card.classList.remove('ranking-locator-target'), 1600);
+  }
+  let rankingLocatorView = null;
+  const rankingLocator = createLazyResource(async () => {
+    const { createRankingLocatorView } = await import('./views/ranking-locator-view.js');
+    rankingLocatorView = createRankingLocatorView({ documentRef: document, getModel: fullRankingModel,
+      onLocate: id => { void locateRankingItem(id).catch(error => { announce('定位失败，请重试。', 'error'); console.error(error); }); }
+    });
+    return rankingLocatorView;
+  });
+  async function openRankingLocator() {
+    if (importBusy || companyDirectoryOpen || personDirectoryOpen || controller.inspectState().workspaceMode !== 'ranking') return;
+    const subject = rankingSubject;
+    closeToolbarMenus();
+    document.getElementById('mobile-ranking-menu')?.close();
+    const view = await rankingLocator();
+    if (importBusy || companyDirectoryOpen || personDirectoryOpen || rankingSubject !== subject || controller.inspectState().workspaceMode !== 'ranking') return;
+    const isLive = document.body.classList.contains('is-ranking-immersive');
+    const opener = document.getElementById(isLive ? 'ranking-live-toggle' : window.matchMedia('(max-width: 899px)').matches ? 'mobile-ranking-more' : 'cleanup-menu-button');
+    opener?.focus({ preventScroll: true });
+    view.open({ subject, isLive });
+  }
+  for (const id of ['ranking-locate-open', 'mobile-ranking-locate', 'ranking-live-locate']) {
+    document.getElementById(id).addEventListener('click', () => {
+      void openRankingLocator().catch(error => { announce('全榜查找暂时无法打开，请重试。', 'error'); console.error(error); });
+    });
+  }
   const rankingActions = createRankingWorkspaceController({
     works: controller, companies: companyRanking, getSubject: () => rankingSubject,
     commit: change => runStateChange(change),
@@ -1387,7 +1452,7 @@ async function initialize() {
     },
     onAnnotationChange(workId, value) {
       const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
-      activePresentation.setAnnotation(workId, value);
+      rankingHistory.annotations(rankingSubject, activePresentation, () => activePresentation.setAnnotation(workId, value));
       rankingView.setAnnotations(activePresentation.inspect().annotations);
       renderControlStates(lastRenderedModel ?? controller.inspect([]));
     },
@@ -1551,13 +1616,39 @@ async function initialize() {
     selectedWorksToggle: document.getElementById('selected-works-toggle')
   });
   function renderWorkspace(model) {
+    if (companyDirectoryOpen || personDirectoryOpen || model.state.workspaceMode !== 'ranking') void immersive.exit();
     workspaceHost.render({ workspaceMode: model.state.workspaceMode, personDirectoryOpen, companyDirectoryOpen });
+    elements.companyBack.hidden = !companyDirectoryOpen || rankingCompanyReturn === null;
+    elements.companyBack.textContent = rankingCompanyReturn?.subject === 'company' ? '← 返回会社排榜' : '← 返回作品排榜';
+    if (!companyDirectoryOpen && !restoreCompanyRankingPending) rankingCompanyReturn = null;
+  }
+  async function restoreCompanyRankingContext() {
+    const context = rankingCompanyReturn;
+    if (!restoreCompanyRankingPending || !context || companyDirectoryOpen || personDirectoryOpen || rankingSubject !== context.subject) return;
+    restoreCompanyRankingPending = false;
+    rankingCompanyReturn = null;
+    if (context.live) await immersive.enter();
+    await new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+    if (companyDirectoryOpen || personDirectoryOpen || controller.inspectState().workspaceMode !== 'ranking' || rankingSubject !== context.subject) return;
+    rankingView?.restoreScroll(context.scroll);
+    rankingView?.restoreAnchor(context.anchor);
+  }
+  async function returnFromCompanyToRanking() {
+    if (importBusy || !rankingCompanyReturn) return;
+    beginUiNavigation('company-ranking-return');
+    rankingSubject = rankingCompanyReturn.subject;
+    restoreCompanyRankingPending = true;
+    companyDirectoryOpen = false; personDirectoryOpen = false;
+    controller.setWorkspaceMode('ranking');
+    pushUiLocation();
+    await render();
   }
   function renderControlStates(model) {
     const company = companyRanking.inspect();
     const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
     workbenchControls.render(projectWorkbenchControls({
-      model, company, rankingSubject, importBusy,
+      model: { ...model, ...rankingHistory.inspect('work') },
+      company: { ...company, ...rankingHistory.inspect('company') }, rankingSubject, importBusy,
       personAvailable: personRuntime !== null,
       selectionMode, compareMode, companyDirectoryOpen, companySelectionMode,
       bangumiAvailable: confirmedBangumiImportBindings !== null,
@@ -1566,6 +1657,9 @@ async function initialize() {
       showCounts: elements.rankingShowCounts.checked,
       showTitles: elements.rankingShowTitles.checked
     }));
+    const commandState = rankingHistory.inspect(rankingSubject);
+    elements.undoEdit.title = commandState.undoLabel ? `撤销：${commandState.undoLabel}` : '撤销';
+    elements.redoEdit.title = commandState.redoLabel ? `重做：${commandState.redoLabel}` : '重做';
     bangumiWorkspace.syncControls();
   }
   function setImportBusy(nextBusy) {
@@ -1577,7 +1671,7 @@ async function initialize() {
 
   function runStateChange(change, visibleBrands = [], interaction = null) {
     if (importBusy) return false;
-    const result = change();
+    const result = rankingHistory.board(change);
     void render(visibleBrands, interaction);
     return result;
   }
@@ -1671,6 +1765,7 @@ async function initialize() {
     } else cancelRankingPreload();
     generation.complete({ empty: !ranking && !personDirectoryOpen && !companyDirectoryOpen && result.resultTotal === 0 });
     interactionMetrics.completeAfterFrame(interaction);
+    await restoreCompanyRankingContext();
     return true;
   }
 
@@ -1741,7 +1836,11 @@ async function initialize() {
   });
   const importCoordinator = createImportCoordinator({
     readText: file => file.text(),
-    commit: jsonText => controller.importJson(jsonText),
+    commit: jsonText => {
+      const preview = controller.previewImportJson(jsonText);
+      if (!window.confirm(`将恢复 ${preview.selectedCount} 部作品（已排 ${preview.rankedCount} 部，候选 ${preview.unrankedCount} 部）和 ${preview.tierCount} 个等级，替换当前榜单。\n作品选择、等级与顺序可撤销恢复；筛选与卡片设置将按文件应用。\n本机图片和标注不从此 JSON 恢复，已有内容保留。是否继续？`)) return false;
+      return rankingHistory.board(() => controller.importJson(jsonText), '导入作品榜');
+    },
     setBusy: setImportBusy
   });
 
@@ -1913,15 +2012,18 @@ async function initialize() {
     isHome: () => document.documentElement.dataset.home === 'true',
     isHomeRoute: () => document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home'),
     invalidate() {
+      rankingLocatorView?.close();
       workbenchQuery.suspend(); companyWorkspace.suspend(); detailOpening.suspend();
       selectionView.suspend(); cancelRankingPreload();
     },
     home() {
+      void immersive.exit();
       currentWorkDetailId = null;
       if (elements.detailsDialog.open) elements.detailsDialog.close();
       if (elements.personDetailDialog.open) elements.personDetailDialog.close();
     },
     ranking: { enter(route) {
+      restoreCompanyRankingPending = companyDirectoryOpen && rankingCompanyReturn?.subject === route.subject;
       companyDirectoryOpen = false; personDirectoryOpen = false; setWorkSelectionMode(false);
       currentWorkDetailId = null; rankingSubject = route.subject; controller.setWorkspaceMode('ranking');
     } },
@@ -2103,6 +2205,7 @@ async function initialize() {
     void open();
   });
   elements.companyBack.addEventListener('click', () => {
+    if (rankingCompanyReturn) { void returnFromCompanyToRanking(); return; }
     beginUiNavigation('companyBack');
     companyDirectoryOpen = false;
     rankingSubject = 'work';
@@ -2252,13 +2355,21 @@ async function initialize() {
     if (elements.clearAnnotations.disabled) return;
     if (!window.confirm('清空全部本地标记？')) return;
     const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
-    activePresentation.clearAnnotations();
+    rankingHistory.annotations(rankingSubject, activePresentation, () => activePresentation.clearAnnotations(), '清空标注');
     rankingView.setAnnotations(activePresentation.inspect().annotations);
     closeToolbarMenus();
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
   });
-  elements.undoEdit.addEventListener('click', rankingActions.undo);
-  elements.redoEdit.addEventListener('click', rankingActions.redo);
+  for (const [button, direction] of [[elements.undoEdit, 'undo'], [elements.redoEdit, 'redo']]) {
+    button.addEventListener('click', () => {
+      if (importBusy) return;
+      rankingHistory[direction](rankingSubject);
+      const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+      rankingView?.setAnnotations(activePresentation.inspect().annotations);
+      renderControlStates(lastRenderedModel ?? controller.inspect([]));
+      void render();
+    });
+  }
   elements.importState.addEventListener('click', () => {
     closeToolbarMenus();
     elements.stateFile.click();
@@ -2272,7 +2383,7 @@ async function initialize() {
         if (file.size > 2000000) throw new TypeError('company JSON too large');
         const data = JSON.parse(await file.text());
         if (!window.confirm(`将恢复会社榜（${data.selectedCompanyIds?.length ?? 0} 家）。${data.tiers ? '同时恢复等级名称、颜色与顺序。' : '旧文件不含等级定义，沿用当前等级。'} 可通过撤销恢复导入前的榜单。`)) return;
-        companyRanking.importState(data);
+        rankingHistory.board(() => companyRanking.importState(data), '导入会社榜');
         companyCandidateQuery = '';
         workspaceScroll.resetRanking();
         void render();
@@ -2285,6 +2396,7 @@ async function initialize() {
     }
     const outcome = await importCoordinator.importFile(file);
     if (outcome.status === 'stale') return;
+    if (outcome.status === 'success' && outcome.value === false) return;
     if (outcome.status === 'error') {
       const message = outcome.stage === 'read'
         ? 'JSON 文件读取失败，请重新选择文件。'
