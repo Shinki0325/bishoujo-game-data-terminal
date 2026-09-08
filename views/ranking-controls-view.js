@@ -5,6 +5,18 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   enterImmersive, documentRef = document, windowRef = window }) {
   const lifetime = createViewLifetime();
   const tray = documentRef.getElementById?.('ranking-candidates');
+  const search = documentRef.getElementById?.('ranking-candidate-search');
+  const queryHint = documentRef.getElementById?.('ranking-live-query');
+  const syncQuery = () => {
+    if (!queryHint) return;
+    queryHint.hidden = !search?.value.trim();
+    queryHint.querySelector('span').textContent = `筛选：${search?.value ?? ''}`;
+    workspace?.style.setProperty('--ranking-live-top', queryHint.hidden ? '54px' : '92px');
+  };
+  lifetime.listen(search, 'input', syncQuery);
+  lifetime.listen(queryHint?.querySelector('button'), 'click', () => {
+    search.value = ''; search.dispatchEvent(new windowRef.Event('input', { bubbles: true }));
+  });
   const workspace = documentRef.getElementById?.('ranking-view');
   const displayMenu = documentRef.getElementById?.('display-menu');
   const styleSelect = documentRef.getElementById?.('ranking-display-style');
@@ -43,10 +55,10 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   const pinButton = documentRef.getElementById?.('ranking-candidates-pin');
   const trayButtons = [...(documentRef.querySelectorAll?.('[data-candidate-tray]') ?? [])];
   let trayMode = 'collapsed', pinned = false, live = false, beforeLive = null, restoreFrame = null;
+  let liveTray = 'row', modeAnchor = null;
   function beginLive() {
     if (live) return;
     windowRef.cancelAnimationFrame(restoreFrame);
-    beforeLive = { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
     return enterImmersive();
   }
   const measureTray = () => {
@@ -95,6 +107,10 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     if (shapeSelect) shapeSelect.value = display.shape;
     const shapeField = documentRef.getElementById?.('ranking-display-shape-field');
     if (shapeField) shapeField.hidden = display.style !== 'classic';
+    const modeLabel = documentRef.getElementById?.('ranking-display-mode');
+    if (modeLabel) modeLabel.textContent = live ? '直播显示 · 独立记住尺寸与内容' : '普通显示 · 独立记住尺寸与内容';
+    const sync = documentRef.getElementById?.('ranking-display-sync');
+    if (sync) sync.textContent = live ? '将当前显示同步到普通模式' : '将当前显示同步到直播模式';
     for (const input of [elements.rankingShowCounts, elements.mobileRankingShowCounts]) input.checked = state.showCounts;
     for (const input of [elements.rankingShowTitles, elements.mobileRankingShowTitles]) input.checked = state.showTitles;
     getRankingView()?.setShowCounts?.(state.showCounts);
@@ -109,6 +125,10 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   }
   lifetime.listen(styleSelect, 'change', () => { scalePresentation.setDisplayStyle(styleSelect.value); applyDisplay(); });
   lifetime.listen(shapeSelect, 'change', () => { scalePresentation.setDisplayShape(shapeSelect.value); applyDisplay(); });
+  lifetime.listen(documentRef.getElementById?.('ranking-display-sync'), 'click', event => {
+    scalePresentation.syncViewMode?.();
+    event.currentTarget.textContent = live ? '已同步到普通模式' : '已同步到直播模式';
+  });
   for (const button of densityButtons) lifetime.listen(button, 'click', () => {
     scalePresentation.setDensity(button.dataset.displayDensity); applyDisplay();
   });
@@ -244,6 +264,12 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   lifetime.add(() => windowRef.cancelAnimationFrame(rankingLayoutFrame));
   lifetime.add(() => windowRef.cancelAnimationFrame(restoreFrame));
   return Object.freeze({
+    prepareMode(value) {
+      windowRef.cancelAnimationFrame(restoreFrame);
+      modeAnchor = getRankingView()?.captureAnchor?.();
+      if (value) beforeLive = { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
+      else liveTray = trayMode;
+    },
     scaleInputs: scaleControls.map(([, input]) => input),
     setCandidatesOpen: setMobileRankingCandidatesOpen, closeCandidates: closeMobileRankingCandidates,
     refreshTray: () => setTrayMode(trayMode),
@@ -253,25 +279,26 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       documentRef.getElementById?.('display-menu-button')?.setAttribute('aria-expanded', 'false');
       if (value) {
         beforeLive ??= { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
-        live = true; setTrayMode('row');
+        live = true; setTrayMode(liveTray);
       } else {
         const scroll = beforeLive?.scroll;
         live = false; setPinned(beforeLive?.pinned ?? false); setTrayMode(beforeLive?.trayMode ?? 'row');
-        // Restore after the fixed layout and ResizeObserver have relinquished the document.
-        // Restoring before layout settles is counteracted by browser scroll anchoring.
-        restoreFrame = windowRef.requestAnimationFrame(() => {
-          restoreFrame = windowRef.requestAnimationFrame(() => {
-            restoreFrame = null;
-            if (!live && !workspace?.hidden) {
-              workspace?.setAttribute('tabindex', '-1');
-              workspace?.focus?.({ preventScroll: true });
-              getRankingView()?.restoreScroll?.(scroll);
-            }
-          });
-        });
+        if (!modeAnchor) getRankingView()?.restoreScroll?.(scroll);
         beforeLive = null;
       }
-      measureTray(); getRankingView()?.refreshLayout();
+      scalePresentation.setViewMode?.(value ? 'live' : 'normal');
+      syncQuery();
+      applyDisplay(); measureTray(); getRankingView()?.refreshLayout();
+      const anchor = modeAnchor;
+      restoreFrame = windowRef.requestAnimationFrame(() => {
+        restoreFrame = windowRef.requestAnimationFrame(() => {
+          restoreFrame = null;
+          if (live === value && !workspace?.hidden) {
+            workspace?.setAttribute('tabindex', '-1'); workspace?.focus?.({ preventScroll: true });
+            getRankingView()?.restoreAnchor?.(anchor);
+          }
+        });
+      });
     },
     dispose: lifetime.dispose
   });

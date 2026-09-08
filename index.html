@@ -483,7 +483,7 @@
             <div class="toolbar-menu-shell">
               <button data-ui="utility" id="display-menu-button" type="button" aria-expanded="false" aria-controls="display-menu">显示 ▾</button>
               <div id="display-menu" class="ranking-display-panel" role="region" aria-label="排榜显示设置" hidden>
-                <div class="ranking-display-heading"><div><strong>显示设置</strong><small>即时生效 · 不改变榜单内容</small></div><button type="button" data-display-close aria-label="关闭显示设置">×</button></div>
+                <div class="ranking-display-heading"><div><strong>显示设置</strong><small id="ranking-display-mode">普通显示 · 独立记住尺寸与内容</small></div><button type="button" data-display-close aria-label="关闭显示设置">×</button></div>
                 <div class="ranking-display-body">
                 <section class="ranking-display-section" aria-label="布局">
                 <label>界面风格 <select id="ranking-display-style"><option value="garden">箱庭默认</option><option value="classic">TierMaker 经典</option></select></label>
@@ -516,7 +516,8 @@
                   </details>
                   <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认大小</button>
                 </section>
-                <p class="ranking-display-note">各风格分别记住显示设置。经典布局的行高随卡片变化；图片标注仅在直播中显示。</p>
+                <button id="ranking-display-sync" type="button">将当前显示同步到直播模式</button>
+                <p class="ranking-display-note">风格与封面形式共用，尺寸和内容显示分别记住。经典布局的行高随卡片变化；图片标注仅在直播中显示。</p>
                 </div>
               </div>
             </div>
@@ -873,20 +874,25 @@
       tabindex="-1"
       aria-label="直播模式边缘控件"
     >
-      <button id="ranking-live-toggle" type="button" aria-label="直播工具" aria-controls="ranking-immersive-controls" aria-expanded="false">⋯</button>
-      <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
-        <button id="ranking-live-candidates" type="button">整理候选</button>
-        <button id="ranking-live-undo" type="button">撤销</button>
-        <button id="ranking-live-redo" type="button">重做</button>
-        <button id="ranking-live-export" type="button">导出图片</button>
-        <button id="ranking-live-display" type="button">显示设置</button>
+      <div class="ranking-live-primary">
         <button
           id="ranking-immersive-exit"
-          class="icon-button ranking-immersive-exit"
+          class="ranking-return-edit"
           type="button"
           aria-label="退出直播模式"
           title="退出直播模式"
-        >×</button>
+        >返回编辑</button>
+        <button id="ranking-live-fullscreen" type="button" aria-pressed="false">全屏</button>
+        <button id="ranking-live-candidates" type="button">候选</button>
+        <button id="ranking-live-undo" type="button" aria-label="撤销" title="撤销">↶</button>
+        <button id="ranking-live-redo" type="button" aria-label="重做" title="重做">↷</button>
+        <button id="ranking-live-toggle" type="button" aria-label="更多直播工具" aria-controls="ranking-immersive-controls" aria-expanded="false">⋯</button>
+      </div>
+      <div id="ranking-live-query" class="ranking-live-query" hidden><span></span><button type="button">清除筛选</button></div>
+      <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
+        <p class="ranking-live-shortcut">Shift＋右键快捷标注</p>
+        <button id="ranking-live-export" type="button">导出图片</button>
+        <button id="ranking-live-display" type="button">显示设置</button>
         <button
           id="ranking-immersive-help"
           class="icon-button ranking-immersive-help"

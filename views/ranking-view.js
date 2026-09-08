@@ -977,6 +977,7 @@ export function createRankingView({
     input.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopPropagation();
         closeAnnotationEditor(false);
       } else if (event.key === 'Enter' && !event.isComposing) {
         event.preventDefault();
@@ -1378,7 +1379,7 @@ export function createRankingView({
     dialog.append(destinations);
     const action = (text, callback, host = dialog) => {
       const button = documentRef.createElement('button'); button.type = 'button'; button.textContent = text;
-      button.addEventListener('click', () => { closeArrangeMenu(); callback(); }); host.append(button);
+      button.addEventListener('click', event => { event.stopPropagation(); closeArrangeMenu(); callback(); }); host.append(button);
       return button;
     };
     for (const tier of model.tiers) {
@@ -1395,6 +1396,7 @@ export function createRankingView({
     const secondary = documentRef.createElement('div'); secondary.className = 'ranking-arrange-secondary'; dialog.append(secondary);
     if (currentTier) action('移回候选', () => onMoveToUnranked(work.workId), secondary);
     if (!immersive && selected.length === 1) action('查看资料', () => onOpenDetails(work), secondary);
+    if (selected.length === 1) action('编辑标注', () => beginAnnotationEdit(work, card), secondary);
     if (!currentTier) {
       const remove = action(`移除候选${selected.length > 1 ? `（${selected.length}项）` : ''}`, () => onRemoveCandidates(selected), secondary);
       remove.className = 'ranking-arrange-remove';
@@ -1408,9 +1410,9 @@ export function createRankingView({
       onOpenDetails(work) {
         if (!immersive) onOpenDetails(work);
       },
-      onContextMenu(work, card) {
-        if (immersive) beginAnnotationEdit(work, card);
-        else onOpenDetails(work);
+      onContextMenu(work, card, event) {
+        if (event?.shiftKey) beginAnnotationEdit(work, card);
+        else openArrangeMenu(work, card);
       },
       onOpenMedia,
       onArrange: openArrangeMenu,
@@ -2001,6 +2003,25 @@ export function createRankingView({
       focusTierId = null;
     },
 
+    captureAnchor() {
+      const top = immersive ? 56 : 180;
+      const candidates = [...root.querySelectorAll('.tier-track .ranking-card')];
+      const visible = node => { const rect = node.getBoundingClientRect(); return rect.bottom > top && rect.top < (viewWindow.innerHeight ?? 900) - 120; };
+      const card = candidates.find(visible);
+      const row = card?.closest('.tier-row') ?? [...tierRows.values()].find(visible);
+      const node = card ?? row;
+      return node ? { workId: card?.dataset.workId, tierId: row?.dataset.tierId, offset: node.getBoundingClientRect().top - top } : null;
+    },
+    restoreAnchor(anchor) {
+      if (!anchor) return;
+      const card = [...root.querySelectorAll('.tier-track .ranking-card')].find(node => node.dataset.workId === anchor.workId);
+      const node = card ?? tierRows.get(anchor.tierId) ?? [...tierRows.values()][0];
+      if (!node) return;
+      const target = pageScrollTarget();
+      const top = (target.scrollTop ?? 0) + node.getBoundingClientRect().top - (immersive ? 56 : 180) - anchor.offset;
+      if (typeof target.scrollTo === 'function') target.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+      else target.scrollTop = Math.max(0, top);
+    },
     captureScroll() {
       return {
         ...capturePageScroll(),

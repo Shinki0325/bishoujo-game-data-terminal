@@ -1467,6 +1467,7 @@ async function initialize() {
   const immersive = createImmersiveController({
     root: document.body,
     documentRef: document,
+    onBeforeChange: value => rankingControls.prepareMode(value),
     onChange(value) {
       closeToolbarMenus();
       previewLoader.cancel();
