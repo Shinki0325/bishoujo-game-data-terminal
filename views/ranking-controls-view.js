@@ -362,12 +362,19 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       scalePresentation.setViewMode?.(value ? 'live' : 'normal');
       syncQuery();
       applyDisplay(); scheduleLayout();
+      // Focus an available control, never the whole workspace (which gets a
+      // browser outline after Escape). Do this now so a delayed layout frame
+      // cannot steal focus from the user's next interaction.
+      const focusTarget = value
+        ? documentRef.getElementById?.('ranking-immersive-exit')
+        : windowRef.matchMedia?.('(max-width: 899px)').matches
+          ? elements.mobileRankingMore : elements.rankingImmersive;
+      if (!workspace?.hidden) focusTarget?.focus?.({ preventScroll: true });
       const anchor = modeAnchor;
       restoreFrame = requestFrame(() => {
         restoreFrame = requestFrame(() => {
           restoreFrame = null;
           if (live === value && !workspace?.hidden) {
-            workspace?.setAttribute('tabindex', '-1'); workspace?.focus?.({ preventScroll: true });
             if (anchor) getRankingView()?.restoreAnchor?.(anchor);
             else getRankingView()?.restoreScroll?.(scroll);
             if (modeAnchor === anchor) modeAnchor = null;
