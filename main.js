@@ -1,3 +1,7 @@
+import { loadLegacyWorkbenchData } from './lib/legacy-workbench-data.js';
+import { toWorkerLookup } from './lib/workbench-data-projection.js';
+export { assertSample, prepareRuntimeSample } from './lib/runtime-sample.js';
+export { fetchStagedRuntimeCoreSources } from './lib/runtime-core-sources.js';
 import { loadWorkbenchData, workbenchQueryWork } from './lib/workbench-demand-data.js';
 import {getOwnedWorkbenchClient,ownedWorkbenchEnabled,workbenchSourceDescriptor} from './lib/workbench-worker-session.js';
 import {
@@ -5,12 +9,7 @@ import {
   resolveAssetUrl,
   validateRelativeAssetPath
 } from './lib/asset-url.js';
-import {
-  isBackendBetaFixture,
-  prepareBackendBetaFixture
-} from './lib/backend-beta-fixture.js';
 import { createHistory } from './lib/history.js';
-import { mergeVndbAdmissionsIntoFixture } from './lib/catalog-admissions.js';
 import { loadRuntimeSource } from './lib/runtime-source-cache.js';
 import { getPersonWorkspaceRuntime } from './lib/person-workspace-data.js';
 import { createPersonWorkspaceController } from './lib/person-workspace-controller.js';
@@ -34,17 +33,7 @@ import { createRankingWorkspaceView } from './views/ranking-workspace-view.js';
 import { createGalpediaSearch } from './lib/galpedia-search.js';
 import { createAppController } from './lib/app-controller.js?v=20260824-selection-source-sorting-v1';
 import { createCustomWork } from './lib/custom-work.js';
-import { prepareEnrichmentSidecar } from './lib/enrichment-sidecar.js';
-import { prepareBangumiPublicBindingsCarrier } from './lib/bangumi-public-bindings.js';
-import { prepareBangumiCanonicalAliasFallback } from './lib/bangumi-canonical-alias-fallback.js';
-import { prepareCompanyProfileSidecar } from './lib/company-profile-sidecar.js';
 import { preparePresentationFamiliesSidecar } from './lib/presentation-families.js';
-import { prepareVndbRatingsSidecar } from './lib/vndb-ratings.js';
-import { prepareBangumiRatingsSidecar } from './lib/bangumi-ratings.js';
-import { prepareVndbAdmissionsSidecar } from './lib/vndb-admissions.js';
-import { createRuntimePopulationContract } from './lib/population-contract.js';
-import { projectWorkWithVndbRating } from './lib/vndb-rating-view.js?v=20260824-selection-source-sorting-v1';
-import { projectWorkWithBangumiRating } from './lib/bangumi-rating-view.js?v=20260824-selection-source-sorting-v1';
 import { buildCompanyDirectory, restoreCompanySummary } from './lib/company-directory.js';
 import { encodeSquareCrop } from './lib/image-crop.js';
 import { createLocalMediaStore, openLocalMediaDatabase } from './lib/local-media-store.js';
@@ -66,16 +55,10 @@ import { createMediaPreviewActions } from './lib/media-preview-actions.js';
 import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createSelectionCardPresentation } from './lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
-import { createWeightedRatingSort } from './lib/rating-sort.js?v=20260824-source-weighted-rating-sort-v1';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
 import { createWorkDetailCreditsLoader } from './lib/work-detail-credits.js';
 import { prepareCharacterImageMap } from './lib/character-image-map.js';
 import { prepareProjectIdentityCrosswalk } from './lib/project-identity-crosswalk.js';
-import {
-  applyAuthorityFanoutMediaToWork,
-  prepareAuthorityFanoutMediaProjection,
-  prepareAuthorityFanoutPageBindings
-} from './lib/authority-fanout.js';
 import { canUseHighDensityPreview } from './lib/adaptive-image-source.js';
 import {
   configuredAssetBase,
@@ -140,7 +123,6 @@ import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
 import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
 import { createKeeperPreferences, resolveKeeperGuide } from './lib/keeper-guide-runtime.js';
 
-const SAMPLE_SCHEMA_VERSION = 'egs-tier-sample-document-v3';
 let PngExportError;
 const loadPngExport = createLazyResource(async attempt => {
   const module = await (attempt === 0 ? import('./lib/png-export.js') : import(`./lib/png-export.js?retry=${attempt}`));
@@ -155,9 +137,6 @@ const loadBangumiImport = createLazyResource(async attempt => {
     : import(`./lib/bangumi-public-import.js?retry=${attempt}`));
   return bangumiImport;
 });
-const EXPECTED_CONTENT_FILTER_COUNT = 45;
-const EXPECTED_GENRE_FILTER_COUNT = 4;
-const EXPECTED_PLATFORM_FILTER_COUNT = 13;
 
 export { FILTER_GROUP_ORDER };
 const FILTER_GROUP_POSITION = new Map(
@@ -518,30 +497,6 @@ function jsonImportMessage(error) {
   return 'JSON 状态文件内容无效。';
 }
 
-function assertStringArray(
-  value,
-  path,
-  knownFilterIds,
-  allowedFilterIds = knownFilterIds,
-  requireSorted = false
-) {
-  if (!Array.isArray(value)) throw new TypeError(`${path} 必须是数组`);
-  const seen = new Set();
-  for (let index = 0; index < value.length; index += 1) {
-    const filterId = value[index];
-    if (
-      typeof filterId !== 'string'
-      || !knownFilterIds.has(filterId)
-      || !allowedFilterIds.has(filterId)
-      || seen.has(filterId)
-      || (requireSorted && index > 0 && value[index - 1] > filterId)
-    ) {
-      throw new TypeError(`${path}[${index}] 包含无效、重复或未知筛选 ID`);
-    }
-    seen.add(filterId);
-  }
-}
-
 export function publicFilterIds(work) {
   return [...new Set([
     ...work.filterIds,
@@ -576,132 +531,6 @@ export function partitionWorkDetailFilters(work, filterById) {
   return { visible, collapsed };
 }
 
-export function assertSample(candidate, options = {}) {
-  const enforceAuthorityCounts = options.enforceAuthorityCounts ?? true;
-  if (candidate === null || typeof candidate !== 'object' || Array.isArray(candidate)) {
-    throw new TypeError('样本顶层必须是对象');
-  }
-  if (candidate.schemaVersion !== SAMPLE_SCHEMA_VERSION) {
-    throw new TypeError(`样本 schemaVersion 必须是 ${SAMPLE_SCHEMA_VERSION}`);
-  }
-  if (typeof candidate.sampleId !== 'string' || candidate.sampleId.length === 0) {
-    throw new TypeError('样本缺少 sampleId');
-  }
-  for (const field of ['works', 'filters', 'genreFilters', 'platformFilters', 'brands']) {
-    if (!Array.isArray(candidate[field])) throw new TypeError(`样本缺少 ${field} 数组`);
-  }
-  if (enforceAuthorityCounts && candidate.filters.length !== EXPECTED_CONTENT_FILTER_COUNT) {
-    throw new TypeError(`样本 filters 必须包含 ${EXPECTED_CONTENT_FILTER_COUNT} 项`);
-  }
-  if (enforceAuthorityCounts && candidate.genreFilters.length !== EXPECTED_GENRE_FILTER_COUNT) {
-    throw new TypeError(`样本 genreFilters 必须包含 ${EXPECTED_GENRE_FILTER_COUNT} 项`);
-  }
-  if (enforceAuthorityCounts && candidate.platformFilters.length !== EXPECTED_PLATFORM_FILTER_COUNT) {
-    throw new TypeError(`样本 platformFilters 必须包含 ${EXPECTED_PLATFORM_FILTER_COUNT} 项`);
-  }
-  const knownFilterIds = new Set();
-  const contentFilterIds = new Set();
-  const genreFilterIds = new Set();
-  const platformFilterIds = new Set();
-  for (const [field, definitions, target, expectedGroup] of [
-    ['filters', candidate.filters, contentFilterIds, 'content'],
-    ['genreFilters', candidate.genreFilters, genreFilterIds, 'game-type'],
-    ['platformFilters', candidate.platformFilters, platformFilterIds, 'platform']
-  ]) {
-    for (const [index, filter] of definitions.entries()) {
-      if (
-        filter === null
-        || typeof filter !== 'object'
-        || typeof filter.filterId !== 'string'
-        || filter.filterId.length === 0
-        || knownFilterIds.has(filter.filterId)
-        || typeof filter.displayTitle !== 'string'
-        || filter.displayTitle.length === 0
-        || typeof filter.groupId !== 'string'
-        || filter.groupId.length === 0
-        || (expectedGroup === 'content'
-          ? filter.groupId === 'game-type' || filter.groupId === 'platform'
-          : filter.groupId !== expectedGroup)
-        || typeof filter.groupTitleZh !== 'string'
-        || filter.groupTitleZh.length === 0
-        || !Number.isInteger(filter.displayOrder)
-      ) {
-        throw new TypeError(`样本 ${field}[${index}] 无效`);
-      }
-      knownFilterIds.add(filter.filterId);
-      target.add(filter.filterId);
-    }
-  }
-  const workIds = new Set();
-  for (const [index, work] of candidate.works.entries()) {
-    if (typeof work?.workId !== 'string' || workIds.has(work.workId)) {
-      throw new TypeError('样本包含无效或重复的 workId');
-    }
-    try {
-      validateRelativeAssetPath(work?.coverPath, `works[${index}].coverPath`);
-    } catch {
-      throw new TypeError(`作品 ${work.workId} 包含无效 coverPath`);
-    }
-    if (
-      !Number.isSafeInteger(work.coverWidth)
-      || work.coverWidth <= 0
-      || !Number.isSafeInteger(work.coverHeight)
-      || work.coverHeight <= 0
-    ) {
-      throw new TypeError(`works[${index}] 缺少有效缩略图尺寸`);
-    }
-    if (typeof work.rawGenre !== 'string') {
-      throw new TypeError(`works[${index}].rawGenre 必须是字符串`);
-    }
-    assertStringArray(work.rawFilterIds, `works[${index}].rawFilterIds`, knownFilterIds, contentFilterIds);
-    assertStringArray(work.filterIds, `works[${index}].filterIds`, knownFilterIds, contentFilterIds);
-    assertStringArray(
-      work.genreFilterIds,
-      `works[${index}].genreFilterIds`,
-      knownFilterIds,
-      genreFilterIds,
-      true
-    );
-    if (
-      typeof work.platformFilterId !== 'string'
-      || !platformFilterIds.has(work.platformFilterId)
-    ) {
-      throw new TypeError(`works[${index}].platformFilterId 包含无效或未知筛选 ID`);
-    }
-    workIds.add(work.workId);
-  }
-  return candidate;
-}
-
-export function prepareRuntimeSample(candidate, authorities = {}) {
-  if (isBackendBetaFixture(candidate)) {
-    const source = assertSample(
-      prepareBackendBetaFixture(candidate, authorities),
-      { enforceAuthorityCounts: authorities.filterAuthority !== undefined && authorities.filterAuthority !== null }
-    );
-    return {
-      ...source,
-      filters: [...source.filters, ...source.genreFilters, ...source.platformFilters]
-    };
-  }
-  const source = assertSample(candidate);
-  return {
-    ...source,
-    filters: [...source.filters, ...source.genreFilters, ...source.platformFilters]
-  };
-}
-
-
-function restrictAssetsManifestToCatalog(assetsManifest, catalogWorkIds) {
-  if (assetsManifest === null || assetsManifest === undefined) return assetsManifest;
-  const allowed = new Set(catalogWorkIds);
-  if (!Array.isArray(assetsManifest.assets)) return assetsManifest;
-  const assets = assetsManifest.assets.filter(asset => allowed.has(asset.workId));
-  return assets.length === assetsManifest.assets.length
-    ? assetsManifest
-    : Object.freeze({ ...assetsManifest, assets: Object.freeze(assets) });
-}
-
 async function fetchJson(url, label) {
   const response = await fetch(url, { cache: 'default' });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
@@ -719,87 +548,6 @@ async function fetchOptionalJsonWithSha256(url, label) {
     console.warn(`${label} unavailable; continuing without aliases`, error);
     return null;
   }
-}
-
-export async function fetchStagedRuntimeCoreSources({
-  catalogUrl,
-  admissionsUrl,
-  fetchRequired = fetchJsonWithSha256,
-  prepareAdmissions = prepareVndbAdmissionsSidecar
-}) {
-  const [catalogSource, admissionsSource] = await Promise.all([
-    fetchRequired(catalogUrl, 'catalog'),
-    fetchRequired(admissionsUrl, 'VNDB admissions sidecar')
-  ]);
-  const admissions = prepareAdmissions(admissionsSource.value, {
-    catalogSnapshotId: catalogSource.value.snapshot?.snapshotId,
-    catalogSha256: catalogSource.sha256,
-    workIds: catalogSource.value.works.map(work => work.workId)
-  });
-  return Object.freeze({
-    catalogSource,
-    admissions,
-    admissionsStatus: 'full',
-    backendIndexesSource: null,
-    assetsManifestSource: null,
-    useCoreFallback: false
-  });
-}
-
-function projectBrandsWithAliases(brands, companyAliasesById, companyPinyinById = null) {
-  return brands.map(brand => {
-    const aliases = companyAliasesById?.get?.(brand.brandId);
-    const pinyin = companyPinyinById?.get?.(brand.brandId);
-    if (
-      (!Array.isArray(aliases) || aliases.length === 0)
-      && (!Array.isArray(pinyin) || pinyin.length === 0)
-    ) return brand;
-    const existing = Array.isArray(brand.searchAliases) ? brand.searchAliases : [];
-    const seen = new Set();
-    const merged = [...existing, ...aliases].filter(alias => {
-      const normalized = String(alias).normalize('NFKC').trim().toLocaleLowerCase('ja-JP');
-      if (normalized.length === 0 || seen.has(normalized)) return false;
-      seen.add(normalized);
-      return true;
-    });
-    const existingPinyin = Array.isArray(brand.searchPinyin) ? brand.searchPinyin : [];
-    const mergedPinyin = [...existingPinyin, ...(Array.isArray(pinyin) ? pinyin : [])]
-      .map(value => String(value).normalize('NFKC').trim().toLocaleLowerCase('en-US'))
-      .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
-    return {
-      ...brand,
-      searchAliases: merged,
-      ...(mergedPinyin.length > 0 ? { searchPinyin: mergedPinyin } : {})
-    };
-  });
-}
-
-function projectWorkWithDisplayTitle(work, workDisplayTitlesById = null) {
-  const displayTitle = workDisplayTitlesById?.get?.(work.workId);
-  if (typeof displayTitle !== 'string' || displayTitle.length === 0) return work;
-  return { ...work, displayTitle };
-}
-
-function applyBangumiCanonicalAliasFallback({
-  workAliasesById = null,
-  workDisplayTitlesById = null,
-  fallbackByWorkId
-}) {
-  const mergedAliases = new Map(workAliasesById ?? []);
-  const mergedDisplayTitles = new Map(workDisplayTitlesById ?? []);
-  for (const [workId, fallback] of fallbackByWorkId) {
-    if (mergedDisplayTitles.has(workId)) continue;
-    mergedDisplayTitles.set(workId, fallback.displayTitle);
-    const aliases = mergedAliases.get(workId) ?? [];
-    mergedAliases.set(workId, Object.freeze([
-      fallback.displayTitle,
-      ...aliases.filter(alias => alias !== fallback.displayTitle)
-    ]));
-  }
-  return Object.freeze({
-    workAliasesById: mergedAliases,
-    workDisplayTitlesById: mergedDisplayTitles
-  });
 }
 
 function browserStorage() {
@@ -899,299 +647,15 @@ async function initialize() {
     )
   });
   assertRuntimeContracts();
-  async function loadLegacyWorkbenchData() {
-  const [
-    coreSources,
-    [
-    filterAuthoritySource,
-    workGroupAuthoritySource,
-    reviewQueueSource,
-    enrichmentSource,
-    companyProfileSource,
-    presentationFamiliesSource,
-    bangumiPublicBindingsSource,
-    vndbRatingsSource,
-    bangumiRatingsSource,
-    bangumiCanonicalAliasFallbackSource,
-    authorityFanoutSource
-    ]
-  ] = await startupMetrics.measureAsync('runtime-fetch-and-parse', () => Promise.all([
-    fetchStagedRuntimeCoreSources({
-      catalogUrl: DATA_URLS.catalog,
-      admissionsUrl: DATA_URLS.vndbAdmissions,
-      indexesUrl: DATA_URLS.indexes,
-      assetsManifestUrl: DATA_URLS.assetsManifest
-    }),
-    Promise.all([
-      fetchJsonWithSha256(DATA_URLS.filterAuthority, '筛选权威'),
-      fetchJsonWithSha256(DATA_URLS.workGroups, '作品组权威'),
-      fetchJsonWithSha256(DATA_URLS.workGroupReviewQueue, '作品组 review queue'),
-      fetchJsonWithSha256(DATA_URLS.enrichment, 'alias enrichment sidecar'),
-      fetchJsonWithSha256(DATA_URLS.companyProfile, 'company profile sidecar'),
-      fetchJsonWithSha256(DATA_URLS.presentationFamilies, 'presentation families sidecar'),
-      RUNTIME_FEATURES.bangumiPublicBindingsV1.enabled
-        ? fetchJsonWithSha256(DATA_URLS.bangumiPublicBindings, 'Bangumi public bindings carrier')
-        : Promise.resolve(null),
-      RUNTIME_FEATURES.vndbRatingsV1.enabled
-        ? fetchJsonWithSha256(DATA_URLS.vndbRatings, 'VNDB ratings sidecar')
-        : Promise.resolve(null),
-      RUNTIME_FEATURES.bangumiRatingsV1.enabled
-        ? fetchJsonWithSha256(DATA_URLS.bangumiRatings, 'Bangumi ratings sidecar')
-        : Promise.resolve(null),
-      RUNTIME_FEATURES.bangumiCanonicalAliasFallbackV1.enabled
-        ? fetchJsonWithSha256(DATA_URLS.bangumiCanonicalAliasFallback, 'Bangumi canonical alias fallback')
-        : Promise.resolve(null),
-      RUNTIME_FEATURES.authorityFanoutV1.enabled
-        ? fetchJsonWithSha256(DATA_URLS.authorityFanout, 'authority fanout projection')
-        : Promise.resolve(null)
-    ])
-  ]));
-  const {
-    catalogSource,
-    admissions,
-    backendIndexesSource,
-    assetsManifestSource
-  } = coreSources;
-  const mergedAdmissions = mergeVndbAdmissionsIntoFixture(catalogSource.value, admissions);
-  const sampleSource = mergedAdmissions.source;
-  const populationContract = createRuntimePopulationContract({
-    coreWorkIds: catalogSource.value.works.map(work => work.workId),
-    admittedWorkIds: admissions?.works.map(work => work.workId) ?? []
+  const preparedWorkbench = await loadWorkbenchData({
+    legacyLoader: () => loadLegacyWorkbenchData({
+      startupMetrics,
+      publishDiagnostics(runtimeDiagnostics) {
+        document.documentElement.dataset.runtimePopulation = 'full';
+        globalThis.__EGS_TIER_STARTUP_DIAGNOSTICS__ = runtimeDiagnostics;
+      }
+    })
   });
-  const runtimePopulation = 'full';
-  const runtimeDiagnostics = Object.freeze({
-    mode: runtimePopulation,
-    admissionsStatus: coreSources.admissionsStatus,
-    coreWorkCount: populationContract.core.workIds.length,
-    admissionsWorkCount: populationContract.admissions.workIds.length,
-    runtimeWorkCount: populationContract.runtime.workIds.length
-  });
-  document.documentElement.dataset.runtimePopulation = runtimePopulation;
-  globalThis.__EGS_TIER_STARTUP_DIAGNOSTICS__ = runtimeDiagnostics;
-  const backendIndexes = admissions === null ? backendIndexesSource.value : null;
-  const assetsManifest = admissions === null
-    ? restrictAssetsManifestToCatalog(
-      assetsManifestSource.value,
-      catalogSource.value.works.map(work => work.workId)
-    )
-    : null;
-  const filterAuthority = filterAuthoritySource.value;
-  const workGroupAuthority = workGroupAuthoritySource.value;
-  const reviewQueue = sampleSource.schemaVersion === 'egs-tier-full-v1'
-    ? null
-    : reviewQueueSource.value;
-  const sample = startupMetrics.measure('sample-preparation', () => prepareRuntimeSample(sampleSource, {
-    backendIndexes,
-    assetsManifest,
-    filterAuthority,
-    workGroupAuthority,
-    reviewQueue,
-    sourceHashes: admissions === null ? {
-      indexes: backendIndexesSource.sha256,
-      assetsManifest: assetsManifestSource.sha256,
-      filterAuthority: filterAuthoritySource.sha256,
-      workGroupAuthority: workGroupAuthoritySource.sha256,
-      ...(sampleSource.schemaVersion === 'egs-tier-full-v1'
-        ? {}
-        : { reviewQueue: reviewQueueSource.sha256 })
-      } : null
-  }));
-  let enrichment = null;
-  if (enrichmentSource !== null) {
-    try {
-      enrichment = prepareEnrichmentSidecar(enrichmentSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: new Set(populationContract.core.workIds),
-        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
-      });
-    } catch (error) {
-      throw new TypeError('alias enrichment sidecar rejected', { cause: error });
-    }
-  }
-  let workAliasesById = enrichment?.workAliasesById ?? null;
-  const workPinyinById = enrichment?.workPinyinById ?? null;
-  let workDisplayTitlesById = enrichment?.workDisplayTitlesById ?? null;
-  let vndbRatings = null;
-  if (vndbRatingsSource !== null) {
-    try {
-      const config = RUNTIME_FEATURES.vndbRatingsV1;
-      if (typeof config.sha256 !== 'string' || vndbRatingsSource.sha256 !== config.sha256) {
-        throw new TypeError('VNDB ratings sidecar hash does not match the runtime pin');
-      }
-      vndbRatings = prepareVndbRatingsSidecar(vndbRatingsSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: populationContract.runtime.workIds,
-        allowSuperset: admissions === null
-      });
-    } catch (error) {
-      throw new TypeError('VNDB ratings sidecar rejected', { cause: error });
-    }
-  }
-  let bangumiPublicBindings = null;
-  if (bangumiPublicBindingsSource !== null) {
-    try {
-      if (bangumiPublicBindingsSource.sha256 !== BANGUMI_PUBLIC_BINDINGS_SHA256) {
-        throw new TypeError('Bangumi public bindings carrier hash does not match the runtime pin');
-      }
-      bangumiPublicBindings = prepareBangumiPublicBindingsCarrier(bangumiPublicBindingsSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: populationContract.runtime.workIds
-      });
-    } catch (error) {
-      throw new TypeError('Bangumi public bindings carrier rejected', { cause: error });
-    }
-  }
-  let bangumiRatings = null;
-  if (bangumiRatingsSource !== null && bangumiPublicBindingsSource !== null && bangumiPublicBindings !== null) {
-    try {
-      const config = RUNTIME_FEATURES.bangumiRatingsV1;
-      if (typeof config.sha256 !== 'string' || bangumiRatingsSource.sha256 !== config.sha256) {
-        throw new TypeError('Bangumi ratings sidecar hash does not match the runtime pin');
-      }
-      bangumiRatings = prepareBangumiRatingsSidecar(bangumiRatingsSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        bangumiPublicBindingsSha256: bangumiPublicBindingsSource.sha256,
-        // Bangumi ratings currently cover the core catalog only; admissions
-        // remain explicit no-rating records in the merged runtime.
-        workIds: populationContract.core.workIds
-      });
-    } catch (error) {
-      throw new TypeError('Bangumi ratings sidecar rejected', { cause: error });
-    }
-  }
-  // The import flow intentionally consumes only the already-validated, confirmed
-  // relation rows. It never derives a match from a title or a loose VNDB relation.
-  const confirmedBangumiImportBindings = bangumiPublicBindings === null
-    ? null
-    : bangumiPublicBindings.bindings;
-  if (bangumiCanonicalAliasFallbackSource !== null && bangumiPublicBindings !== null) {
-    try {
-      const config = RUNTIME_FEATURES.bangumiCanonicalAliasFallbackV1;
-      if (typeof config.sha256 !== 'string' || bangumiCanonicalAliasFallbackSource.sha256 !== config.sha256) {
-        throw new TypeError('Bangumi canonical alias fallback hash does not match the runtime pin');
-      }
-      const fallback = prepareBangumiCanonicalAliasFallback(bangumiCanonicalAliasFallbackSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        enrichmentSha256: enrichmentSource?.sha256,
-        bangumiPublicBindingsSha256: bangumiPublicBindingsSource.sha256,
-        workIds: populationContract.core.workIds
-      });
-      ({ workAliasesById, workDisplayTitlesById } = applyBangumiCanonicalAliasFallback({
-        workAliasesById,
-        workDisplayTitlesById,
-        fallbackByWorkId: fallback.workFallbackById
-      }));
-    } catch (error) {
-      throw new TypeError('Bangumi canonical alias fallback rejected', { cause: error });
-    }
-  }
-  const displayWorks = sample.works.map(work => projectWorkWithDisplayTitle(work, workDisplayTitlesById));
-  let authorityFanout = null;
-  if (authorityFanoutSource !== null) {
-    try {
-      const config = RUNTIME_FEATURES.authorityFanoutV1;
-      if (typeof config.sha256 !== 'string' || authorityFanoutSource.sha256 !== config.sha256) {
-        throw new TypeError('authority fanout projection hash does not match the runtime pin');
-      }
-      const mediaProjection = prepareAuthorityFanoutMediaProjection(authorityFanoutSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: populationContract.core.workIds
-      });
-      const pageBindingProjection = prepareAuthorityFanoutPageBindings(authorityFanoutSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        workIds: populationContract.core.workIds,
-        ratingsSha256: RUNTIME_FEATURES.vndbRatingsV1.sha256
-      });
-      authorityFanout = {
-        selectedMediaByWorkId: mediaProjection.selectedMediaByWorkId,
-        pageBindingIssues: pageBindingProjection.pageBindingIssues
-      };
-      if (authorityFanout.pageBindingIssues.length > 0) {
-        throw new TypeError(`authority fanout page bindings rejected: ${authorityFanout.pageBindingIssues.length} issue(s)`);
-      }
-      console.info('authority fanout projection applied', { selectedWorkCount: authorityFanout.selectedMediaByWorkId.size });
-    } catch (error) {
-      throw new TypeError('authority fanout projection rejected', { cause: error });
-    }
-  }
-  const vndbWeightedSort = vndbRatings === null
-    ? null
-    : createWeightedRatingSort({ ratings: vndbRatings.ratingByWorkId, scoreField: 'ratingRaw' });
-  const bangumiWeightedSort = bangumiRatings === null
-    ? null
-    : createWeightedRatingSort({ ratings: bangumiRatings.ratingByWorkId, scoreField: 'score' });
-  const egsWeightedSort = createWeightedRatingSort({
-    ratings: new Map(sample.works.map(work => [work.workId, {
-      ratingStatus: Number.isFinite(work.median) && Number.isInteger(work.voteCount)
-        ? 'mapped-rated'
-        : 'snapshot-unavailable',
-      score: work.median,
-      voteCount: work.voteCount
-    }])),
-    scoreField: 'score'
-  });
-  let legacyEntityRuntime = null, legacyApplyMedia;
-  if (!RUNTIME_FEATURES.authorityFanoutV1.enabled) {
-    const [bridge, module] = await Promise.all([fetchJsonWithSha256(DATA_URLS.mediaClearanceBridge, 'G1 media clearance bridge'), import('./lib/project-entity-runtime.js')]);
-    if (bridge.sha256 !== MEDIA_CLEARANCE_BRIDGE_SHA256) throw new TypeError('G1 media clearance bridge hash mismatch');
-    legacyEntityRuntime = await module.createProjectEntityRuntime({bridge:bridge.value,catalog:{...catalogSource.value,catalogSha256:catalogSource.sha256},dataRevision:DATA_REVISION,cryptoRef:crypto});
-    legacyApplyMedia = module.applyProjectedMediaToWork;
-  }
-  const ratedDisplayWorks = displayWorks.map(work => {
-    const vndbRated = projectWorkWithVndbRating(work, vndbRatings?.ratingByWorkId);
-    const rated = projectWorkWithBangumiRating(vndbRated, bangumiRatings?.ratingByWorkId);
-    const clearanceProjected = legacyEntityRuntime === null ? rated : legacyApplyMedia(rated, legacyEntityRuntime.selectedMediaByWorkId);
-    const authorityProjected = authorityFanout === null
-      ? clearanceProjected
-      : applyAuthorityFanoutMediaToWork(clearanceProjected, authorityFanout.selectedMediaByWorkId);
-    return {
-      ...authorityProjected,
-      externalAdmissionVisible: authorityProjected.isCrossSourceAdmission === true
-        && (authorityProjected.vndbRating?.ratingStatus === 'mapped-rated'
-          || authorityProjected.bangumiRating?.ratingStatus === 'mapped-rated'),
-      egsScore: egsWeightedSort?.score(
-        authorityProjected.median,
-        authorityProjected.voteCount
-      ) ?? null,
-      vndbScore: vndbWeightedSort?.score(
-        authorityProjected.vndbRating?.sortScore,
-        authorityProjected.vndbRating?.sortVoteCount
-      ) ?? null,
-      vndbVoteCount: authorityProjected.vndbRating?.sortVoteCount ?? null,
-      bangumiScore: bangumiWeightedSort?.score(
-        authorityProjected.bangumiRating?.sortScore,
-        authorityProjected.bangumiRating?.sortVoteCount
-      ) ?? null,
-      bangumiVoteCount: authorityProjected.bangumiRating?.sortVoteCount ?? null
-    };
-  });
-  const brands = projectBrandsWithAliases(
-    sample.brands,
-    enrichment?.companyAliasesById,
-    enrichment?.companyPinyinById
-  );
-  let companyProfile = null;
-  if (companyProfileSource !== null) {
-    try {
-      companyProfile = prepareCompanyProfileSidecar(companyProfileSource.value, {
-        catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-        catalogSha256: catalogSource.sha256,
-        companyIds: new Set(catalogSource.value.companies.map(brand => brand.companyId))
-      });
-    } catch (error) {
-      throw new TypeError('company profile sidecar rejected', { cause: error });
-    }
-  }
-    return { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile };
-  }
-  const preparedWorkbench = await loadWorkbenchData({ legacyLoader: loadLegacyWorkbenchData });
   if(preparedWorkbench.workerOwned)filterWorkerClient=getOwnedWorkbenchClient();
   // Workbench export boundary: all legacy inputs have passed their original validators.
   const { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile, workData = null } = preparedWorkbench;
@@ -1213,10 +677,10 @@ async function initialize() {
     const baseGet = worksById.get.bind(worksById);
     worksById.get = id => workbenchQuery.lookup(id) ?? baseGet(id);
   }
-  const workerWorkAliasesById = workAliasesById;
-  const workerWorkPinyinById = workPinyinById;
-  const workerCompanyAliasesById = enrichment?.companyAliasesById??null;
-  const workerCompanyPinyinById = enrichment?.companyPinyinById??null;
+  const workerWorkAliasesById = toWorkerLookup(workAliasesById);
+  const workerWorkPinyinById = toWorkerLookup(workPinyinById);
+  const workerCompanyAliasesById = toWorkerLookup(enrichment?.companyAliasesById ?? null);
+  const workerCompanyPinyinById = toWorkerLookup(enrichment?.companyPinyinById ?? null);
   const filterWorkerPayload = preparedWorkbench.workerOwned ? workbenchSourceDescriptor() : {
     searchText: preparedWorkbench.searchText ?? null,
     prepareSearch: Boolean(workData),
