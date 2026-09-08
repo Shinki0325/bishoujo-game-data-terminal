@@ -369,6 +369,7 @@ export function createFilterView({
   }
 
   function showFormulaError(error) {
+    elements.modeBasic.disabled = true;
     elements.expressionError.hidden = false;
     elements.expressionError.textContent = error instanceof FormulaSyntaxError
       ? `偏移 ${error.offset}: ${error.message}`
@@ -378,6 +379,9 @@ export function createFilterView({
   function clearFormulaError() {
     elements.expressionError.hidden = true;
     elements.expressionError.textContent = '';
+    // A repaired draft can equal the already-applied formula, so no data render
+    // follows. Its local availability must not depend on a result change.
+    elements.modeBasic.disabled = currentState.mode === 'advanced' && !canRepresentDraftAsBasic();
   }
 
   function restorePendingFocus() {

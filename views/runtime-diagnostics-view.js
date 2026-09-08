@@ -1,8 +1,10 @@
 import { runtimeDiagnostics } from '../lib/runtime-diagnostics.js';
+import { CURRENT_GALPEDIA_RELEASE } from '../lib/galpedia-release-notes.js';
 
 // Opt-in, local-only. No persistence or upload; render only sanitized snapshots.
 export function mountRuntimeDiagnostics({ documentRef = document, globalRef = window } = {}) {
   if (!runtimeDiagnostics.enabled) return null;
+  runtimeDiagnostics.identify({ appVersion: CURRENT_GALPEDIA_RELEASE.version, appRelease: CURRENT_GALPEDIA_RELEASE.releaseId });
   const button = documentRef.createElement('button'), panel = documentRef.createElement('section');
   button.type = 'button'; button.textContent = '本地诊断'; button.id = 'runtime-diagnostics-toggle';
   button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', 'runtime-diagnostics-panel');
