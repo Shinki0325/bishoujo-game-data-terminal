@@ -1,5 +1,5 @@
 {
-  "closureSha256": "9768ed81d1bcfd5d95d99d44bfdb6eb345770f6017b5cf8cf4ee271a17e8c52a",
+  "closureSha256": "d440575bfe9e7e5ee2ff4dc07aeefb696be3ec77936ca3cec7eba3198397954a",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -5902,9 +5902,9 @@
       "sha256": "3e397afc6aa895e2c1816546d983a20a93e2696c2ec4de79ba84ca890f7543fc"
     },
     {
-      "bytes": 5953,
+      "bytes": 6041,
       "path": "lib/resource-request.js",
-      "sha256": "ce99fb1c96f9fc5a4a446672095e4f6cc568f19c432b35035c5a20b2b17d6f30"
+      "sha256": "3ec8c25a6f7527c902921e06e02ffc0999dc3b850007c7fc11a2632211da59c4"
     },
     {
       "bytes": 7953,

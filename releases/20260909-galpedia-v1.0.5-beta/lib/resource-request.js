@@ -4,7 +4,8 @@ import { runtimeDiagnostics as diagnostics } from './runtime-diagnostics.js';
 let nextRequestId = 0;
 function resourceCategory(url) {
   let path;
-  try { path = new URL(String(url), 'https://local.invalid/').pathname; } catch { return 'other'; }
+  // The base only resolves relative paths for diagnostics; no request is made.
+  try { path = new URL(String(url), 'https://favorite.bishojo.date/').pathname; } catch { return 'other'; }
   if (/person|m2-/i.test(path)) return 'people';
   if (/company/i.test(path)) return 'companies';
   if (/media|images|assets/i.test(path)) return 'media';
