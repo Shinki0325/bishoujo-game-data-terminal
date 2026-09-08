@@ -128,10 +128,11 @@ import { createCompanyRanking } from './lib/company-ranking.js';
 import { createMediaDialogView } from './views/media-dialog-view.js';
 import { createWorkDetailCreditsView } from './views/work-detail-credits-view.js';
 import {
-  buildSelectionShareUrl,
   parseSelectionShare
 } from './lib/share-selection.js';
 import { createSharedSelectionController } from './lib/shared-selection-controller.js';
+import { createSelectionSharingController } from './lib/selection-sharing-controller.js';
+import { createBrowserClipboard } from './lib/browser-clipboard.js';
 import { createShareImportView } from './views/share-import-view.js';
 import { createPopoverController } from './lib/ui-popover.js';
 import { createWorkbenchNavigationController, projectUiLocation } from './lib/workbench-navigation-controller.js';
@@ -2339,51 +2340,13 @@ async function initialize() {
     renderCompanyDirectory();
     replaceUiLocation();
   });
-  async function copySelectionUrl(url) {
-    try {
-      if (typeof navigator.clipboard?.writeText === 'function') {
-        await navigator.clipboard.writeText(url);
-        return true;
-      }
-    } catch {
-      // Fall through to the legacy copy path.
-    }
-    const textarea = document.createElement('textarea');
-    textarea.value = url;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.append(textarea);
-    textarea.select();
-    let copied = false;
-    try {
-      copied = document.execCommand?.('copy') === true;
-    } catch {
-      copied = false;
-    }
-    textarea.remove();
-    return copied;
-  }
-
-  async function shareSelectedWorkIds(workIds) {
-    if (!Array.isArray(workIds) || workIds.length === 0) return false;
-    const url = buildSelectionShareUrl({
-      baseUrl: window.location.href,
-      datasetVersion: sample.sampleId,
-      workIds
-    });
-    try {
-      if (typeof navigator.share === 'function') {
-        await navigator.share({ title: '排榜选片', url });
-      }
-    } catch (error) {
-      if (error?.name !== 'AbortError') console.error(error);
-    }
-    const copied = await copySelectionUrl(url);
-    if (copied) announce('链接已复制，可在当前设备或其他设备打开', 'success');
-    else announce('分享链接已生成，可在当前设备或其他设备打开', 'warning');
-    return copied;
-  }
+  const selectionSharing = createSelectionSharingController({
+    locationRef: window.location, datasetVersion: sample.sampleId,
+    nativeShare: typeof navigator.share === 'function' ? data => navigator.share(data) : null,
+    copy: createBrowserClipboard({ navigatorRef: navigator, documentRef: document }).copy,
+    announce, logError: error => console.error(error)
+  });
+  const shareSelectedWorkIds = ids => selectionSharing.share(ids);
 
   const mobileSelectionView = createMobileSelectionView({
     root: elements.mobileSelectionView,
