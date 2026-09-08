@@ -1,6 +1,6 @@
 import {
   STICKER_LIMIT,
-  STICKER_TYPES,
+  stickerAspectRatio,
   addSticker,
   clearStickers,
   createStickerHistory,
@@ -11,6 +11,7 @@ import {
 } from '../lib/sticker-document.js';
 import { createActionIcon } from '../lib/action-icons.js';
 import { createPopoverController } from '../lib/ui-popover.js';
+import { createStickerToolsView } from './sticker-tools-view.js';
 
 const PALETTE = Object.freeze({
   'sticker-option-black-bar': 'black-bar',
@@ -62,6 +63,7 @@ export function createStickerEditorView({
   cancelFrame,
   renderPreview,
   compose,
+  uploadImage,
   confirm,
   onError
 }) {
@@ -194,6 +196,7 @@ export function createStickerEditorView({
     saveButton.disabled = busy;
     cancelButton.disabled = busy;
     moreButton.disabled = busy;
+    tools.sync();
   }
 
   function scheduleRender() {
@@ -231,6 +234,7 @@ export function createStickerEditorView({
   }
 
   function useHistory(method) {
+    if (tools.locked()) return;
     if (!session || busy || !session.history[method]()) return;
     session.transientDocument = null;
     if (session.selectedId && !currentDocument().layers.some(layer => layer.id === session.selectedId)) {
@@ -269,7 +273,7 @@ export function createStickerEditorView({
       centerX: rect.x + (layer.centerX * rect.width),
       centerY: rect.y + (layer.centerY * rect.height),
       width,
-      height: width / STICKER_TYPES[layer.kind].aspectRatio,
+      height: width / stickerAspectRatio(layer),
       radians: layer.rotation * Math.PI / 180
     };
   }
@@ -413,7 +417,8 @@ export function createStickerEditorView({
 
   for (const [kind, button] of paletteButtons) {
     button.addEventListener?.('click', () => {
-      if (!session || busy) return;
+      if (!session || busy || tools.locked()) return;
+      tools.selectMode();
       try {
         const document = addSticker(currentDocument(), kind);
         commit(document, { selectedId: document.layers.at(-1).id, coalesceKey: 'add' });
@@ -454,6 +459,7 @@ export function createStickerEditorView({
     if (!session || busy) return false;
     closeMenu();
     const resolve = session.resolve;
+    tools.reset();
     session.history.reset(session.initialDocument);
     session = null;
     pointers.clear();
@@ -467,7 +473,7 @@ export function createStickerEditorView({
   }
 
   async function save() {
-    if (!session || busy) return false;
+    if (!session || busy || tools.locked()) return false;
     closeMenu();
     setBusy(true);
     const activeSession = session;
@@ -486,6 +492,7 @@ export function createStickerEditorView({
         document: validateStickerDocument(composed?.document ?? document)
       });
       const resolve = activeSession.resolve;
+      tools.reset();
       session = null;
       pointers.clear();
       gesture = null;
@@ -516,6 +523,8 @@ export function createStickerEditorView({
     if (event.defaultPrevented) return;
     if (!session || busy) return;
     const eventTarget = event.target ?? documentRef.activeElement;
+    if (tools.locked() && event.key !== 'Escape') return;
+    if (eventTarget?.matches?.('input,textarea,select,[contenteditable="true"]')) return;
     if (moreMenu.contains?.(eventTarget) || moreButton.contains?.(eventTarget)) return;
     const topModal = documentRef.querySelector?.('dialog:modal');
     if (topModal && !topModal.contains?.(eventTarget)) return;
@@ -555,6 +564,12 @@ export function createStickerEditorView({
       centerY: layer.centerY + ((key === 'ArrowDown' ? amount : key === 'ArrowUp' ? -amount : 0) / document.baseHeight)
     };
     commit(transformSticker(document, layer.id, patch), { selectedId: layer.id, coalesceKey: `nudge-${key}` });
+  });
+
+  const tools = createStickerToolsView({
+    documentRef, canvas, inspect, commit, uploadImage, onError, render: scheduleRender,
+    select(id) { if (session) { session.selectedId = id; scheduleRender(); } },
+    transient(document, id) { if (session) { session.transientDocument = document; session.selectedId = id; scheduleRender(); } }
   });
 
   return Object.freeze({

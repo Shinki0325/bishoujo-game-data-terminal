@@ -945,13 +945,19 @@
     <dialog id="media-crop" aria-labelledby="media-crop-title-label">
       <div class="dialog-heading">
         <h2 id="media-crop-title-label">裁切图片</h2>
+        <span id="media-crop-progress" aria-live="polite"></span>
       </div>
       <div class="media-crop-body">
+        <progress id="media-crop-progress-bar" max="1" value="1" aria-label="上传队列进度"></progress>
         <div class="media-crop-stage">
           <canvas id="media-crop-canvas" width="512" height="512" aria-label="方形裁切区域"></canvas>
           <span class="media-crop-guide" aria-hidden="true"></span>
         </div>
         <label class="media-crop-field" for="media-crop-title">标题<input id="media-crop-title" type="text" maxlength="120"></label>
+        <label class="media-crop-zoom-row" for="media-crop-zoom">缩放<input id="media-crop-zoom" type="range" min="1" max="4" step="0.05" value="1"><output id="media-crop-zoom-value">100%</output></label>
+        <p id="media-crop-status" role="status" hidden></p>
+        <button id="media-crop-retry" type="button" hidden>重试读取这张图片</button>
+        <button id="media-crop-stickers-clear" type="button" hidden>清除图片编辑，重新裁切</button>
       </div>
       <div class="media-crop-actions gp-dialog-footer">
         <div class="gp-footer-tools">
@@ -960,7 +966,7 @@
         <button data-ui="utility" id="media-crop-cancel" type="button">取消全部</button>
         </div>
         <div class="gp-footer-actions">
-        <button data-ui="secondary" id="media-crop-stickers" type="button">添加贴纸</button>
+        <button data-ui="secondary" id="media-crop-stickers" type="button">图片编辑</button>
         <button data-ui="primary" id="media-crop-confirm" type="button">确认</button>
         </div>
       </div>
@@ -968,7 +974,7 @@
 
     <dialog id="sticker-editor" aria-labelledby="sticker-editor-title">
           <div class="dialog-heading sticker-editor-heading">
-            <h2 id="sticker-editor-title">图片贴纸</h2><button type="button" class="icon-button" data-help-article="tier.stickers" aria-label="图片贴纸帮助">?</button>
+            <h2 id="sticker-editor-title">图片编辑</h2><button type="button" class="icon-button" data-help-article="tier.stickers" aria-label="图片贴纸帮助">?</button>
             <div class="sticker-editor-history" role="toolbar" aria-label="贴纸编辑历史与菜单">
               <button data-ui="utility" id="sticker-undo" class="icon-button action-neutral" type="button" aria-label="撤销贴纸操作" title="撤销"></button>
               <button data-ui="utility" id="sticker-redo" class="icon-button action-neutral" type="button" aria-label="重做贴纸操作" title="重做"></button>
@@ -979,8 +985,9 @@
             </div>
       </div>
       <div class="sticker-editor-body">
+        <div class="sticker-workspace">
         <div class="sticker-editor-stage">
-          <canvas id="sticker-editor-canvas" width="512" height="512" aria-label="图片贴纸编辑区域"></canvas>
+          <canvas id="sticker-editor-canvas" width="512" height="512" aria-label="图片编辑区域"></canvas>
         </div>
             <div id="sticker-selection-controls" class="sticker-selection-controls" role="toolbar" aria-label="所选贴纸操作" hidden>
               <button id="sticker-layer-backward" class="icon-button action-neutral" type="button" aria-label="贴纸下移一层" title="下移一层"></button>
@@ -994,10 +1001,37 @@
           <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img loading="lazy" src="./releases/20260907-galpedia-v1.0.4-beta/assets/stickers/please-wait-character.webp" alt=""></button>
           <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img loading="lazy" src="./releases/20260907-galpedia-v1.0.4-beta/assets/stickers/paper-bag-character.png" alt=""></button>
         </div>
+        </div>
+        <aside id="sticker-tools" class="sticker-tools" aria-label="编辑工具与图层">
+          <div class="sticker-tool-modes" role="group" aria-label="画布操作">
+            <button type="button" data-editor-tool="select" aria-pressed="true">选择</button>
+            <button type="button" data-editor-tool="brush" aria-pressed="false">画笔</button>
+            <button type="button" data-editor-tool="mask-brush" aria-pressed="false">打码笔</button>
+          </div>
+          <p id="sticker-tool-status" class="sticker-tool-hint" role="status">选择图层后可拖动、缩放、旋转。</p>
+          <div class="sticker-tool-fields">
+            <label>颜色<input id="sticker-color" type="color" value="#e34868"></label>
+            <label>笔触粗细<input id="sticker-stroke-width" type="range" min="1" max="20" step="1" value="4"></label>
+          </div>
+          <button id="sticker-upload" type="button">＋ 上传图片贴纸</button>
+          <input id="sticker-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          <p class="sticker-tool-hint">支持透明图片，10 MB 以内；仅保存在本机。</p>
+          <label class="sticker-text-label" for="sticker-text">文字内容</label>
+          <textarea id="sticker-text" rows="2" maxlength="200" placeholder="写一段说明，最多 6 行"></textarea>
+          <button id="sticker-add-text" type="button">＋ 添加文本框</button>
+          <div class="sticker-tool-fields">
+            <label>所选尺寸 %<input id="sticker-size" type="number" min="4" max="200" value="60"></label>
+            <label>旋转 °<input id="sticker-rotation" type="number" min="-180" max="180" value="0"></label>
+          </div>
+          <div class="sticker-layer-heading"><strong>图层 · 从上到下</strong><span id="sticker-layer-count">0 / 12</span></div>
+          <div id="sticker-layers" class="sticker-layers" role="group" aria-label="选择图层"></div>
+          <div class="sticker-tool-fields"><button id="sticker-layer-top" type="button">置顶</button><button id="sticker-layer-bottom" type="button">置底</button></div>
+          <p class="sticker-tool-hint">打码会合成到导出图；本机仍保留原图用于编辑。</p>
+        </aside>
       </div>
           <div class="dialog-actions gp-dialog-footer sticker-editor-actions">
             <button data-ui="secondary" id="sticker-cancel" class="action-neutral" type="button">取消</button>
-            <button data-ui="primary" id="sticker-save" class="action-primary" type="button"><span class="action-label">保存贴纸</span></button>
+            <button data-ui="primary" id="sticker-save" class="action-primary" type="button"><span class="action-label">保存编辑</span></button>
       </div>
     </dialog>
 

@@ -1,5 +1,5 @@
 import { createLazyResource } from '../lib/lazy-resource.js';
-import { STICKER_TYPES } from '../lib/sticker-document.js';
+import { stickerAspectRatio } from '../lib/sticker-document.js';
 
 const STICKER_IMAGE_ASSETS = Object.freeze({
   'please-wait-character': '../assets/stickers/please-wait-character.webp',
@@ -12,11 +12,13 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
     const canvas = documentRef.getElementById('media-crop-canvas');
     const context = canvas.getContext('2d');
     if (!context) return;
+    if (!active.crop) { context.clearRect(0, 0, canvas.width, canvas.height); return; }
     canvas.width = active.crop.viewport;
     canvas.height = active.crop.viewport;
     const { x, y, size } = active.crop;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(active.decoded.image, x, y, size, size, 0, 0, canvas.width, canvas.height);
+    if (active.stickerPreview?.image) context.drawImage(active.stickerPreview.image, 0, 0, canvas.width, canvas.height);
+    else context.drawImage(active.decoded.image, x, y, size, size, 0, 0, canvas.width, canvas.height);
   }
 
   async function decodeMediaFile(file) {
@@ -56,7 +58,7 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
     return canvas;
   }
 
-  async function loadStickerImages() {
+  async function loadStickerImages(document = null) {
     const releases = [];
     const release = () => { for (const cleanup of releases.splice(0)) cleanup(); };
     const images = new Map();
@@ -67,11 +69,36 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
         images.set(kind, decoded.image);
         if (typeof decoded.release === 'function') releases.push(decoded.release);
       }
+      for (const layer of document?.layers ?? []) {
+        if (layer.kind !== 'custom-image' || images.has(layer.imageDataUrl)) continue;
+        const image = new windowRef.Image();
+        image.src = layer.imageDataUrl;
+        await image.decode();
+        if (image.naturalWidth * image.naturalHeight > 589824) { image.src = ''; throw new RangeError('贴纸图片尺寸超过限制。'); }
+        images.set(layer.imageDataUrl, image);
+        releases.push(() => { image.src = ''; });
+      }
       return { images, release };
     } catch (error) {
       release();
       throw error;
     }
+  }
+
+  async function uploadStickerImage(file) {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) throw new RangeError('请选择 10 MB 以内的 PNG、JPEG 或 WebP 图片。');
+    const decoded = await decodeMediaFile(file);
+    try {
+      const { width, height } = decoded;
+      if (!width || !height || width * height > 16000000 || width / height < .05 || width / height > 20) throw new RangeError('图片过大或比例过长，请先缩小后上传。');
+      const ratio = Math.min(1, 768 / Math.max(width, height));
+      const canvas = createCanvas(Math.max(1, Math.round(width * ratio)), Math.max(1, Math.round(height * ratio)));
+      canvas.getContext('2d').drawImage(decoded.image, 0, 0, canvas.width, canvas.height);
+      const data = canvas.toDataURL('image/webp', .85);
+      if (data.length > 400000) throw new RangeError('贴纸细节过多，请缩小图片后再试（单张约 300 KB）。');
+      const image = new windowRef.Image(); image.src = data; await image.decode();
+      return { image, release() { image.src = ''; }, properties: { imageDataUrl: data, imageName: file.name.slice(0, 80), aspectRatio: canvas.width / canvas.height } };
+    } finally { decoded.release(); }
   }
 
   function renderStickerPreview(state) {
@@ -100,7 +127,7 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
       const selected = state.document.layers.find(layer => layer.id === state.selectedId);
       if (!selected) return;
       const layerWidth = selected.scale * Math.min(width, height);
-      const layerHeight = layerWidth / STICKER_TYPES[selected.kind].aspectRatio;
+      const layerHeight = layerWidth / stickerAspectRatio(selected);
       context.save();
       context.translate(left + (selected.centerX * width), top + (selected.centerY * height));
       context.rotate(selected.rotation * Math.PI / 180);
@@ -147,6 +174,7 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
     requestFrame: callback => windowRef.requestAnimationFrame(callback),
     cancelFrame: frame => windowRef.cancelAnimationFrame(frame),
     renderPreview: renderStickerPreview,
+    uploadImage: uploadStickerImage,
     compose: async state => ({
       compositeBlob: await encodeStickerComposite({
         baseImage: state.baseImage,
@@ -172,4 +200,3 @@ export function createMediaEditEnvironment({ documentRef, windowRef, announce })
     cancel() { stickerEditor?.cancel(); }
   });
 }
-
