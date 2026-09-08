@@ -79,7 +79,7 @@ export function createWorkbenchControlsView({ elements, cardDisplayInputs, scale
         else element[key] = value;
       }
     }
-    for (const input of [...cardDisplayInputs, ...scaleInputs]) input.disabled = projection.inputsDisabled;
+    for (const input of [...cardDisplayInputs, ...scaleInputs]) input.disabled = projection.inputsDisabled || input.dataset?.displayUnavailable === 'true';
     syncSelectionContext({
       root: elements.selectionContextBar, ...projection.selection, keepEmptyTools: true,
       focusFallback: elements.selectionModeToggle,

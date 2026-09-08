@@ -1,4 +1,13 @@
 import { edgeScrollVelocity, insertionIndexFromPoint } from '../lib/drag.js';
+
+// Wrapped classic rows need both coordinates; a horizontal-only search targets the first line.
+export function wrappedInsertionIndex(rects, x, y) {
+  if (!rects.length) return 0;
+  const nearest = rects.reduce((best, rect) => Math.abs(y - (rect.top + rect.bottom) / 2) < Math.abs(y - (best.top + best.bottom) / 2) ? rect : best);
+  const row = rects.map((rect, index) => ({ rect, index })).filter(({rect}) => Math.abs(rect.top - nearest.top) < 2);
+  const next = row.find(({rect}) => x < (rect.left + rect.right) / 2);
+  return next ? next.index : row.at(-1).index + 1;
+}
 import { applyImageAsset, AssetUrlError } from '../lib/asset-url.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { MAX_TIERS, moveTier } from '../lib/tier-config.js';
@@ -882,6 +891,13 @@ export function createRankingView({
     for (const [tierId, track] of tierTracks) {
       const row = tierRows.get(tierId);
       const cards = arrayFrom(track.children).filter(isRankingCard);
+      if (documentRef.documentElement?.getAttribute?.('data-ranking-style') === 'classic') {
+        row.dataset.trackRows = '1';
+        for (const card of cards) {
+          card.style.removeProperty('grid-row'); card.style.removeProperty('grid-column');
+        }
+        continue;
+      }
       const cardWidth = Number(cards[0]?.getBoundingClientRect?.().width) || 88;
       const trackWidth = Number(track.clientWidth)
         || Number(track.getBoundingClientRect?.().width)
@@ -1034,6 +1050,7 @@ export function createRankingView({
   }
 
   function removeIndicator() {
+    for (const key of ['position', 'left', 'top', 'height']) indicator.style.removeProperty(key);
     const parent = indicator.parentElement;
     if (!parent) return;
     parent.replaceChildren(...arrayFrom(parent.children).filter(child => child !== indicator));
@@ -1167,7 +1184,17 @@ export function createRankingView({
     const destinationCards = allCards.filter(card => !draggedWorkIds.includes(card.dataset.workId));
     const usesTwoRows = track.parentElement?.dataset?.trackRows === '2';
     let insertionIndex;
-    if (usesTwoRows) {
+    const classic = documentRef.documentElement?.getAttribute?.('data-ranking-style') === 'classic';
+    if (classic) {
+      const rects = destinationCards.map(card => card.getBoundingClientRect());
+      insertionIndex = wrappedInsertionIndex(rects, pointerX, pointerY);
+      const rect = rects[insertionIndex] ?? rects.at(-1);
+      const bounds = track.getBoundingClientRect();
+      indicator.style.setProperty('position', 'absolute');
+      indicator.style.setProperty('left', `${rect ? (insertionIndex < rects.length ? rect.left : rect.right) - bounds.left + track.scrollLeft : 0}px`);
+      indicator.style.setProperty('top', `${rect ? rect.top - bounds.top + track.scrollTop : 0}px`);
+      indicator.style.setProperty('height', `${rect ? rect.bottom - rect.top : 80}px`);
+    } else if (usesTwoRows) {
       const entries = allCards.map(card => {
         const rect = card.getBoundingClientRect();
         const row = Number(card.style.getPropertyValue('grid-row'));
@@ -1701,6 +1728,19 @@ export function createRankingView({
     });
     row.addEventListener('drop', event => handleTierDrop(tier.id, event));
     row.append(label, track);
+    const classicActions = documentRef.createElement('div');
+    classicActions.className = 'tier-classic-actions';
+    for (const [glyph, title, disabled, callback] of [
+      ['⚙', '等级设置', false, () => openMobileTierEditor(tier)],
+      ['↑', '上移等级', tierIndex === 0, controls[0][4]],
+      ['↓', '下移等级', tierIndex === model.tiers.length - 1, controls[1][4]]
+    ]) {
+      const button = documentRef.createElement('button');
+      button.type = 'button'; button.textContent = glyph; button.disabled = disabled;
+      button.setAttribute('aria-label', title); button.title = title;
+      button.addEventListener('click', callback); classicActions.append(button);
+    }
+    row.append(classicActions);
     return { row, track };
   }
 

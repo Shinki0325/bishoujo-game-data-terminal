@@ -483,6 +483,10 @@
             <div class="toolbar-menu-shell">
               <button data-ui="utility" id="display-menu-button" type="button" aria-expanded="false" aria-controls="display-menu">显示 ▾</button>
               <div id="display-menu" class="toolbar-menu" hidden>
+                <div class="ranking-display-heading"><strong>显示设置</strong><button type="button" data-display-close aria-label="关闭显示设置">×</button></div>
+                <label>界面风格 <select id="ranking-display-style"><option value="garden">箱庭默认</option><option value="classic">TierMaker 经典</option></select></label>
+                <label>显示密度 <select id="ranking-display-density"><option value="compact">紧凑</option><option value="standard">标准</option><option value="spacious">舒展</option><option value="custom" disabled>自定义</option></select></label>
+                <label id="ranking-display-shape-field">封面显示 <select id="ranking-display-shape"><option value="square">方形裁切</option><option value="portrait">竖图裁切</option><option value="landscape">横图裁切</option><option value="contain">完整封面（不裁切）</option></select></label>
                 <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
                 <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
                 <fieldset class="ranking-scale-controls">
@@ -499,8 +503,9 @@
                   <label for="ranking-scale-tier-name"><span>分级名称</span><output id="ranking-scale-tier-name-output">100%</output></label>
                   <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
                   </details>
-                  <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认</button>
+                  <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认大小</button>
                 </fieldset>
+                <p class="ranking-display-note">即时预览；切换风格会记住各自的设置，不改变榜单内容。图片标注仅在直播中显示。</p>
               </div>
             </div>
             <div class="toolbar-menu-shell">
@@ -583,6 +588,7 @@
           <div class="mobile-ranking-menu-body">
             <section>
               <h3>显示</h3>
+              <button id="mobile-ranking-display" type="button">打开显示面板 · 边调边看</button>
               <label><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
               <label><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
               <label>卡片大小 <input data-ranking-mobile-scale type="range" min="80" max="160" step="5" value="100"></label>
@@ -861,6 +867,7 @@
         <button id="ranking-live-undo" type="button">撤销</button>
         <button id="ranking-live-redo" type="button">重做</button>
         <button id="ranking-live-export" type="button">导出图片</button>
+        <button id="ranking-live-display" type="button">显示设置</button>
         <button
           id="ranking-immersive-exit"
           class="icon-button ranking-immersive-exit"

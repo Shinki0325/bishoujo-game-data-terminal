@@ -6,6 +6,40 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   const lifetime = createViewLifetime();
   const tray = documentRef.getElementById?.('ranking-candidates');
   const workspace = documentRef.getElementById?.('ranking-view');
+  const displayMenu = documentRef.getElementById?.('display-menu');
+  const styleSelect = documentRef.getElementById?.('ranking-display-style');
+  const densitySelect = documentRef.getElementById?.('ranking-display-density');
+  const shapeSelect = documentRef.getElementById?.('ranking-display-shape');
+  // One panel outside the toolbar: available while the toolbar is hidden on mobile/live.
+  if (displayMenu && workspace) workspace.append(displayMenu);
+  let displayOpener = null;
+  const closeDisplay = () => {
+    if (!displayMenu) return;
+    displayMenu.hidden = true;
+    documentRef.getElementById?.('display-menu-button')?.setAttribute('aria-expanded', 'false');
+    displayOpener?.focus?.({ preventScroll: true });
+  };
+  for (const id of ['display-menu-button', 'mobile-ranking-display', 'ranking-live-display']) {
+    const opener = documentRef.getElementById?.(id);
+    lifetime.listen(opener, 'click', event => {
+      event.stopPropagation();
+      elements.mobileRankingMenu?.close?.();
+      if (displayMenu && !displayMenu.hidden) { closeDisplay(); return; }
+      displayOpener = id === 'mobile-ranking-display' ? elements.mobileRankingMore : opener;
+      if (displayMenu) displayMenu.hidden = false;
+      documentRef.getElementById?.('display-menu-button')?.setAttribute('aria-expanded', 'true');
+      styleSelect?.focus?.({ preventScroll: true });
+    });
+  }
+  lifetime.listen(documentRef, 'keydown', event => {
+    if (event.key === 'Escape' && !event.defaultPrevented && displayMenu && !displayMenu.hidden && !documentRef.querySelector?.('dialog:modal')) {
+      event.preventDefault(); closeDisplay();
+    }
+  });
+  lifetime.listen(documentRef.querySelector?.('[data-display-close]'), 'click', closeDisplay);
+  lifetime.listen(displayMenu, 'keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDisplay(); }
+  });
   const pinButton = documentRef.getElementById?.('ranking-candidates-pin');
   const trayButtons = [...(documentRef.querySelectorAll?.('[data-candidate-tray]') ?? [])];
   let trayMode = 'collapsed', pinned = false, live = false, beforeLive = null, restoreFrame = null;
@@ -40,14 +74,45 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       output.textContent = `${value}%`;
       documentRef.documentElement.style.setProperty(`--ranking-ui-scale-${cssKey}`, String(value / 100));
     }
+    if (densitySelect) densitySelect.value = uiScale.overall === 100 && uiScale.rail === 100
+      ? ({ 80: 'compact', 100: 'standard', 130: 'spacious' }[uiScale.card] ?? 'custom') : 'custom';
+    const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
+    if (mobileScale) mobileScale.value = String(uiScale.card);
     getRankingView()?.refreshLayout();
   }
 
-  applyUiScale(scalePresentation.inspect().uiScale);
+  function applyDisplay() {
+    const state = scalePresentation.inspect();
+    const display = state.display ?? { style: 'garden', shape: 'square' };
+    documentRef.documentElement.setAttribute?.('data-ranking-style', display.style);
+    documentRef.documentElement.setAttribute?.('data-ranking-shape', display.shape);
+    if (styleSelect) styleSelect.value = display.style;
+    if (shapeSelect) shapeSelect.value = display.shape;
+    const shapeField = documentRef.getElementById?.('ranking-display-shape-field');
+    if (shapeField) shapeField.hidden = display.style !== 'classic';
+    for (const input of [elements.rankingShowCounts, elements.mobileRankingShowCounts]) input.checked = state.showCounts;
+    for (const input of [elements.rankingShowTitles, elements.mobileRankingShowTitles]) input.checked = state.showTitles;
+    getRankingView()?.setShowCounts?.(state.showCounts);
+    getRankingView()?.setShowTitles?.(state.showTitles);
+    for (const key of ['Overall', 'Rail']) {
+      const input = elements[`rankingScale${key}`];
+      input.disabled = display.style === 'classic';
+      if (input.dataset) input.dataset.displayUnavailable = String(display.style === 'classic');
+      input.title = display.style === 'classic' ? '经典布局使用卡片大小控制尺寸，行高随内容变化' : '';
+    }
+    applyUiScale(state.uiScale);
+  }
+  lifetime.listen(styleSelect, 'change', () => { scalePresentation.setDisplayStyle(styleSelect.value); applyDisplay(); });
+  lifetime.listen(shapeSelect, 'change', () => { scalePresentation.setDisplayShape(shapeSelect.value); applyDisplay(); });
+  lifetime.listen(densitySelect, 'change', () => { scalePresentation.setDensity(densitySelect.value); applyDisplay(); });
+
+  applyDisplay();
   for (const [key, input] of scaleControls) {
     lifetime.listen(input, 'input', () => {
-      applyUiScale({ ...scalePresentation.inspect().uiScale, [key]: scalePresentation.setUiScale(key, input.value) });
+      applyUiScale({ ...scalePresentation.inspect().uiScale, [key]: scalePresentation.setUiScale(key, input.value, { persistChange: false }) });
     });
+    lifetime.listen(input, 'change', () => scalePresentation.saveDisplay?.());
+    lifetime.listen(input, 'blur', () => scalePresentation.saveDisplay?.());
   }
   lifetime.listen(elements.rankingScaleReset, 'click', () => {
     scalePresentation.resetUiScale();
@@ -131,9 +196,11 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   lifetime.listen(elements.rankingCoachmarkDismiss, 'click', () => { elements.rankingCoachmark.hidden = true; });
   lifetime.listen(elements.rankingShowCounts, 'change', () => {
     getRankingView().setShowCounts(activePresentation().setShowCounts(elements.rankingShowCounts.checked));
+    elements.mobileRankingShowCounts.checked = elements.rankingShowCounts.checked;
   });
   lifetime.listen(elements.rankingShowTitles, 'change', () => {
     getRankingView().setShowTitles(activePresentation().setShowTitles(elements.rankingShowTitles.checked));
+    elements.mobileRankingShowTitles.checked = elements.rankingShowTitles.checked;
   });
   lifetime.listen(elements.mobileRankingUndo, 'click', () => elements.undoEdit.click());
   lifetime.listen(elements.mobileRankingRedo, 'click', () => elements.redoEdit.click());
@@ -146,6 +213,7 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     elements.rankingScaleCard.value = mobileScale.value;
     elements.rankingScaleCard.dispatchEvent(new windowRef.Event('input', { bubbles: true }));
   });
+  lifetime.listen(mobileScale, 'change', () => scalePresentation.saveDisplay?.());
   lifetime.listen(elements.mobileRankingMenu, 'click', event => {
     if (event.target.closest?.('button') && elements.mobileRankingMenu.open) elements.mobileRankingMenu.close();
   }, true);
@@ -171,6 +239,8 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     refreshTray: () => setTrayMode(trayMode),
     setImmersive(value) {
       if (value === live) return;
+      if (displayMenu) displayMenu.hidden = true;
+      documentRef.getElementById?.('display-menu-button')?.setAttribute('aria-expanded', 'false');
       if (value) {
         beforeLive ??= { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
         live = true; setTrayMode('row');

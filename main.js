@@ -1470,8 +1470,7 @@ async function initialize() {
     documentRef: document, windowRef: window,
     items: [
       { button: elements.cardViewToggle, menu: elements.selectionCardDisplayMenu, kind: 'form' },
-      { button: elements.cleanupMenuButton, menu: elements.cleanupMenu, kind: 'actions' },
-      { button: elements.displayMenuButton, menu: elements.displayMenu, kind: 'form' }
+      { button: elements.cleanupMenuButton, menu: elements.cleanupMenu, kind: 'actions' }
     ]
   });
   const closeToolbarMenus = () => toolbarPopover.closeAll();
