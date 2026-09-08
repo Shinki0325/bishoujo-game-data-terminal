@@ -19,6 +19,9 @@ import { createBangumiImportController } from './lib/bangumi-import-controller.j
 import { createWorkCreditsController, createWorkStatsController } from './lib/work-detail-resources-controller.js';
 import { createWorkDetailController } from './lib/work-detail-controller.js';
 import { createWorkCompareController } from './lib/work-compare-controller.js';
+import { createWorkspaceHostController } from './lib/workspace-host-controller.js';
+import { projectWorkbenchControls } from './lib/workbench-control-model.js';
+import { createWorkspaceHostView, createWorkbenchControlsView, WORKBENCH_CONTROL_ELEMENTS } from './views/workbench-shell-view.js';
 import { createWorkCompareView } from './views/work-compare-view.js';
 import { createWorkDetailView } from './views/work-detail-view.js';
 import { createWorkVersionView } from './views/work-version-view.js';
@@ -126,7 +129,6 @@ import {
 } from './lib/share-selection.js';
 import { planSharedSelectionImport } from './lib/share-import.js';
 import { createPopoverController } from './lib/ui-popover.js';
-import { syncSelectionContext } from './lib/ui-selection-context.js';
 import { formatUiLocationHash, parseUiLocationHash } from './lib/ui-location-state.js?v=20260824-selection-source-sorting-v1';
 import { createKeeperGuideCard } from './lib/keeper-guide-card.js';
 import { resolveKeeperPortrait } from './lib/keeper-guide-assets.js';
@@ -1486,7 +1488,6 @@ async function initialize() {
     poolLeft: 0
   };
   let renderedWorkspaceMode = null;
-  let rankingWorkspaceVisible = false;
   let renderedFilterKey = null;
   let lastRenderedModel = null;
   const renderSession = createWorkspaceSession();
@@ -2753,217 +2754,49 @@ async function initialize() {
     }
   }
 
-  let activeWorkspaceKey = null;
+  const workspaceHostView = createWorkspaceHostView({
+    tabs: { selection: elements.modeSelection, ranking: elements.modeRanking, companies: elements.modeCompany, persons: elements.modePerson },
+    panels: { selection: elements.selectionView, ranking: elements.rankingView, companies: elements.companyView, persons: elements.personView },
+    mobileSelectionView: elements.mobileSelectionView
+  });
+  const workspaceHost = createWorkspaceHostController({
+    renderView: key => workspaceHostView.render(key),
+    isMobile: () => window.matchMedia('(max-width: 899px)').matches,
+    setCandidatesOpen: setMobileRankingCandidatesOpen,
+    suspendCompany: () => companyWorkspace.suspend(),
+    suspendDetails: () => detailOpening.suspend(),
+    cancelRankingPreload,
+    suspendSelection: () => selectionView.suspend(),
+    suspendPerson: () => personDirectoryView?.suspend?.()
+  });
+  const workbenchControls = createWorkbenchControlsView({
+    // This exported whitelist contains only the controls owned by this view.
+    elements: Object.fromEntries(WORKBENCH_CONTROL_ELEMENTS.map(key => [key, elements[key]])),
+    cardDisplayInputs: selectionCardDisplayInputs.map(([, input]) => input),
+    scaleInputs: scaleControls.map(([, input]) => input),
+    selectedWorksToggle: document.getElementById('selected-works-toggle')
+  });
   function renderWorkspace(model) {
-    const key = personDirectoryOpen ? 'persons' : companyDirectoryOpen ? 'companies' : model.state.workspaceMode;
-    if (key !== activeWorkspaceKey) {
-      activeWorkspaceKey = key;
-      companyWorkspace.suspend();
-      detailOpening.suspend();
-      cancelRankingPreload();
-      if (key !== 'selection') selectionView.suspend();
-      if (key !== 'persons') personDirectoryView?.suspend?.();
-    }
-    if (personDirectoryOpen) {
-      rankingWorkspaceVisible = false;
-      closeMobileRankingCandidates();
-      elements.modeSelection.setAttribute('aria-selected', 'false');
-      elements.modeRanking.setAttribute('aria-selected', 'false');
-      elements.modeCompany.setAttribute('aria-selected', 'false');
-      elements.modePerson.setAttribute('aria-selected', 'true');
-      elements.modeSelection.tabIndex = -1;
-      elements.modeRanking.tabIndex = -1;
-      elements.modeCompany.tabIndex = -1;
-      elements.modePerson.tabIndex = 0;
-      elements.selectionView.hidden = true;
-      elements.rankingView.hidden = true;
-      elements.mobileSelectionView.hidden = true;
-      elements.companyView.hidden = true;
-      elements.personView.hidden = false;
-      return;
-    }
-    if (companyDirectoryOpen) {
-      rankingWorkspaceVisible = false;
-      closeMobileRankingCandidates();
-      elements.modeSelection.setAttribute('aria-selected', 'false');
-      elements.modeRanking.setAttribute('aria-selected', 'false');
-      elements.modeCompany.setAttribute('aria-selected', 'true');
-      elements.modePerson.setAttribute('aria-selected', 'false');
-      elements.modeSelection.tabIndex = -1;
-      elements.modeRanking.tabIndex = -1;
-      elements.modeCompany.tabIndex = 0;
-      elements.modePerson.tabIndex = -1;
-      elements.selectionView.hidden = true;
-      elements.rankingView.hidden = true;
-      elements.mobileSelectionView.hidden = true;
-      elements.companyView.hidden = false;
-      elements.personView.hidden = true;
-      return;
-    }
-    const ranking = model.state.workspaceMode === 'ranking';
-    if (!ranking) {
-      rankingWorkspaceVisible = false;
-      closeMobileRankingCandidates();
-    } else if (!rankingWorkspaceVisible && window.matchMedia('(max-width: 899px)').matches) {
-      setMobileRankingCandidatesOpen(true);
-    }
-    rankingWorkspaceVisible = ranking;
-    elements.modeSelection.setAttribute('aria-selected', String(!ranking));
-    elements.modeRanking.setAttribute('aria-selected', String(ranking));
-    elements.modeCompany.setAttribute('aria-selected', 'false');
-    elements.modePerson.setAttribute('aria-selected', 'false');
-    elements.modeSelection.tabIndex = ranking ? -1 : 0;
-    elements.modeRanking.tabIndex = ranking ? 0 : -1;
-    elements.modeCompany.tabIndex = -1;
-    elements.modePerson.tabIndex = -1;
-    elements.selectionView.hidden = ranking;
-    elements.rankingView.hidden = !ranking;
-    elements.companyView.hidden = true;
-    elements.personView.hidden = true;
-    elements.mobileSelectionView.hidden = true;
+    workspaceHost.render({ workspaceMode: model.state.workspaceMode, personDirectoryOpen, companyDirectoryOpen });
   }
-
   function renderControlStates(model) {
-    const hasTitleQuery = String(model?.state?.filterState?.titleQuery ?? '').trim().length > 0;
-    elements.titleSearchClear.hidden = !hasTitleQuery;
-    elements.mobileTitleSearchClear.hidden = !hasTitleQuery;
-    const companyState = rankingSubject === 'company' ? companyRanking.inspect() : null;
-    const activePresentation = companyState === null ? presentation : companyPresentation;
-    const activeRankingState = companyState === null
-      ? model
-      : {
-        ...model,
-        selectedCount: companyState.selectedCompanyIds.length,
-        rankedCount: companyState.rankedCount,
-        unrankedCount: companyState.candidateCompanyIds.length,
-        canUndo: companyState.canUndo,
-        canRedo: companyState.canRedo
-      };
-    elements.modeSelection.disabled = importBusy;
-    elements.modeRanking.disabled = importBusy;
-    elements.modePerson.disabled = importBusy || personRuntime === null;
-    elements.selectionModeToggle.disabled = importBusy || compareMode;
-    elements.compareModeToggle.disabled = importBusy || companyDirectoryOpen || model.state.workspaceMode === 'ranking';
-    elements.browseModeToggle.disabled = importBusy || companyDirectoryOpen || model.state.workspaceMode === 'ranking';
-    elements.quickRankingEntry.disabled = importBusy || companyDirectoryOpen || model.state.workspaceMode === 'ranking';
-    elements.cardViewToggle.disabled = importBusy;
-    elements.bangumiImportOpen.disabled = importBusy || confirmedBangumiImportBindings === null;
-    elements.mobileBangumiImportOpen.disabled = importBusy || confirmedBangumiImportBindings === null;
+    const company = companyRanking.inspect();
+    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
+    workbenchControls.render(projectWorkbenchControls({
+      model, company, rankingSubject, importBusy,
+      personAvailable: personRuntime !== null,
+      selectionMode, compareMode, companyDirectoryOpen, companySelectionMode,
+      bangumiAvailable: confirmedBangumiImportBindings !== null,
+      annotationCount: Object.keys(activePresentation.inspect().annotations).length,
+      pngExportInProgress,
+      showCounts: elements.rankingShowCounts.checked,
+      showTitles: elements.rankingShowTitles.checked
+    }));
     bangumiWorkspace.syncControls();
-    for (const [, input] of selectionCardDisplayInputs) input.disabled = importBusy;
-    elements.companySelectionModeToggle.disabled = importBusy;
-    elements.selectionModeToggle.setAttribute('aria-pressed', String(selectionMode));
-    elements.selectionModeToggle.textContent = selectionMode ? '退出选择' : '选择作品';
-    elements.selectionModeToggle.setAttribute('aria-label', selectionMode ? '退出选择，返回作品浏览' : '选择作品，进入排榜选片模式');
-    elements.selectionModeToggle.title = selectionMode ? '退出排榜选片' : '进入排榜选片模式';
-    elements.compareModeToggle.setAttribute('aria-pressed', String(compareMode));
-    elements.compareModeToggle.textContent = compareMode ? '退出比较' : '比较作品';
-    elements.browseModeToggle.setAttribute('aria-pressed', String(!selectionMode && !compareMode));
-    elements.browseModeToggle.title = '返回浏览作品';
-    elements.quickRankingEntry.textContent = model.selectedCount > 0 ? '开始排榜' : '选择后排榜';
-    elements.quickRankingEntry.hidden = true;
-    elements.quickRankingEntry.setAttribute('aria-label', model.selectedCount > 0
-      ? `开始排榜（已选 ${model.selectedCount} 部）`
-      : '选择作品后开始排榜');
-    elements.companySelectionModeToggle.setAttribute('aria-pressed', String(companySelectionMode));
-    elements.companySelectionModeToggle.textContent = companySelectionMode ? '退出选择' : '选择';
-    syncSelectionContext({
-      root: elements.selectionContextBar, mode: !companyDirectoryOpen && model.state.workspaceMode !== 'ranking' && selectionMode && !compareMode,
-      count: model.selectedCount, keepEmptyTools: true, focusFallback: elements.selectionModeToggle,
-      resultActions: [document.getElementById('selected-works-toggle'), elements.clearSelectedWorks, elements.startWorkRanking]
-    });
-    elements.selectionContextCount.textContent = String(model.selectedCount);
-    elements.startWorkRanking.disabled = importBusy || model.selectedCount === 0;
-    elements.clearSelectedWorks.disabled = importBusy || model.selectedCount === 0;
-    const companySelectedCount = companyRanking.inspect().selectedCompanyIds.length;
-    syncSelectionContext({
-      root: elements.companySelectionContextBar, mode: companyDirectoryOpen && companySelectionMode,
-      count: companySelectedCount, focusFallback: elements.companySelectionModeToggle,
-      resultActions: [elements.clearSelectedCompanies, elements.startCompanyRanking]
-    });
-    elements.companySelectionContextCount.textContent = String(companySelectedCount);
-    elements.startCompanyRanking.disabled = importBusy || companySelectedCount === 0;
-    elements.clearSelectedCompanies.disabled = importBusy || companySelectedCount === 0;
-    elements.undoEdit.disabled = importBusy || !activeRankingState.canUndo;
-    elements.redoEdit.disabled = importBusy || !activeRankingState.canRedo;
-    elements.clearBoard.disabled = importBusy || activeRankingState.rankedCount === 0;
-    elements.clearCandidates.disabled = importBusy || activeRankingState.selectedCount === 0;
-    elements.clearAnnotations.disabled = importBusy
-      || Object.keys(activePresentation.inspect().annotations).length === 0;
-    elements.rankingCandidateSearch.disabled = importBusy || activeRankingState.unrankedCount === 0;
-    elements.rankingShowCounts.disabled = importBusy;
-    elements.rankingShowTitles.disabled = importBusy;
-    for (const [, input] of scaleControls) input.disabled = importBusy;
-    elements.rankingScaleReset.disabled = importBusy;
-    elements.rankingHelpButton.disabled = importBusy;
-    elements.rankingImmersive.disabled = importBusy;
-    elements.cleanupMenuButton.disabled = importBusy;
-    elements.displayMenuButton.disabled = importBusy;
-    elements.exportState.disabled = importBusy;
-    elements.exportPng.disabled = importBusy || activeRankingState.rankedCount === 0 || pngExportInProgress;
-    elements.exportPng.setAttribute('aria-busy', String(pngExportInProgress));
-    elements.exportPng.setAttribute('aria-label', pngExportInProgress ? '正在导出图片' : '导出图片');
-    elements.mobileRankingUndo.disabled = elements.undoEdit.disabled;
-    elements.mobileRankingRedo.disabled = elements.redoEdit.disabled;
-    elements.mobileRankingCandidateCount.textContent = String(activeRankingState.unrankedCount);
-    elements.mobileRankingCandidates.disabled = importBusy;
-    elements.mobileRankingMore.disabled = importBusy;
-    elements.mobileRankingShowCounts.disabled = importBusy;
-    elements.mobileRankingShowTitles.disabled = importBusy;
-    elements.mobileRankingShowCounts.checked = elements.rankingShowCounts.checked;
-    elements.mobileRankingShowTitles.checked = elements.rankingShowTitles.checked;
-    elements.mobileRankingImport.disabled = importBusy;
-    elements.mobileRankingExport.disabled = importBusy;
-    elements.mobileRankingExportPng.disabled = elements.exportPng.disabled;
-    elements.mobileRankingExportPng.setAttribute('aria-busy', String(pngExportInProgress));
-    elements.mobileRankingClearBoard.disabled = elements.clearBoard.disabled;
-    elements.mobileRankingClearCandidates.disabled = elements.clearCandidates.disabled;
-    elements.mobileRankingClearAnnotations.disabled = elements.clearAnnotations.disabled;
   }
-
   function setImportBusy(nextBusy) {
     importBusy = nextBusy;
-    setWorkspaceBusy({
-      roots: [elements.selectionView, elements.rankingView, elements.mobileSelectionView],
-      controls: [
-        elements.modeSelection,
-        elements.modeRanking,
-        elements.selectionModeToggle,
-        elements.cardViewToggle,
-        elements.bangumiImportOpen,
-        elements.mobileBangumiImportOpen,
-        elements.bangumiPublicFetch,
-        elements.bangumiPublicImportAppend,
-        ...selectionCardDisplayInputs.map(([, input]) => input),
-        elements.companySelectionModeToggle,
-        elements.undoEdit,
-        elements.redoEdit,
-        elements.clearBoard,
-        elements.clearCandidates,
-        elements.clearAnnotations,
-        elements.rankingCandidateSearch,
-        elements.mobileRankingUndo,
-        elements.mobileRankingRedo,
-        elements.mobileRankingCandidates,
-        elements.mobileRankingMore,
-        elements.mobileRankingShowCounts,
-        elements.mobileRankingShowTitles,
-        elements.mobileRankingImport,
-        elements.mobileRankingExport,
-        elements.mobileRankingExportPng,
-        elements.mobileRankingClearBoard,
-        elements.mobileRankingClearCandidates,
-        elements.mobileRankingClearAnnotations,
-        elements.rankingShowCounts,
-        elements.rankingShowTitles,
-        elements.rankingHelpButton,
-        elements.rankingImmersive,
-        elements.cleanupMenuButton,
-        elements.displayMenuButton,
-        elements.exportState,
-        elements.exportPng
-      ]
-    }, nextBusy);
+    workbenchControls.setBusy(nextBusy);
     renderControlStates(lastRenderedModel ?? controller.inspect([]));
     renderKeeperGuidance();
   }
