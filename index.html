@@ -511,8 +511,6 @@
                 <button id="import-state" type="button">导入 JSON</button>
                 <button id="export-state" type="button">导出 JSON</button>
                 <p class="ranking-backup-note">JSON保存公开条目的等级与顺序，不含本地图片、替换封面、标注及显示设置。</p>
-                <label>图片清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
-                <p class="ranking-backup-note">图片使用深色排榜背景，导出后提示尺寸和文件大小。</p>
                 <strong class="toolbar-menu-section-title">清理</strong>
                 <button data-ui="danger" id="clear-board" type="button">清空分级</button>
                 <button data-ui="danger" id="clear-candidates" type="button">清空候选</button>
@@ -533,7 +531,11 @@
               aria-label="进入直播模式"
               title="进入直播模式"
             ><span aria-hidden="true">⛶</span><span>直播模式</span></button>
-            <button data-ui="primary" id="export-png" type="button" aria-label="导出当前排榜图片" title="导出当前排榜图片">导出图片</button>
+            <button id="ranking-candidates-pin" type="button" aria-pressed="false" aria-controls="ranking-candidates">固定候选区</button>
+            <div class="ranking-export-split">
+              <button data-ui="primary" id="export-png" type="button" aria-label="导出当前排榜图片" title="按上次设置直接导出图片">导出图片</button>
+              <button id="ranking-export-options" type="button" aria-label="图片导出设置" aria-haspopup="dialog" title="图片导出设置">▾</button>
+            </div>
           </div>
         </div>
 
@@ -550,6 +552,12 @@
         <section id="tier-board" class="tier-board" aria-label="分级板" tabindex="-1"></section>
 
         <section id="ranking-candidates" class="ranking-candidates" aria-labelledby="ranking-candidates-title">
+          <div class="candidate-tray-controls" role="group" aria-label="候选区显示">
+            <span>候选区</span>
+            <button type="button" data-candidate-tray="collapsed">收起</button>
+            <button type="button" data-candidate-tray="row">单行</button>
+            <button type="button" data-candidate-tray="expanded">展开</button>
+          </div>
           <div class="candidate-toolbar">
             <h2 id="ranking-candidates-title">候选作品</h2>
             <label class="search-field" for="ranking-candidate-search">
@@ -557,6 +565,7 @@
               <input id="ranking-candidate-search" type="search" placeholder="搜索候选标题" autocomplete="off">
             </label>
           </div>
+          <p class="candidate-gesture-hint">点封面查看 · 点拖柄整理／按住拖动</p>
           <div id="ranking-candidate-grid" class="ranking-candidate-grid" aria-live="polite"></div>
         </section>
         <div id="mobile-ranking-dock" class="mobile-ranking-dock" aria-label="移动端排榜操作">
@@ -583,8 +592,8 @@
               <button id="mobile-bangumi-import-open" type="button">从 Bangumi 导入</button>
               <button id="mobile-ranking-import" type="button">导入 JSON</button>
               <button id="mobile-ranking-export" type="button">导出 JSON</button>
-              <button id="mobile-ranking-export-png" type="button">导出图片</button>
-              <label>图片清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
+              <button id="mobile-ranking-export-png" type="button">图片设置与导出</button>
+              <button id="mobile-ranking-immersive" type="button">进入直播模式</button>
               <p class="ranking-backup-note">JSON不含本地图片、替换封面、标注及显示设置。图片使用深色排榜背景。</p>
             </section>
             <section>
@@ -846,7 +855,12 @@
       tabindex="-1"
       aria-label="直播模式边缘控件"
     >
+      <button id="ranking-live-toggle" type="button" aria-label="直播工具" aria-controls="ranking-immersive-controls" aria-expanded="false">⋯</button>
       <div id="ranking-immersive-controls" class="ranking-immersive-controls" hidden>
+        <button id="ranking-live-candidates" type="button">整理候选</button>
+        <button id="ranking-live-undo" type="button">撤销</button>
+        <button id="ranking-live-redo" type="button">重做</button>
+        <button id="ranking-live-export" type="button">导出图片</button>
         <button
           id="ranking-immersive-exit"
           class="icon-button ranking-immersive-exit"
@@ -864,6 +878,20 @@
       </div>
     </div>
 
+    <dialog id="ranking-export-dialog" class="ranking-export-dialog" aria-labelledby="ranking-export-title">
+      <div class="dialog-heading"><h2 id="ranking-export-title">分享与备份</h2><button type="button" data-export-close aria-label="关闭导出设置">×</button></div>
+      <div class="ranking-export-body">
+        <h3>图片分享 · PNG</h3>
+        <label>清晰度 <select data-ranking-export-quality><option value="standard">标准 · 适合分享</option><option value="high">高清 · 文件较大</option></select></label>
+        <output data-export-summary aria-live="polite"></output>
+        <p>使用深色排榜背景；文件大小取决于封面和榜单内容，导出后显示实际大小。设置自动记住，工具栏“导出图片”可直接使用。</p>
+        <div class="ranking-export-actions"><button type="button" data-export-confirm data-ui="primary">导出 PNG 图片</button><button type="button" data-export-retry>重新计算</button></div>
+        <hr>
+        <h3>榜单备份 · JSON</h3>
+        <p>保存公开条目的等级、顺序与候选，可用于恢复榜单。不含本地图片、替换封面、标注及显示设置。</p>
+        <button type="button" data-export-json>下载 JSON 备份</button>
+      </div>
+    </dialog>
     <input id="state-file" type="file" accept="application/json,.json" hidden>
     <input id="media-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div id="status-message" role="status" aria-live="polite"></div>

@@ -29,8 +29,8 @@ export function createCompanyRankingCard(documentRef, companyItem, callbacks) {
   handle.type = 'button';
   handle.className = 'ranking-drag-handle';
   handle.setAttribute('aria-label', `整理 ${companyItem.title}`);
-  handle.setAttribute('title', `整理 ${companyItem.title}`);
-  handle.textContent = '::';
+  handle.setAttribute('title', '点按整理，按住拖动');
+  handle.textContent = '⠿';
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();

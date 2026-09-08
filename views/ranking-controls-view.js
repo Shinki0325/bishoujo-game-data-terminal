@@ -4,10 +4,25 @@ import { createViewLifetime } from '../lib/view-lifetime.js';
 export function createRankingControlsView({ elements, scalePresentation, activePresentation, subject, getRankingView,
   enterImmersive, documentRef = document, windowRef = window }) {
   const lifetime = createViewLifetime();
-  const qualities = [...(documentRef.querySelectorAll?.('[data-ranking-export-quality]') ?? [])];
-  for (const select of qualities) lifetime.listen(select, 'change', () => {
-    for (const other of qualities) other.value = select.value;
-  });
+  const tray = documentRef.getElementById?.('ranking-candidates');
+  const workspace = documentRef.getElementById?.('ranking-view');
+  const pinButton = documentRef.getElementById?.('ranking-candidates-pin');
+  const trayButtons = [...(documentRef.querySelectorAll?.('[data-candidate-tray]') ?? [])];
+  let trayMode = 'collapsed', pinned = false, live = false, beforeLive = null, restoreFrame = null;
+  function beginLive() {
+    if (live) return;
+    windowRef.cancelAnimationFrame(restoreFrame);
+    beforeLive = { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
+    return enterImmersive();
+  }
+  const measureTray = () => {
+    const height = trayMode === 'collapsed' && windowRef.matchMedia?.('(max-width: 899px)').matches ? 0 : (tray?.getBoundingClientRect?.().height ?? 0);
+    workspace?.style?.setProperty('--candidate-tray-height', `${Math.ceil(height)}px`);
+  };
+  if (tray && typeof windowRef.ResizeObserver === 'function') {
+    const observer = new windowRef.ResizeObserver(measureTray);
+    observer.observe(tray); lifetime.add(() => observer.disconnect());
+  }
   const scaleControls = [
     ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
     ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
@@ -47,22 +62,61 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     });
   });
 
-  function setMobileRankingCandidatesOpen(open) {
+  function setTrayMode(mode) {
+    // In live mode collapse only the tools, keeping the candidate strip available.
+    if (live && mode === 'collapsed') mode = 'row';
+    trayMode = ['collapsed', 'row', 'expanded'].includes(mode) ? mode : 'row';
+    const open = trayMode !== 'collapsed';
+    documentRef.body.setAttribute?.('data-ranking-tray', trayMode);
     documentRef.body.classList.toggle('is-mobile-ranking-candidates-open', open);
     elements.mobileRankingCandidates.setAttribute('aria-expanded', String(open));
-    elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '展开候选';
+    elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '显示候选';
     const candidateLabel = subject() === 'company' ? '候选会社' : '候选作品';
-    elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '展开'}${candidateLabel}`);
+    elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '显示'}${candidateLabel}`);
+    for (const button of trayButtons) button.setAttribute('aria-pressed', String(button.dataset.candidateTray === trayMode));
+    // Collapsed candidates cannot remain in the keyboard focus order on mobile.
+    if (tray) tray.inert = !open && Boolean(windowRef.matchMedia?.('(max-width: 899px)').matches);
+    measureTray();
   }
+  function setMobileRankingCandidatesOpen(open) { setTrayMode(open ? 'row' : 'collapsed'); }
 
   function closeMobileRankingCandidates() {
     setMobileRankingCandidatesOpen(false);
   }
 
   function toggleMobileRankingCandidates() {
-    const opening = !documentRef.body.classList.contains('is-mobile-ranking-candidates-open');
-    setMobileRankingCandidatesOpen(opening);
+    setMobileRankingCandidatesOpen(trayMode === 'collapsed');
   }
+  function setPinned(value) {
+    pinned = value;
+    workspace?.classList.toggle('is-candidates-pinned', value);
+    pinButton?.setAttribute('aria-pressed', String(value));
+    if (pinButton) pinButton.textContent = value ? '取消固定候选' : '固定候选区';
+    if (value && trayMode === 'collapsed') setTrayMode('row');
+    measureTray();
+  }
+  for (const button of trayButtons) lifetime.listen(button, 'click', () => setTrayMode(button.dataset.candidateTray));
+  lifetime.listen(pinButton, 'click', () => setPinned(!pinned));
+  lifetime.listen(documentRef.getElementById?.('ranking-live-candidates'), 'click', () => {
+    setTrayMode(trayMode === 'expanded' ? 'row' : 'expanded');
+    if (trayMode === 'expanded') documentRef.getElementById?.('ranking-candidate-search')?.focus();
+  });
+  lifetime.listen(documentRef.getElementById?.('ranking-live-undo'), 'click', () => elements.undoEdit.click());
+  lifetime.listen(documentRef.getElementById?.('ranking-live-redo'), 'click', () => elements.redoEdit.click());
+  const syncLiveHistory = () => {
+    for (const [id, source] of [['ranking-live-undo', elements.undoEdit], ['ranking-live-redo', elements.redoEdit]]) {
+      const button = documentRef.getElementById?.(id);
+      if (button) button.disabled = source.disabled;
+    }
+  };
+  if (typeof windowRef.MutationObserver === 'function') {
+    const observer = new windowRef.MutationObserver(syncLiveHistory);
+    for (const button of [elements.undoEdit, elements.redoEdit]) observer.observe(button, { attributes: true, attributeFilter: ['disabled'] });
+    lifetime.add(() => observer.disconnect());
+  }
+  syncLiveHistory();
+  lifetime.listen(documentRef.getElementById?.('mobile-ranking-immersive'), 'click', () => void beginLive());
+  lifetime.listen(windowRef, 'resize', () => setTrayMode(trayMode));
 
   function openMobileRankingMenu() {
     const scale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
@@ -105,14 +159,40 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   });
   lifetime.listen(elements.mobileRankingImport, 'click', () => elements.importState.click());
   lifetime.listen(elements.mobileRankingExport, 'click', () => elements.exportState.click());
-  lifetime.listen(elements.mobileRankingExportPng, 'click', () => elements.exportPng.click());
   lifetime.listen(elements.mobileRankingClearBoard, 'click', () => elements.clearBoard.click());
   lifetime.listen(elements.mobileRankingClearCandidates, 'click', () => elements.clearCandidates.click());
   lifetime.listen(elements.mobileRankingClearAnnotations, 'click', () => elements.clearAnnotations.click());
-  lifetime.listen(elements.rankingImmersive, 'click', () => void enterImmersive());
+  lifetime.listen(elements.rankingImmersive, 'click', () => void beginLive());
   lifetime.add(() => windowRef.cancelAnimationFrame(rankingLayoutFrame));
+  lifetime.add(() => windowRef.cancelAnimationFrame(restoreFrame));
   return Object.freeze({
     scaleInputs: scaleControls.map(([, input]) => input),
-    setCandidatesOpen: setMobileRankingCandidatesOpen, closeCandidates: closeMobileRankingCandidates, dispose: lifetime.dispose
+    setCandidatesOpen: setMobileRankingCandidatesOpen, closeCandidates: closeMobileRankingCandidates,
+    refreshTray: () => setTrayMode(trayMode),
+    setImmersive(value) {
+      if (value === live) return;
+      if (value) {
+        beforeLive ??= { trayMode, pinned, scroll: getRankingView()?.captureScroll?.() };
+        live = true; setTrayMode('row');
+      } else {
+        const scroll = beforeLive?.scroll;
+        live = false; setPinned(beforeLive?.pinned ?? false); setTrayMode(beforeLive?.trayMode ?? 'row');
+        // Restore after the fixed layout and ResizeObserver have relinquished the document.
+        // Restoring before layout settles is counteracted by browser scroll anchoring.
+        restoreFrame = windowRef.requestAnimationFrame(() => {
+          restoreFrame = windowRef.requestAnimationFrame(() => {
+            restoreFrame = null;
+            if (!live && !workspace?.hidden) {
+              workspace?.setAttribute('tabindex', '-1');
+              workspace?.focus?.({ preventScroll: true });
+              getRankingView()?.restoreScroll?.(scroll);
+            }
+          });
+        });
+        beforeLive = null;
+      }
+      measureTray(); getRankingView()?.refreshLayout();
+    },
+    dispose: lifetime.dispose
   });
 }

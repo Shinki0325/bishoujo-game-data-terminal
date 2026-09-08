@@ -221,8 +221,8 @@ export function createRankingCard(documentRef, work, callbacks) {
   handle.type = 'button';
   handle.className = 'ranking-drag-handle';
   handle.setAttribute('aria-label', `整理 ${displayTitle}`);
-  handle.setAttribute('title', `整理 ${displayTitle}`);
-  handle.textContent = '::';
+  handle.setAttribute('title', '点按整理，按住拖动');
+  handle.textContent = '⠿';
   handle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
@@ -294,6 +294,13 @@ export function buildRankingModel(state, worksById, candidateTitleQuery) {
     candidateWorks,
     candidateTitleQuery
   };
+}
+
+export function rankingInteractionKey(model) {
+  if (!model) return '';
+  return JSON.stringify([model.candidateTitleQuery,
+    model.tiers.map(t => [t.id, t.name, t.colorId, t.works.map(w => [w.workId, w.title])]),
+    model.candidateWorks.map(w => [w.workId, w.title])]);
 }
 
 export function createRankingView({
@@ -390,6 +397,17 @@ export function createRankingView({
   let editingTierId = null;
   let focusTierId = null;
   let immersive = false;
+  let lastNativeDragEnd = -Infinity;
+  let deferredRender = null, deferredFrame = null, renderModel = null;
+  function flushDeferredRender() {
+    if (!deferredRender || deferredFrame !== null) return;
+    deferredFrame = requestFrame(() => {
+      deferredFrame = null;
+      const pending = deferredRender;
+      deferredRender = null;
+      if (pending) renderModel(pending.model, pending.covers);
+    });
+  }
   let colorPalette = null;
   let colorPaletteTrigger = null;
   let annotationEditor = null;
@@ -413,6 +431,11 @@ export function createRankingView({
   function restorePageScroll(position) {
     const target = pageScrollTarget();
     if (target === null || typeof target !== 'object') return;
+    if (typeof target.scrollTo === 'function') {
+      target.scrollTo({ top: Number.isFinite(position?.top) ? position.top : 0,
+        left: Number.isFinite(position?.left) ? position.left : 0, behavior: 'instant' });
+      return;
+    }
     target.scrollTop = Number.isFinite(position?.top) ? position.top : 0;
     target.scrollLeft = Number.isFinite(position?.left) ? position.left : 0;
   }
@@ -447,7 +470,15 @@ export function createRankingView({
   candidateRemoveSelected.className = 'candidate-remove-selected';
   candidateRemoveSelected.textContent = '移除所选';
   candidateRemoveSelected.disabled = true;
-  candidateBatchActions.append(candidateSelectAllLabel, candidateSelectedCount, candidateRemoveSelected);
+  const candidateMoveSelected = documentRef.createElement('button');
+  candidateMoveSelected.type = 'button';
+  candidateMoveSelected.className = 'candidate-move-selected';
+  candidateMoveSelected.textContent = '移至等级';
+  const candidateCancelSelection = documentRef.createElement('button');
+  candidateCancelSelection.type = 'button';
+  candidateCancelSelection.className = 'candidate-cancel-selection';
+  candidateCancelSelection.textContent = '取消选择';
+  candidateBatchActions.append(candidateSelectAllLabel, candidateSelectedCount, candidateMoveSelected, candidateCancelSelection, candidateRemoveSelected);
   candidateToolbar?.append(candidateBatchActions);
 
   function candidateSelectionIds() {
@@ -469,7 +500,9 @@ export function createRankingView({
     }
     const selectedIds = candidateSelectionIds();
     const total = visibleIds.size;
-    candidateSelectedCount.textContent = String(selectedIds.length);
+    candidateSelectedCount.textContent = `已选 ${selectedIds.length} 项`;
+    candidateSelectedCount.hidden = selectedIds.length === 0;
+    for (const button of [candidateMoveSelected, candidateCancelSelection, candidateRemoveSelected]) button.hidden = selectedIds.length === 0;
     candidateRemoveSelected.disabled = selectedIds.length === 0;
     candidateSelectAll.checked = total > 0 && selectedIds.length === total;
     candidateSelectAll.indeterminate = selectedIds.length > 0 && selectedIds.length < total;
@@ -610,22 +643,9 @@ export function createRankingView({
   }
 
   function clearTouchDrag() {
-    if (touchDrag?.timer !== null) cancelHold(touchDrag.timer);
+    if (touchDrag?.timer != null) cancelHold(touchDrag.timer);
     touchDrag = null;
-  }
-
-  function mobileCandidateDrawerButton() {
-    return documentRef.getElementById?.('mobile-ranking-candidates')
-      ?? root.querySelector?.('#mobile-ranking-candidates')
-      ?? null;
-  }
-
-  function setMobileCandidateDrawer(open) {
-    documentRef.body?.classList?.toggle('is-mobile-ranking-candidates-open', open);
-    const button = mobileCandidateDrawerButton();
-    button?.setAttribute?.('aria-expanded', String(open));
-    const label = button?.querySelector?.('#mobile-ranking-candidates-label');
-    if (label) label.textContent = open ? '收起候选' : '展开候选';
+    flushDeferredRender();
   }
 
   function removeMobileDragVisuals() {
@@ -729,12 +749,13 @@ export function createRankingView({
   function beginTouchDrag(event) {
     if (!viewWindow.matchMedia?.('(max-width: 899px)')?.matches) return;
     if (!isTouchPointer(event) || touchDrag !== null) return;
+    // A new finger contact is intentional, not the compatibility click from the previous drag.
+    clearSuppressedTouchClick();
     const card = rankingCardFromPointer(event);
     if (!event.target?.closest?.('.ranking-drag-handle')) return;
     if (!card || event.target?.classList?.contains?.('ranking-candidate-select')
       || event.target?.classList?.contains?.('ranking-candidate-remove')) return;
     const pointerId = event.pointerId ?? 0;
-    event.preventDefault?.();
     const gesture = {
       pointerId,
       card,
@@ -745,7 +766,7 @@ export function createRankingView({
       startY: Number(event.clientY) || 0
     };
     touchDrag = gesture;
-    card.setPointerCapture?.(pointerId);
+    // Capture only after dragging activates. A tap must keep its click on the handle.
     gesture.timer = scheduleHold(() => { if (touchDrag === gesture) activateTouchDrag(gesture, event); }, 320);
   }
 
@@ -759,9 +780,7 @@ export function createRankingView({
     startDrag(card.dataset.workId, card, { includeCandidateSelection: false });
     root.classList.add('is-mobile-ranking-dragging');
     root.classList.toggle('is-mobile-ranking-dragging-from-pool', dragOrigin === 'pool');
-    gesture.restoreCandidateDrawer = dragOrigin === 'pool'
-      && documentRef.body?.classList?.contains('is-mobile-ranking-candidates-open');
-    if (gesture.restoreCandidateDrawer) setMobileCandidateDrawer(false);
+    // The transient drag class hides the tray; its row/expanded preference is unchanged.
     card.classList.add('is-mobile-dragging');
     card.draggable = false;
     gesture.row?.classList.add('is-mobile-touch-dragging');
@@ -793,7 +812,7 @@ export function createRankingView({
     clearTouchDrag();
     if (!gesture.started) {
       if (event.type !== 'pointercancel') {
-        const work = [...(model?.candidateWorks ?? []), ...(model?.tiers ?? []).flatMap(tier => tier.works)].find(item => item.workId === gesture.card.dataset.workId);
+        const work = [...model.candidateWorks, ...model.tiers.flatMap(tier => tier.works)].find(item => item.workId === gesture.card.dataset.workId);
         suppressNextTouchClick(gesture.card.dataset.workId);
         if (work) openArrangeMenu(work, gesture.card);
       }
@@ -811,6 +830,7 @@ export function createRankingView({
     const plan = cancelled ? null : dropPlan;
     clearDropState();
     root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
+    flushDeferredRender();
     draggedWorkId = null;
     draggedWorkIds = [];
     dragOrigin = null;
@@ -820,7 +840,6 @@ export function createRankingView({
     suppressNextTouchClick(gesture.card.dataset.workId);
     event.preventDefault?.();
     if (workId === null || plan === null) {
-      if (gesture.restoreCandidateDrawer) setMobileCandidateDrawer(true);
       return;
     }
     if (plan.type === 'tier') {
@@ -832,7 +851,6 @@ export function createRankingView({
     } else if (plan.type === 'pool') {
       onMoveToUnranked(workId);
     }
-    if (gesture.restoreCandidateDrawer) setMobileCandidateDrawer(true);
   }
 
   function candidateCardFromNode(node) {
@@ -1137,6 +1155,12 @@ export function createRankingView({
     root.classList.remove('is-mobile-ranking-dragging', 'is-mobile-ranking-dragging-from-pool');
   }
 
+  function cancelActiveDrag() {
+    if (touchDrag) clearTouchDrag();
+    for (const card of arrayFrom(root.querySelectorAll?.('.ranking-card.is-dragging'))) clearDragCard(card);
+    finishDrag();
+  }
+
   function placeIndicator(track, pointerX, pointerY) {
     removeIndicator();
     const allCards = arrayFrom(track.children).filter(isRankingCard);
@@ -1296,31 +1320,53 @@ export function createRankingView({
     if (arrangeDialog.open) arrangeDialog.close();
     arrangeDialog.remove();
     arrangeDialog = null;
+    flushDeferredRender();
   }
   function openArrangeMenu(work, card) {
-    if (immersive) return;
+    if (!work) return;
     closeArrangeMenu();
     const dialog = documentRef.createElement('dialog');
     arrangeDialog = dialog;
     dialog.id = 'ranking-item-menu';
     dialog.className = 'ranking-item-menu';
-    const title = documentRef.createElement('h2');
-    title.id = 'ranking-item-menu-title'; title.textContent = `整理 ${work.title}`;
-    dialog.setAttribute('aria-labelledby', title.id); dialog.append(title);
     const selected = candidateSelection.has(work.workId) ? candidateSelectionIds() : [work.workId];
-    const action = (text, callback) => {
+    const currentTier = model.tiers.find(tier => tier.works.some(item => item.workId === work.workId));
+    const title = documentRef.createElement('h2');
+    title.id = 'ranking-item-menu-title'; title.textContent = selected.length > 1 ? `整理已选 ${selected.length} 项` : `整理 ${work.title}`;
+    dialog.setAttribute('aria-labelledby', title.id); dialog.append(title);
+    const description = documentRef.createElement('p');
+    description.className = 'ranking-arrange-description';
+    description.textContent = `${currentTier ? `当前：${currentTier.name}` : '当前：候选区'} · 选择目标等级，追加至末尾`;
+    dialog.append(description);
+    const destinations = documentRef.createElement('div');
+    destinations.className = 'ranking-tier-destinations';
+    destinations.setAttribute('role', 'group'); destinations.setAttribute('aria-label', '移至等级');
+    dialog.append(destinations);
+    const action = (text, callback, host = dialog) => {
       const button = documentRef.createElement('button'); button.type = 'button'; button.textContent = text;
-      button.addEventListener('click', () => { closeArrangeMenu(); callback(); }); dialog.append(button);
+      button.addEventListener('click', () => { closeArrangeMenu(); callback(); }); host.append(button);
+      return button;
     };
-    for (const tier of model.tiers) action(`移至 ${tier.name}${selected.length > 1 ? `（${selected.length}项）` : ''}`, () => {
-      if (selected.length > 1) onMoveCandidatesToTier(selected, tier.id, tier.works.length);
-      else onMoveToTier(work.workId, tier.id, tier.works.length);
-    });
-    if (!model.candidateWorks.some(item => item.workId === work.workId)) action('移回候选', () => onMoveToUnranked(work.workId));
-    else action('移除候选', () => onRemoveCandidates(selected));
-    action('查看资料', () => onOpenDetails(work));
-    action('取消', () => card.isConnected && card.focus());
-    dialog.addEventListener('cancel', event => { event.preventDefault(); closeArrangeMenu(); if (card.isConnected) card.focus(); });
+    for (const tier of model.tiers) {
+      const button = action(tier.name, () => {
+        if (selected.length > 1) onMoveCandidatesToTier(selected, tier.id, tier.works.length);
+        else onMoveToTier(work.workId, tier.id, tier.works.length);
+      }, destinations);
+      const color = tierColor(tier.colorId);
+      button.style.setProperty('--destination-color', color.background);
+      button.setAttribute('aria-label', `移至 ${tier.name}`);
+      button.disabled = currentTier?.id === tier.id;
+      if (button.disabled) { button.setAttribute('aria-current', 'true'); button.textContent += ' · 当前'; }
+    }
+    const secondary = documentRef.createElement('div'); secondary.className = 'ranking-arrange-secondary'; dialog.append(secondary);
+    if (currentTier) action('移回候选', () => onMoveToUnranked(work.workId), secondary);
+    if (!immersive && selected.length === 1) action('查看资料', () => onOpenDetails(work), secondary);
+    if (!currentTier) {
+      const remove = action(`移除候选${selected.length > 1 ? `（${selected.length}项）` : ''}`, () => onRemoveCandidates(selected), secondary);
+      remove.className = 'ranking-arrange-remove';
+    }
+    action('取消', () => card?.isConnected && card.focus());
+    dialog.addEventListener('cancel', event => { event.preventDefault(); closeArrangeMenu(); if (card?.isConnected) card.focus(); });
     (documentRef.body ?? root).append(dialog); dialog.showModal();
   }
   function cardCallbacks() {
@@ -1338,6 +1384,7 @@ export function createRankingView({
         startDrag(work.workId, card);
       },
       onDragEnd(work, card) {
+        lastNativeDragEnd = Date.now();
         clearDragCard(card);
         finishDrag();
       },
@@ -1684,11 +1731,16 @@ export function createRankingView({
   candidateRemoveSelected.addEventListener('click', event => {
     event.preventDefault();
     const selectedIds = candidateSelectionIds();
-    if (immersive || selectedIds.length === 0) return;
+    if (selectedIds.length === 0) return;
     candidateSelection.clear();
     updateCandidateSelection();
     onRemoveCandidates(selectedIds);
   });
+  candidateMoveSelected.addEventListener('click', () => {
+    const work = model?.candidateWorks.find(item => candidateSelection.has(item.workId));
+    openArrangeMenu(work, candidateMoveSelected);
+  });
+  candidateCancelSelection.addEventListener('click', () => { candidateSelection.clear(); updateCandidateSelection(); });
   candidatePool.addEventListener('pointerdown', event => {
     if (isTouchPointer(event)) return;
     const card = candidateCardFromNode(event.target);
@@ -1701,6 +1753,15 @@ export function createRankingView({
   root.addEventListener('pointermove', updateTouchDrag);
   root.addEventListener('pointerup', finishTouchDrag);
   root.addEventListener('pointercancel', finishTouchDrag);
+  // Consume only the compatibility click of this touch gesture, even if opening
+  // the dialog retargets that click to its Cancel button. Any new contact resets it.
+  documentRef.addEventListener('pointerdown', clearSuppressedTouchClick, true);
+  documentRef.addEventListener('click', event => {
+    if (suppressedTouchClickWorkId !== null && (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents)) {
+      clearSuppressedTouchClick();
+      event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
   documentRef.addEventListener('dragover', handleDocumentDragOver, true);
   candidatePool.addEventListener('pointermove', event => {
     if (!candidateSelectionActive || (event.pointerId ?? 0) !== candidatePointerId) return;
@@ -1748,14 +1809,22 @@ export function createRankingView({
   });
   documentRef.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
+    // Chromium can deliver dragend before the Escape keydown that cancelled it.
+    if (Date.now() - lastNativeDragEnd < 100) { event.stopPropagation(); return; }
+    if (draggedWorkId !== null || touchDrag !== null) {
+      // Keep the browser's native drag cancellation, but do not also exit live mode.
+      event.stopPropagation();
+      cancelActiveDrag();
+      return;
+    }
     if (annotationEditor !== null) closeAnnotationEditor(false);
     if (editingTierId !== null) closeTierEditing();
     else closeColorPalette();
-  });
+  }, true);
 
   return Object.freeze({
-    render(nextModel, coverUrls = null) {
-      closeArrangeMenu();
+    render: function render(nextModel, coverUrls = null) {
+      renderModel = render;
       if (nextModel === null || typeof nextModel !== 'object' || Array.isArray(nextModel)) {
         throw new TypeError('model must be an object');
       }
@@ -1765,6 +1834,15 @@ export function createRankingView({
       if (!Array.isArray(nextModel.candidateWorks) || typeof nextModel.candidateTitleQuery !== 'string') {
         throw new TypeError('model must contain candidateWorks and candidateTitleQuery');
       }
+      // Late cover hydration must not detach the card currently holding a pointer,
+      // or close its dialog. A genuine board/search change still invalidates it.
+      if ((arrangeDialog || touchDrag || draggedWorkId !== null)
+        && rankingInteractionKey(model) === rankingInteractionKey(nextModel)) {
+        deferredRender = { model: nextModel, covers: coverUrls };
+        return;
+      }
+      deferredRender = null;
+      closeArrangeMenu();
       const retainedTierScroll = Object.fromEntries(
         [...tierTracks].map(([tierId, track]) => [tierId, track.scrollLeft])
       );
@@ -1931,6 +2009,9 @@ export function createRankingView({
 
     setImmersive(nextImmersive) {
       if (typeof nextImmersive !== 'boolean') throw new TypeError('immersive must be a boolean');
+      if (immersive !== nextImmersive) {
+        cancelActiveDrag();
+      }
       immersive = nextImmersive;
       if (immersive) {
         focusTierId = null;

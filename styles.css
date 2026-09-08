@@ -9451,3 +9451,96 @@ dialog::backdrop {
   body.is-ranking-immersive #ranking-view .mobile-ranking-dock { display: none; }
   #ranking-view { padding-bottom: calc(var(--mobile-nav-height) + 54px); }
 }
+
+/* Ranking interaction refinement: one candidate pool shared by normal and live modes. */
+#ranking-view .candidate-tray-controls {
+  display: flex; gap: 4px; align-items: center; padding: 4px 10px;
+  background: var(--surface); border-top: 1px solid var(--border);
+}
+.candidate-tray-controls > span { margin-right: auto; font-size: 12px; color: var(--text-muted); }
+.candidate-tray-controls button { min-height: 32px; padding: 3px 10px; font-size: 12px; }
+.candidate-tray-controls button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+#ranking-view .candidate-gesture-hint { display: none; margin: 0; padding: 4px 10px; color: var(--text-muted); font-size: 11px; }
+#ranking-view .candidate-batch-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+#ranking-view .candidate-batch-actions [hidden] { display: none !important; }
+#ranking-view .candidate-selected-count { white-space: nowrap; font-size: 12px; }
+.candidate-move-selected { color: var(--accent); border-color: var(--accent); }
+.ranking-item-menu .ranking-tier-destinations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ranking-item-menu .ranking-tier-destinations button {
+  margin: 0; min-width: 0; min-height: 48px; padding: 8px; border-left: 6px solid var(--destination-color);
+  white-space: normal; overflow-wrap: anywhere;
+}
+.ranking-item-menu .ranking-tier-destinations button[aria-current] { opacity: 1; background: var(--surface-muted); color: var(--text-muted); border-style: dashed; }
+.ranking-arrange-description { color: var(--text-muted); font-size: 13px; margin: 0 0 12px; }
+.ranking-arrange-secondary { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--border); }
+.ranking-item-menu .ranking-arrange-remove { color: var(--text-muted); background: none; }
+.ranking-export-split { display: inline-flex; }
+.ranking-export-split #export-png { border-radius: 6px 0 0 6px; }
+.ranking-export-split #ranking-export-options { border-radius: 0 6px 6px 0; margin-left: -1px; min-width: 32px; }
+.ranking-export-dialog { width: min(480px, calc(100vw - 24px)); max-height: 85dvh; overflow: auto; padding: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.ranking-export-dialog::backdrop { background: rgb(0 0 0 / 30%); }
+.ranking-export-body { padding: 16px; display: grid; gap: 12px; }
+.ranking-export-body h3, .ranking-export-body p { margin: 0; }
+.ranking-export-body p { color: var(--text-muted); font-size: 12px; line-height: 1.65; }
+.ranking-export-body output { display: block; min-height: 2.8em; color: var(--text-muted); font-size: 13px; }
+.ranking-export-body label, .ranking-export-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ranking-export-body hr { width: 100%; border: 0; border-top: 1px solid var(--border); }
+@media (min-width: 900px) {
+  body:not(.is-ranking-immersive) #ranking-view:not(.is-candidates-pinned) .candidate-tray-controls { display: none; }
+  #ranking-view.is-candidates-pinned { padding-bottom: var(--candidate-tray-height, 190px); }
+  #ranking-view.is-candidates-pinned .ranking-candidates { position: fixed; inset-inline: 0; bottom: 0; z-index: 35; box-shadow: 0 -4px 18px rgb(0 0 0 / 8%); }
+  body[data-ranking-tray="collapsed"] #ranking-view.is-candidates-pinned .ranking-candidate-grid,
+  body[data-ranking-tray="collapsed"] #ranking-view.is-candidates-pinned .candidate-toolbar { display: none; }
+}
+body[data-ranking-tray="expanded"] #ranking-view .ranking-candidate-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, var(--ranking-card-size-scaled));
+  grid-auto-flow: row; height: auto; max-height: 32dvh; overflow-y: auto; align-content: start;
+}
+/* The fullscreen API is optional; the same layout must also work when it is denied. */
+body.is-ranking-immersive { overflow: hidden !important; }
+body.is-ranking-immersive .tool-header.galpedia-header,
+body.is-ranking-immersive #ranking-view .ranking-page-heading,
+body.is-ranking-immersive .mode-switch { display: none !important; }
+body.is-ranking-immersive #ranking-view {
+  position: fixed !important; inset: 0 !important; width: 100%; max-width: none; margin: 0;
+  height: 100dvh !important; min-height: 0 !important; overflow: auto !important;
+  padding: 0 0 var(--candidate-tray-height, 124px) !important;
+  scroll-padding-bottom: var(--candidate-tray-height, 124px); z-index: 80;
+}
+body.is-ranking-immersive #ranking-view .tier-board { padding-bottom: 8px; min-height: 0 !important; }
+body.is-ranking-immersive #ranking-view .ranking-candidates {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 81; min-height: 0; padding-bottom: var(--safe-bottom);
+  transform: none; background: var(--surface);
+}
+body.is-ranking-immersive #ranking-view .candidate-tray-controls,
+body.is-ranking-immersive #ranking-view .candidate-toolbar,
+body.is-ranking-immersive #ranking-view .candidate-gesture-hint { display: none; }
+body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate-batch-actions { display: flex !important; }
+body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .ranking-candidate-select { display: block !important; }
+body.is-ranking-immersive[data-ranking-tray="expanded"] #ranking-view .candidate-tray-controls { display: flex; }
+body.is-ranking-immersive .ranking-immersive-edge { z-index: 90; width: auto; height: auto; top: calc(var(--safe-top) + 8px); right: calc(var(--safe-right) + 8px); }
+#ranking-live-toggle { min-width: 40px; min-height: 36px; padding: 0 8px; opacity: .7; }
+#ranking-live-toggle:hover, #ranking-live-toggle:focus-visible { opacity: 1; }
+.ranking-immersive-controls { top: 40px; padding: 6px; width: 112px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.ranking-immersive-controls button { min-height: 36px; width: 100%; font-size: 12px; }
+@media (max-width: 899px) {
+  #ranking-view .candidate-toolbar { display: none; }
+  #ranking-view .ranking-page-heading { grid-template-columns: max-content minmax(0, 1fr); }
+  #ranking-view .ranking-page-title { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px; }
+  #ranking-view #mobile-ranking-candidates { white-space: nowrap; }
+  #ranking-view #ranking-heading-count { font-size: 11px; white-space: nowrap; }
+  #ranking-view .candidate-tray-controls button { min-height: 36px; }
+  #ranking-view .candidate-gesture-hint { display: block; }
+  #ranking-view .ranking-candidates { grid-template-rows: none; max-height: 60dvh; overflow: auto; }
+  body[data-ranking-tray="expanded"] #ranking-view .candidate-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; }
+  body[data-ranking-tray="expanded"] #ranking-view .candidate-toolbar h2 { display: none; }
+  body[data-ranking-tray="expanded"] #ranking-view .candidate-toolbar .search-field { display: flex; width: 100%; max-width: none; }
+  body[data-ranking-tray="expanded"] #ranking-view .ranking-candidate-select { display: block; }
+  #ranking-view .candidate-batch-actions button { min-height: 36px; font-size: 12px; padding: 4px 8px; }
+  #ranking-view .ranking-drag-handle { background: transparent; text-shadow: 0 1px 3px #000, 0 0 3px #000; font-size: 18px; }
+  #ranking-view .ranking-drag-handle:focus-visible { background: rgb(24 29 40 / 70%); }
+  #ranking-view .tier-board { padding-bottom: calc(var(--candidate-tray-height, 0px) + 12px); }
+  body.is-ranking-immersive[data-ranking-tray="collapsed"] #ranking-view .ranking-candidates { display: none; }
+  body.is-ranking-immersive #ranking-view .candidate-gesture-hint { display: none; }
+}

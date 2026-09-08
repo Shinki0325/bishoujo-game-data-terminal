@@ -49,6 +49,7 @@ import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
 import { createWorkbenchChrome, connectWorkbenchNavigation } from './views/workbench-chrome.js';
 import { createRankingControlsView } from './views/ranking-controls-view.js';
+import { createRankingExportView } from './views/ranking-export-view.js';
 import { createMediaPreviewActions } from './lib/media-preview-actions.js';
 import { createWorkbenchMediaSources } from './lib/workbench-media-sources.js';
 import { createRankingMediaSession } from './lib/ranking-media-session.js';
@@ -700,6 +701,7 @@ async function initialize() {
         presentation: (company ? companyPresentation : presentation).inspect() };
     },
     exportPng: exportTierPng,
+    planPng: async options => (await loadPngExport()).planTierPng(options),
     isPngError: error => Boolean(PngExportError && error instanceof PngExportError),
     onBusyChange() { renderControlStates(lastRenderedModel ?? controller.inspect([])); renderKeeperGuidance(); },
     announce, logError: error => console.error(error),
@@ -718,6 +720,9 @@ async function initialize() {
     }
   });
   let candidateTitleQuery = '';
+  createRankingExportView({ documentRef: document,
+    storage: { getItem: key => window.localStorage.getItem(key), setItem: (key, value) => window.localStorage.setItem(key, value) },
+    preview: rankingExport.preview, png: rankingExport.png, json: rankingExport.json, isBusy: () => rankingExport.busy || importBusy });
   const workspaceScroll = createWorkspaceScrollSession({
     selection: {
       capture: () => selectionView.captureScroll(),
@@ -1476,7 +1481,6 @@ async function initialize() {
     documentRef: document,
     onChange(value) {
       closeToolbarMenus();
-      closeMobileRankingCandidates();
       previewLoader.cancel();
       previewActions.clear();
       if (value) {
@@ -1485,6 +1489,7 @@ async function initialize() {
         else elements.mediaPreview.open = false;
       }
       rankingView?.setImmersive(value);
+      rankingControls.setImmersive(value);
     }
   });
   const mediaDialog = createMediaDialogView({
@@ -1592,7 +1597,7 @@ async function initialize() {
   });
   const rankingWorkspace = createRankingWorkspaceView({
     getView: () => rankingView,
-    syncCandidateTray: () => setMobileRankingCandidatesOpen(document.body.classList.contains('is-mobile-ranking-candidates-open')),
+    syncCandidateTray: () => rankingControls.refreshTray(),
     elements: {
       root: elements.rankingView, showCounts: elements.rankingShowCounts, showTitles: elements.rankingShowTitles,
       subjectWork: elements.rankingSubjectWork, subjectCompany: elements.rankingSubjectCompany,
