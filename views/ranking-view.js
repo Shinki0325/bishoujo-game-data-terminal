@@ -1403,7 +1403,7 @@ export function createRankingView({
     }
     const secondary = documentRef.createElement('div'); secondary.className = 'ranking-arrange-secondary'; dialog.append(secondary);
     if (currentTier) action('移回候选', () => onMoveToUnranked(work.workId), secondary);
-    if (!immersive && selected.length === 1 && work.localMediaKind !== 'custom') action('查看资料', () => onOpenDetails(work), secondary);
+    if (selected.length === 1 && work.localMediaKind !== 'custom') action('查看资料', () => onOpenDetails(work), secondary);
     if (selected.length === 1) action('放大图片', () => onOpenMedia(work), secondary);
     if (!immersive && selected.length === 1 && canEditImage(work)) {
       const edit = action('编辑图片', () => onEditImage(work), secondary);
