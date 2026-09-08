@@ -8,7 +8,7 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   const workspace = documentRef.getElementById?.('ranking-view');
   const displayMenu = documentRef.getElementById?.('display-menu');
   const styleSelect = documentRef.getElementById?.('ranking-display-style');
-  const densitySelect = documentRef.getElementById?.('ranking-display-density');
+  const densityButtons = [...(documentRef.querySelectorAll?.('[data-display-density]') ?? [])];
   const shapeSelect = documentRef.getElementById?.('ranking-display-shape');
   // One panel outside the toolbar: available while the toolbar is hidden on mobile/live.
   if (displayMenu && workspace) workspace.append(displayMenu);
@@ -70,12 +70,17 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
       const value = Number(uiScale[key]) || 100;
       const cssKey = key === 'tierName' ? 'tier-name' : key;
       input.value = String(value);
+      input.style?.setProperty('--range-fill', `${(value - 80) / 80 * 100}%`);
       output.value = `${value}%`;
       output.textContent = `${value}%`;
       documentRef.documentElement.style.setProperty(`--ranking-ui-scale-${cssKey}`, String(value / 100));
     }
-    if (densitySelect) densitySelect.value = uiScale.overall === 100 && uiScale.rail === 100
+    const density = uiScale.overall === 100 && uiScale.rail === 100
       ? ({ 80: 'compact', 100: 'standard', 130: 'spacious' }[uiScale.card] ?? 'custom') : 'custom';
+    for (const button of densityButtons) button.setAttribute('aria-pressed', String(button.dataset.displayDensity === density));
+    const densityLabel = documentRef.getElementById?.('ranking-density-current');
+    if (densityLabel) densityLabel.textContent = { compact: '紧凑', standard: '标准', spacious: '舒展', custom: '自定义' }[density];
+    for (const button of documentRef.querySelectorAll?.('[data-scale-reset]') ?? []) button.disabled = uiScale[button.dataset.scaleReset] === 100;
     const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
     if (mobileScale) mobileScale.value = String(uiScale.card);
     getRankingView()?.refreshLayout();
@@ -104,7 +109,12 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   }
   lifetime.listen(styleSelect, 'change', () => { scalePresentation.setDisplayStyle(styleSelect.value); applyDisplay(); });
   lifetime.listen(shapeSelect, 'change', () => { scalePresentation.setDisplayShape(shapeSelect.value); applyDisplay(); });
-  lifetime.listen(densitySelect, 'change', () => { scalePresentation.setDensity(densitySelect.value); applyDisplay(); });
+  for (const button of densityButtons) lifetime.listen(button, 'click', () => {
+    scalePresentation.setDensity(button.dataset.displayDensity); applyDisplay();
+  });
+  for (const button of documentRef.querySelectorAll?.('[data-scale-reset]') ?? []) lifetime.listen(button, 'click', () => {
+    scalePresentation.resetUiScale(button.dataset.scaleReset); applyUiScale(scalePresentation.inspect().uiScale);
+  });
 
   applyDisplay();
   for (const [key, input] of scaleControls) {

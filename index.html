@@ -482,17 +482,28 @@
           <div class="state-actions" role="group" aria-label="排榜视图与输出操作">
             <div class="toolbar-menu-shell">
               <button data-ui="utility" id="display-menu-button" type="button" aria-expanded="false" aria-controls="display-menu">显示 ▾</button>
-              <div id="display-menu" class="toolbar-menu" hidden>
-                <div class="ranking-display-heading"><strong>显示设置</strong><button type="button" data-display-close aria-label="关闭显示设置">×</button></div>
+              <div id="display-menu" class="ranking-display-panel" role="region" aria-label="排榜显示设置" hidden>
+                <div class="ranking-display-heading"><div><strong>显示设置</strong><small>即时生效 · 不改变榜单内容</small></div><button type="button" data-display-close aria-label="关闭显示设置">×</button></div>
+                <div class="ranking-display-body">
+                <section class="ranking-display-section" aria-label="布局">
                 <label>界面风格 <select id="ranking-display-style"><option value="garden">箱庭默认</option><option value="classic">TierMaker 经典</option></select></label>
-                <label>显示密度 <select id="ranking-display-density"><option value="compact">紧凑</option><option value="standard">标准</option><option value="spacious">舒展</option><option value="custom" disabled>自定义</option></select></label>
                 <label id="ranking-display-shape-field">封面显示 <select id="ranking-display-shape"><option value="square">方形裁切</option><option value="portrait">竖图裁切</option><option value="landscape">横图裁切</option><option value="contain">完整封面（等高紧排）</option></select></label>
-                <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
-                <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
-                <fieldset class="ranking-scale-controls">
-                  <legend>排榜界面大小</legend>
-                  <label for="ranking-scale-card"><span>卡片大小</span><output id="ranking-scale-card-output">100%</output></label>
+                </section>
+                <section class="ranking-display-section" aria-label="尺寸">
+                  <div class="ranking-setting-title"><strong>显示密度</strong><span id="ranking-density-current">标准</span></div>
+                  <div class="ranking-density-options" role="group" aria-label="显示密度">
+                    <button type="button" data-display-density="compact" aria-pressed="false">紧凑</button>
+                    <button type="button" data-display-density="standard" aria-pressed="true">标准</button>
+                    <button type="button" data-display-density="spacious" aria-pressed="false">舒展</button>
+                  </div>
+                  <div class="ranking-setting-title"><label for="ranking-scale-card">卡片大小</label><output id="ranking-scale-card-output">100%</output><button type="button" data-scale-reset="card" aria-label="恢复默认卡片大小">复位</button></div>
                   <input id="ranking-scale-card" type="range" min="80" max="160" step="5" value="100">
+                </section>
+                <section class="ranking-display-section ranking-display-toggles" aria-label="内容">
+                  <label for="ranking-show-counts"><input id="ranking-show-counts" type="checkbox">显示数量</label>
+                  <label for="ranking-show-titles"><input id="ranking-show-titles" type="checkbox">显示标题</label>
+                </section>
+                <section class="ranking-display-section" aria-label="高级设置">
                   <details class="ranking-advanced-settings"><summary>高级微调</summary>
                   <label for="ranking-scale-overall"><span>总体</span><output id="ranking-scale-overall-output">100%</output></label>
                   <input id="ranking-scale-overall" type="range" min="80" max="160" step="5" value="100">
@@ -504,8 +515,9 @@
                   <input id="ranking-scale-tier-name" type="range" min="80" max="160" step="5" value="100">
                   </details>
                   <button data-ui="utility" id="ranking-scale-reset" type="button">恢复默认大小</button>
-                </fieldset>
-                <p class="ranking-display-note">即时预览；切换风格会记住各自的设置，不改变榜单内容。图片标注仅在直播中显示。</p>
+                </section>
+                <p class="ranking-display-note">各风格分别记住显示设置。经典布局的行高随卡片变化；图片标注仅在直播中显示。</p>
+                </div>
               </div>
             </div>
             <div class="toolbar-menu-shell">
@@ -906,6 +918,14 @@
 
 
     <dialog id="media-preview" aria-labelledby="media-preview-title">
+      <div class="media-preview-tools" role="group" aria-label="图片缩放">
+        <button type="button" data-preview-action="out" aria-label="缩小图片">−</button>
+        <output id="media-preview-scale" aria-label="图片缩放比例">100%</output>
+        <button type="button" data-preview-action="in" aria-label="放大图片">＋</button>
+        <button type="button" data-preview-action="reset">复位</button>
+        <button type="button" data-preview-action="close" aria-label="关闭图片预览">×</button>
+      </div>
+      <p class="media-preview-gesture-hint">滚轮缩放 · 拖动图片 · 双击复位 · Esc 关闭</p>
       <div class="dialog-heading">
         <h2 id="media-preview-title">图片预览</h2>
             <form method="dialog"><button id="media-preview-close" class="icon-button action-neutral" type="submit" aria-label="关闭图片预览" title="关闭图片预览"></button></form>

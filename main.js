@@ -46,6 +46,7 @@ import {
 import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
+import { createMediaPreviewInteractionView } from './views/media-preview-interaction-view.js';
 import { createActionIcon } from './lib/action-icons.js';
 import { createWorkbenchChrome, connectWorkbenchNavigation } from './views/workbench-chrome.js';
 import { createRankingControlsView } from './views/ranking-controls-view.js';
@@ -923,6 +924,7 @@ async function initialize() {
       });
     }
   });
+  const previewInteraction = createMediaPreviewInteractionView({ dialog: elements.mediaPreview, image: elements.mediaPreviewImage });
   const previewLoader = createMediaPreviewLoader({
     image: elements.mediaPreviewImage,
     resolveUrl: previewUrlForWork,
@@ -931,6 +933,7 @@ async function initialize() {
       const hasReplacement = !isImmersive && await hasLocalReplacementForCurrentAuthority(work);
       if (!isCurrent()) return;
       elements.mediaPreview.classList.toggle('is-immersive-preview', isImmersive);
+      previewInteraction.reset();
       elements.mediaPreviewTitle.textContent = work.title;
       previewActions.render({
         work,
@@ -954,20 +957,6 @@ async function initialize() {
   elements.mediaPreview.addEventListener('close', () => {
     previewLoader.cancel();
     previewActions.closeMenu();
-  });
-  elements.mediaPreview.addEventListener('click', event => {
-    if (!elements.mediaPreview.classList.contains('is-immersive-preview')) return;
-    const rect = elements.mediaPreviewImage.getBoundingClientRect();
-    const outsideImage = event.clientX < rect.left
-      || event.clientX > rect.right
-      || event.clientY < rect.top
-      || event.clientY > rect.bottom;
-    if (!outsideImage) return;
-    if (typeof elements.mediaPreview.close === 'function') elements.mediaPreview.close();
-    else {
-      elements.mediaPreview.open = false;
-      previewLoader.cancel();
-    }
   });
 
   const mediaEnvironment = createMediaEditEnvironment({ documentRef: document, windowRef: window, announce });
