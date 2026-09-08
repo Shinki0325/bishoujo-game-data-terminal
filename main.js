@@ -9,11 +9,10 @@ import { loadWorkbenchData, workbenchQueryWork } from './lib/workbench-demand-da
 import {getOwnedWorkbenchClient,ownedWorkbenchEnabled,workbenchSourceDescriptor} from './lib/workbench-worker-session.js';
 import {
   installExternalCoverImageRecovery,
-  resolveAssetUrl,
-  validateRelativeAssetPath
+  resolveAssetUrl
 } from './lib/asset-url.js';
 import { createHistory } from './lib/history.js';
-import { loadRuntimeSource } from './lib/runtime-source-cache.js';
+import { loadImageUrl } from './lib/browser-cover-loader.js';
 import { createPersonWorkspaceController } from './lib/person-workspace-controller.js';
 import { createCompanyWorkspaceController } from './lib/company-workspace-controller.js';
 import { createBangumiImportController } from './lib/bangumi-import-controller.js';
@@ -27,7 +26,6 @@ import { createWorkCompareView } from './views/work-compare-view.js';
 import { createWorkDetailView } from './views/work-detail-view.js';
 import { createWorkVersionView } from './views/work-version-view.js';
 import { createLazyResource } from './lib/lazy-resource.js';
-import { createWorkspaceSession } from './lib/workspace-session.js';
 import { createWorkbenchQueryController } from './lib/workbench-query-controller.js';
 import { projectWorkbenchResults } from './lib/workbench-results-model.js';
 import { createWorkbenchResultsView } from './views/workbench-results-view.js';
@@ -49,9 +47,11 @@ import { createFilterDrawerController } from './lib/filter-drawer.js';
 import { createFilterWorkerClient } from './lib/filter-worker-client.js';
 import { createMediaPreviewLoader } from './lib/media-preview-loader.js';
 import { createActionIcon } from './lib/action-icons.js';
-import { applyTheme, readTheme, saveTheme } from './lib/theme-preference.js';
+import { createWorkbenchChrome, connectWorkbenchNavigation } from './views/workbench-chrome.js';
+import { createRankingControlsView } from './views/ranking-controls-view.js';
 import { createMediaPreviewActions } from './lib/media-preview-actions.js';
-import { createRankingPreloader, preloadImage } from './lib/ranking-preloader.js';
+import { createWorkbenchMediaSources } from './lib/workbench-media-sources.js';
+import { createRankingMediaSession } from './lib/ranking-media-session.js';
 import { createImmersiveController, createRankingPresentation } from './lib/ranking-presentation.js';
 import { createSelectionCardPresentation } from './lib/selection-card-presentation.js?v=20260824-selection-source-sorting-v1';
 import { createPreviewMediaResolver } from './lib/preview-media.js';
@@ -111,6 +111,8 @@ import { createPopoverController } from './lib/ui-popover.js';
 import { createWorkbenchNavigationController, projectUiLocation } from './lib/workbench-navigation-controller.js';
 import { createKeeperGuidanceController } from './lib/keeper-guidance-controller.js';
 import { createKeeperGuidanceView } from './views/keeper-guidance-view.js';
+import { createWorkspaceScrollSession } from './lib/workspace-scroll-session.js';
+import { createDetailBrowserSession } from './lib/detail-browser-session.js';
 
 let PngExportError;
 const loadPngExport = createLazyResource(async attempt => {
@@ -412,65 +414,6 @@ function assertRuntimeContracts() {
   }
 }
 
-function loadLocalCover(coverPath, assetBase) {
-  try {
-    validateRelativeAssetPath(coverPath, 'coverPath');
-  } catch (error) {
-    return Promise.reject(error);
-  }
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.referrerPolicy = 'no-referrer';
-    image.addEventListener('load', async () => {
-      try {
-        if (typeof image.decode === 'function') await image.decode();
-        const width = image.naturalWidth;
-        const height = image.naturalHeight;
-        if (
-          !Number.isFinite(width)
-          || !Number.isFinite(height)
-          || width <= 0
-          || height <= 0
-        ) {
-          throw new TypeError('PNG cover decoded with invalid dimensions');
-        }
-        resolve(image);
-      } catch (error) {
-        reject(error);
-      }
-    }, { once: true });
-    image.addEventListener('error', () => {
-      reject(new Error(`PNG cover failed to load: ${coverPath}`));
-    }, { once: true });
-    image.src = resolveAssetUrl(coverPath, assetBase);
-  });
-}
-
-function loadImageUrl(url, { crossOrigin = 'anonymous' } = {}) {
-  return new Promise((resolve, reject) => {
-    if (typeof url !== 'string' || url.length === 0) {
-      reject(new TypeError('PNG cover URL is unavailable'));
-      return;
-    }
-    const image = new Image();
-    if (crossOrigin !== null) image.crossOrigin = crossOrigin;
-    image.referrerPolicy = 'no-referrer';
-    image.addEventListener('load', async () => {
-      try {
-        if (typeof image.decode === 'function') await image.decode();
-        if (!Number.isFinite(image.naturalWidth) || !Number.isFinite(image.naturalHeight) || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
-          throw new TypeError('PNG cover decoded with invalid dimensions');
-        }
-        resolve(image);
-      } catch (error) {
-        reject(error);
-      }
-    }, { once: true });
-    image.addEventListener('error', () => reject(new Error(`PNG cover failed to load: ${url}`)), { once: true });
-    image.src = url;
-  });
-}
 
 
 function jsonImportMessage(error) {
@@ -526,18 +469,6 @@ async function fetchJson(url, label) {
   return response.json();
 }
 
-async function fetchJsonWithSha256(url, label) {
-  return loadRuntimeSource(url, label);
-}
-
-async function fetchOptionalJsonWithSha256(url, label) {
-  try {
-    return await fetchJsonWithSha256(url, label);
-  } catch (error) {
-    console.warn(`${label} unavailable; continuing without aliases`, error);
-    return null;
-  }
-}
 
 function browserStorage() {
   try {
@@ -567,51 +498,12 @@ function downloadJson({ filename, text, mimeType }) {
 
 
 async function initialize() {
-  const localSearchClears = [...document.querySelectorAll('[data-clear-input]')].map(button => {
-    const input = document.getElementById(button.dataset.clearInput);
-    const sync = () => { button.hidden = !input.value; };
-    input.addEventListener('input', sync);
-    button.addEventListener('click', () => {
-      input.value = '';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.focus();
-    });
-    sync();
-    return sync;
-  });
-  let themeStorage = null;
-  try {
-    themeStorage = window.localStorage;
-  } catch {
-    // Private browsing or a blocked storage policy should not block startup.
-  }
-  let activeTheme = applyTheme(document, document.documentElement.classList.contains('galpedia')
-    ? document.documentElement.dataset.theme : readTheme(themeStorage));
-  const renderThemeToggle = () => {
-    const isLight = activeTheme === 'light';
-    const nextThemeLabel = isLight ? '暗色' : '亮色';
-    elements.themeToggle.replaceChildren(createActionIcon(document, isLight ? 'moon' : 'sun'));
-    elements.themeToggle.setAttribute('aria-label', `切换到${nextThemeLabel}界面`);
-    elements.themeToggle.setAttribute('aria-pressed', String(isLight));
-    elements.themeToggle.title = `切换到${nextThemeLabel}界面`;
-  };
-  renderThemeToggle();
-  for (const [button, iconName, label] of [
-    [elements.modeSelection, 'library', '作品库'],
-    [elements.modeCompany, 'building', '会社库'],
-    [elements.modeRanking, 'ranking', '排榜'],
-    [elements.modePerson, 'person', '人物']
-  ]) {
-    const icon = createActionIcon(document, iconName);
-    icon.classList.add('workspace-tab-icon');
-    const copy = document.createElement('span');
-    copy.textContent = label;
-    button.replaceChildren(icon, copy);
-  }
-  elements.themeToggle.addEventListener('click', () => {
-    activeTheme = saveTheme(themeStorage, activeTheme === 'dark' ? 'light' : 'dark');
-    applyTheme(document, activeTheme);
-    renderThemeToggle();
+  const chrome = createWorkbenchChrome({
+    elements: {
+      themeToggle: elements.themeToggle, modeSelection: elements.modeSelection,
+      modeCompany: elements.modeCompany, modeRanking: elements.modeRanking, modePerson: elements.modePerson
+    },
+    documentRef: document, windowRef: window
   });
   const startupMetrics = createStartupMetrics();
   let filterWorkerClient = ownedWorkbenchEnabled() ? getOwnedWorkbenchClient() : createFilterWorkerClient({
@@ -714,8 +606,13 @@ async function initialize() {
   });
   const filterById = new Map(sample.filters.map(filter => [filter.filterId, filter]));
   let mediaStore = null;
-  const replacementMetadataCache = new Map();
-  const coverSourceCache = new Map();
+  const {
+    authorityThumbnailPathForWork, hasLocalReplacementForCurrentAuthority, invalidateMedia,
+    coverUrlForWork, coverSourcesForWork, resolveCoverUrls, previewUrlForWork
+  } = createWorkbenchMediaSources({
+    getMediaStore: () => mediaStore, assetBase, highDensityPreviewsEnabled, previewMedia,
+    hydrateWorks: workData ? works => workData.hydrate(works) : null
+  });
   let customWorks = [];
   const keeperGuidanceView = createKeeperGuidanceView({
     elements: {
@@ -817,17 +714,19 @@ async function initialize() {
     }
   });
   let candidateTitleQuery = '';
-  let selectionScrollPosition = { top: 0, left: 0 };
+  const workspaceScroll = createWorkspaceScrollSession({
+    selection: {
+      capture: () => selectionView.captureScroll(),
+      restore: position => selectionView.restoreScroll(position)
+    },
+    ranking: {
+      capture: () => rankingView?.captureScroll(),
+      restore: position => rankingView?.restoreScroll(position)
+    }
+  });
   // Mobile uses the same workspace as desktop. The companion view remains inert
   // until it can offer feature parity rather than hiding the ranking workspace.
   const mobileCompanion = false;
-  let rankingScrollPosition = {
-    top: 0,
-    left: 0,
-    tiers: {},
-    poolLeft: 0
-  };
-  let renderedWorkspaceMode = null;
   let lastRenderedModel = null;
   let replacementWork = null;
   let companyDirectoryOpen = false;
@@ -849,11 +748,10 @@ async function initialize() {
   let compareMode = false;
   let companySelectionMode = false;
   let currentWorkDetailId = null;
-  let detailsReturnFocus = null;
-  let detailsPageScrollTop = null;
-  let detailsPageScrollStyles = null;
+  const detailBrowser = createDetailBrowserSession({
+    dialog: elements.detailsDialog, documentRef: document, windowRef: window
+  });
   const telemetry = createTelemetryClient({ endpoint: TELEMETRY_ENDPOINT, releaseId: TELEMETRY_RELEASE_ID });
-  let locationScrollTimer = null;
   const workDetailCreditsView = createWorkDetailCreditsView({
     root: elements.detailsCredits,
     status: elements.detailsCreditsStatus,
@@ -887,43 +785,6 @@ async function initialize() {
     endpointUrl: TELEMETRY_PUBLIC_STATS_ENDPOINT, pageOrigin: window.location.origin,
     isOpen: () => elements.detailsDialog.open, fetchImpl: fetch
   });
-
-  function lockDetailsPageScroll() {
-    if (detailsPageScrollTop !== null) return;
-    detailsPageScrollTop = window.scrollY;
-    detailsPageScrollStyles = {
-      position: document.body.style.position,
-      top: document.body.style.top,
-      left: document.body.style.left,
-      right: document.body.style.right,
-      width: document.body.style.width,
-      paddingRight: document.body.style.paddingRight
-    };
-    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
-    document.documentElement.classList.add('work-details-open');
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${detailsPageScrollTop}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-    document.body.style.paddingRight = scrollbarWidth > 0 ? `${scrollbarWidth}px` : '';
-  }
-
-  function unlockDetailsPageScroll() {
-    if (detailsPageScrollTop === null) return;
-    const top = detailsPageScrollTop;
-    detailsPageScrollTop = null;
-    document.documentElement.classList.remove('work-details-open');
-    const styles = detailsPageScrollStyles;
-    detailsPageScrollStyles = null;
-    document.body.style.position = styles?.position ?? '';
-    document.body.style.top = styles?.top ?? '';
-    document.body.style.left = styles?.left ?? '';
-    document.body.style.right = styles?.right ?? '';
-    document.body.style.width = styles?.width ?? '';
-    document.body.style.paddingRight = styles?.paddingRight ?? '';
-    window.scrollTo(0, top);
-  }
 
   const comparisonView = createWorkCompareView({
     elements: {
@@ -1019,130 +880,13 @@ async function initialize() {
     if (push) pushUiLocation();
   }
 
-  function authorityThumbnailPathForWork(work) {
-    const path = work.projectedThumbnailPath ?? work.coverPath;
-    return typeof path === 'string' && path.length > 0 ? path : null;
-  }
-
-  async function localReplacementUrlForCurrentAuthority(work) {
-    if (mediaStore === null || work.localMediaKind === 'custom') return null;
-    const replacement = await replacementFor(work.workId);
-    if (replacement?.authorityThumbnailPath !== authorityThumbnailPathForWork(work)) return null;
-    return mediaStore.urlForReplacement(work.workId);
-  }
-
-  async function hasLocalReplacementForCurrentAuthority(work) {
-    if (mediaStore === null || work.localMediaKind === 'custom') return false;
-    const replacement = await replacementFor(work.workId);
-    return replacement?.authorityThumbnailPath === authorityThumbnailPathForWork(work);
-  }
-
-  function replacementFor(workId) {
-    if (mediaStore === null) return Promise.resolve(null);
-    const cached = replacementMetadataCache.get(workId);
-    if (cached) return cached;
-    const request = mediaStore.replacementFor(workId).catch(error => {
-      replacementMetadataCache.delete(workId);
-      throw error;
-    });
-    replacementMetadataCache.set(workId, request);
-    return request;
-  }
-
-  function invalidateMedia(workId) {
-    replacementMetadataCache.delete(workId);
-    coverSourceCache.delete(workId);
-  }
-
-  async function coverUrlForWork(work) {
-    if (mediaStore !== null && work.localMediaKind === 'custom') {
-      return mediaStore.urlForCustom(work.workId);
-    }
-    const replacement = await localReplacementUrlForCurrentAuthority(work);
-    if (replacement !== null) return replacement;
-    return resolveAssetUrl(authorityThumbnailPathForWork(work), assetBase);
-  }
-
-  async function prepareCoverSourcesForWork(work) {
-    const thumbnailUrl = await coverUrlForWork(work);
-    if (!highDensityPreviewsEnabled || thumbnailUrl.startsWith('blob:')) {
-      return Object.freeze({ thumbnailUrl, previewUrl: null });
-    }
-    const previewUrl = await previewUrlForWork(work);
-    return Object.freeze({ thumbnailUrl, previewUrl: previewUrl === thumbnailUrl ? null : previewUrl });
-  }
-
-  function coverSourceKey(work) {
-    return JSON.stringify([
-      authorityThumbnailPathForWork(work),
-      work.projectedPreviewPath ?? null,
-      work.previewPath ?? null,
-      work.coverPath ?? null,
-      work.localMediaKind ?? null,
-      highDensityPreviewsEnabled
-    ]);
-  }
-
-  function coverSourcesForWork(work) {
-    const key = coverSourceKey(work);
-    const cached = coverSourceCache.get(work.workId);
-    if (cached?.key === key) return cached.request;
-    const request = prepareCoverSourcesForWork(work).catch(error => {
-      if (coverSourceCache.get(work.workId)?.request === request) coverSourceCache.delete(work.workId);
-      throw error;
-    });
-    coverSourceCache.set(work.workId, Object.freeze({ key, request }));
-    return request;
-  }
-
-  async function resolveCoverUrls(works) {
-    if (workData) works = await workData.hydrate(works);
-    const entries = await Promise.all(works.map(async work => [work.workId, await coverSourcesForWork(work)]));
-    return new Map(entries);
-  }
-
-  async function previewUrlForWork(work) {
-    if (mediaStore !== null && work.localMediaKind === 'custom') {
-      return mediaStore.urlForCustom(work.workId);
-    }
-    const replacement = await localReplacementUrlForCurrentAuthority(work);
-    if (replacement !== null) return replacement;
-    if (typeof work.projectedPreviewPath === 'string' && work.projectedPreviewPath.length > 0) {
-      return resolveAssetUrl(work.projectedPreviewPath, assetBase);
-    }
-    if (typeof work.previewPath === 'string' && work.previewPath.length > 0) {
-      return resolveAssetUrl(work.previewPath, assetBase);
-    }
-    return previewMedia.urlFor(work.workId, work.coverPath);
-  }
-
-  const rankingPreloader = createRankingPreloader({ load: preloadImage, concurrency: 4 });
-  const rankingPreloadSession = createWorkspaceSession();
-
-  function cancelRankingPreload() {
-    rankingPreloadSession.suspend();
-    rankingPreloader.cancel();
-  }
-
-  async function refreshRankingPreload(rankingModel) {
-    const generation = rankingPreloadSession.begin('ranking-media');
-    const visibleWorkIds = new Set(rankingView.visibleWorkIds());
-    const selectedWorks = [
-      ...rankingModel.tiers.flatMap(tier => tier.works),
-      ...rankingModel.candidateWorks
-    ];
-    const entries = await Promise.all(selectedWorks.map(async work => ({
-      url: await previewUrlForWork(work),
-      visible: visibleWorkIds.has(work.workId)
-    })));
-    if (
-      !generation.isCurrent()
-      || lastRenderedModel?.state.workspaceMode !== 'ranking'
-    ) return false;
-    rankingPreloader.replace(entries);
-    generation.complete();
-    return true;
-  }
+  const rankingMedia = createRankingMediaSession({
+    visibleWorkIds: () => rankingView.visibleWorkIds(),
+    isActive: () => lastRenderedModel?.state.workspaceMode === 'ranking',
+    previewUrlForWork
+  });
+  const cancelRankingPreload = rankingMedia.cancel;
+  const refreshRankingPreload = rankingMedia.refresh;
 
   elements.mediaPreviewClose.replaceChildren(createActionIcon(document, 'x'));
   const previewActions = createMediaPreviewActions({
@@ -1385,7 +1129,7 @@ async function initialize() {
       elements: { root: elements.personView, search: elements.personSearch,
         count: elements.personDirectoryCount, list: elements.personList, empty: elements.personEmpty },
       view: personDirectoryView, query: personQuery, selectedPersonId,
-      syncSearchClears: () => localSearchClears.forEach(sync => sync())
+      syncSearchClears: chrome.syncSearchClears
     });
   }
 
@@ -1400,7 +1144,7 @@ async function initialize() {
     loadWorks: ids => workData.get(ids),
     onSelectionResolved: id => { selectedCompanyId = id; },
     onError: announce,
-    syncSearchClears: () => localSearchClears.forEach(sync => sync()),
+    syncSearchClears: chrome.syncSearchClears,
     imageUrlForCompany: company => companyImageUrl(company, assetBase),
     imageUrlForWork: work => Object.freeze({
       thumbnailUrl: resolveAssetUrl(work.projectedThumbnailPath ?? work.coverPath, assetBase),
@@ -1632,7 +1376,7 @@ async function initialize() {
       if (rankingSubject === 'company') return;
       candidateTitleQuery = query;
       if (lastRenderedModel?.state.workspaceMode !== 'ranking') return;
-      rankingScrollPosition = rankingView.captureScroll();
+      workspaceScroll.captureRanking();
       void render();
     },
     onAnnotationChange(workId, value) {
@@ -1664,44 +1408,54 @@ async function initialize() {
   });
   // Company ranking shares the work ranking presentation state; only ranking data is separate.
   const companyPresentation = presentation;
-  const scaleControls = [
-    ['overall', elements.rankingScaleOverall, elements.rankingScaleOverallOutput],
-    ['card', elements.rankingScaleCard, elements.rankingScaleCardOutput],
-    ['rail', elements.rankingScaleRail, elements.rankingScaleRailOutput],
-    ['annotation', elements.rankingScaleAnnotation, elements.rankingScaleAnnotationOutput],
-    ['tierName', elements.rankingScaleTierName, elements.rankingScaleTierNameOutput]
-  ];
-
-  function applyUiScale(uiScale) {
-    for (const [key, input, output] of scaleControls) {
-      const value = Number(uiScale[key]) || 100;
-      const cssKey = key === 'tierName' ? 'tier-name' : key;
-      input.value = String(value);
-      output.value = `${value}%`;
-      output.textContent = `${value}%`;
-      document.documentElement.style.setProperty(`--ranking-ui-scale-${cssKey}`, String(value / 100));
-    }
-    rankingView?.refreshLayout();
-  }
-
-  applyUiScale(presentation.inspect().uiScale);
-  for (const [key, input] of scaleControls) {
-    input.addEventListener('input', () => {
-      applyUiScale({ ...presentation.inspect().uiScale, [key]: presentation.setUiScale(key, input.value) });
-    });
-  }
-  elements.rankingScaleReset.addEventListener('click', () => {
-    presentation.resetUiScale();
-    applyUiScale(presentation.inspect().uiScale);
+  const rankingControls = createRankingControlsView({
+    elements: {
+      rankingCoachmarkDismiss: elements.rankingCoachmarkDismiss,
+      rankingCoachmark: elements.rankingCoachmark,
+      rankingScaleOverall: elements.rankingScaleOverall,
+      rankingScaleOverallOutput: elements.rankingScaleOverallOutput,
+      rankingScaleCard: elements.rankingScaleCard,
+      rankingScaleCardOutput: elements.rankingScaleCardOutput,
+      rankingScaleRail: elements.rankingScaleRail,
+      rankingScaleRailOutput: elements.rankingScaleRailOutput,
+      rankingScaleAnnotation: elements.rankingScaleAnnotation,
+      rankingScaleAnnotationOutput: elements.rankingScaleAnnotationOutput,
+      rankingScaleTierName: elements.rankingScaleTierName,
+      rankingScaleTierNameOutput: elements.rankingScaleTierNameOutput,
+      rankingScaleReset: elements.rankingScaleReset,
+      mobileRankingCandidates: elements.mobileRankingCandidates,
+      mobileRankingCandidatesLabel: elements.mobileRankingCandidatesLabel,
+      mobileRankingMenu: elements.mobileRankingMenu,
+      mobileRankingUndo: elements.mobileRankingUndo,
+      undoEdit: elements.undoEdit,
+      mobileRankingRedo: elements.mobileRankingRedo,
+      redoEdit: elements.redoEdit,
+      mobileRankingMore: elements.mobileRankingMore,
+      mobileRankingShowCounts: elements.mobileRankingShowCounts,
+      rankingShowCounts: elements.rankingShowCounts,
+      mobileRankingShowTitles: elements.mobileRankingShowTitles,
+      rankingShowTitles: elements.rankingShowTitles,
+      mobileRankingImport: elements.mobileRankingImport,
+      importState: elements.importState,
+      mobileRankingExport: elements.mobileRankingExport,
+      exportState: elements.exportState,
+      mobileRankingExportPng: elements.mobileRankingExportPng,
+      exportPng: elements.exportPng,
+      mobileRankingClearBoard: elements.mobileRankingClearBoard,
+      clearBoard: elements.clearBoard,
+      mobileRankingClearCandidates: elements.mobileRankingClearCandidates,
+      clearCandidates: elements.clearCandidates,
+      mobileRankingClearAnnotations: elements.mobileRankingClearAnnotations,
+      clearAnnotations: elements.clearAnnotations,
+      rankingImmersive: elements.rankingImmersive
+    },
+    scalePresentation: presentation,
+    activePresentation: () => rankingSubject === 'company' ? companyPresentation : presentation,
+    subject: () => rankingSubject, getRankingView: () => rankingView,
+    enterImmersive: () => immersive.enter(), documentRef: document, windowRef: window
   });
-  let rankingLayoutFrame = null;
-  window.addEventListener('resize', () => {
-    window.cancelAnimationFrame(rankingLayoutFrame);
-    rankingLayoutFrame = window.requestAnimationFrame(() => {
-      rankingLayoutFrame = null;
-      rankingView?.refreshLayout();
-    });
-  });
+  const setMobileRankingCandidatesOpen = rankingControls.setCandidatesOpen;
+  const closeMobileRankingCandidates = rankingControls.closeCandidates;
 
   const toolbarPopover = createPopoverController({
     documentRef: document, windowRef: window,
@@ -1713,31 +1467,6 @@ async function initialize() {
   });
   const closeToolbarMenus = () => toolbarPopover.closeAll();
 
-  function setMobileRankingCandidatesOpen(open) {
-    document.body.classList.toggle('is-mobile-ranking-candidates-open', open);
-    elements.mobileRankingCandidates.setAttribute('aria-expanded', String(open));
-    elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '展开候选';
-    const candidateLabel = rankingSubject === 'company' ? '候选会社' : '候选作品';
-    elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '展开'}${candidateLabel}`);
-  }
-
-  function closeMobileRankingCandidates() {
-    setMobileRankingCandidatesOpen(false);
-  }
-
-  function toggleMobileRankingCandidates() {
-    const opening = !document.body.classList.contains('is-mobile-ranking-candidates-open');
-    setMobileRankingCandidatesOpen(opening);
-  }
-
-  function openMobileRankingMenu() {
-    if (typeof elements.mobileRankingMenu.showModal === 'function') elements.mobileRankingMenu.showModal();
-    else elements.mobileRankingMenu.open = true;
-  }
-
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('dialog:modal')) closeMobileRankingCandidates();
-  });
   const immersive = createImmersiveController({
     root: document.body,
     documentRef: document,
@@ -1793,14 +1522,6 @@ async function initialize() {
   }
   syncSelectionCardDisplay();
 
-  function captureWorkspaceScroll() {
-    if (renderedWorkspaceMode === 'selection') {
-      selectionScrollPosition = selectionView.captureScroll();
-    } else if (renderedWorkspaceMode === 'ranking') {
-      rankingScrollPosition = rankingView?.captureScroll() ?? rankingScrollPosition;
-    }
-  }
-
   const workspaceHostView = createWorkspaceHostView({
     tabs: { selection: elements.modeSelection, ranking: elements.modeRanking, companies: elements.modeCompany, persons: elements.modePerson },
     panels: { selection: elements.selectionView, ranking: elements.rankingView, companies: elements.companyView, persons: elements.personView },
@@ -1820,7 +1541,7 @@ async function initialize() {
     // This exported whitelist contains only the controls owned by this view.
     elements: Object.fromEntries(WORKBENCH_CONTROL_ELEMENTS.map(key => [key, elements[key]])),
     cardDisplayInputs: selectionCardDisplayInputs.map(([, input]) => input),
-    scaleInputs: scaleControls.map(([, input]) => input),
+    scaleInputs: rankingControls.scaleInputs,
     selectedWorksToggle: document.getElementById('selected-works-toggle')
   });
   function renderWorkspace(model) {
@@ -1876,7 +1597,7 @@ async function initialize() {
   });
 
   async function render(visibleBrands = [], interaction = null) {
-    captureWorkspaceScroll();
+    workspaceScroll.capture();
     const state = controller.inspectState();
     const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
     const queryResult = await workbenchQuery.run({
@@ -1936,11 +1657,7 @@ async function initialize() {
       resultTotal: result.resultTotal, selectionActive: !ranking && !personDirectoryOpen && !companyDirectoryOpen
     });
     renderControlStates(model);
-    if (companyDirectoryOpen) {
-      // The directory owns its own scroll surface and is intentionally not persisted.
-    } else if (model.state.workspaceMode === 'ranking') rankingView?.restoreScroll(rankingScrollPosition);
-    else selectionView.restoreScroll(selectionScrollPosition);
-    renderedWorkspaceMode = model.state.workspaceMode;
+    workspaceScroll.restore(model.state.workspaceMode, { skip: companyDirectoryOpen });
     lastRenderedModel = model;
     renderKeeperGuidance();
     if (rankingModel !== null && rankingSubject === 'work') {
@@ -2129,12 +1846,7 @@ async function initialize() {
   function openWorkDetails(work, options = {}) { return detailOpening.open(work, options); }
 
   function showWorkDetailsReady(work, { push = true, keepVersionShelf = false, aliases = workAliasesById } = {}) {
-    if (!keepVersionShelf) {
-      const activeElement = document.activeElement;
-      detailsReturnFocus = activeElement instanceof HTMLElement && !elements.detailsDialog.contains(activeElement)
-        ? activeElement
-        : null;
-    }
+    detailBrowser.captureFocus({ preserve: keepVersionShelf });
     currentWorkDetailId = work.workId;
     telemetry.recordWorkOpen(work.workId);
     void workDetailResources.start(work);
@@ -2158,7 +1870,7 @@ async function initialize() {
       elements.detailsCompareButton.setAttribute('aria-pressed', String(active));
       if (active && elements.detailsDialog.open) elements.detailsDialog.close();
     };
-    lockDetailsPageScroll();
+    detailBrowser.lock();
     detailVersions.render(work, { keepExpanded: keepVersionShelf });
     if (push) pushUiLocation();
   }
@@ -2250,18 +1962,19 @@ async function initialize() {
   function beginUiNavigation(key) { return navigation.begin(key); }
   function applyUiLocation() { return navigation.apply(); }
 
-  window.addEventListener('popstate', () => { void applyUiLocation(); });
-  window.addEventListener('hashchange', () => { void applyUiLocation(); });
+  connectWorkbenchNavigation({
+    windowRef: window, tabs: [elements.modeSelection, elements.modeRanking],
+    isBusy: () => importBusy, applyLocation: applyUiLocation
+  });
   elements.detailsDialog.addEventListener('close', () => {
     if (elements.detailsDialog.open) return; // Ignore a queued close from the previous visit.
     workDetailStats.suspend();
     detailOpening.suspend();
     detailPresentation.suspend();
-    unlockDetailsPageScroll();
+    detailBrowser.unlock();
     workDetailResources.suspend();
     workDetailCreditsView.clear();
-    const returnFocus = detailsReturnFocus;
-    detailsReturnFocus = null;
+    const restoreFocus = detailBrowser.takeFocusRestore();
     if (currentWorkDetailId === null || navigation.applying) return;
     const returnPersonId = personDetailReturnId;
     personDetailReturnId = null;
@@ -2278,11 +1991,7 @@ async function initialize() {
       });
     }
     pushUiLocation();
-    if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
-  });
-  elements.detailsDialog.addEventListener('toggle', () => {
-    if (elements.detailsDialog.open) lockDetailsPageScroll();
-    else unlockDetailsPageScroll();
+    restoreFocus();
   });
   elements.workCompareDialog.addEventListener('close', () => {
     if (!elements.workCompareDialog.open) comparison.suspend();
@@ -2491,42 +2200,12 @@ async function initialize() {
     };
     open();
   });
-  elements.rankingCoachmarkDismiss.addEventListener('click', () => {
-    elements.rankingCoachmark.hidden = true;
-  });
-  elements.rankingShowCounts.addEventListener('change', () => {
-    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
-    rankingView.setShowCounts(activePresentation.setShowCounts(elements.rankingShowCounts.checked));
-  });
-  elements.rankingShowTitles.addEventListener('change', () => {
-    const activePresentation = rankingSubject === 'company' ? companyPresentation : presentation;
-    rankingView.setShowTitles(activePresentation.setShowTitles(elements.rankingShowTitles.checked));
-  });
   for (const [key, input] of selectionCardDisplayInputs) {
     input.addEventListener('change', () => {
       selectionCardPresentation.setDisplay({ [key]: input.checked });
       syncSelectionCardDisplay();
     });
   }
-  elements.mobileRankingUndo.addEventListener('click', () => elements.undoEdit.click());
-  elements.mobileRankingRedo.addEventListener('click', () => elements.redoEdit.click());
-  elements.mobileRankingCandidates.addEventListener('click', () => toggleMobileRankingCandidates());
-  elements.mobileRankingMore.addEventListener('click', () => openMobileRankingMenu());
-  elements.mobileRankingShowCounts.addEventListener('change', () => {
-    elements.rankingShowCounts.checked = elements.mobileRankingShowCounts.checked;
-    elements.rankingShowCounts.dispatchEvent(new Event('change'));
-  });
-  elements.mobileRankingShowTitles.addEventListener('change', () => {
-    elements.rankingShowTitles.checked = elements.mobileRankingShowTitles.checked;
-    elements.rankingShowTitles.dispatchEvent(new Event('change'));
-  });
-  elements.mobileRankingImport.addEventListener('click', () => elements.importState.click());
-  elements.mobileRankingExport.addEventListener('click', () => elements.exportState.click());
-  elements.mobileRankingExportPng.addEventListener('click', () => elements.exportPng.click());
-  elements.mobileRankingClearBoard.addEventListener('click', () => elements.clearBoard.click());
-  elements.mobileRankingClearCandidates.addEventListener('click', () => elements.clearCandidates.click());
-  elements.mobileRankingClearAnnotations.addEventListener('click', () => elements.clearAnnotations.click());
-  elements.rankingImmersive.addEventListener('click', () => void immersive.enter());
   elements.mediaFiles.addEventListener('change', () => {
     const files = Array.from(elements.mediaFiles.files ?? []);
     elements.mediaFiles.value = '';
@@ -2545,16 +2224,6 @@ async function initialize() {
       console.error(error);
     });
   });
-  for (const tab of [elements.modeSelection, elements.modeRanking]) {
-    tab.addEventListener('keydown', event => {
-      if (importBusy) return;
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      const target = tab === elements.modeSelection ? elements.modeRanking : elements.modeSelection;
-      target.click();
-      target.focus();
-    });
-  }
   elements.clearCandidates.addEventListener('click', () => {
     closeToolbarMenus();
     if (rankingSubject === 'company') {
@@ -2592,7 +2261,7 @@ async function initialize() {
       try {
         companyRanking.importState(JSON.parse(await file.text()));
         companyCandidateQuery = '';
-        rankingScrollPosition = { top: 0, left: 0, tiers: {}, poolLeft: 0 };
+        workspaceScroll.resetRanking();
         void render();
         announce('会社排榜 JSON 已导入。', 'success');
       } catch (error) {
@@ -2614,14 +2283,7 @@ async function initialize() {
 
     candidateTitleQuery = '';
     cancelRankingPreload();
-    selectionScrollPosition = { top: 0, left: 0 };
-    rankingScrollPosition = {
-      top: 0,
-      left: 0,
-      tiers: {},
-      poolLeft: 0
-    };
-    renderedWorkspaceMode = null;
+    workspaceScroll.reset();
     workbenchResults.reset();
     lastRenderedModel = null;
     void render();
