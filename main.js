@@ -84,6 +84,7 @@ import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
 import { createInteractionMetrics } from './lib/interaction-metrics.js';
+import { runtimeDiagnostics as localDiagnostics } from './lib/runtime-diagnostics.js';
 import { createTelemetryClient } from './lib/telemetry-client.js';
 import { createRankingWorkspaceController, projectCompanyRankingItems } from './lib/ranking-workspace-controller.js';
 import { createRankingExportController } from './lib/ranking-export-controller.js';
@@ -540,6 +541,7 @@ async function initialize() {
   if(preparedWorkbench.workerOwned)filterWorkerClient=getOwnedWorkbenchClient();
   // Workbench export boundary: all legacy inputs have passed their original validators.
   const { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile, workData = null } = preparedWorkbench;
+  localDiagnostics.identify({ runtimeRelease: TELEMETRY_RELEASE_ID, dataSnapshot: sampleSource.snapshot?.snapshotId });
   document.documentElement.dataset.runtimePopulation = 'full';
   globalThis.__EGS_TIER_STARTUP_DIAGNOSTICS__ = runtimeDiagnostics;
   const sortableSample = { ...sample, works: ratedDisplayWorks };

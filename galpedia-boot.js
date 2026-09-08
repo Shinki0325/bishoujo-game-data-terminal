@@ -2,6 +2,9 @@ import { createWorkspaceSession } from './lib/workspace-session.js';
 // Small home shell: the data workspace is loaded only for a route or a search.
 import { createActionIcon } from './lib/action-icons.js';
 import { createCommandSearch } from './lib/galpedia-command-search.js';
+if (new URLSearchParams(location.search).get('diagnostics') === '1') {
+  void import('./views/runtime-diagnostics-view.js').then(m => m.mountRuntimeDiagnostics()).catch(() => {});
+}
 
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
