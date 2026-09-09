@@ -1,5 +1,5 @@
 {
-  "closureSha256": "30367cb227554a39934a25d94921d0c3d5e904eb3186640629cbf38a590ef3a6",
+  "closureSha256": "03c7b3eb901335f48ee1517a09a50ec587fedfa00ccd5e8486bdc3200ba4b38f",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -5909,7 +5909,7 @@
     {
       "bytes": 7939,
       "path": "lib/runtime-config.js",
-      "sha256": "058aeb18e1e442b9dc889bb5a6bef58dce5969947e9f087966e2e4bd53f95710"
+      "sha256": "9286a6de6847d002512981e2b9538e9e6594fcc597c9f26dbb053cc5dd1d0e62"
     },
     {
       "bytes": 913,
@@ -6189,7 +6189,7 @@
     {
       "bytes": 116867,
       "path": "main.js",
-      "sha256": "6afb6b0fad20d6a070cdfaab4a86ea11f21ad476b36a1b4e72d7a0db76ca8e4b"
+      "sha256": "acfad99157df0fcbe4b479057b338081a9cc8503e7e7be5d1b8814b44b264fb0"
     },
     {
       "bytes": 18092,
@@ -6328,7 +6328,7 @@
     }
   ],
   "releaseId": "20260909-galpedia-v1.0.5-beta",
-  "runtimeDataRevision": "a6ad209572ec5b7a1d0e223bff884b78f1315d3b56ca25dd3e2d6edcbf2c2952",
+  "runtimeDataRevision": "84dbf98cef85584191d48e12a1248831e9cffd5c9ba97cea4b88c9a0ae8cc6b7",
   "schemaVersion": "egs-tier-immutable-release-closure-v1",
   "staticFiles": [
     {
