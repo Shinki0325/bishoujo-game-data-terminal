@@ -81,7 +81,7 @@ import {
   TELEMETRY_ENDPOINT,
   TELEMETRY_PUBLIC_STATS_ENDPOINT,
   TELEMETRY_RELEASE_ID
-} from './lib/runtime-config.js?v=a6ad209572ec5b7a1d0e223bff884b78f1315d3b56ca25dd3e2d6edcbf2c2952';
+} from './lib/runtime-config.js?v=84dbf98cef85584191d48e12a1248831e9cffd5c9ba97cea4b88c9a0ae8cc6b7';
 import { selectionStateForResults } from './lib/selection.js';
 import { StateValidationError, USER_WORK_LIMIT } from './lib/state.js?v=20260824-selection-source-sorting-v1';
 import { createStartupMetrics } from './lib/startup-metrics.js';
