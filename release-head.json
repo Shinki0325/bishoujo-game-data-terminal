@@ -1,6 +1,6 @@
 {
-  "closureSha256": "03c7b3eb901335f48ee1517a09a50ec587fedfa00ccd5e8486bdc3200ba4b38f",
-  "entry": "releases/20260909-galpedia-v1.0.5-beta/index.html",
-  "releaseId": "20260909-galpedia-v1.0.5-beta",
+  "closureSha256": "256d5bf94fede03c104a8aec2161a8d6518064c1128331f5ef4cbcb168dbece4",
+  "entry": "releases/20260909-galpedia-v1.0.5-beta-metadata/index.html",
+  "releaseId": "20260909-galpedia-v1.0.5-beta-metadata",
   "schemaVersion": "egs-tier-release-head-v1"
 }
