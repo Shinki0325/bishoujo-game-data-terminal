@@ -8,16 +8,16 @@ export const MEDIA_CLEARANCE_BRIDGE_SHA256 = '4c9fbb87d58e6262f8c70b6638b0cf745b
 export const BANGUMI_PUBLIC_BINDINGS_PATH = 'egs-tier-bangumi-public-bindings-v1.json';
 export const BANGUMI_PUBLIC_BINDINGS_SHA256 = '213537a704e6caf858684b9b55e0e530edd2fa9d4281385b6fe2373a59f7a350';
 export const BANGUMI_RATINGS_PATH = 'egs-tier-bangumi-ratings-v1.20260904-m2-identity-character-image-v1.json';
-export const BANGUMI_CANONICAL_ALIAS_FALLBACK_PATH = 'egs-tier-bangumi-canonical-alias-fallback-v1.20260904-m2-identity-character-image-v1.json';
+export const BANGUMI_CANONICAL_ALIAS_FALLBACK_PATH = 'egs-tier-bangumi-canonical-alias-fallback-v1.20260909-v105-consistency.json';
 export const AUTHORITY_FANOUT_PATH = 'egs-tier-authority-fanout-v1.20260904-m2-identity-character-image-v1.json';
 export const CHARACTER_IMAGE_MAP_SHA256 = '4f3a0c4e7f015e7aa8a52b136a201290d6388a498d1db6c49dbfe06cf6044d15';
 export const CHARACTER_IMAGE_ALIAS_MAP_SHA256 = '8e667829cdf2c836a87692423d83d1fa15814ff98337dfb5282c7c41ef93147d';
 export const CHARACTER_IMAGE_MAP_SNAPSHOT_ID = 'terminal-wiki-character-public-v3-2026-09-01';
 export const CHARACTER_IMAGE_ASSET_BASE = 'https://assets.bishojo.date/terminal-wiki/v1/';
 export const CHARACTER_IMAGE_ASSET_FALLBACK_BASE = 'https://raw.githubusercontent.com/Shinki0325/bishoujo-game-cover-assets/main/terminal-wiki/v1/';
-export const M2_PERSON_MANIFEST_SHA256 = '2f9434d3644a9fa46473170d06b8d863a95b7a80d206174ea57cfc65b42e88e0';
-export const M2_PERSON_ENTITIES_SHA256 = '9122351c524e4c88d5098228e205c1ea294b300c479ed9a3ab984f8a092f5d19';
-export const M2_PERSON_RELATIONS_SHA256 = '8764ea09a475b8b9818e5a7ee8828b181d674af1d733c338eb438d7a7c61f766';
+export const M2_PERSON_MANIFEST_SHA256 = 'aa9c331ddaab4a9101c2391b984d85efecd3a06501525bbfb0bf73aa35bdfb0a';
+export const M2_PERSON_ENTITIES_SHA256 = '0f0b2defa3a001f573334ab8193f3465d08458abb98daef4a4a9c91eba8b62f0';
+export const M2_PERSON_RELATIONS_SHA256 = '6fe348d0339804305a7694c72505434724effda9824c3183f5238382981eeafe';
 export const M2_PERSON_NAME_VARIANTS_SHA256 = 'e6b69034f8ad7bc3a7e8f7103a808382503a46518a942a4fe43f13ad5e1f86d2';
 export const M2_PERSON_CHARACTER_ROLES_SHA256 = '723719ca9335c760b49e6fd331ae2ebd3b16fc9b0d1214416e4b4f56fc5124bf';
 export const M2_PERSON_NAME_PREFERENCES_SHA256 = '62f507055fb85271d58a1004ff986adc05ae7c7edef3dda59a49eaddf118572e';
@@ -31,7 +31,7 @@ export const RUNTIME_FEATURES = Object.freeze({
   bangumiPublicBindingsV1: Object.freeze({ enabled: true, sha256: BANGUMI_PUBLIC_BINDINGS_SHA256 }),
   vndbRatingsV1: Object.freeze({ enabled: true, sha256: 'c25d8a94d5a3fcc17a5716a929a46f3c8b13ebdb8637b39794a39334e58fc899' }),
   bangumiRatingsV1: Object.freeze({ enabled: true, sha256: '18ac39e86e7534fb20832a3a533117744f17b96d706f65c2ae9ea1a3efa09162' }),
-  bangumiCanonicalAliasFallbackV1: Object.freeze({ enabled: true, sha256: 'd57eb5048c4224936fb5743017e28fa4269745b3485756b923982c706221c064' }),
+  bangumiCanonicalAliasFallbackV1: Object.freeze({ enabled: true, sha256: 'ea68414d264ba6e0a36e9702892086aadcd0dde80148bde2f0530d82d2400a86' }),
   authorityFanoutV1: Object.freeze({ enabled: true, sha256: '78d59228afdbb8bdc5b3f48273c3e6c922f5cbacf697d963e9833a375eeaac9a' }),
   projectEntitiesV1: Object.freeze({ enabled: true, mediaClearance: true, characterImages: true }),
   personDirectoryV1: Object.freeze({ enabled: true, performanceCandidate: true }),

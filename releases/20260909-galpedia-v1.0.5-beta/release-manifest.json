@@ -1,5 +1,5 @@
 {
-  "closureSha256": "d440575bfe9e7e5ee2ff4dc07aeefb696be3ec77936ca3cec7eba3198397954a",
+  "closureSha256": "8819a4044de4d4acf153a672a30d944249b4b43d8c8ce4682babed49bc788e95",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -17,9 +17,9 @@
       "sha256": "78d59228afdbb8bdc5b3f48273c3e6c922f5cbacf697d963e9833a375eeaac9a"
     },
     {
-      "bytes": 207909,
-      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260904-m2-identity-character-image-v1.json",
-      "sha256": "d57eb5048c4224936fb5743017e28fa4269745b3485756b923982c706221c064"
+      "bytes": 150172,
+      "path": "data/egs-tier-bangumi-canonical-alias-fallback-v1.20260909-v105-consistency.json",
+      "sha256": "ea68414d264ba6e0a36e9702892086aadcd0dde80148bde2f0530d82d2400a86"
     },
     {
       "bytes": 876545,
@@ -5739,7 +5739,7 @@
     {
       "bytes": 22026,
       "path": "lib/m2-person-runtime.js",
-      "sha256": "313f3c0421aca05aabbe4cab1d643456260be8406d342ef93d127a9a8635d3cd"
+      "sha256": "f585410a60fa0541a6374fbd8d09b1e170c59ff9225f23b14023c5f0fd04e22c"
     },
     {
       "bytes": 5838,
@@ -5907,9 +5907,9 @@
       "sha256": "3ec8c25a6f7527c902921e06e02ffc0999dc3b850007c7fc11a2632211da59c4"
     },
     {
-      "bytes": 7953,
+      "bytes": 7939,
       "path": "lib/runtime-config.js",
-      "sha256": "66fef2dd1bb1f48c2f7af9e01097c644237a720d66709222b9ab4545c6efe55c"
+      "sha256": "058aeb18e1e442b9dc889bb5a6bef58dce5969947e9f087966e2e4bd53f95710"
     },
     {
       "bytes": 913,
