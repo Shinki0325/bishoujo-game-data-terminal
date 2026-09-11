@@ -208,7 +208,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     if (!faces.children.length && state === 'ready') {
       faces.append(node(documentRef, 'span', 'person-directory-representative-empty', '—'));
     }
-    if (state === 'error') faces.title = '代表角色加载失败，点击重试';
+    if (state === 'error') { faces.title = '图片加载失败，角色文字资料仍可用；点击重试'; faces.dataset.representativeState = 'error'; }
     else faces.removeAttribute('title');
     if (person) person.representativeCharacters = rows;
   }
