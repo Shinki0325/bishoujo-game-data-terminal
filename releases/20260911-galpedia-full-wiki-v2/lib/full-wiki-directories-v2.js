@@ -542,7 +542,9 @@ export function createFullWikiDirectories({
       const selected = await once(`person-ranked-cast:${summary.entityId}`, async () => {
         const rows = selectRepresentativeCharacters(await personCastRows(id));
         const images = loadCharacterImages ? await loadCharacterImages(rows.map(row => row.characterId)) : null;
-        return rows.map(row => ({...row, imageUrl:images?.get?.(row.characterId)?.url ?? row.imageUrl ?? null}));
+        return rows.map((row, index) => ({...row, imageUrl:images?.get?.(row.characterId)?.url ?? row.imageUrl ?? null, _imageRank: images?.get?.(row.characterId)?.url ? 0 : 1, _imageOrder:index}))
+          .sort((a, b) => a._imageRank - b._imageRank || a._imageOrder - b._imageOrder)
+          .map(({_imageRank, _imageOrder, ...row}) => row);
       });
       return selected.slice(0, Math.max(0, Math.min(4, limit)));
     }
