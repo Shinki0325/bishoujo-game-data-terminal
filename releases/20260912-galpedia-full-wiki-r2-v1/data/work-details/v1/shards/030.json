@@ -1,0 +1,7797 @@
+{
+  "bucketId": "030",
+  "schemaVersion": "egs-work-detail-credits-shard-v1",
+  "works": {
+    "3001": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "creatorId": "5790",
+              "name": "木村あやか"
+            }
+          ],
+          "characterId": "27303",
+          "characterName": "柚希 蛍",
+          "role": "メイン"
+        },
+        {
+          "actors": [
+            {
+              "name": "彩世 ゆう",
+              "vndbStaffId": "s57"
+            }
+          ],
+          "characterId": "27304",
+          "characterName": "七星 紫都夏",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40156"
+        },
+        {
+          "actors": [
+            {
+              "name": "柚木 かなめ",
+              "vndbStaffId": "s13"
+            }
+          ],
+          "characterId": "27305",
+          "characterName": "絹塚 あげは",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40157"
+        },
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "27306",
+          "characterName": "夜護 愛",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40158"
+        },
+        {
+          "actors": [
+            {
+              "name": "いそや かおり",
+              "vndbStaffId": "s1894"
+            }
+          ],
+          "characterId": "27307",
+          "characterName": "瀬見 朱鷺子",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40159"
+        },
+        {
+          "actors": [
+            {
+              "name": "茉莉奈",
+              "vndbStaffId": "s58"
+            }
+          ],
+          "characterId": "27308",
+          "characterName": "比良多 美山",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40160"
+        },
+        {
+          "actors": [
+            {
+              "name": "如月 美琴",
+              "vndbStaffId": "s1012"
+            }
+          ],
+          "characterId": "27309",
+          "characterName": "坂奈 文恵",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c40161"
+        },
+        {
+          "actors": [
+            {
+              "name": "木村 あやか",
+              "vndbStaffId": "s590"
+            }
+          ],
+          "characterId": "vndb:c40155",
+          "characterName": "柚希 螢",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c40155"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c55915",
+          "characterName": "網村 美紀男",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c55915"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "1070",
+                "name": "与猶啓至(ヨナオケイシ)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "6393",
+                "name": "REIKA"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "6393",
+                "featuring": "f",
+                "name": "REIKA"
+              }
+            ]
+          },
+          "songId": "4323",
+          "title": "潮騒の声 -short ver"
+        },
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "1070",
+                "name": "与猶啓至(ヨナオケイシ)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "6393",
+                "name": "REIKA"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "6393",
+                "featuring": "f",
+                "name": "REIKA"
+              }
+            ]
+          },
+          "songId": "4324",
+          "title": "潮騒の声 -full ver"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {},
+          "songId": "4325",
+          "title": "She owns a sight not he may"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {},
+          "songId": "4326",
+          "title": "水平線の裏側"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {},
+          "songId": "4327",
+          "title": "drunk party"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "98",
+            "name": "Moo℃団(なべち、てってち、ぎんぱち、渡辺義弘)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "4146",
+            "name": "TILDE"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1690",
+            "name": "兄丸"
+          }
+        ]
+      },
+      "workId": "3001"
+    },
+    "3005": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "歌織",
+              "vndbStaffId": "s891"
+            }
+          ],
+          "characterId": "27287",
+          "characterName": "嵯峨山 多恵子",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c7455"
+        },
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "27288",
+          "characterName": "嵯峨山 千代子",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c7456"
+        },
+        {
+          "actors": [
+            {
+              "name": "かわしま りの",
+              "vndbStaffId": "s28"
+            }
+          ],
+          "characterId": "27289",
+          "characterName": "芹川 みゆき",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c7457"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c7458",
+          "characterName": "松峰 薫",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c7458"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c7459",
+          "characterName": "稲葉 俊樹",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c7459"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2991",
+                "name": "PaPa’s Pleasure"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2991",
+                "name": "PaPa’s Pleasure"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "2991",
+                "name": "PaPa’s Pleasure"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "2991",
+                "featuring": "f",
+                "name": "PaPa’s Pleasure"
+              }
+            ]
+          },
+          "songId": "12575",
+          "title": "je t'aime ～mourir ou vivre？～"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "335",
+            "name": "望月望"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2689",
+            "name": "筒井香織(tutti)"
+          },
+          {
+            "creatorId": "2991",
+            "name": "PaPa’s Pleasure"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "435",
+            "name": "猫柳まんぼ(山田びんご)"
+          }
+        ]
+      },
+      "workId": "3005"
+    },
+    "3006": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "岩田 由貴",
+              "vndbStaffId": "s1160"
+            }
+          ],
+          "characterId": "vndb:c3049",
+          "characterName": "仁科 恭子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3049"
+        },
+        {
+          "actors": [
+            {
+              "name": "大波 こなみ",
+              "vndbStaffId": "s260"
+            }
+          ],
+          "characterId": "vndb:c3050",
+          "characterName": "秋山 文緒",
+          "source": "vndb",
+          "vndbCharacterId": "c3050"
+        },
+        {
+          "actors": [
+            {
+              "name": "北都 南",
+              "vndbStaffId": "s113"
+            }
+          ],
+          "characterId": "vndb:c3051",
+          "characterName": "橘 ちひろ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3051"
+        },
+        {
+          "actors": [
+            {
+              "name": "観村 咲子",
+              "vndbStaffId": "s858"
+            }
+          ],
+          "characterId": "vndb:c3052",
+          "characterName": "藤枝 保奈美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3052"
+        },
+        {
+          "actors": [
+            {
+              "name": "高橋 広樹",
+              "vndbStaffId": "s67"
+            }
+          ],
+          "characterId": "vndb:c3053",
+          "characterName": "広瀬 弘司",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3053"
+        },
+        {
+          "actors": [
+            {
+              "name": "飯塚 雅弓",
+              "vndbStaffId": "s1383"
+            }
+          ],
+          "characterId": "vndb:c3054",
+          "characterName": "広瀬 柚香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3054"
+        },
+        {
+          "actors": [
+            {
+              "name": "金田 まひる",
+              "vndbStaffId": "s485"
+            }
+          ],
+          "characterId": "vndb:c3055",
+          "characterName": "渋垣 茉理",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3055"
+        },
+        {
+          "actors": [
+            {
+              "name": "小鳥田 麗子",
+              "vndbStaffId": "s828"
+            }
+          ],
+          "characterId": "vndb:c3056",
+          "characterName": "宇佐美 玲",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3056"
+        },
+        {
+          "actors": [
+            {
+              "name": "片岡 大二郎",
+              "vndbStaffId": "s292"
+            }
+          ],
+          "characterId": "vndb:c3057",
+          "characterName": "深野 順一",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3057"
+        },
+        {
+          "actors": [
+            {
+              "name": "木村 あやか",
+              "vndbStaffId": "s590"
+            }
+          ],
+          "characterId": "vndb:c3058",
+          "characterName": "野乃原 結",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3058"
+        },
+        {
+          "actors": [
+            {
+              "name": "北都 南",
+              "vndbStaffId": "s113"
+            }
+          ],
+          "characterId": "vndb:c3059",
+          "characterName": "渋垣 英理",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3059"
+        },
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "vndb:c3060",
+          "characterName": "天ヶ崎 美琴",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3060"
+        },
+        {
+          "actors": [
+            {
+              "name": "上別府 仁資",
+              "vndbStaffId": "s1196"
+            }
+          ],
+          "characterId": "vndb:c3061",
+          "characterName": "渋垣 源三",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3061"
+        },
+        {
+          "actors": [
+            {
+              "name": "氷河流",
+              "vndbStaffId": "s73"
+            }
+          ],
+          "characterId": "vndb:c3062",
+          "characterName": "久住 直樹",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c3062"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "25146",
+                "name": "quad(LOOPCUBE)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "25145",
+                "name": "Hiro(Hiroki)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "25144",
+                "name": "H/de.(LOOPCUBE)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "6591",
+                "featuring": "f",
+                "name": "真優"
+              }
+            ]
+          },
+          "songId": "2136",
+          "title": "divergent flow"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "25146",
+                "name": "quad(LOOPCUBE)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "25145",
+                "name": "Hiro(Hiroki)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "25144",
+                "name": "H/de.(LOOPCUBE)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "2571",
+                "featuring": "f",
+                "name": "LOOPCUBE"
+              },
+              {
+                "creatorId": "6591",
+                "featuring": "t",
+                "name": "真優"
+              }
+            ]
+          },
+          "songId": "7218",
+          "title": "明日の想い出"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7552",
+          "title": "A BALMY NATURAL LIGHT"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7553",
+          "title": "Shining Days"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7554",
+          "title": "WAY TO THE HOME"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7555",
+          "title": "ムービングライト"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7556",
+          "title": "夕暮れの向こう"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7557",
+          "title": "星空のカーテン"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7558",
+          "title": "GET OUTGOING!"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7559",
+          "title": "STRAIGHT AT ME"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7560",
+          "title": "シルキーウェーブ"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7561",
+          "title": "陽だまりロケット"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7562",
+          "title": "プチプチフロート"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7563",
+          "title": "MATURE MIND"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7564",
+          "title": "キラメキパビリオン"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7565",
+          "title": "パレード"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7566",
+          "title": "二人の時間"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7567",
+          "title": "Lonely Sky"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7568",
+          "title": "THE WAILING WALL"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7569",
+          "title": "ナイトメア"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7570",
+          "title": "流れの中で"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7571",
+          "title": "Silent Air"
+        },
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7572",
+          "title": "divergent flow (オルゴール)"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7573",
+          "title": "invisible shadow"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7574",
+          "title": "FIGHT INSTINCT"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7575",
+          "title": "クリーミー・クリーミー"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7576",
+          "title": "ラバーソウル・ストリーミング"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7577",
+          "title": "quiet prayer"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7578",
+          "title": "幻想ノスタルジー"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7579",
+          "title": "永久(とわ)の光"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7580",
+          "title": "両手いっぱいレインボー"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7581",
+          "title": "A LOT OF COLOR AND THOUGHTS"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7582",
+          "title": "UNSPOKEN WORDS"
+        },
+        {
+          "categories": [
+            "BGM"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2571",
+                "name": "LOOPCUBE"
+              }
+            ]
+          },
+          "songId": "7583",
+          "title": "はにはにメドレー"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1250",
+            "name": "べっかんこう"
+          },
+          {
+            "creatorId": "22686",
+            "detail": "SD原画",
+            "name": "壬RYUZIN"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2571",
+            "name": "LOOPCUBE"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1251",
+            "name": "榊原拓"
+          },
+          {
+            "creatorId": "1965",
+            "name": "内田ヒロユキ"
+          },
+          {
+            "creatorId": "1966",
+            "name": "安西秀明"
+          }
+        ]
+      },
+      "workId": "3006"
+    },
+    "3007": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c3658",
+          "characterName": "黒須 太一",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c3658"
+        },
+        {
+          "actors": [
+            {
+              "name": "楠 鈴音",
+              "vndbStaffId": "s112"
+            }
+          ],
+          "characterId": "vndb:c3659",
+          "characterName": "桐原 冬子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3659"
+        },
+        {
+          "actors": [
+            {
+              "name": "中瀬 ひな",
+              "vndbStaffId": "s926"
+            }
+          ],
+          "characterId": "vndb:c3660",
+          "characterName": "佐倉 霧",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3660"
+        },
+        {
+          "actors": [
+            {
+              "name": "榎津 まお",
+              "vndbStaffId": "s106"
+            }
+          ],
+          "characterId": "vndb:c3661",
+          "characterName": "山辺 美希",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3661"
+        },
+        {
+          "actors": [
+            {
+              "name": "鳩野 比奈",
+              "vndbStaffId": "s110"
+            }
+          ],
+          "characterId": "vndb:c3662",
+          "characterName": "宮澄 見里",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3662"
+        },
+        {
+          "actors": [
+            {
+              "name": "児玉 さとみ",
+              "vndbStaffId": "s115"
+            }
+          ],
+          "characterId": "vndb:c3663",
+          "characterName": "支倉 曜子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3663"
+        },
+        {
+          "actors": [
+            {
+              "name": "理多",
+              "vndbStaffId": "s102"
+            }
+          ],
+          "characterId": "vndb:c3664",
+          "characterName": "七香",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3664"
+        },
+        {
+          "actors": [
+            {
+              "name": "牛久 京也",
+              "vndbStaffId": "s122"
+            }
+          ],
+          "characterId": "vndb:c3665",
+          "characterName": "島 友貴",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3665"
+        },
+        {
+          "actors": [
+            {
+              "name": "十文字 隼人",
+              "vndbStaffId": "s10"
+            },
+            {
+              "name": "山崎 たくみ",
+              "vndbStaffId": "s119"
+            }
+          ],
+          "characterId": "vndb:c3666",
+          "characterName": "桜庭 浩",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3666"
+        },
+        {
+          "actors": [
+            {
+              "name": "鵜乃瀬 朱香",
+              "vndbStaffId": "s117"
+            }
+          ],
+          "characterId": "vndb:c3667",
+          "characterName": "堂島 遊紗",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3667"
+        },
+        {
+          "actors": [
+            {
+              "name": "間寺 司",
+              "vndbStaffId": "s123"
+            }
+          ],
+          "characterId": "vndb:c3668",
+          "characterName": "新川 豊",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c3668"
+        },
+        {
+          "actors": [
+            {
+              "name": "鈴木 舞香",
+              "vndbStaffId": "s127"
+            },
+            {
+              "name": "大石 育美",
+              "vndbStaffId": "s937"
+            }
+          ],
+          "characterId": "vndb:c3948",
+          "characterName": "福原 みゆき",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c3948"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c56183",
+          "characterName": "ママン",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c56183"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2566",
+                "name": "Funczion SOUNDS"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2566",
+                "name": "Funczion SOUNDS"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "892",
+                "name": "田中ロミオ(山田一)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "4605",
+          "title": "CROSSING"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14832",
+          "title": "End of the Sky"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14833",
+          "title": "終わらない夏"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "6012",
+                "name": "榎津まお"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "6012",
+                "featuring": "f",
+                "name": "山辺美希"
+              }
+            ]
+          },
+          "songId": "14834",
+          "title": "Reset"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "lyrics": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14835",
+          "title": "Crisscross"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "lyrics": [
+              {
+                "creatorId": "12493",
+                "name": "Marica"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14836",
+          "title": "Silent Voice"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14837",
+          "title": "終わらない夏 FLOWER mix"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14838",
+          "title": "CROSSING FLOWER mix"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "12493",
+                "featuring": "f",
+                "name": "Marica"
+              }
+            ]
+          },
+          "songId": "14839",
+          "title": "Reset piano arrange"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6012",
+                "featuring": "f",
+                "name": "山辺美希"
+              }
+            ]
+          },
+          "songId": "14840",
+          "title": "CROSSING miki version"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2044",
+            "name": "松竜"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2566",
+            "name": "Funczion SOUNDS"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "892",
+            "name": "田中ロミオ(山田一)"
+          }
+        ]
+      },
+      "workId": "3007"
+    },
+    "3008": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "大波 こなみ",
+              "vndbStaffId": "s260"
+            }
+          ],
+          "characterId": "vndb:c74616",
+          "characterName": "リコッテ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74616"
+        },
+        {
+          "actors": [
+            {
+              "name": "長崎 みなみ",
+              "vndbStaffId": "s1073"
+            }
+          ],
+          "characterId": "vndb:c74617",
+          "characterName": "フィオーレ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74617"
+        },
+        {
+          "actors": [
+            {
+              "name": "三木本 彩響",
+              "vndbStaffId": "s1987"
+            }
+          ],
+          "characterId": "vndb:c74618",
+          "characterName": "フェタ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74618"
+        },
+        {
+          "actors": [
+            {
+              "name": "松井 みどり",
+              "vndbStaffId": "s354"
+            }
+          ],
+          "characterId": "vndb:c74619",
+          "characterName": "クーロミエ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74619"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74620",
+          "characterName": "トゥーシー",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74620"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74621",
+          "characterName": "クレシェンツァ・バラカ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74621"
+        },
+        {
+          "actors": [
+            {
+              "name": "北都 南",
+              "vndbStaffId": "s113"
+            }
+          ],
+          "characterId": "vndb:c74622",
+          "characterName": "フォンティナ・ボニファッツ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74622"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74623",
+          "characterName": "グラーナ・パダーノ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74623"
+        },
+        {
+          "actors": [
+            {
+              "name": "富永 理恵",
+              "vndbStaffId": "s4832"
+            }
+          ],
+          "characterId": "vndb:c74624",
+          "characterName": "ラミ・デュ・シャンベルタン",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74624"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "挿入歌"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "2858",
+          "title": "ありがとうの歌"
+        },
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "6497",
+          "title": "幸せのMelody"
+        },
+        {
+          "categories": [
+            "挿入歌"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "6498",
+          "title": "気まぐれこねこの歌"
+        },
+        {
+          "categories": [
+            "挿入歌"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "6499",
+          "title": "ちいさなほしのおおきなゆめ"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "26",
+            "name": "野々原幹(ぢょんたいらん)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2546",
+            "name": "リバーサイド・ミュージック(feel、Cats、キャッツ)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1616",
+            "name": "千籐まさと"
+          }
+        ]
+      },
+      "workId": "3008"
+    },
+    "3009": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "田中 美智",
+              "vndbStaffId": "s796"
+            }
+          ],
+          "characterId": "12098",
+          "characterName": "嘉島 聖",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c55879"
+        },
+        {
+          "actors": [
+            {
+              "name": "佐々木 あかり",
+              "vndbStaffId": "s1575"
+            }
+          ],
+          "characterId": "12099",
+          "characterName": "姫史 愛生",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c55880"
+        },
+        {
+          "actors": [
+            {
+              "name": "涼森 ちさと",
+              "vndbStaffId": "s445"
+            }
+          ],
+          "characterId": "12100",
+          "characterName": "葛城 佳央",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c55883"
+        },
+        {
+          "actors": [
+            {
+              "name": "天天",
+              "vndbStaffId": "s2922"
+            }
+          ],
+          "characterId": "12101",
+          "characterName": "逢坂 遥奈",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c55881"
+        },
+        {
+          "actors": [
+            {
+              "name": "中瀬 ひな",
+              "vndbStaffId": "s926"
+            }
+          ],
+          "characterId": "12102",
+          "characterName": "櫻見 枝絵留",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c55882"
+        },
+        {
+          "actors": [
+            {
+              "name": "杏露 花梨",
+              "vndbStaffId": "s2925"
+            }
+          ],
+          "characterId": "12103",
+          "characterName": "本城 理人",
+          "role": "主人公",
+          "source": "vndb",
+          "vndbCharacterId": "c55878"
+        },
+        {
+          "actors": [],
+          "characterId": "12104",
+          "characterName": "嘉島 早智子",
+          "role": "サブ",
+          "source": "vndb",
+          "vndbCharacterId": "c55884"
+        },
+        {
+          "actors": [],
+          "characterId": "12105",
+          "characterName": "姫史 翔子",
+          "role": "サブ",
+          "source": "vndb",
+          "vndbCharacterId": "c55885"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74746",
+          "characterName": "中谷 恭一",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74746"
+        },
+        {
+          "actors": [
+            {
+              "name": "天天",
+              "vndbStaffId": "s2922"
+            }
+          ],
+          "characterId": "vndb:c74747",
+          "characterName": "原田 ひかり",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74747"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74748",
+          "characterName": "藤原 紅緒",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74748"
+        },
+        {
+          "actors": [
+            {
+              "name": "中瀬 ひな",
+              "vndbStaffId": "s926"
+            }
+          ],
+          "characterId": "vndb:c74749",
+          "characterName": "野乃原 のの乃",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c74749"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "12499",
+                "name": "KOTOKO"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "578",
+                "name": "うつろあくた(シュート彦)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12499",
+                "featuring": "f",
+                "name": "KOTOKO"
+              }
+            ]
+          },
+          "songId": "2339",
+          "title": "Princess Bride!"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "12499",
+                "name": "KOTOKO"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "473",
+                "name": "元長柾木(椎名ヘカトンケイル)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12499",
+                "featuring": "f",
+                "name": "KOTOKO"
+              }
+            ]
+          },
+          "songId": "2341",
+          "title": "Sledgehammer Romance"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1974",
+            "name": "みやま零(まやせろみ)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2294",
+            "name": "I've"
+          },
+          {
+            "creatorId": "5114",
+            "name": "E&M’s SOUND"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "473",
+            "detail": "2部以降の愛生と枝絵留",
+            "name": "元長柾木(椎名ヘカトンケイル)"
+          },
+          {
+            "creatorId": "578",
+            "name": "うつろあくた(シュート彦)"
+          },
+          {
+            "creatorId": "1639",
+            "name": "もみあげルパンR"
+          }
+        ]
+      },
+      "workId": "3009"
+    },
+    "3010": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "vndb:c55914",
+          "characterName": "湖川 水緒",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c55914"
+        },
+        {
+          "actors": [
+            {
+              "name": "YUKI",
+              "vndbStaffId": "s828"
+            }
+          ],
+          "characterId": "vndb:c55916",
+          "characterName": "牧瀬 遙",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c55916"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c114674",
+          "characterName": "風早 薫",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c114674"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3310",
+                "name": "オハラジョウジ(George Ohara)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "4417",
+                "name": "カンナユリ"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4417",
+                "featuring": "f",
+                "name": "カンナユリ"
+              }
+            ]
+          },
+          "songId": "1105",
+          "title": "Fantastic Kiss"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1709",
+            "name": "蔓木鋼音"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3310",
+            "name": "オハラジョウジ(George Ohara)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "568",
+            "name": "素浪人"
+          },
+          {
+            "creatorId": "1424",
+            "name": "ひろもりさかな(弘森魚)"
+          },
+          {
+            "creatorId": "1967",
+            "name": "巳無月麗羅"
+          }
+        ]
+      },
+      "workId": "3010"
+    },
+    "3013": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "櫻 レオナ",
+              "vndbStaffId": "s7025"
+            }
+          ],
+          "characterId": "vndb:c82749",
+          "characterName": "須賀 瞳",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82749"
+        },
+        {
+          "actors": [
+            {
+              "name": "涼森 ちさと",
+              "vndbStaffId": "s445"
+            }
+          ],
+          "characterId": "vndb:c82750",
+          "characterName": "夏樹 ヒカル",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82750"
+        },
+        {
+          "actors": [
+            {
+              "name": "春野 萌",
+              "vndbStaffId": "s5766"
+            }
+          ],
+          "characterId": "vndb:c82751",
+          "characterName": "春山 菊乃",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82751"
+        },
+        {
+          "actors": [
+            {
+              "name": "紬 叶慧",
+              "vndbStaffId": "s2920"
+            }
+          ],
+          "characterId": "vndb:c82752",
+          "characterName": "笛吹 祥子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82752"
+        },
+        {
+          "actors": [
+            {
+              "name": "もっち",
+              "vndbStaffId": "s4336"
+            }
+          ],
+          "characterId": "vndb:c82753",
+          "characterName": "南 千佳",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82753"
+        },
+        {
+          "actors": [
+            {
+              "name": "田中 美智",
+              "vndbStaffId": "s796"
+            }
+          ],
+          "characterId": "vndb:c82754",
+          "characterName": "ここあ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82754"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c104652",
+          "characterName": "反ノ内 拓也",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c104652"
+        }
+      ],
+      "songs": [],
+      "staff": {},
+      "workId": "3013"
+    },
+    "3014": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "みる",
+              "vndbStaffId": "s364"
+            }
+          ],
+          "characterId": "27282",
+          "characterName": "麻生 こま",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c4202"
+        },
+        {
+          "actors": [
+            {
+              "name": "あおい 和紀",
+              "vndbStaffId": "s83"
+            }
+          ],
+          "characterId": "27283",
+          "characterName": "燕子花 こりす",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c29260"
+        },
+        {
+          "actors": [
+            {
+              "name": "芹園 みや",
+              "vndbStaffId": "s609"
+            }
+          ],
+          "characterId": "27284",
+          "characterName": "結乃由姫命",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c4206"
+        },
+        {
+          "actors": [
+            {
+              "name": "木葉 楓",
+              "vndbStaffId": "s471"
+            }
+          ],
+          "characterId": "27285",
+          "characterName": "春野 千草",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c4204"
+        },
+        {
+          "actors": [
+            {
+              "name": "鈴田 美夜子",
+              "vndbStaffId": "s446"
+            }
+          ],
+          "characterId": "27286",
+          "characterName": "咒吠君鏡架",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c4205"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c4201",
+          "characterName": "麻生 智",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c4201"
+        },
+        {
+          "actors": [
+            {
+              "name": "中澤 アユム",
+              "vndbStaffId": "s1490"
+            }
+          ],
+          "characterId": "vndb:c4203",
+          "characterName": "翁俊信",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c4203"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "13730",
+                "name": "不知火つばさ"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "3138",
+                "name": "山本秀樹(斑尾歩、紫賀耕元)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "24932",
+                "name": "下田芳裕"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "3360",
+                "featuring": "f",
+                "name": "榊原ゆい(雛野まよ、Hinano、まりあ)"
+              }
+            ]
+          },
+          "songId": "2200",
+          "title": "奇跡の絆"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3138",
+                "name": "山本秀樹(斑尾歩、紫賀耕元)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "3138",
+                "name": "山本秀樹(斑尾歩、紫賀耕元)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "24932",
+                "name": "下田芳裕"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26900",
+                "featuring": "f",
+                "name": "浅海梨江"
+              }
+            ]
+          },
+          "songId": "8694",
+          "title": "PIECE of Love"
+        },
+        {
+          "categories": [
+            "カバー"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "33430",
+                "name": "白戸佑輔"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "3138",
+                "name": "山本秀樹(斑尾歩、紫賀耕元)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "24932",
+                "name": "下田芳裕"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "18315",
+                "featuring": "f",
+                "name": "大島はるな"
+              }
+            ]
+          },
+          "songId": "17348",
+          "title": "奇跡の絆"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1462",
+            "name": "のり太"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3138",
+            "name": "山本秀樹(斑尾歩、紫賀耕元)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1118",
+            "name": "朱門優"
+          }
+        ]
+      },
+      "workId": "3014"
+    },
+    "3017": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c3275",
+          "characterName": "木田 時紀",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c3275"
+        },
+        {
+          "actors": [
+            {
+              "name": "鮎川 ひなた",
+              "vndbStaffId": "s650"
+            }
+          ],
+          "characterId": "vndb:c3276",
+          "characterName": "栗原 透子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3276"
+        },
+        {
+          "actors": [
+            {
+              "name": "鷹月 さくら",
+              "vndbStaffId": "s5"
+            }
+          ],
+          "characterId": "vndb:c3277",
+          "characterName": "榊 しのぶ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3277"
+        },
+        {
+          "actors": [
+            {
+              "name": "井村屋 ほのか",
+              "vndbStaffId": "s867"
+            }
+          ],
+          "characterId": "vndb:c3278",
+          "characterName": "須磨寺 雪緒",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3278"
+        },
+        {
+          "actors": [
+            {
+              "name": "安玖深 音",
+              "vndbStaffId": "s469"
+            }
+          ],
+          "characterId": "vndb:c3279",
+          "characterName": "葉月 真帆",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3279"
+        },
+        {
+          "actors": [
+            {
+              "name": "皆美 伊吹",
+              "vndbStaffId": "s1429"
+            }
+          ],
+          "characterId": "vndb:c3280",
+          "characterName": "麻生 明日菜",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c3280"
+        },
+        {
+          "actors": [
+            {
+              "name": "みる",
+              "vndbStaffId": "s364"
+            }
+          ],
+          "characterId": "vndb:c59896",
+          "characterName": "木田 恵美梨",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c59896"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c59897",
+          "characterName": "霜村 功",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c59897"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c59898",
+          "characterName": "巣鴨 文吾",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c59898"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c59899",
+          "characterName": "橘",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c59899"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2970",
+                "name": "中上和英"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2970",
+                "name": "中上和英"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "24870",
+                "name": "須谷尚子"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "16673",
+                "featuring": "f",
+                "name": "池田春菜"
+              }
+            ]
+          },
+          "songId": "3119",
+          "title": "I hope so"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2971",
+                "name": "下川直哉"
+              },
+              {
+                "creatorId": "3212",
+                "name": "衣笠道雄(豆田将)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2971",
+                "name": "下川直哉"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "24870",
+                "name": "須谷尚子"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12505",
+                "featuring": "f",
+                "name": "AKKO(あっこ)"
+              }
+            ]
+          },
+          "songId": "9841",
+          "title": "ヒトリ"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "595",
+            "name": "なかむらたけし(NAK村、中村毅)"
+          },
+          {
+            "creatorId": "947",
+            "name": "みつみ美里"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2969",
+            "name": "石川真也"
+          },
+          {
+            "creatorId": "2970",
+            "name": "中上和英"
+          },
+          {
+            "creatorId": "2971",
+            "name": "下川直哉"
+          },
+          {
+            "creatorId": "2973",
+            "name": "松岡純也"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "949",
+            "name": "三宅章介"
+          }
+        ]
+      },
+      "workId": "3017"
+    },
+    "3018": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "乃田 あす実",
+              "vndbStaffId": "s1182"
+            }
+          ],
+          "characterId": "vndb:c27131",
+          "characterName": "上條 彩",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c27131"
+        },
+        {
+          "actors": [
+            {
+              "name": "岬 友美",
+              "vndbStaffId": "s128"
+            }
+          ],
+          "characterId": "vndb:c27132",
+          "characterName": "沖津 凪",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c27132"
+        },
+        {
+          "actors": [
+            {
+              "name": "春瀬 みき",
+              "vndbStaffId": "s1566"
+            }
+          ],
+          "characterId": "vndb:c27133",
+          "characterName": "進藤 真由紀",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c27133"
+        },
+        {
+          "actors": [
+            {
+              "name": "榎津 まお",
+              "vndbStaffId": "s106"
+            }
+          ],
+          "characterId": "vndb:c27134",
+          "characterName": "草壁 紫",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c27134"
+        },
+        {
+          "actors": [
+            {
+              "name": "北都 南",
+              "vndbStaffId": "s113"
+            }
+          ],
+          "characterId": "vndb:c27135",
+          "characterName": "臣 温美",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c27135"
+        },
+        {
+          "actors": [
+            {
+              "name": "鮎川 ひなた",
+              "vndbStaffId": "s650"
+            }
+          ],
+          "characterId": "vndb:c27136",
+          "characterName": "カサッカ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c27136"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c27138",
+          "characterName": "上條 玲",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c27138"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2960",
+                "name": "下地和彦"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2960",
+                "name": "下地和彦"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "455",
+                "name": "SAY"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "1095",
+          "title": "Pearly Gates"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2960",
+                "name": "下地和彦"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "25242",
+                "name": "SAYA(作詞)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "8684",
+          "title": "Endless Spiral Corridor"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "7",
+            "name": "娘太丸"
+          },
+          {
+            "creatorId": "1536",
+            "name": "BLADE"
+          },
+          {
+            "creatorId": "1975",
+            "name": "美和美和"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2960",
+            "name": "下地和彦"
+          },
+          {
+            "creatorId": "2962",
+            "name": "Ebi"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "455",
+            "name": "SAY"
+          }
+        ]
+      },
+      "workId": "3018"
+    },
+    "3020": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "17064",
+          "characterName": "キリエルファン＝アントレイ",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c71676"
+        },
+        {
+          "actors": [],
+          "characterId": "17065",
+          "characterName": "アイシャ＝フローレンス",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c71677"
+        },
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "17066",
+          "characterName": "リファーニ＝フローレンス",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c71678"
+        },
+        {
+          "actors": [
+            {
+              "name": "須本 綾奈",
+              "vndbStaffId": "s1013"
+            }
+          ],
+          "characterId": "17067",
+          "characterName": "橋野 響",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c71679"
+        },
+        {
+          "actors": [
+            {
+              "name": "須本 綾奈",
+              "vndbStaffId": "s1013"
+            }
+          ],
+          "characterId": "17068",
+          "characterName": "霧崎 ありす",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c71680"
+        },
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "vndb:c71681",
+          "characterName": "ネージュ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c71681"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c90441",
+          "characterName": "椎名 優輝",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c90441"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "544",
+                "name": "くるがみ龍"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "3360",
+                "featuring": "f",
+                "name": "榊原ゆい(雛野まよ、Hinano、まりあ)"
+              }
+            ]
+          },
+          "songId": "8729",
+          "title": "Eternal Truth"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "27",
+            "name": "神崎直哉(倉瀬あまね)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "544",
+            "name": "くるがみ龍"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "433",
+            "name": "チャック雅"
+          },
+          {
+            "creatorId": "1343",
+            "name": "まこっちゃ"
+          }
+        ]
+      },
+      "workId": "3020"
+    },
+    "3021": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "松永 雪希",
+              "vndbStaffId": "s452"
+            }
+          ],
+          "characterId": "vndb:c13892",
+          "characterName": "巣鴨 さと子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13892"
+        },
+        {
+          "actors": [
+            {
+              "name": "春瀬 みき",
+              "vndbStaffId": "s1566"
+            }
+          ],
+          "characterId": "vndb:c13894",
+          "characterName": "三ノ瀬 ななせ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13894"
+        },
+        {
+          "actors": [
+            {
+              "name": "夏川 菜々美",
+              "vndbStaffId": "s1099"
+            }
+          ],
+          "characterId": "vndb:c13895",
+          "characterName": "九尾 みりん",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13895"
+        },
+        {
+          "actors": [
+            {
+              "name": "冬樹 みずほ",
+              "vndbStaffId": "s281"
+            }
+          ],
+          "characterId": "vndb:c13896",
+          "characterName": "川原 すなお",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13896"
+        },
+        {
+          "actors": [
+            {
+              "name": "上戸 琉",
+              "vndbStaffId": "s263"
+            }
+          ],
+          "characterId": "vndb:c114272",
+          "characterName": "小川 るな",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c114272"
+        },
+        {
+          "actors": [
+            {
+              "name": "香月",
+              "vndbStaffId": "s6591"
+            }
+          ],
+          "characterId": "vndb:c114273",
+          "characterName": "鳴登 らみか",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c114273"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c114274",
+          "characterName": "鳴登 海",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c114274"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "4425",
+                "name": "ケニーK"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "4425",
+                "name": "ケニーK"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1973",
+                "name": "沢村奈唯(サワムラナユ、あさじむおう)"
+              },
+              {
+                "creatorId": "26350",
+                "name": "GOZO53."
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "27067",
+                "featuring": "f",
+                "name": "加藤ひさえ"
+              }
+            ]
+          },
+          "songId": "8999",
+          "title": "girl's garden"
+        },
+        {
+          "categories": [
+            "OPアレンジ"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "5819",
+                "featuring": "f",
+                "name": "Rita(理多)"
+              }
+            ]
+          },
+          "songId": "15143",
+          "title": "girl's garden (Heartful Leaf arrange)"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "795",
+            "name": "ゆきみだいふく"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "4024",
+            "name": "有限会社クワイア"
+          },
+          {
+            "creatorId": "4425",
+            "name": "ケニーK"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1973",
+            "name": "沢村奈唯(サワムラナユ、あさじむおう)"
+          }
+        ]
+      },
+      "workId": "3021"
+    },
+    "3022": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c99293",
+          "characterName": "アルル",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99293"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99294",
+          "characterName": "白雪姫",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99294"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99295",
+          "characterName": "シンデレラ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99295"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99296",
+          "characterName": "メル",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99296"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99297",
+          "characterName": "クレア＆クララ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99297"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99300",
+          "characterName": "ロッテ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99300"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c99301",
+          "characterName": "アリス",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99301"
+        },
+        {
+          "actors": [
+            {
+              "name": "金松 由花",
+              "vndbStaffId": "s538"
+            }
+          ],
+          "characterId": "vndb:c99303",
+          "characterName": "ピーターパン",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99303"
+        },
+        {
+          "actors": [
+            {
+              "name": "カンザキ カナリ",
+              "vndbStaffId": "s1000"
+            }
+          ],
+          "characterId": "vndb:c99304",
+          "characterName": "ウェンディ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99304"
+        },
+        {
+          "actors": [
+            {
+              "name": "岩泉 まい",
+              "vndbStaffId": "s666"
+            }
+          ],
+          "characterId": "vndb:c99305",
+          "characterName": "メルティ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c99305"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "933",
+            "name": "ZATOU(さとう)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "4842",
+            "name": "PANDA"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "122",
+            "name": "米倉俵"
+          },
+          {
+            "creatorId": "123",
+            "name": "米倉ねずみ"
+          }
+        ]
+      },
+      "workId": "3022"
+    },
+    "3024": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "青山 ゆかり",
+              "vndbStaffId": "s83"
+            }
+          ],
+          "characterId": "vndb:c44144",
+          "characterName": "結城 奈緒美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44144"
+        },
+        {
+          "actors": [
+            {
+              "name": "富樫 ケイ",
+              "vndbStaffId": "s647"
+            }
+          ],
+          "characterId": "vndb:c44145",
+          "characterName": "結城 幸太",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44145"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c44146",
+          "characterName": "吉沢 卓也",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44146"
+        },
+        {
+          "actors": [
+            {
+              "name": "カンザキ カナリ",
+              "vndbStaffId": "s1000"
+            }
+          ],
+          "characterId": "vndb:c44147",
+          "characterName": "北原 茜",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44147"
+        },
+        {
+          "actors": [
+            {
+              "name": "神崎 ちひろ",
+              "vndbStaffId": "s1253"
+            }
+          ],
+          "characterId": "vndb:c44148",
+          "characterName": "望月 香織",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44148"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c44150",
+          "characterName": "橋本 亜紀",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44150"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c44152",
+          "characterName": "小早川 良人",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c44152"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2113",
+            "name": "AS(西田亜沙子)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "29851",
+            "name": "佐藤龍一"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "138",
+            "name": "菅野ひろゆき(菅野洋之、妃路雪≠卿、剣乃ゆきひろ)"
+          }
+        ]
+      },
+      "workId": "3024"
+    },
+    "3027": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "松永 雪希",
+              "vndbStaffId": "s452"
+            }
+          ],
+          "characterId": "vndb:c13515",
+          "characterName": "秋元 七海",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13515"
+        },
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "vndb:c13516",
+          "characterName": "沢田香夜",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13516"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c13519",
+          "characterName": "春日井 芳乃",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13519"
+        },
+        {
+          "actors": [
+            {
+              "name": "岸辺 亜弥",
+              "vndbStaffId": "s3080"
+            }
+          ],
+          "characterId": "vndb:c13520",
+          "characterName": "町田 郁",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13520"
+        },
+        {
+          "actors": [
+            {
+              "name": "柏倉 れん",
+              "vndbStaffId": "s2833"
+            }
+          ],
+          "characterId": "vndb:c13521",
+          "characterName": "相澤美紀",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13521"
+        },
+        {
+          "actors": [
+            {
+              "name": "成瀬 ゆら",
+              "vndbStaffId": "s359"
+            }
+          ],
+          "characterId": "vndb:c13522",
+          "characterName": "河相音子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c13522"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "4131",
+                "name": "YUKI NAKANO(Yuki Nakano、YUKIちゃん)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "4131",
+                "name": "YUKI NAKANO(Yuki Nakano、YUKIちゃん)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "4520",
+                "name": "高木真由美"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "8728",
+                "featuring": "f",
+                "name": "NANA"
+              }
+            ]
+          },
+          "songId": "2166",
+          "title": "DO☆キュン!!"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2839",
+                "name": "Revo"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2839",
+                "name": "Revo"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "2839",
+                "name": "Revo"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "33947",
+                "featuring": "f",
+                "name": "Aramary"
+              }
+            ]
+          },
+          "songId": "13491",
+          "title": "迎夏には夏物の服を"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1748",
+            "name": "犬彦"
+          },
+          {
+            "creatorId": "1978",
+            "name": "猫野おせろ"
+          },
+          {
+            "creatorId": "1979",
+            "name": "Pとも"
+          },
+          {
+            "creatorId": "2463",
+            "name": "山浦環"
+          },
+          {
+            "creatorId": "5203",
+            "name": "春巻秋"
+          },
+          {
+            "creatorId": "5204",
+            "name": "ほたるとうがらし"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3028",
+            "name": "Sound Horizon"
+          },
+          {
+            "creatorId": "4131",
+            "detail": "主題歌",
+            "name": "YUKI NAKANO(Yuki Nakano、YUKIちゃん)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2462",
+            "name": "Aisis"
+          },
+          {
+            "creatorId": "2489",
+            "detail": "飛べる翼、飛べない翼",
+            "name": "木緒なち(グッチー)"
+          }
+        ]
+      },
+      "workId": "3027"
+    },
+    "3028": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "vndb:c1233",
+          "characterName": "岬 風花",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1233"
+        },
+        {
+          "actors": [
+            {
+              "name": "かわの 亜衣",
+              "vndbStaffId": "s7742"
+            }
+          ],
+          "characterId": "vndb:c1234",
+          "characterName": "新庄 つばさ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1234"
+        },
+        {
+          "actors": [
+            {
+              "name": "木葉 楓",
+              "vndbStaffId": "s471"
+            }
+          ],
+          "characterId": "vndb:c1235",
+          "characterName": "阿久沢七海",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1235"
+        },
+        {
+          "actors": [
+            {
+              "name": "乃田 あす実",
+              "vndbStaffId": "s1182"
+            }
+          ],
+          "characterId": "vndb:c1236",
+          "characterName": "阿久沢 美空",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1236"
+        },
+        {
+          "actors": [
+            {
+              "name": "白井 綾乃",
+              "vndbStaffId": "s665"
+            }
+          ],
+          "characterId": "vndb:c1237",
+          "characterName": "猪俣 理緒",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1237"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c116625",
+          "characterName": "最上 拓哉",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c116625"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "2559",
+                "name": "畑亜貴"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "2559",
+                "name": "畑亜貴"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "2559",
+                "featuring": "f",
+                "name": "畑亜貴"
+              }
+            ]
+          },
+          "songId": "6093",
+          "title": "Chocolate"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1454",
+            "name": "みずのまこと"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1977",
+            "name": "座敷猫(飯崎島)"
+          }
+        ]
+      },
+      "workId": "3028"
+    },
+    "3033": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "内村 みるく",
+              "vndbStaffId": "s1015"
+            }
+          ],
+          "characterId": "27332",
+          "characterName": "明科 麻理",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80476"
+        },
+        {
+          "actors": [
+            {
+              "name": "西田 こむぎ",
+              "vndbStaffId": "s570"
+            }
+          ],
+          "characterId": "27333",
+          "characterName": "明科 江理",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80477"
+        },
+        {
+          "actors": [
+            {
+              "name": "日下 千鶴",
+              "vndbStaffId": "s1068"
+            }
+          ],
+          "characterId": "27334",
+          "characterName": "相模 茜",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80478"
+        },
+        {
+          "actors": [
+            {
+              "name": "Yuki-Lin",
+              "vndbStaffId": "s801"
+            }
+          ],
+          "characterId": "27335",
+          "characterName": "谷村 史歩",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80479"
+        },
+        {
+          "actors": [
+            {
+              "creatorId": "6703",
+              "name": "柘翁そのか"
+            }
+          ],
+          "characterId": "27336",
+          "characterName": "コードネーム“HA-RU-KA”",
+          "role": "メイン"
+        },
+        {
+          "actors": [
+            {
+              "name": "ジョウ・ブルマン",
+              "vndbStaffId": "s18078"
+            }
+          ],
+          "characterId": "27337",
+          "characterName": "柴崎博士",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80527"
+        },
+        {
+          "actors": [
+            {
+              "name": "富士 爆発",
+              "vndbStaffId": "s65"
+            }
+          ],
+          "characterId": "27338",
+          "characterName": "御台場 卓",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80528"
+        },
+        {
+          "actors": [
+            {
+              "name": "後野 祭",
+              "vndbStaffId": "s1067"
+            }
+          ],
+          "characterId": "27339",
+          "characterName": "宇宙人",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c80529"
+        },
+        {
+          "actors": [
+            {
+              "name": "柘翁 そのか",
+              "vndbStaffId": "s5747"
+            }
+          ],
+          "characterId": "vndb:c80480",
+          "characterName": "はるか",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c80480"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c80531",
+          "characterName": "慎太郎",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c80531"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "752",
+            "name": "ことみようじ"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "13670",
+            "name": "Sound ams inc.(サウンドエイムス)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "935",
+            "name": "伽遠蒔絵"
+          }
+        ]
+      },
+      "workId": "3033"
+    },
+    "3037": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "春奈 有美",
+              "vndbStaffId": "s1634"
+            }
+          ],
+          "characterId": "vndb:c82774",
+          "characterName": "里崎 みい",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82774"
+        },
+        {
+          "actors": [
+            {
+              "name": "まき いづみ",
+              "vndbStaffId": "s365"
+            }
+          ],
+          "characterId": "vndb:c82775",
+          "characterName": "里崎 ゆう",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c82775"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "25231",
+                "name": "小西輝男"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "25230",
+                "name": "ARI(音楽)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "25229",
+                "name": "貞方祥(SHOWMAN'S)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "2700",
+                "featuring": "f",
+                "name": "U"
+              }
+            ]
+          },
+          "songId": "2501",
+          "title": "いつも一緒に"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1414",
+            "name": "空中幼彩"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2700",
+            "name": "U"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1130",
+            "name": "桑原文彦"
+          }
+        ]
+      },
+      "workId": "3037"
+    },
+    "3042": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "伊藤 瞳子",
+              "vndbStaffId": "s2000"
+            }
+          ],
+          "characterId": "vndb:c9900",
+          "characterName": "佐倉 真由美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9900"
+        },
+        {
+          "actors": [
+            {
+              "name": "友永 朱音",
+              "vndbStaffId": "s83"
+            }
+          ],
+          "characterId": "vndb:c9903",
+          "characterName": "田代 美紀",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c9903"
+        },
+        {
+          "actors": [
+            {
+              "name": "藤田 夏海",
+              "vndbStaffId": "s666"
+            }
+          ],
+          "characterId": "vndb:c9907",
+          "characterName": "大沢 ひな子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9907"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c9909",
+          "characterName": "山本 のり子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9909"
+        },
+        {
+          "actors": [
+            {
+              "name": "JOE",
+              "vndbStaffId": "s67"
+            }
+          ],
+          "characterId": "vndb:c9911",
+          "characterName": "脇谷 徹",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9911"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c9914",
+          "characterName": "黒崎 崇",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c9914"
+        },
+        {
+          "actors": [
+            {
+              "name": "静木 亜美",
+              "vndbStaffId": "s663"
+            }
+          ],
+          "characterId": "vndb:c9919",
+          "characterName": "河合 理恵",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9919"
+        },
+        {
+          "actors": [
+            {
+              "name": "大波 こなみ",
+              "vndbStaffId": "s260"
+            }
+          ],
+          "characterId": "vndb:c155137",
+          "characterName": "河合 美奈代",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c155137"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "7951",
+                "featuring": "f",
+                "name": "長田梢"
+              }
+            ]
+          },
+          "songId": "15457",
+          "title": "はじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6526",
+                "featuring": "f",
+                "name": "静木亜美"
+              }
+            ]
+          },
+          "songId": "15458",
+          "title": "恋に落ちたら？"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "9290",
+                "featuring": "f",
+                "name": "川瀬ゆう子(川瀬ゆうこ)"
+              }
+            ]
+          },
+          "songId": "15459",
+          "title": "ラビリンス"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6526",
+                "featuring": "f",
+                "name": "静木亜美"
+              }
+            ]
+          },
+          "songId": "15460",
+          "title": "抱きしめてLOVE"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "5996",
+                "featuring": "f",
+                "name": "伊藤瞳子"
+              }
+            ]
+          },
+          "songId": "15461",
+          "title": "茜色のせつなさ 〜L'ecran garance〜"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6336",
+                "featuring": "f",
+                "name": "さくらなつみ(藤田夏海)"
+              }
+            ]
+          },
+          "songId": "15462",
+          "title": "めなきゃ！"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "8064",
+                "featuring": "f",
+                "name": "三五美奈子"
+              }
+            ]
+          },
+          "songId": "15463",
+          "title": "恋のdo-re-mi"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6979",
+                "featuring": "f",
+                "name": "友永朱音"
+              }
+            ]
+          },
+          "songId": "15464",
+          "title": "春よこい"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6526",
+                "featuring": "f",
+                "name": "静木亜美"
+              }
+            ]
+          },
+          "songId": "15465",
+          "title": "理恵のはじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "7951",
+                "featuring": "f",
+                "name": "長田梢"
+              }
+            ]
+          },
+          "songId": "15466",
+          "title": "ひな子のはじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "5996",
+                "featuring": "f",
+                "name": "伊藤瞳子"
+              }
+            ]
+          },
+          "songId": "15467",
+          "title": "真由美のはじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "6979",
+                "featuring": "f",
+                "name": "友永朱音"
+              }
+            ]
+          },
+          "songId": "15468",
+          "title": "美紀のはじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "8064",
+                "featuring": "f",
+                "name": "三五美奈子"
+              }
+            ]
+          },
+          "songId": "15469",
+          "title": "のり子のはじめてデート"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "7951",
+                "featuring": "f",
+                "name": "長田梢"
+              }
+            ]
+          },
+          "songId": "15470",
+          "title": "はじめてデート・その後"
+        }
+      ],
+      "staff": {
+        "music": [
+          {
+            "creatorId": "3401",
+            "name": "ham"
+          },
+          {
+            "creatorId": "3696",
+            "name": "T&N MUSIC FACTORY"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "603",
+            "name": "MAB"
+          }
+        ]
+      },
+      "workId": "3042"
+    },
+    "3045": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c72406",
+          "characterName": "長内 エミリ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72406"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72407",
+          "characterName": "瀬能 小夜子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72407"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72408",
+          "characterName": "ヒトミ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72408"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72409",
+          "characterName": "神楽坂 ちさと",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72409"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72410",
+          "characterName": "天王寺 鈴音",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72410"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72411",
+          "characterName": "桐畠 晶",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72411"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72412",
+          "characterName": "藤島 綾香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72412"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72413",
+          "characterName": "望月 夕子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72413"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72414",
+          "characterName": "松沼 ゆかり",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72414"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72415",
+          "characterName": "マチャハーナ・プリー",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72415"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "312",
+            "name": "松本規之"
+          },
+          {
+            "creatorId": "1065",
+            "name": "藤井純生"
+          },
+          {
+            "creatorId": "1066",
+            "name": "あさの"
+          },
+          {
+            "creatorId": "37522",
+            "name": "宇野真"
+          },
+          {
+            "creatorId": "37523",
+            "name": "高木潤"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "12215",
+            "name": "MUSE Inc."
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "596",
+            "detail": "夕子、晶ほか？",
+            "name": "石川洋一"
+          },
+          {
+            "creatorId": "37525",
+            "detail": "小夜子、ゆかりほか？",
+            "name": "澁澤T"
+          },
+          {
+            "creatorId": "37526",
+            "detail": "ちさと、綾香、プリー、エミリ",
+            "name": "Y.Sugano"
+          }
+        ]
+      },
+      "workId": "3045"
+    },
+    "3046": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c72395",
+          "characterName": "プリシア",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72395"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72396",
+          "characterName": "永島 マミ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72396"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72397",
+          "characterName": "松本 安奈",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72397"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72398",
+          "characterName": "周 美花",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72398"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72399",
+          "characterName": "明日香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72399"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72400",
+          "characterName": "鈴木 めぐみ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72400"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72401",
+          "characterName": "横井 千影",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72401"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72402",
+          "characterName": "クリスティーヌ・アルヌール",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72402"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72403",
+          "characterName": "安達 エミ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72403"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72404",
+          "characterName": "安達 ユカ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72404"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c72405",
+          "characterName": "坂口 もえみ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c72405"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "312",
+            "name": "松本規之"
+          },
+          {
+            "creatorId": "1065",
+            "name": "藤井純生"
+          }
+        ]
+      },
+      "workId": "3046"
+    },
+    "3047": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "鷹月 さくら",
+              "vndbStaffId": "s5"
+            }
+          ],
+          "characterId": "vndb:c31077",
+          "characterName": "仲根 美帆",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c31077"
+        },
+        {
+          "actors": [
+            {
+              "name": "神崎 ちひろ",
+              "vndbStaffId": "s1253"
+            }
+          ],
+          "characterId": "vndb:c31078",
+          "characterName": "仲根 亜季奈",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c31078"
+        },
+        {
+          "actors": [
+            {
+              "name": "大波 こなみ",
+              "vndbStaffId": "s260"
+            }
+          ],
+          "characterId": "vndb:c31079",
+          "characterName": "白石 玲",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c31079"
+        },
+        {
+          "actors": [
+            {
+              "name": "岩泉 まい",
+              "vndbStaffId": "s666"
+            }
+          ],
+          "characterId": "vndb:c31080",
+          "characterName": "浅間 奈那子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c31080"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c129325",
+          "characterName": "稲庭 俊明",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c129325"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c129326",
+          "characterName": "朽木 陽大",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c129326"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c129327",
+          "characterName": "渡部",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c129327"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2000",
+            "name": "芦俊"
+          },
+          {
+            "creatorId": "32055",
+            "detail": "モブ原画",
+            "name": "内名育子"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "32062",
+            "name": "takky"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "760",
+            "name": "MILLION-FACE"
+          },
+          {
+            "creatorId": "32056",
+            "name": "チーム鬼島"
+          }
+        ]
+      },
+      "workId": "3047"
+    },
+    "3052": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "涼森 ちさと",
+              "vndbStaffId": "s445"
+            }
+          ],
+          "characterId": "13290",
+          "characterName": "塚守 詠呼",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59957"
+        },
+        {
+          "actors": [
+            {
+              "name": "天天",
+              "vndbStaffId": "s2922"
+            }
+          ],
+          "characterId": "13291",
+          "characterName": "空 夏生",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59963"
+        },
+        {
+          "actors": [
+            {
+              "name": "理多",
+              "vndbStaffId": "s102"
+            }
+          ],
+          "characterId": "13292",
+          "characterName": "苗葉 舞",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59958"
+        },
+        {
+          "actors": [
+            {
+              "name": "理多",
+              "vndbStaffId": "s102"
+            }
+          ],
+          "characterId": "13293",
+          "characterName": "妹尾 杏",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59962"
+        },
+        {
+          "actors": [
+            {
+              "name": "天天",
+              "vndbStaffId": "s2922"
+            }
+          ],
+          "characterId": "13294",
+          "characterName": "遠野 希亜",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59959"
+        },
+        {
+          "actors": [
+            {
+              "name": "杏露 花梨",
+              "vndbStaffId": "s2925"
+            }
+          ],
+          "characterId": "13276",
+          "characterName": "深潮 冴美",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59961"
+        },
+        {
+          "actors": [
+            {
+              "name": "紬 叶慧",
+              "vndbStaffId": "s2920"
+            }
+          ],
+          "characterId": "13295",
+          "characterName": "藍原 流宇",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c59960"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3536",
+                "name": "NSN(西野尚利)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1718",
+                "name": "秋華"
+              },
+              {
+                "creatorId": "25474",
+                "name": "諸手ジャクソン(諸手J)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "10695",
+                "featuring": "f",
+                "name": "桑島三幸"
+              }
+            ]
+          },
+          "songId": "10842",
+          "title": "陽だまりの陰で"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3536",
+                "name": "NSN(西野尚利)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1718",
+                "name": "秋華"
+              },
+              {
+                "creatorId": "25474",
+                "name": "諸手ジャクソン(諸手J)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "10695",
+                "featuring": "f",
+                "name": "桑島三幸"
+              }
+            ]
+          },
+          "songId": "10843",
+          "title": "紅い虹"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3536",
+                "name": "NSN(西野尚利)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1718",
+                "name": "秋華"
+              },
+              {
+                "creatorId": "25474",
+                "name": "諸手ジャクソン(諸手J)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "10695",
+                "featuring": "f",
+                "name": "桑島三幸"
+              }
+            ]
+          },
+          "songId": "10844",
+          "title": "水瓶の中の君"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1689",
+            "name": "あおじる"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3536",
+            "name": "NSN(西野尚利)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1565",
+            "name": "フレーム"
+          },
+          {
+            "creatorId": "1718",
+            "name": "秋華"
+          },
+          {
+            "creatorId": "1787",
+            "name": "神楽月師走"
+          }
+        ]
+      },
+      "workId": "3052"
+    },
+    "3054": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "成瀬 未亜",
+              "vndbStaffId": "s470"
+            }
+          ],
+          "characterId": "vndb:c74889",
+          "characterName": "有栖川 希美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74889"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74890",
+          "characterName": "品川 メグ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74890"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c74891",
+          "characterName": "半田 理奈",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74891"
+        },
+        {
+          "actors": [
+            {
+              "name": "金田 まひる",
+              "vndbStaffId": "s485"
+            }
+          ],
+          "characterId": "vndb:c74892",
+          "characterName": "東 京子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74892"
+        },
+        {
+          "actors": [
+            {
+              "name": "本条 真琴",
+              "vndbStaffId": "s2246"
+            }
+          ],
+          "characterId": "vndb:c74893",
+          "characterName": "桃乃 かおり",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74893"
+        },
+        {
+          "actors": [
+            {
+              "name": "茶谷 やすら",
+              "vndbStaffId": "s266"
+            }
+          ],
+          "characterId": "vndb:c74894",
+          "characterName": "恵比寿 ルイ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74894"
+        },
+        {
+          "actors": [
+            {
+              "name": "茶谷 やすら",
+              "vndbStaffId": "s266"
+            }
+          ],
+          "characterId": "vndb:c74895",
+          "characterName": "日暮 里美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74895"
+        },
+        {
+          "actors": [
+            {
+              "name": "文月 かな",
+              "vndbStaffId": "s54"
+            }
+          ],
+          "characterId": "vndb:c74896",
+          "characterName": "鶯谷 はるか",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74896"
+        },
+        {
+          "actors": [
+            {
+              "name": "如月 葵",
+              "vndbStaffId": "s757"
+            }
+          ],
+          "characterId": "vndb:c74897",
+          "characterName": "クリス・神田・あやめ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74897"
+        },
+        {
+          "actors": [
+            {
+              "name": "三木本 彩響",
+              "vndbStaffId": "s1987"
+            }
+          ],
+          "characterId": "vndb:c74898",
+          "characterName": "目黒 五月",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74898"
+        },
+        {
+          "actors": [
+            {
+              "name": "三木本 彩響",
+              "vndbStaffId": "s1987"
+            }
+          ],
+          "characterId": "vndb:c74899",
+          "characterName": "目黒 彩",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74899"
+        },
+        {
+          "actors": [
+            {
+              "name": "文月 かな",
+              "vndbStaffId": "s54"
+            }
+          ],
+          "characterId": "vndb:c74900",
+          "characterName": "中嶋 秋生",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74900"
+        },
+        {
+          "actors": [
+            {
+              "name": "根岸 なお",
+              "vndbStaffId": "s2820"
+            }
+          ],
+          "characterId": "vndb:c74901",
+          "characterName": "代々木 育子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74901"
+        },
+        {
+          "actors": [
+            {
+              "name": "金田 まひる",
+              "vndbStaffId": "s485"
+            }
+          ],
+          "characterId": "vndb:c74902",
+          "characterName": "大塚 涼",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74902"
+        },
+        {
+          "actors": [
+            {
+              "name": "児玉 さとみ",
+              "vndbStaffId": "s115"
+            }
+          ],
+          "characterId": "vndb:c74903",
+          "characterName": "高田 マユ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c74903"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "98",
+            "name": "Moo℃団(なべち、てってち、ぎんぱち、渡辺義弘)"
+          },
+          {
+            "creatorId": "224",
+            "name": "越後谷寛"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3891",
+            "name": "柳生宗矩"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "143",
+            "name": "萌木一路"
+          },
+          {
+            "creatorId": "144",
+            "name": "たいらひとし"
+          },
+          {
+            "creatorId": "1470",
+            "name": "木全伸治(木全伸二、荒川しょうぶ)"
+          },
+          {
+            "creatorId": "4873",
+            "name": "霧生紗夜"
+          },
+          {
+            "creatorId": "5135",
+            "name": "Ray(シナリオ)"
+          }
+        ]
+      },
+      "workId": "3054"
+    },
+    "3057": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c64065",
+          "characterName": "アリスちゃん",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c64065"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c70343",
+          "characterName": "猿藤 吾郎",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c70343"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c70344",
+          "characterName": "三蔵 法子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c70344"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c70345",
+          "characterName": "八神 ちょこ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c70345"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c70346",
+          "characterName": "四万十 沙織",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c70346"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c70347",
+          "characterName": "魔窟堂 野武彦",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c70347"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c80101",
+          "characterName": "諭吉",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c80101"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "980",
+            "name": "K"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "960",
+            "name": "DragonAttack(雷丸)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "968",
+            "name": "イマーム"
+          }
+        ]
+      },
+      "workId": "3057"
+    },
+    "3060": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "一色 ヒカル",
+              "vndbStaffId": "s6"
+            }
+          ],
+          "characterId": "vndb:c34919",
+          "characterName": "赤羽 響子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34919"
+        },
+        {
+          "actors": [
+            {
+              "name": "如月 葵",
+              "vndbStaffId": "s757"
+            }
+          ],
+          "characterId": "vndb:c34920",
+          "characterName": "天宮 佳織",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34920"
+        },
+        {
+          "actors": [
+            {
+              "name": "楠 鈴音",
+              "vndbStaffId": "s112"
+            }
+          ],
+          "characterId": "vndb:c34921",
+          "characterName": "天宮 悠",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34921"
+        },
+        {
+          "actors": [
+            {
+              "name": "乃田 あす実",
+              "vndbStaffId": "s1182"
+            }
+          ],
+          "characterId": "vndb:c34922",
+          "characterName": "倉本 沙奈",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34922"
+        },
+        {
+          "actors": [
+            {
+              "name": "本条 真琴",
+              "vndbStaffId": "s2246"
+            }
+          ],
+          "characterId": "vndb:c34923",
+          "characterName": "佐々川 香澄",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34923"
+        },
+        {
+          "actors": [
+            {
+              "name": "三木本 彩響",
+              "vndbStaffId": "s1987"
+            }
+          ],
+          "characterId": "vndb:c34924",
+          "characterName": "高原 夏希",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34924"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c118050",
+          "characterName": "佐間 景志",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c118050"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3166",
+                "name": "平林征児"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "19282",
+                "name": "河村好乃"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "5810",
+                "featuring": "f",
+                "name": "海原エレナ"
+              }
+            ]
+          },
+          "songId": "10941",
+          "title": "君の想い、その願い"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3166",
+                "name": "平林征児"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "19282",
+                "name": "河村好乃"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "25444",
+                "featuring": "f",
+                "name": "南響理子"
+              }
+            ]
+          },
+          "songId": "10942",
+          "title": "やさしい風"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1557",
+            "name": "あかり☆かずと"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2543",
+            "name": "梶原正裕(KAJA、かぢゃぽん)"
+          },
+          {
+            "creatorId": "3166",
+            "name": "平林征児"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2004",
+            "name": "椎野順那"
+          }
+        ]
+      },
+      "workId": "3060"
+    },
+    "3061": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "田中 美智",
+              "vndbStaffId": "s796"
+            }
+          ],
+          "characterId": "27248",
+          "characterName": "七瀬 ほのか",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c32536"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c125007",
+          "characterName": "恵美子",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c125007"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c155381",
+          "characterName": "秋吉 拓巳",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c155381"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "4380",
+                "name": "おおしまとしひこ"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "4380",
+                "name": "おおしまとしひこ"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "26854",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "7373",
+          "title": "向日葵"
+        },
+        {
+          "categories": [
+            "挿入歌"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "4380",
+                "name": "おおしまとしひこ"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "4380",
+                "name": "おおしまとしひこ"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "26854",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "7374",
+          "title": "ひだりてみぎて"
+        }
+      ],
+      "staff": {
+        "music": [
+          {
+            "creatorId": "4380",
+            "name": "おおしまとしひこ"
+          }
+        ]
+      },
+      "workId": "3061"
+    },
+    "3062": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "永倉 仁八",
+              "vndbStaffId": "s2128"
+            }
+          ],
+          "characterId": "vndb:c17395",
+          "characterName": "井上 青児",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c17395"
+        },
+        {
+          "actors": [
+            {
+              "name": "寧々",
+              "vndbStaffId": "s456"
+            }
+          ],
+          "characterId": "vndb:c17396",
+          "characterName": "真鍋 来海",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c17396"
+        },
+        {
+          "actors": [
+            {
+              "name": "西郷 朋美",
+              "vndbStaffId": "s12512"
+            }
+          ],
+          "characterId": "vndb:c17397",
+          "characterName": "四方堂 緑",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c17397"
+        },
+        {
+          "actors": [
+            {
+              "name": "杏",
+              "vndbStaffId": "s23347"
+            }
+          ],
+          "characterId": "vndb:c17398",
+          "characterName": "高円寺 菫",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c17398"
+        },
+        {
+          "actors": [
+            {
+              "name": "葉月 さくら",
+              "vndbStaffId": "s12513"
+            }
+          ],
+          "characterId": "vndb:c17399",
+          "characterName": "津島 紅葉",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c17399"
+        },
+        {
+          "actors": [
+            {
+              "name": "夏川 菜々美",
+              "vndbStaffId": "s1099"
+            }
+          ],
+          "characterId": "vndb:c17400",
+          "characterName": "野々村 美空",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c17400"
+        },
+        {
+          "actors": [
+            {
+              "name": "二葉 裕美",
+              "vndbStaffId": "s1596"
+            }
+          ],
+          "characterId": "vndb:c17401",
+          "characterName": "瀬戸 京子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c17401"
+        },
+        {
+          "actors": [
+            {
+              "name": "浅見 ちほ",
+              "vndbStaffId": "s83"
+            }
+          ],
+          "characterId": "vndb:c58179",
+          "characterName": "深海 千草",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58179"
+        },
+        {
+          "actors": [
+            {
+              "name": "龍鳳院 剣",
+              "vndbStaffId": "s88"
+            }
+          ],
+          "characterId": "vndb:c58180",
+          "characterName": "加藤 常盤",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58180"
+        },
+        {
+          "actors": [
+            {
+              "name": "上条 茗",
+              "vndbStaffId": "s8601"
+            }
+          ],
+          "characterId": "vndb:c58181",
+          "characterName": "広瀬 若葉",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58181"
+        },
+        {
+          "actors": [
+            {
+              "name": "佐野 赫",
+              "vndbStaffId": "s10221"
+            }
+          ],
+          "characterId": "vndb:c58182",
+          "characterName": "瀬戸 都",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58182"
+        },
+        {
+          "actors": [
+            {
+              "name": "西郷明美",
+              "vndbStaffId": "s23346"
+            }
+          ],
+          "characterId": "vndb:c58183",
+          "characterName": "サクラ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58183"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c58185",
+          "characterName": "柏葉",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c58185"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c58186",
+          "characterName": "朝倉",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c58186"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "3981",
+                "name": "ぴょんも"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "12572",
+                "name": "CANDY"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12572",
+                "featuring": "f",
+                "name": "CANDY"
+              }
+            ]
+          },
+          "songId": "8126",
+          "title": "ワナビーガールズ"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "168",
+            "name": "山本和枝(やまもと☆かずえ)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3981",
+            "name": "ぴょんも"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "723",
+            "name": "寺岡健冶(丘野境界)"
+          }
+        ]
+      },
+      "workId": "3062"
+    },
+    "3063": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "乃田 あす実",
+              "vndbStaffId": "s1182"
+            }
+          ],
+          "characterId": "vndb:c34998",
+          "characterName": "神応寺 古都",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34998"
+        },
+        {
+          "actors": [
+            {
+              "name": "茶谷 やすら",
+              "vndbStaffId": "s266"
+            }
+          ],
+          "characterId": "vndb:c34999",
+          "characterName": "木乃内 ひなた",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c34999"
+        },
+        {
+          "actors": [
+            {
+              "name": "本条 真琴",
+              "vndbStaffId": "s2246"
+            }
+          ],
+          "characterId": "vndb:c35000",
+          "characterName": "八乙女 維月",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c35000"
+        },
+        {
+          "actors": [
+            {
+              "name": "青山 ゆかり",
+              "vndbStaffId": "s83"
+            }
+          ],
+          "characterId": "vndb:c35001",
+          "characterName": "水篠 碧衣",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c35001"
+        },
+        {
+          "actors": [
+            {
+              "name": "一色 ヒカル",
+              "vndbStaffId": "s6"
+            }
+          ],
+          "characterId": "vndb:c35002",
+          "characterName": "若色 遙香",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35002"
+        },
+        {
+          "actors": [
+            {
+              "name": "まき いづみ",
+              "vndbStaffId": "s365"
+            }
+          ],
+          "characterId": "vndb:c35003",
+          "characterName": "マヤ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35003"
+        },
+        {
+          "actors": [
+            {
+              "name": "まき いづみ",
+              "vndbStaffId": "s365"
+            }
+          ],
+          "characterId": "vndb:c35004",
+          "characterName": "サヤ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35004"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c35006",
+          "characterName": "神谷",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35006"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c35007",
+          "characterName": "金城 和彦",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35007"
+        },
+        {
+          "actors": [
+            {
+              "name": "野神 奈々",
+              "vndbStaffId": "s124"
+            }
+          ],
+          "characterId": "vndb:c35008",
+          "characterName": "メイド隊",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c35008"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c35009",
+          "characterName": "百瀬 裕一",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c35009"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c127292",
+          "characterName": "エリオット",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c127292"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c127293",
+          "characterName": "茂蔵",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c127293"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "2859",
+          "title": "チェリーレッドのピストル"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "15604",
+                "name": "藤田淳平"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4525",
+                "featuring": "f",
+                "name": "佐藤ひろ美(佐藤裕美)"
+              }
+            ]
+          },
+          "songId": "6496",
+          "title": "HACHIMITSU"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "160",
+            "name": "厘京太朗"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2546",
+            "name": "リバーサイド・ミュージック(feel、Cats、キャッツ)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "188",
+            "name": "企画屋"
+          },
+          {
+            "creatorId": "1338",
+            "name": "丸戸史明"
+          }
+        ]
+      },
+      "workId": "3063"
+    },
+    "3064": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "22658",
+          "characterName": "秋吉 珠恵",
+          "role": "メイン",
+          "source": "vndb",
+          "vndbCharacterId": "c9239"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c9235",
+          "characterName": "新堂 二貴太",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c9235"
+        },
+        {
+          "actors": [
+            {
+              "name": "西田 こむぎ",
+              "vndbStaffId": "s570"
+            }
+          ],
+          "characterId": "vndb:c9236",
+          "characterName": "蒼井 恋",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9236"
+        },
+        {
+          "actors": [
+            {
+              "name": "歌織",
+              "vndbStaffId": "s891"
+            }
+          ],
+          "characterId": "vndb:c9237",
+          "characterName": "木乃葉 鳩子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9237"
+        },
+        {
+          "actors": [
+            {
+              "name": "寧々",
+              "vndbStaffId": "s456"
+            }
+          ],
+          "characterId": "vndb:c9238",
+          "characterName": "新堂 鳴",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9238"
+        },
+        {
+          "actors": [
+            {
+              "name": "蓮香",
+              "vndbStaffId": "s1682"
+            }
+          ],
+          "characterId": "vndb:c9240",
+          "characterName": "岬 蓮香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c9240"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "10",
+            "name": "佐野俊英(さのとしひで、さぬ)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2689",
+            "name": "筒井香織(tutti)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "336",
+            "name": "んじゃが倫也"
+          }
+        ]
+      },
+      "workId": "3064"
+    },
+    "3065": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "野中くるみ",
+              "vndbStaffId": "s11211"
+            }
+          ],
+          "characterId": "vndb:c54211",
+          "characterName": "フィリア＝パシエンティア",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c54211"
+        },
+        {
+          "actors": [
+            {
+              "name": "高橋 夕稀",
+              "vndbStaffId": "s2666"
+            }
+          ],
+          "characterId": "vndb:c54212",
+          "characterName": "アイカ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c54212"
+        },
+        {
+          "actors": [
+            {
+              "name": "まいん",
+              "vndbStaffId": "s11237"
+            }
+          ],
+          "characterId": "vndb:c54213",
+          "characterName": "チェリモア＝チュエル",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c54213"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c54214",
+          "characterName": "フレアー＝マクマホン",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c54214"
+        },
+        {
+          "actors": [
+            {
+              "name": "稲垣 ゆうき",
+              "vndbStaffId": "s11239"
+            }
+          ],
+          "characterId": "vndb:c54215",
+          "characterName": "プレアマール＝パシエンティア",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c54215"
+        }
+      ],
+      "songs": [],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1311",
+            "name": "おしゃれ教室"
+          }
+        ]
+      },
+      "workId": "3065"
+    },
+    "3066": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c65378",
+          "characterName": "御木元 元",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c65378"
+        },
+        {
+          "actors": [
+            {
+              "name": "白井 綾乃",
+              "vndbStaffId": "s665"
+            }
+          ],
+          "characterId": "vndb:c65379",
+          "characterName": "初瀬 しのぶ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65379"
+        },
+        {
+          "actors": [
+            {
+              "name": "桃華ちゃん",
+              "vndbStaffId": "s25"
+            }
+          ],
+          "characterId": "vndb:c65380",
+          "characterName": "初瀬 ちはる",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65380"
+        },
+        {
+          "actors": [
+            {
+              "name": "木葉 楓",
+              "vndbStaffId": "s471"
+            }
+          ],
+          "characterId": "vndb:c65381",
+          "characterName": "江戸川 じゅん",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65381"
+        },
+        {
+          "actors": [
+            {
+              "name": "夏野 向日葵",
+              "vndbStaffId": "s855"
+            }
+          ],
+          "characterId": "vndb:c65382",
+          "characterName": "市原 萌子",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65382"
+        },
+        {
+          "actors": [
+            {
+              "name": "本条 真琴",
+              "vndbStaffId": "s2246"
+            }
+          ],
+          "characterId": "vndb:c65383",
+          "characterName": "市原 萌花",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65383"
+        },
+        {
+          "actors": [
+            {
+              "name": "児玉 さとみ",
+              "vndbStaffId": "s115"
+            }
+          ],
+          "characterId": "vndb:c65384",
+          "characterName": "市原 多萌",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65384"
+        },
+        {
+          "actors": [
+            {
+              "name": "夏野 向日葵",
+              "vndbStaffId": "s855"
+            }
+          ],
+          "characterId": "vndb:c65385",
+          "characterName": "岸辺 一徳子",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65385"
+        },
+        {
+          "actors": [
+            {
+              "name": "茶谷 やすら",
+              "vndbStaffId": "s266"
+            }
+          ],
+          "characterId": "vndb:c65386",
+          "characterName": "小瑠 手賀",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65386"
+        },
+        {
+          "actors": [
+            {
+              "name": "如月 葵",
+              "vndbStaffId": "s757"
+            }
+          ],
+          "characterId": "vndb:c65387",
+          "characterName": "花唯亜",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65387"
+        },
+        {
+          "actors": [
+            {
+              "name": "本条 真琴",
+              "vndbStaffId": "s2246"
+            }
+          ],
+          "characterId": "vndb:c65388",
+          "characterName": "摩周子",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c65388"
+        },
+        {
+          "actors": [
+            {
+              "name": "北条 明日香",
+              "vndbStaffId": "s1016"
+            }
+          ],
+          "characterId": "vndb:c65389",
+          "characterName": "優香様",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c65389"
+        },
+        {
+          "actors": [
+            {
+              "name": "茶谷 やすら",
+              "vndbStaffId": "s266"
+            }
+          ],
+          "characterId": "vndb:c65390",
+          "characterName": "クル",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c65390"
+        },
+        {
+          "actors": [
+            {
+              "name": "御苑生 メイ",
+              "vndbStaffId": "s278"
+            }
+          ],
+          "characterId": "vndb:c65391",
+          "characterName": "わるぎつね",
+          "role": "appears",
+          "source": "vndb",
+          "vndbCharacterId": "c65391"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {},
+          "songId": "11012",
+          "title": "チチユレ HERE WE 5♪"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "81",
+            "name": "スカイハウス"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2557",
+            "name": "Super Sweep(株式会社スーパースィープ)"
+          },
+          {
+            "creatorId": "36178",
+            "name": "古川典裕(なかやまらいでん)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "628",
+            "name": "菅沼恭司"
+          },
+          {
+            "creatorId": "671",
+            "name": "ココノツ"
+          },
+          {
+            "creatorId": "1074",
+            "name": "でぇすて(D.S.T、不二川巴人)"
+          }
+        ]
+      },
+      "workId": "3066"
+    },
+    "3067": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "理多",
+              "vndbStaffId": "s102"
+            }
+          ],
+          "characterId": "vndb:c64775",
+          "characterName": "霧",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c64775"
+        },
+        {
+          "actors": [
+            {
+              "name": "あ・ろま",
+              "vndbStaffId": "s17014"
+            }
+          ],
+          "characterId": "vndb:c64776",
+          "characterName": "茜",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c64776"
+        },
+        {
+          "actors": [
+            {
+              "name": "楠 鈴音",
+              "vndbStaffId": "s112"
+            }
+          ],
+          "characterId": "vndb:c64777",
+          "characterName": "香澄",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c64777"
+        },
+        {
+          "actors": [
+            {
+              "name": "中瀬 ひな",
+              "vndbStaffId": "s926"
+            }
+          ],
+          "characterId": "vndb:c64778",
+          "characterName": "和泉",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c64778"
+        },
+        {
+          "actors": [
+            {
+              "name": "間寺 司",
+              "vndbStaffId": "s123"
+            }
+          ],
+          "characterId": "vndb:c64779",
+          "characterName": "神崎",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c64779"
+        },
+        {
+          "actors": [
+            {
+              "name": "児玉 さとみ",
+              "vndbStaffId": "s115"
+            }
+          ],
+          "characterId": "vndb:c64780",
+          "characterName": "惣一",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c64780"
+        },
+        {
+          "actors": [
+            {
+              "name": "緒田 マリ",
+              "vndbStaffId": "s574"
+            }
+          ],
+          "characterId": "vndb:c161033",
+          "characterName": "さくら",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c161033"
+        },
+        {
+          "actors": [
+            {
+              "name": "児玉 さとみ",
+              "vndbStaffId": "s115"
+            }
+          ],
+          "characterId": "vndb:c161035",
+          "characterName": "静音",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c161035"
+        },
+        {
+          "actors": [
+            {
+              "name": "胸肩 腎",
+              "vndbStaffId": "s31"
+            }
+          ],
+          "characterId": "vndb:c161036",
+          "characterName": "師範代",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c161036"
+        },
+        {
+          "actors": [
+            {
+              "name": "鳩野 比奈",
+              "vndbStaffId": "s110"
+            }
+          ],
+          "characterId": "vndb:c161039",
+          "characterName": "椿",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c161039"
+        },
+        {
+          "actors": [
+            {
+              "name": "向井弥・葵",
+              "vndbStaffId": "s50031"
+            }
+          ],
+          "characterId": "vndb:c161040",
+          "characterName": "ルッソ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c161040"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "3947",
+                "name": "藤間仁"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "18829",
+                "name": "上松範康"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "1101",
+          "title": "緋の月"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "6917",
+          "title": "彼方へ…"
+        },
+        {
+          "categories": [
+            "イメージソング"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "26854",
+                "featuring": "f",
+                "name": "KIRIKO(REM、ましろゆき、真白月子)"
+              }
+            ]
+          },
+          "songId": "15117",
+          "title": "旅人の詩"
+        },
+        {
+          "categories": [
+            "キャラソン"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "1077",
+                "name": "柏木るざりん(Loser Kashiwagi)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "5819",
+                "featuring": "f",
+                "name": "霧"
+              }
+            ]
+          },
+          "songId": "15119",
+          "title": "旅人の詩"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "351",
+            "name": "川合正起"
+          },
+          {
+            "creatorId": "493",
+            "name": "ねこにゃん"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "1077",
+            "name": "柏木るざりん(Loser Kashiwagi)"
+          },
+          {
+            "creatorId": "2546",
+            "name": "リバーサイド・ミュージック(feel、Cats、キャッツ)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2005",
+            "name": "G・ハギス"
+          },
+          {
+            "creatorId": "2006",
+            "name": "根上広行"
+          }
+        ]
+      },
+      "workId": "3067"
+    },
+    "3068": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "みる",
+              "vndbStaffId": "s364"
+            }
+          ],
+          "characterId": "vndb:c2779",
+          "characterName": "ハルカ=リヒテンバイン",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c2779"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c2780",
+          "characterName": "天海 晃司",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c2780"
+        },
+        {
+          "actors": [
+            {
+              "name": "岬 ゆうか",
+              "vndbStaffId": "s1239"
+            }
+          ],
+          "characterId": "vndb:c2781",
+          "characterName": "草薙 真琴",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c2781"
+        },
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "vndb:c2782",
+          "characterName": "草薙 みなと",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c2782"
+        },
+        {
+          "actors": [
+            {
+              "name": "夏木 琵琶",
+              "vndbStaffId": "s4864"
+            }
+          ],
+          "characterId": "vndb:c2783",
+          "characterName": "醍醐 奈菜美",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c2783"
+        },
+        {
+          "actors": [
+            {
+              "name": "岬 友美",
+              "vndbStaffId": "s128"
+            }
+          ],
+          "characterId": "vndb:c2784",
+          "characterName": "比良坂 鈴鹿",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c2784"
+        },
+        {
+          "actors": [
+            {
+              "name": "一条 和矢",
+              "vndbStaffId": "s256"
+            }
+          ],
+          "characterId": "vndb:c2785",
+          "characterName": "草薙 啓介",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c2785"
+        },
+        {
+          "actors": [
+            {
+              "name": "一条 和矢",
+              "vndbStaffId": "s256"
+            }
+          ],
+          "characterId": "vndb:c2786",
+          "characterName": "赤城 カイジ",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c2786"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "2986",
+                "name": "八霧翔"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "2986",
+                "name": "八霧翔"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "26041",
+                "name": "藤川新夜"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4493",
+                "featuring": "f",
+                "name": "みとせのりこ"
+              }
+            ]
+          },
+          "songId": "6851",
+          "title": "落ち葉舞う頃"
+        },
+        {
+          "categories": [
+            "挿入歌"
+          ],
+          "credits": {
+            "lyrics": [
+              {
+                "creatorId": "26041",
+                "name": "藤川新夜"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4493",
+                "featuring": "f",
+                "name": "みとせのりこ"
+              }
+            ]
+          },
+          "songId": "6852",
+          "title": "夜明けの空"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2008",
+            "name": "えのもとひろあき"
+          },
+          {
+            "creatorId": "23717",
+            "name": "宮瀬まひろ(Aria)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2986",
+            "name": "八霧翔"
+          },
+          {
+            "creatorId": "2988",
+            "name": "D!"
+          },
+          {
+            "creatorId": "2989",
+            "name": "如月まさと"
+          },
+          {
+            "creatorId": "12928",
+            "name": "坂本昌一郎(Jun.A)"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2008",
+            "name": "えのもとひろあき"
+          }
+        ]
+      },
+      "workId": "3068"
+    },
+    "3071": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "葦沢 モモ美",
+              "vndbStaffId": "s2825"
+            }
+          ],
+          "characterId": "vndb:c19986",
+          "characterName": "仁科 雪乃",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19986"
+        },
+        {
+          "actors": [
+            {
+              "name": "ゆずきりあ",
+              "vndbStaffId": "s25399"
+            }
+          ],
+          "characterId": "vndb:c19987",
+          "characterName": "沢口 遙凪",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19987"
+        },
+        {
+          "actors": [
+            {
+              "name": "鈴堂 弓香",
+              "vndbStaffId": "s267"
+            }
+          ],
+          "characterId": "vndb:c19988",
+          "characterName": "立花 加代",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19988"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c19989",
+          "characterName": "河原美野里",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19989"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c19990",
+          "characterName": "沢口絵里子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19990"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c19991",
+          "characterName": "立花紗子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c19991"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c102888",
+          "characterName": "岡野 一樹",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c102888"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "4372",
+                "name": "中村一気"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "2022",
+                "name": "すずきけんいち"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "30439",
+                "featuring": "f",
+                "name": "高野真由子"
+              }
+            ]
+          },
+          "songId": "10540",
+          "title": "約束の向こう側"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2021",
+            "name": "タケシマサトシ"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "4372",
+            "name": "中村一気"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2022",
+            "name": "すずきけんいち"
+          }
+        ]
+      },
+      "workId": "3071"
+    },
+    "3072": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c77379",
+          "characterName": "花山 真紀",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77379"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c77380",
+          "characterName": "雪白 明日香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77380"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c77381",
+          "characterName": "雪白 夏美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77381"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c77382",
+          "characterName": "雪白 はずな",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77382"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c77383",
+          "characterName": "青樹 沙羅",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77383"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c77384",
+          "characterName": "山上 玲香",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c77384"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c112789",
+          "characterName": "雪白 紀世",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c112789"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "26189",
+                "name": "ティン・パン・アレー"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "26189",
+                "name": "ティン・パン・アレー"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "25018",
+                "featuring": "f",
+                "name": "林田輪朱"
+              }
+            ]
+          },
+          "songId": "7121",
+          "title": "Water Color"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "26189",
+                "name": "ティン・パン・アレー"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "26189",
+                "name": "ティン・パン・アレー"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "25018",
+                "featuring": "f",
+                "name": "林田輪朱"
+              }
+            ]
+          },
+          "songId": "7122",
+          "title": "青空は哀しみの色"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2017",
+            "name": "ANICD"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2558",
+            "name": "Angel Note"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1846",
+            "name": "MOONZERO(林達永、イムダリョン)"
+          }
+        ]
+      },
+      "workId": "3072"
+    },
+    "3073": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "西田 こむぎ",
+              "vndbStaffId": "s570"
+            }
+          ],
+          "characterId": "vndb:c1145",
+          "characterName": "入江 茉莉",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1145"
+        },
+        {
+          "actors": [
+            {
+              "name": "YUKI",
+              "vndbStaffId": "s828"
+            }
+          ],
+          "characterId": "vndb:c1146",
+          "characterName": "倉茂 真衣佳",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1146"
+        },
+        {
+          "actors": [
+            {
+              "name": "鳩野 比奈",
+              "vndbStaffId": "s110"
+            }
+          ],
+          "characterId": "vndb:c1147",
+          "characterName": "室星 朱音",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1147"
+        },
+        {
+          "actors": [
+            {
+              "name": "草柳 順子",
+              "vndbStaffId": "s631"
+            }
+          ],
+          "characterId": "vndb:c1148",
+          "characterName": "桜庭 李",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c1148"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "22563",
+                "name": "Glassroad"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "22563",
+                "name": "Glassroad"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "6781",
+                "featuring": "f",
+                "name": "成瀬麻衣"
+              }
+            ]
+          },
+          "songId": "1451",
+          "title": "夏草のシンフォニー"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "1468",
+            "name": "葛葉恭司"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2956",
+            "name": "Grass Road"
+          }
+        ]
+      },
+      "workId": "3073"
+    },
+    "3074": {
+      "cast": [],
+      "songs": [
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "13053",
+                "featuring": "f",
+                "name": "黒崎朔夜"
+              }
+            ]
+          },
+          "songId": "8762",
+          "title": "Dream goes on"
+        },
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "vocal": [
+              {
+                "creatorId": "20960",
+                "featuring": "f",
+                "name": "有村深羽"
+              }
+            ]
+          },
+          "songId": "14575",
+          "title": "ROOTS"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "891",
+            "name": "師走の翁"
+          },
+          {
+            "creatorId": "2020",
+            "name": "雨衣ユイ(Yuyi)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2670",
+            "name": "ミリオンバンブー(有限会社バンブー)"
+          },
+          {
+            "creatorId": "2671",
+            "name": "野村義男"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "892",
+            "name": "田中ロミオ(山田一)"
+          }
+        ]
+      },
+      "workId": "3074"
+    },
+    "3078": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "榊原 ゆい",
+              "vndbStaffId": "s272"
+            }
+          ],
+          "characterId": "vndb:c6245",
+          "characterName": "小笠原 美帆",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c6245"
+        },
+        {
+          "actors": [
+            {
+              "name": "一色 ヒカル",
+              "vndbStaffId": "s6"
+            }
+          ],
+          "characterId": "vndb:c6246",
+          "characterName": "北沢 真理",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c6246"
+        },
+        {
+          "actors": [
+            {
+              "name": "桜川 未央",
+              "vndbStaffId": "s279"
+            }
+          ],
+          "characterId": "vndb:c6247",
+          "characterName": "三村 里美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c6247"
+        },
+        {
+          "actors": [
+            {
+              "name": "歌織",
+              "vndbStaffId": "s891"
+            }
+          ],
+          "characterId": "vndb:c6248",
+          "characterName": "冴木 陽子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c6248"
+        },
+        {
+          "actors": [
+            {
+              "name": "長崎 みなみ",
+              "vndbStaffId": "s1073"
+            }
+          ],
+          "characterId": "vndb:c6249",
+          "characterName": "白石 今日子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c6249"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c124756",
+          "characterName": "酒井 隆則",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c124756"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "24940",
+                "name": "AIR"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "3009",
+                "name": "あるるかん(drops tone)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "3360",
+                "featuring": "f",
+                "name": "榊原ゆい(雛野まよ、Hinano、まりあ)"
+              }
+            ]
+          },
+          "songId": "1100",
+          "title": "キラリ☆夏"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "26615",
+                "name": "RYO(音楽)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "3009",
+                "name": "あるるかん(drops tone)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "25019",
+                "featuring": "f",
+                "name": "安藤夏"
+              }
+            ]
+          },
+          "songId": "8267",
+          "title": "あの夏の君を忘れない ～precious memory～"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2009",
+            "name": "榊MAKI"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "3009",
+            "name": "あるるかん(drops tone)"
+          },
+          {
+            "creatorId": "3309",
+            "name": "古口眞弓"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "503",
+            "name": "烏童マリヤ(烏堂マリヤ)"
+          },
+          {
+            "creatorId": "504",
+            "name": "武田勝信"
+          },
+          {
+            "creatorId": "2286",
+            "name": "河東アングル"
+          }
+        ]
+      },
+      "workId": "3078"
+    },
+    "3079": {
+      "cast": [
+        {
+          "actors": [
+            {
+              "name": "田中 美智",
+              "vndbStaffId": "s796"
+            }
+          ],
+          "characterId": "vndb:c86626",
+          "characterName": "安藤 暖花",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c86626"
+        },
+        {
+          "actors": [
+            {
+              "name": "紬 叶慧",
+              "vndbStaffId": "s2920"
+            }
+          ],
+          "characterId": "vndb:c86627",
+          "characterName": "安藤 雪音",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c86627"
+        },
+        {
+          "actors": [
+            {
+              "name": "あさり☆",
+              "vndbStaffId": "s1420"
+            }
+          ],
+          "characterId": "vndb:c86628",
+          "characterName": "谷川 帆南",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c86628"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c86629",
+          "characterName": "氷川 珠々果",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c86629"
+        },
+        {
+          "actors": [
+            {
+              "name": "涼森 ちさと",
+              "vndbStaffId": "s445"
+            }
+          ],
+          "characterId": "vndb:c86630",
+          "characterName": "西城戸 凛",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c86630"
+        },
+        {
+          "actors": [
+            {
+              "name": "櫻 レオナ",
+              "vndbStaffId": "s7025"
+            }
+          ],
+          "characterId": "vndb:c86631",
+          "characterName": "河本 麻紀子",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c86631"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c119279",
+          "characterName": "有海 睦未",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c119279"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "13941",
+                "name": "中坪淳彦(fish tone)"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "13941",
+                "name": "中坪淳彦(fish tone)"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "12499",
+                "name": "KOTOKO"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4359",
+                "featuring": "f",
+                "name": "モモイヒトミ(MOMO、桃井ひとみ)"
+              }
+            ]
+          },
+          "songId": "2539",
+          "title": "恋のマグネット"
+        },
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "19338",
+                "name": "C.G mix"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "19338",
+                "name": "C.G mix"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "12499",
+                "name": "KOTOKO"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "12499",
+                "featuring": "f",
+                "name": "KOTOKO"
+              }
+            ]
+          },
+          "songId": "2540",
+          "title": "absurd"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "41",
+            "name": "ミヤスリサ(宮栖里紗)"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "2294",
+            "name": "I've"
+          },
+          {
+            "creatorId": "3004",
+            "name": "BIGたあぼう"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "2012",
+            "name": "保住圭"
+          },
+          {
+            "creatorId": "2013",
+            "name": "椎田いのり"
+          }
+        ]
+      },
+      "workId": "3079"
+    },
+    "3099": {
+      "cast": [
+        {
+          "actors": [],
+          "characterId": "vndb:c56851",
+          "characterName": "望月 真心",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c56851"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c56852",
+          "characterName": "新川 透子",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c56852"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c56853",
+          "characterName": "華岡・アレクサンド・柚那",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c56853"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c56854",
+          "characterName": "武内 花織",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c56854"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c56855",
+          "characterName": "藤沢 姫菜",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c56855"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c65290",
+          "characterName": "芝原 琴美",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65290"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c65291",
+          "characterName": "桜乃 穂乃華",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65291"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c65292",
+          "characterName": "浦辺 なつみ",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c65292"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c85705",
+          "characterName": "華岡 恋奈",
+          "role": "primary",
+          "source": "vndb",
+          "vndbCharacterId": "c85705"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c85706",
+          "characterName": "白瀬 鳴海",
+          "role": "side",
+          "source": "vndb",
+          "vndbCharacterId": "c85706"
+        },
+        {
+          "actors": [],
+          "characterId": "vndb:c123052",
+          "characterName": "芝原 圭介",
+          "role": "main",
+          "source": "vndb",
+          "vndbCharacterId": "c123052"
+        }
+      ],
+      "songs": [
+        {
+          "categories": [
+            "OP"
+          ],
+          "credits": {
+            "arrangement": [
+              {
+                "creatorId": "4400",
+                "name": "景家淳"
+              }
+            ],
+            "composition": [
+              {
+                "creatorId": "4400",
+                "name": "景家淳"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "591",
+                "name": "桑島由一(E TICKET PRODUCTION)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4994",
+                "featuring": "f",
+                "name": "YURIA(有里亜)"
+              }
+            ]
+          },
+          "songId": "6365",
+          "title": "恋人大作戦"
+        },
+        {
+          "categories": [
+            "ED"
+          ],
+          "credits": {
+            "composition": [
+              {
+                "creatorId": "4400",
+                "name": "景家淳"
+              }
+            ],
+            "lyrics": [
+              {
+                "creatorId": "591",
+                "name": "桑島由一(E TICKET PRODUCTION)"
+              }
+            ],
+            "vocal": [
+              {
+                "creatorId": "4503",
+                "featuring": "f",
+                "name": "橋本みゆき"
+              }
+            ]
+          },
+          "songId": "6947",
+          "title": "AM1:00"
+        }
+      ],
+      "staff": {
+        "artwork": [
+          {
+            "creatorId": "2026",
+            "name": "あおいまなぶ"
+          }
+        ],
+        "music": [
+          {
+            "creatorId": "4131",
+            "name": "YUKI NAKANO(Yuki Nakano、YUKIちゃん)"
+          },
+          {
+            "creatorId": "4400",
+            "detail": "OP曲、ED曲",
+            "name": "景家淳"
+          }
+        ],
+        "scenario": [
+          {
+            "creatorId": "1461",
+            "name": "早川柚流(ゆ)"
+          }
+        ]
+      },
+      "workId": "3099"
+    }
+  },
+  "generatedAt": "2026-09-04T16:06:05+08:00"
+}
