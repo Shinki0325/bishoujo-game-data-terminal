@@ -1,1 +1,1 @@
-export const CHARACTER_NAMES = Object.freeze({"url": "../data/terminal-wiki-display-names-v1/characters.json", "sha256": "6db17315dc143bb1cf76420e0890f53b7ec116c36e09f8ef6fe0c491fd22eb96", "bytes": 631144});
+export const CHARACTER_NAMES = Object.freeze({"url": "../data/terminal-wiki-display-names-v1/characters.json?v=20260910", "sha256": "6db17315dc143bb1cf76420e0890f53b7ec116c36e09f8ef6fe0c491fd22eb96", "bytes": 631144});
