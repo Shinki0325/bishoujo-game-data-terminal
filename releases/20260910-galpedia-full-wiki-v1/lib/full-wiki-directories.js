@@ -1,6 +1,6 @@
 import { yieldMainThread, sortWithYield } from './yield-main-thread.js';
 import * as personDirectoryTransportCodec from './person-directory-transport-codec.js';
-import { createCharacterNamesLoader, characterDisplayName } from './full-wiki-character-names.js';
+import { createCharacterNamesLoader, characterDisplayName } from './full-wiki-character-names-v2.js';
 import { selectRepresentativeCharacters } from './person-representative-characters.js';
 import {resolveCompanyWorkIds} from './full-wiki-company-relations.js';
 import {resolvePersonActivityBounds, buildPersonDirectoryActivity, formatPersonActivitySpan} from './person-activity-timeline.js';

@@ -1,5 +1,5 @@
 import { loadPersonDisplayNames } from './full-wiki-person-names.js';
-import { createCharacterNamesLoader } from './full-wiki-character-names.js';
+import { createCharacterNamesLoader } from './full-wiki-character-names-v2.js';
 import { adaptFullWikiWorkDetail } from './full-wiki-work-detail-adapter.js';
 
 export function createFullWikiWorkDetailLoader({

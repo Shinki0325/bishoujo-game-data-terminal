@@ -1,4 +1,4 @@
-import { characterDisplayName } from './full-wiki-character-names.js';
+import { characterDisplayName } from './full-wiki-character-names-v2.js';
 const STAFF_ROLE_GROUPS = Object.freeze({
   artwork: 'artwork',
   art: 'artwork',
