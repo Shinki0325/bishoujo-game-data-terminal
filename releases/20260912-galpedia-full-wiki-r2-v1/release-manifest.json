@@ -20632,7 +20632,7 @@
       "sha256": "714ef50034280ae4c6be5b78fa1e53e11a399d29cbc4d74a8bf3311cf0ea209b"
     }
   ],
-  "releaseId": "20260911-galpedia-full-wiki-v2",
+  "releaseId": "20260912-galpedia-full-wiki-r2-v1",
   "runtimeDataRevision": "8a3437c7128fabece42acacadf663a7a9f6a08bf200509870858eb01a4843503",
   "schemaVersion": "egs-tier-immutable-release-closure-v1",
   "staticFiles": [
