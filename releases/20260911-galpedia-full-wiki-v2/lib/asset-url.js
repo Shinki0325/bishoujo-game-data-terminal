@@ -32,7 +32,7 @@ export function approvedPublicMediaUrl(publicUrl, descriptor = {}) {
   if (typeof publicUrl !== 'string' || !publicUrl) throw new AssetUrlError('public media URL is required');
   let url;
   try { url = new URL(publicUrl); } catch { throw new AssetUrlError('public media URL is invalid'); }
-  if (url.origin !== 'https://assets.bishojo.date' || url.search || url.hash) throw new AssetUrlError('public media URL origin is not approved');
+  if (!['https://assets.bishojo.date','https://wiki-assets.bishojo.date'].includes(url.origin) || url.search || url.hash) throw new AssetUrlError('public media URL origin is not approved');
   const path = url.pathname.replace(/^\//u, '');
   if (!APPROVED_PUBLIC_MEDIA_PATTERNS.some(pattern => pattern.test(path))) throw new AssetUrlError('public media URL path is not approved');
   if (typeof descriptor.sha256 !== 'string' || !path.endsWith(`${descriptor.sha256}.webp`)) throw new AssetUrlError('public media URL SHA mismatch');
