@@ -762,8 +762,14 @@ async function initialize() {
       loadPersonCast: createPersonCastLoader().load,
       loadCharacterAvailability: () => fullWikiMedia.characterAvailability(),
       loadCharacterImages: async ids => {
-        const rows = await fullWikiMedia.getMany('characters', ids);
-        return new Map([...rows].map(([id, row]) => [id, fullWikiMedia.characterImage(row)]));
+        const aliases = id => {
+          const value = String(id);
+          const bare = value.replace(/^char_(?:vndb_|bangumi_)?/u, '').replace(/^vndb:/u, '');
+          return [...new Set([value, `char_vndb_${bare}`, `char_bangumi_${bare}`, `char_${bare}`])];
+        };
+        const requested = [...new Set(ids.flatMap(aliases))];
+        const rows = await fullWikiMedia.getMany('characters', requested);
+        return new Map(ids.map(id => [id, aliases(id).map(alias => fullWikiMedia.characterImage(rows.get(alias))).find(Boolean) ?? null]));
       },
       loadWorkCharacters: id => workDetailCreditsLoader.load(id)
     });
@@ -1034,8 +1040,10 @@ async function initialize() {
     workDetailCreditsLoader = createFullWikiWorkDetailLoader({
       enabled: true, runtime:fullWikiRuntime, fallbackLoader: legacyWorkDetailCreditsLoader,
       async loadCharacterMedia(characters) {
-        const rows = await fullWikiMedia.getMany('characters', characters.map(row => row.characterId));
-        return new Map([...rows].map(([id,row]) => [id,fullWikiMedia.characterImage(row)]));
+        const aliases = id => { const value=String(id); const bare=value.replace(/^char_(?:vndb_|bangumi_)?/u,'').replace(/^vndb:/u,''); return [...new Set([value,`char_vndb_${bare}`,`char_bangumi_${bare}`,`char_${bare}`])]; };
+        const ids = characters.map(row => row.characterId);
+        const rows = await fullWikiMedia.getMany('characters', [...new Set(ids.flatMap(aliases))]);
+        return new Map(ids.map(id => [id, aliases(id).map(alias => fullWikiMedia.characterImage(rows.get(alias))).find(Boolean) ?? null]));
       },
       onMediaError(error) { console.warn('角色图片暂不可用，保留文字资料', error); },
       onFallback(error, workId) { console.warn('full wiki v7 detail unavailable; using legacy credits', {workId, error}); }
