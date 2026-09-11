@@ -747,7 +747,7 @@ async function initialize() {
   let companyDirectory = null;
   let companyDirectoryPromise = null;
   if (fullWikiEnabled) {
-    const {createFullWikiDirectories} = await import('./lib/full-wiki-directories.js');
+    const {createFullWikiDirectories} = await import('./lib/full-wiki-directories-v2.js');
     const {createPersonCastLoader} = await import('./lib/full-wiki-person-cast-v2.js');
     fullWikiDirectories = createFullWikiDirectories({
       manifestUrl:new URL(`data/terminal-wiki-directory-v1/${preparedWorkbench.fullWiki.directoryManifest.path}`, import.meta.url),
