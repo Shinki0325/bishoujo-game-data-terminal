@@ -1,2 +1,0 @@
-// Derived from validated public runtime inputs. Data revision is independent of UI commits.
-export const WORKBENCH_DEMAND = Object.freeze({"enabled":true,"manifestPath":"../runtime-data/workbench-demand/manifest.json","sha256":"4d2189173ca98eadd2392045658f25770b753de3294beeb17198fa17acf11bf8","firstPage":{"path":"first-page.0c5ce211613a8b6c.json","sha256":"0c5ce211613a8b6ced36ac17feac1d8f2d4ddcb997480eac867aed26902a7c46"}});
