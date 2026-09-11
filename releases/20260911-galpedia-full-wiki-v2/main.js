@@ -1845,9 +1845,12 @@ async function initialize() {
     onLoadRepresentativeCharacters: fullWikiDirectories
       ? personId => fullWikiDirectories.loadRepresentativeCharacters(personId, { limit: 3 }) : undefined,
     loadImageForWork: fullWikiMedia ? async credit => {
-      const id = String(credit.workId);
-      const rows = await fullWikiMedia.getMany('editions', [id]);
-      return fullWikiMedia.characterImage(rows.get(id))?.url ?? null;
+      const value = String(credit.characterId ?? credit.sourceCharacterId ?? '');
+      const bare = value.replace(/^char_(?:vndb_|bangumi_)?/u, '').replace(/^vndb:/u, '');
+      const ids = [...new Set([value, `char_vndb_${bare}`, `char_bangumi_${bare}`, `char_${bare}`])];
+      const rows = await fullWikiMedia.getMany('characters', ids);
+      for (const id of ids) { const image = fullWikiMedia.characterImage(rows.get(id)); if (image?.url) return image.url; }
+      return null;
     } : undefined,
     onSelect(personId) {
       if (workPersonOverlay && personId === null) {
