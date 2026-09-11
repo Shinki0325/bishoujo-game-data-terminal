@@ -1,0 +1,438 @@
+import { resolveAssetUrl } from '../lib/asset-url.js';
+import { formatReleaseDate, releaseDateInfo, RELEASE_STATUS } from '../lib/work-release-date.js';
+import { createViewLifetime } from '../lib/view-lifetime.js';
+import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
+import { setListState } from '../lib/list-state.js';
+import { syncSortDirectionControl, toggleSortDirection } from '../lib/ui-sort-control.js';
+
+const COMPANY_PAGE_SIZE = 36;
+const COMPANY_SORT_KEYS = new Set([
+  'totalVoteCount', 'workCount', 'averageVoteCount', 'releaseYearStart', 'brandName'
+]);
+const COMPANY_SORT_DEFAULT_DIRECTIONS = Object.freeze({
+  totalVoteCount: 'desc',
+  workCount: 'desc',
+  averageVoteCount: 'desc',
+  releaseYearStart: 'asc',
+  brandName: 'asc'
+});
+
+function requireElement(root, id) {
+  const element = root.querySelector?.(`#${id}`);
+  if (!element) throw new Error(`Company directory root is missing #${id}`);
+  return element;
+}
+
+function text(documentRef, tag, className, value) {
+  const element = documentRef.createElement(tag);
+  element.className = className;
+  element.textContent = String(value ?? '');
+  return element;
+}
+
+function formatCount(value) {
+  if (!Number.isFinite(value)) return '暂无';
+  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(value);
+}
+
+function companyReleaseSpan(company, works = []) {
+  const infos = (Array.isArray(works) ? works : []).map(work => releaseDateInfo(work.releaseDate));
+  const releasedYears = infos.filter(info => info.kind === RELEASE_STATUS.RELEASED).map(info => info.year);
+  const hasTbd = infos.some(info => info.kind === RELEASE_STATUS.TBD);
+  const hasUnreleased = infos.some(info => info.kind === RELEASE_STATUS.UNRELEASED);
+  if (releasedYears.length > 0) {
+    const span = `${Math.min(...releasedYears)}-${Math.max(...releasedYears)}`;
+    const suffix = [hasTbd ? '含发售未定作品' : '', hasUnreleased ? '含未发售作品' : ''].filter(Boolean).join('、');
+    return suffix ? `${span} · ${suffix}` : span;
+  }
+  const start = Number(company.releaseYearStart);
+  const end = Number(company.releaseYearEnd);
+  if (start === 2050 && end === 2050) return '发售未定';
+  if (Number.isFinite(start) && end === 2050) return `${start} · 含发售未定作品`;
+  if (Number.isFinite(start) && Number.isFinite(end)) return `${start}-${end}`;
+  return '日期未知';
+}
+
+function parseCompanySortValue(value) {
+  const raw = String(value ?? '');
+  const match = /^(.*)-(asc|desc)$/u.exec(raw);
+  const key = match?.[1] ?? raw;
+  if (!COMPANY_SORT_KEYS.has(key)) {
+    return { key: 'totalVoteCount', direction: 'desc' };
+  }
+  return {
+    key,
+    direction: match?.[2] === 'asc' || match?.[2] === 'desc'
+      ? match[2]
+      : COMPANY_SORT_DEFAULT_DIRECTIONS[key]
+  };
+}
+
+function companySortValue({ key, direction }) {
+  return `${key}-${direction}`;
+}
+
+export function createCompanyDirectoryView({
+  root,
+  onSearch,
+  onSort,
+  onSelectCompany,
+  onToggleCompany,
+  onOpenWork,
+  onDetailWorkSort,
+  onCloseDetail = () => {},
+  onPageChange = () => {},
+  selectionMode = true
+}) {
+  if (!root || typeof root.querySelector !== 'function') throw new TypeError('root must provide querySelector');
+  if (typeof onSearch !== 'function' || typeof onSort !== 'function' || typeof onSelectCompany !== 'function' || typeof onToggleCompany !== 'function' || typeof onOpenWork !== 'function' || typeof onDetailWorkSort !== 'function' || typeof onCloseDetail !== 'function' || typeof onPageChange !== 'function') {
+    throw new TypeError('company directory callbacks must be functions');
+  }
+  const documentRef = root.ownerDocument;
+  const lifetime = createViewLifetime();
+  const search = requireElement(root, 'company-directory-search');
+  const sort = requireElement(root, 'company-sort');
+  // The direction control was added after the first directory view tests;
+  // keep it optional so those minimal fixtures remain valid.
+  const sortDirection = root.querySelector?.('#company-sort-direction');
+  const sortDirectionIcon = root.querySelector?.('#company-sort-direction-icon');
+  const list = requireElement(root, 'company-list');
+  const layout = root.querySelector?.('.company-directory-layout');
+  const detail = requireElement(root, 'company-detail');
+  const detailHome = detail.parentElement;
+  const detailTitle = requireElement(root, 'company-detail-title');
+  const detailAvatar = requireElement(root, 'company-detail-avatar');
+  const detailMeta = requireElement(root, 'company-detail-meta');
+  const detailClose = root.querySelector?.('#company-detail-close');
+  const detailWorks = requireElement(root, 'company-detail-works');
+  const detailSort = requireElement(root, 'company-detail-sort');
+  const detailSortDirection = requireElement(root, 'company-detail-sort-direction');
+  const detailSortDirectionIcon = requireElement(root, 'company-detail-sort-direction-icon');
+  const empty = requireElement(root, 'company-empty');
+  const listState = requireElement(root, 'company-list-state');
+  const pagination = requireElement(root, 'company-directory-pagination');
+  const pagePrevious = requireElement(root, 'company-page-previous');
+  const pageInput = requireElement(root, 'company-page-input');
+  const pageTotal = requireElement(root, 'company-page-total');
+  const pageNext = requireElement(root, 'company-page-next');
+  const pageError = requireElement(root, 'company-page-error');
+  let latestModel = null;
+  let renderedCompanyKey = '';
+  let renderedPageKey = '';
+  let pageIndex = 0;
+  let renderedSelectedCompanyId = null;
+
+  lifetime.listen(search, 'input', () => onSearch(search.value));
+  lifetime.listen(sort, 'change', () => {
+    const parsed = parseCompanySortValue(sort.value);
+    onSort(companySortValue({ key: parsed.key, direction: COMPANY_SORT_DEFAULT_DIRECTIONS[parsed.key] }));
+  });
+  lifetime.listen(sortDirection, 'click', () => {
+    const parsed = parseCompanySortValue(latestModel?.sortValue ?? sort.value);
+    onSort(companySortValue({ key: parsed.key, direction: toggleSortDirection(parsed.direction) }));
+  });
+  lifetime.listen(detailSort, 'change', () => onDetailWorkSort({ sortKey: detailSort.value }));
+  lifetime.listen(detailSortDirection, 'click', () => {
+    onDetailWorkSort({ direction: detailSortDirection.getAttribute('aria-pressed') === 'true' ? 'desc' : 'asc' });
+  });
+  lifetime.listen(detailClose, 'click', () => onCloseDetail());
+
+  function pageCount(companies) {
+    return Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
+  }
+
+  function clearPageError() {
+    pageError.hidden = true;
+    pageInput.removeAttribute('aria-invalid');
+  }
+
+  function showPageError() {
+    pageError.hidden = false;
+    pageInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function imageFor(parent, company, className, imageUrlForCompany) {
+    const imageUrl = typeof imageUrlForCompany === 'function' ? imageUrlForCompany(company) : null;
+    if (!imageUrl) {
+      parent.append(text(documentRef, 'span', `${className} company-avatar-fallback`, '无头像'));
+      return;
+    }
+    const image = documentRef.createElement('img');
+    image.className = className;
+    image.alt = '';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.src = imageUrl;
+    image.addEventListener('error', () => {
+      image.remove();
+      parent.append(text(documentRef, 'span', `${className} company-avatar-fallback`, '无头像'));
+    }, { once: true });
+    parent.append(image);
+  }
+
+  function render({
+    companies = [],
+    selectedCompanyId = null,
+    selectedCompanyIds = new Set(),
+    selectedWorks = [],
+    detailState = 'ready',
+    onRetryDetail = null,
+    sortValue = 'totalVoteCount-desc',
+    detailWorkSortKey = 'releaseDate',
+    detailWorkSortDirection = 'asc',
+    selectionMode: currentSelectionMode = selectionMode,
+    imageUrlForCompany = null,
+    imageUrlForWork = null
+  } = {}) {
+    const parsedSort = parseCompanySortValue(sortValue);
+    const normalizedSortValue = companySortValue(parsedSort);
+    const companyKey = companies.map(company => company.companyId).join('\u001f');
+    if (companyKey !== renderedCompanyKey) {
+      renderedCompanyKey = companyKey;
+      renderedPageKey = '';
+      pageIndex = 0;
+      clearPageError();
+    }
+    const selectedCompanyChanged = selectedCompanyId !== renderedSelectedCompanyId;
+    renderedSelectedCompanyId = selectedCompanyId;
+    latestModel = {
+      companies,
+      selectedCompanyId,
+      selectedCompanyIds,
+      selectedWorks,
+      detailState,
+      onRetryDetail,
+      sortValue: normalizedSortValue,
+      detailWorkSortKey,
+      detailWorkSortDirection,
+      selectionMode: currentSelectionMode,
+      imageUrlForCompany,
+      imageUrlForWork
+    };
+    const totalPages = pageCount(companies);
+    const selectedIndex = companies.findIndex(company => company.companyId === selectedCompanyId);
+    if (selectedCompanyChanged && selectedIndex >= 0 && (selectedIndex < pageIndex * COMPANY_PAGE_SIZE || selectedIndex >= (pageIndex + 1) * COMPANY_PAGE_SIZE)) {
+      pageIndex = Math.floor(selectedIndex / COMPANY_PAGE_SIZE);
+    }
+    pageIndex = Math.min(pageIndex, totalPages - 1);
+    const visibleCompanies = companies.slice(pageIndex * COMPANY_PAGE_SIZE, (pageIndex + 1) * COMPANY_PAGE_SIZE);
+    const pageKey = `${companyKey}\u001f${pageIndex}\u001f${currentSelectionMode}`;
+    if (pageKey !== renderedPageKey) {
+      renderedPageKey = pageKey;
+      if (detailHome && detail.parentElement !== detailHome) detailHome.append(detail);
+      list.replaceChildren();
+      for (const company of visibleCompanies) {
+      const card = documentRef.createElement('article');
+      card.className = 'company-directory-card';
+      card.classList.toggle('is-selected', company.companyId === selectedCompanyId);
+      card.dataset.companyId = company.companyId;
+      const open = documentRef.createElement('button');
+      open.type = 'button';
+      open.className = 'company-directory-card-open';
+      open.setAttribute('aria-label', `打开会社 ${company.brandName}`);
+      imageFor(open, company, 'company-avatar', imageUrlForCompany);
+      const overlay = documentRef.createElement('span');
+      overlay.className = 'company-directory-card-overlay';
+      overlay.append(
+        text(documentRef, 'strong', 'company-directory-card-name', company.brandName),
+        text(documentRef, 'span', 'company-directory-card-work-count', `${company.workCount} 部`),
+        text(documentRef, 'span', 'company-directory-card-vote-count', `${formatCount(company.totalVoteCount)} 票`)
+      );
+      open.append(overlay);
+      if (currentSelectionMode) {
+        open.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
+        open.setAttribute('aria-pressed', String(selectedCompanyIds.has(company.companyId)));
+        open.addEventListener('click', () => onToggleCompany(company.companyId, !selectedCompanyIds.has(company.companyId)));
+      } else {
+        open.addEventListener('click', () => onSelectCompany(company.companyId, { revealDetail: true }));
+      }
+      if (currentSelectionMode) {
+        const select = documentRef.createElement('input');
+        select.type = 'checkbox';
+        select.className = 'company-directory-card-select';
+        select.checked = selectedCompanyIds.has(company.companyId);
+        select.setAttribute('aria-label', `选择会社 ${company.brandName} 进行排榜`);
+        select.addEventListener('change', () => onToggleCompany(company.companyId, select.checked));
+        card.append(open, select);
+      } else {
+        card.append(open);
+        if (selectedCompanyIds.has(company.companyId)) {
+          const marker = documentRef.createElement('span');
+          marker.className = 'company-directory-card-selected-mark';
+          marker.textContent = '已选';
+          marker.setAttribute('aria-label', '已选');
+          card.append(marker);
+        }
+      }
+      list.append(card);
+    }
+    }
+    empty.hidden = true;
+    setListState({
+      status: listState,
+      state: companies.length === 0 ? 'empty' : 'ready',
+      message: '没有匹配的会社。'
+    });
+    pagination.hidden = totalPages <= 1;
+    pagePrevious.disabled = pageIndex === 0;
+    pageNext.disabled = pageIndex >= totalPages - 1;
+    pageInput.value = String(pageIndex + 1);
+    pageTotal.textContent = String(totalPages);
+    const sortOptionValues = Array.from(sort.options ?? [], option => option.value);
+    sort.value = sortOptionValues.includes(parsedSort.key) ? parsedSort.key : normalizedSortValue;
+    if (sortDirection) {
+      syncSortDirectionControl({
+        button: sortDirection,
+        icon: sortDirectionIcon,
+        direction: parsedSort.direction,
+        labelPrefix: '会社排序',
+        documentRef
+      });
+    }
+    for (const card of list.querySelectorAll('.company-directory-card')) {
+      const companyId = card.dataset.companyId;
+      card.classList.toggle('is-selected', companyId === selectedCompanyId);
+      const select = card.querySelector('.company-directory-card-select');
+      if (select !== null) select.checked = selectedCompanyIds.has(companyId);
+    }
+    const selected = companies.find(company => company.companyId === selectedCompanyId) ?? null;
+    const isMobile = Boolean(root.ownerDocument?.defaultView?.matchMedia?.('(max-width: 899px)')?.matches);
+    if (!isMobile && layout && detail.parentElement !== layout) layout.append(detail);
+    detail.hidden = selected === null;
+    detail.setAttribute('aria-busy', String(selected !== null && detailState === 'loading'));
+    if (!selected) return;
+    detailTitle.textContent = selected.brandName;
+    detailAvatar.replaceChildren();
+    imageFor(detailAvatar, selected, 'company-detail-avatar-image', imageUrlForCompany);
+    detailMeta.textContent = `${selected.workCount} 部作品 · ${companyReleaseSpan(selected, selectedWorks)} · 总评分 ${formatCount(selected.totalVoteCount)} · 平均每作 ${formatCount(selected.averageVoteCount)}`;
+    detailSort.value = detailWorkSortKey;
+    syncSortDirectionControl({
+      button: detailSortDirection,
+      icon: detailSortDirectionIcon,
+      direction: detailWorkSortDirection,
+      labelPrefix: '作品排序',
+      documentRef
+    });
+    detailWorks.replaceChildren();
+    if (detailState !== 'ready') {
+      const status = text(documentRef, 'div', 'list-state', '');
+      status.setAttribute('role', 'status');
+      setListState({status, state: detailState,
+        message: detailState === 'loading' ? '正在载入会社作品…' : '会社作品加载失败，请重试。',
+        retry: onRetryDetail});
+      detailWorks.append(status);
+    }
+    for (const work of detailState === 'ready' ? selectedWorks : []) {
+      const item = documentRef.createElement('button');
+      item.type = 'button';
+      item.className = 'company-directory-work';
+      const cover = documentRef.createElement('span');
+      cover.className = 'company-directory-work-cover';
+      const imageSource = typeof imageUrlForWork === 'function' ? imageUrlForWork(work) : null;
+      const imageUrl = typeof imageSource === 'string' ? imageSource : imageSource?.thumbnailUrl ?? null;
+      if (imageUrl) {
+        const image = documentRef.createElement('img');
+        image.alt = '';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        applyAdaptiveImageSource(image, {
+          thumbnailUrl: imageUrl,
+          previewUrl: typeof imageSource === 'string' ? null : imageSource?.previewUrl ?? null
+        });
+        image.addEventListener('error', () => image.remove(), { once: true });
+        cover.append(image);
+      }
+      const copy = documentRef.createElement('span');
+      copy.className = 'company-directory-work-copy';
+      copy.append(
+        text(documentRef, 'strong', 'company-directory-work-title', work.displayTitle || work.title),
+        text(documentRef, 'span', 'company-directory-work-meta', `${formatReleaseDate(work.releaseDate)} · ${Number.isFinite(work.median) ? work.median.toFixed(1) : '-'} · ${formatCount(work.voteCount)}`)
+      );
+      item.append(cover, copy);
+      item.addEventListener('click', () => onOpenWork(work));
+      detailWorks.append(item);
+    }
+    if (isMobile) {
+      const selectedIndex = visibleCompanies.findIndex(company => company.companyId === selectedCompanyId);
+      const columns = Number(root.ownerDocument?.defaultView?.innerWidth) <= 899 ? 3 : 2;
+      const rowEnd = Math.min(visibleCompanies.length, (Math.floor(selectedIndex / columns) + 1) * columns);
+      const anchor = list.children[rowEnd - 1];
+      if (selectedIndex >= 0 && anchor) anchor.after(detail);
+      else if (detailHome) detailHome.append(detail);
+    }
+  }
+
+  function setPage(nextPageIndex, { scroll = true, notify = true } = {}) {
+    if (latestModel === null) return;
+    const previousIndex = pageIndex;
+    pageIndex = Math.max(0, Math.min(nextPageIndex, pageCount(latestModel.companies) - 1));
+    clearPageError();
+    render(latestModel);
+    if (scroll && pageIndex !== previousIndex) root.scrollTop = 0;
+    const scrollWindow = root.ownerDocument?.defaultView
+      ?? (typeof window !== 'undefined' ? window : null);
+    if (scroll && pageIndex !== previousIndex && typeof scrollWindow?.scrollTo === 'function') {
+      try {
+        scrollWindow.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      } catch {
+        try { scrollWindow.scrollTo(0, 0); } catch { /* no-op in test DOMs */ }
+      }
+    }
+    if (notify && pageIndex !== previousIndex) onPageChange(pageIndex + 1);
+  }
+
+  lifetime.listen(pagePrevious, 'click', () => setPage(pageIndex - 1));
+  lifetime.listen(pageNext, 'click', () => setPage(pageIndex + 1));
+  lifetime.listen(pageInput, 'keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const raw = String(pageInput.value ?? '').trim();
+    const requested = Number(raw);
+    if (!/^\d+$/u.test(raw) || !Number.isSafeInteger(requested) || requested < 1 || requested > pageCount(latestModel?.companies ?? [])) {
+      showPageError();
+      return;
+    }
+    setPage(requested - 1);
+  });
+
+  return Object.freeze({
+    dispose() {
+      lifetime.dispose();
+      // Mobile places the detail between cards. Return the owned panel before
+      // clearing rows so a subsequent workspace owner can still find its IDs.
+      if (detailHome && detail.parentElement !== detailHome) detailHome.append(detail);
+      list.replaceChildren(); detailWorks.replaceChildren();
+    },
+    render,
+    getPageNumber() {
+      return pageIndex + 1;
+    },
+    setPageNumber(pageNumber, { scroll = false, notify = false } = {}) {
+      const number = Number(pageNumber);
+      if (!Number.isSafeInteger(number) || number < 1) return false;
+      setPage(number - 1, { scroll, notify });
+      return true;
+    },
+    elements: Object.freeze({
+      search,
+      sort,
+      sortDirection,
+      list,
+      detail,
+      detailClose,
+      detailSort,
+      detailSortDirection,
+      pagination,
+      pagePrevious,
+      pageInput,
+      pageTotal,
+      pageNext,
+      pageError
+    })
+  });
+}
+
+export function companyImageUrl(company, assetBase) {
+  const path = company?.avatar?.path;
+  return typeof path === 'string' && path.length > 0 ? resolveAssetUrl(path, assetBase) : null;
+}
