@@ -1,1 +1,1 @@
-export const PERSON_CAST = Object.freeze({ schema: 'terminal-wiki-person-cast-payload-v1', url: '../data/terminal-wiki-person-cast-v1/manifest.json?v=20260910', sha256: '0ce9f76f4e984d0e677c1e2a4c025d80761f538602de2712cc46a0f0606aee97', bytes: 1956071 });
+export const PERSON_CAST = Object.freeze({ schema: 'terminal-wiki-person-cast-payload-v1', url: '/data/terminal-wiki-person-cast-v1/manifest.json?v=20260910', sha256: '0ce9f76f4e984d0e677c1e2a4c025d80761f538602de2712cc46a0f0606aee97', bytes: 1956071 });
