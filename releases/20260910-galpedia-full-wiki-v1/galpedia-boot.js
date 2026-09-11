@@ -169,7 +169,7 @@ async function ensureRuntime() {
     // Start validated data alongside the module graph, only when the full
     // workbench is requested. Home and independent directories remain lazy.
     void import('./lib/workbench-demand-data.js').then(module=>module.preloadWorkbenchData()).catch(()=>{});
-    const mainReady = import('./main.js');
+    const mainReady = import('./main.js?v=20260911b');
     mainReady.catch(()=>{});
     void import('./lib/workbench-landing.js').then(module=>{
       if(runtimeReady||runtimeFailed)return;
