@@ -540,11 +540,13 @@ export function createFullWikiDirectories({
     if (!summary) return [];
     if (loadPersonCast) {
       const selected = await once(`person-ranked-cast:${summary.entityId}`, async () => {
-        const rows = selectRepresentativeCharacters(await personCastRows(id));
+        // Select a wider candidate window first; some early source rows have
+        // no public image while later VNDB rows for the same person do.
+        const rows = selectRepresentativeCharacters(await personCastRows(id), 16);
         const images = loadCharacterImages ? await loadCharacterImages(rows.map(row => row.characterId)) : null;
         return rows.map((row, index) => ({...row, imageUrl:images?.get?.(row.characterId)?.url ?? row.imageUrl ?? null, _imageRank: images?.get?.(row.characterId)?.url ? 0 : 1, _imageOrder:index}))
           .sort((a, b) => a._imageRank - b._imageRank || a._imageOrder - b._imageOrder)
-          .map(({_imageRank, _imageOrder, ...row}) => row);
+          .map(({_imageRank, _imageOrder, ...row}) => row).slice(0, 4);
       });
       return selected.slice(0, Math.max(0, Math.min(4, limit)));
     }
