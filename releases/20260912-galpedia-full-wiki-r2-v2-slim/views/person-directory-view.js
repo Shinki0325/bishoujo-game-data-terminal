@@ -159,6 +159,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   const close = documentRef.querySelector('#person-detail-close');
   const roleTabs = [...root.querySelectorAll('[data-person-role]')];
   let model = [];
+  let remotePage = null;
   let roleCountSnapshot = null;
   let populationCount = null;
   const detailSession = createWorkspaceSession();
@@ -194,7 +195,9 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   }
 
   function paintRepresentativeFaces(person, faces, rows, state = 'ready') {
-    if (!faces?.isConnected) return;
+    // Precomputed static faces are painted before their row enters the DOM.
+    // Async callers retain their render-token and connected-node checks.
+    if (!faces) return;
     faces.replaceChildren();
     faces.dataset.representativeState = state;
     for (const character of rows) {
@@ -288,7 +291,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     jobs.forEach(job => enqueueRepresentativeJob(job.person, job.faces, job.row, token));
   }
 
-  function filteredModel() { return roleFilter === 'all' ? model : model.filter(person => directoryRole(person) === roleFilter); }
+  function filteredModel() { return remotePage || roleFilter === 'all' ? model : model.filter(person => directoryRole(person) === roleFilter); }
   function isVoiceActor(person) { return Number(person?.roles?.['voice-actor'] ?? person?.roles?.voice ?? 0) > 0; }
   function renderRoleTabCounts() {
     if (roleCountSnapshot === null) {
@@ -302,7 +305,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       const key = tab.dataset.personRole ?? 'all';
       const label = tab.dataset.baseLabel ?? tab.textContent.replace(/\s*[0-9,]+\s*$/u, '').trim();
       tab.dataset.baseLabel = label;
-      const amount = key === 'all' ? model.length : (roleCountSnapshot.get(key) ?? 0);
+      const amount = remotePage ? (key === 'all' ? remotePage.searchCount : (remotePage.roleCounts[key] ?? 0)) : key === 'all' ? model.length : (roleCountSnapshot.get(key) ?? 0);
       tab.textContent = `${label} ${new Intl.NumberFormat('zh-CN').format(amount)}`;
     }
   }
@@ -747,17 +750,17 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         activityAxis.append(label);
       }
     }
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)); pageIndex = Math.min(pageIndex, totalPages - 1);
+    const totalPages = remotePage?.pageCount ?? Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)); pageIndex = Math.min(pageIndex, totalPages - 1);
     renderRoleTabCounts();
     if (representativeHeading) representativeHeading.textContent = roleFilter === 'voice-actor'
       ? '代表角色'
       : roleFilter === 'all' ? '代表角色/作品' : '代表作品';
-    syncLocalFeedback(count, new Intl.NumberFormat('zh-CN').format(filtered.length));
+    syncLocalFeedback(count, new Intl.NumberFormat('zh-CN').format(remotePage?.totalCount ?? filtered.length));
     const resultSummary = root.querySelector('#person-result-summary');
-    if (resultSummary) resultSummary.hidden = filtered.length === populationCount;
+    if (resultSummary) resultSummary.hidden = (remotePage?.totalCount ?? filtered.length) === populationCount;
     page.textContent = String(pageIndex + 1); total.textContent = String(totalPages);
     previous.disabled = pageIndex === 0; next.disabled = pageIndex >= totalPages - 1; list.replaceChildren();
-    const visible = filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE); empty.hidden = visible.length !== 0;
+    const visible = remotePage ? filtered : filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE); empty.hidden = visible.length !== 0;
     for (const person of visible) {
       const row = node(documentRef, 'button', 'person-directory-row'); row.type = 'button'; row.dataset.personId = person.entityId;
       const displayName = person.displayName || person.canonicalName || '未命名人物';
@@ -824,11 +827,11 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   }
 
   lifetime.listen(search, 'input', () => { pageIndex = 0; onSearch?.(search.value); });
-  lifetime.listen(previous, 'click', () => { pageIndex = Math.max(0, pageIndex - 1); render(); onPageChange?.(pageIndex + 1); });
-  lifetime.listen(next, 'click', () => { pageIndex += 1; render(); onPageChange?.(pageIndex + 1); });
+  lifetime.listen(previous, 'click', () => { if (remotePage) { onPageChange?.(Math.max(1, pageIndex)); return; } pageIndex = Math.max(0, pageIndex - 1); render(); onPageChange?.(pageIndex + 1); });
+  lifetime.listen(next, 'click', () => { if (remotePage) { onPageChange?.(pageIndex + 2); return; } pageIndex += 1; render(); onPageChange?.(pageIndex + 1); });
   lifetime.listen(close, 'click', closeDetailFromUser);
   roleTabs.forEach((tab, index) => {
-    lifetime.listen(tab, 'click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); item.setAttribute('aria-pressed', String(active)); item.tabIndex = active ? 0 : -1; }); pageIndex = 0; render(); onRoleChange?.(roleFilter); });
+    lifetime.listen(tab, 'click', () => { roleFilter = tab.dataset.personRole ?? 'all'; roleTabs.forEach(item => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); item.setAttribute('aria-pressed', String(active)); item.tabIndex = active ? 0 : -1; }); pageIndex = 0; if (!remotePage) render(); onRoleChange?.(roleFilter); });
     lifetime.listen(tab, 'keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
@@ -840,7 +843,9 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   return Object.freeze({
     suspend() { representativeObserver?.disconnect?.(); representativeObserver = null; representativeQueue = []; invalidateDetailRequest(); },
     dispose() { representativeObserver?.disconnect?.(); representativeObserver = null; representativeQueue = []; detailSession.dispose(); lifetime.dispose(); invalidateDetailRequest(); list.replaceChildren(); },
-    render({ persons = [], totalPersonCount = null, selectedPersonId = null, activityAxis: nextActivityAxis = null } = {}) {
+    render({ persons = [], totalPersonCount = null, selectedPersonId = null, activityAxis: nextActivityAxis = null, remotePage: nextRemotePage = null } = {}) {
+      remotePage = nextRemotePage;
+      if (remotePage) pageIndex = remotePage.pageNumber - 1;
       model = Array.isArray(persons) ? persons : [];
       roleCountSnapshot = null;
       populationCount = totalPersonCount;

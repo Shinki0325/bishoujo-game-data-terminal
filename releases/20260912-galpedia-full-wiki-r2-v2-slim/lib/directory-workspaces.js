@@ -9,20 +9,48 @@ export function isIndependentDirectoryRoute(hash) {
   return route?.page === 'companies' || (route?.page === 'persons' && !route.personId);
 }
 
-export function createDirectoryWorkspaces({ navigate, activateFull }) {
+export function createDirectoryWorkspaces({ navigate, activateFull, staticPersons = false }) {
   const lifetime = createViewLifetime();
   const session = createWorkspaceSession();
   const assetBase = configuredAssetBase();
   let activeTicket;
   let personView, companyView, personData, companyData;
   let personLocation, companyLocation;
+  let personStaticClient, personRenderSequence = 0;
   let personSearch, companySearch, companyImageUrl, worksForCompany;
   let detailSort = { sortKey: 'releaseDate', direction: 'asc' };
   const get = id => document.getElementById(id);
   const replace = route => history.replaceState(null, '', formatUiLocationHash(route));
   const changeCompany = patch => { if (!companyLocation || !session.isActive('companies')) return; Object.assign(companyLocation, patch); paintCompanies(); replace(companyLocation); };
 
+  async function paintStaticPersons() {
+    if (!personView || !personStaticClient || !session.isActive('persons')) return;
+    const ticket = activeTicket, sequence = ++personRenderSequence;
+    const loading = get('person-directory-loading');
+    get('person-view').setAttribute('aria-busy', 'true');
+    get('person-directory-search').value = personLocation.query;
+    get('person-search-clear').hidden = !personLocation.query;
+    loading.textContent = '正在加载人物数据…'; loading.hidden = false;
+    get('person-page-previous').disabled = true; get('person-page-next').disabled = true;
+    try {
+      const page = await personStaticClient.getPage({ ...personLocation });
+      if (!ticket.isCurrent() || sequence !== personRenderSequence) return;
+      personLocation.pageNumber = page.remotePage.pageNumber;
+      get('person-directory-total').textContent = page.totalPersonCount.toLocaleString('zh-CN') + ' 位人物';
+      personView.render(page); replace(personLocation);
+      loading.hidden = true; get('person-view').setAttribute('aria-busy', 'false');
+      ticket.complete({ empty: page.persons.length === 0 });
+    } catch (error) {
+      if (!ticket.isCurrent() || sequence !== personRenderSequence) return;
+      get('person-view').setAttribute('aria-busy', 'false');
+      loading.textContent = '人物资料暂未能加载。';
+      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重试';
+      retry.addEventListener('click', ticket.guard(() => { void paintStaticPersons(); })); loading.append(retry);
+      ticket.fail(error);
+    }
+  }
   function paintPersons() {
+    if (staticPersons) return paintStaticPersons();
     if (!personView || !personData || !session.isActive('persons')) return;
     get('person-directory-search').value = personLocation.query;
     get('person-search-clear').hidden = !personLocation.query;
@@ -55,7 +83,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull }) {
   }
   lifetime.listen(get('person-search-clear'), 'click', () => {
     if (!personLocation || !session.isActive('persons')) return;
-    personLocation.query = ''; paintPersons(); replace(personLocation); get('person-directory-search').focus();
+    personLocation.query = ''; personLocation.pageNumber = 1; paintPersons(); replace(personLocation); get('person-directory-search').focus();
   });
   lifetime.listen(get('company-search-clear'), 'click', () => changeCompany({ query: '', pageNumber: 1 }));
   lifetime.listen(get('company-has-image'), 'change', () => changeCompany({ hasImage: get('company-has-image').checked, pageNumber: 1 }));
@@ -78,26 +106,29 @@ export function createDirectoryWorkspaces({ navigate, activateFull }) {
       try {
         if (route?.page === 'persons') {
           personLocation = route;
-          const [{ getPersonWorkspaceRuntime }, { createPersonDirectoryView }, { filterPersonsBySearch, withCjkPersonSearchKey }] = await Promise.all([
-            import('./person-workspace-data.js'), import('../views/person-directory-view.js'), import('./person-search.js')
+          const [{ getPersonWorkspaceRuntime, createStaticPersonClient }, { createPersonDirectoryView }, { filterPersonsBySearch, withCjkPersonSearchKey }] = await Promise.all([
+            staticPersons ? import('./person-static-client.js') : import('./person-workspace-data.js'), import('../views/person-directory-view.js'), import('./person-search.js')
           ]);
           if (!ticket.isCurrent()) return;
-          const directory = await getPersonWorkspaceRuntime().loadDirectory();
-          if (!ticket.isCurrent()) return;
-          personData ??= { ...directory, records: directory.records.map(withCjkPersonSearchKey) };
+          if (staticPersons) personStaticClient ??= createStaticPersonClient();
+          else {
+            const directory = await getPersonWorkspaceRuntime().loadDirectory();
+            if (!ticket.isCurrent()) return;
+            personData ??= { ...directory, records: directory.records.map(withCjkPersonSearchKey) };
+          }
           personSearch = filterPersonsBySearch;
           const mounted = createPersonDirectoryView({
             root: get('person-view'),
             onSearch: ticket.guard(query => { personLocation.query = query; personLocation.pageNumber = 1; paintPersons(); replace(personLocation); }),
-            onRoleChange: ticket.guard(role => { personLocation.role = role; personLocation.pageNumber = 1; ticket.complete({ empty: get('person-directory-count').textContent === '0' }); replace(personLocation); }),
-            onPageChange: ticket.guard(pageNumber => { personLocation.pageNumber = pageNumber; replace(personLocation); }),
+            onRoleChange: ticket.guard(role => { personLocation.role = role; personLocation.pageNumber = 1; if (staticPersons) { void paintPersons(); replace(personLocation); return; } ticket.complete({ empty: get('person-directory-count').textContent === '0' }); replace(personLocation); }),
+            onPageChange: ticket.guard(pageNumber => { personLocation.pageNumber = pageNumber; if (staticPersons) void paintPersons(); replace(personLocation); }),
             onSelect(personId) { if (ticket.isCurrent()) navigate(`#persons/person/${personId}`); return false; }
           });
           personView = mounted;
           ticket.scope.add(() => { if (personView === mounted) personView = null; mounted.dispose(); });
           personView.setRoleFilter(route.role);
-          paintPersons();
-          personView.setPageNumber(route.pageNumber);
+          await paintPersons();
+          if (!staticPersons) personView.setPageNumber(route.pageNumber);
         } else if (route?.page === 'companies') {
           companyLocation = route;
           const [{ loadCompanyWorkspace }, view, model] = await Promise.all([

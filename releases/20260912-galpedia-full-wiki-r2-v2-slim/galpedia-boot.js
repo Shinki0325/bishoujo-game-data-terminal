@@ -36,7 +36,6 @@ let landing;
 let personLanding;
 const STATIC_SITE_MODE = true;
 function finishLanding() {
-  if (STATIC_SITE_MODE && /^(#works|#persons)(?:[/?]|$)/u.test(location.hash)) return;
   landing?.dispose();landing=null;personLanding?.dispose();personLanding=null;
 }
 let directoryController;
@@ -247,7 +246,7 @@ async function ensureRoute() {
   try {
     const { createDirectoryWorkspaces } = await import('./lib/directory-workspaces.js');
     if (!request.isCurrent() || runtimePromise) return;
-    directoryController ??= createDirectoryWorkspaces({ navigate, activateFull: ensureRuntime });
+    directoryController ??= createDirectoryWorkspaces({ navigate, activateFull: ensureRuntime, staticPersons: STATIC_SITE_MODE });
     await directoryController.show(hash);
     if (!request.isCurrent() || runtimePromise) return;
     request.complete();
