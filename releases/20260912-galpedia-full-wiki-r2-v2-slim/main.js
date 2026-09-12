@@ -847,7 +847,7 @@ async function initialize() {
         catalogSnapshotId: sampleSource.snapshot?.snapshotId,
         catalogSha256: catalogSource.sha256,
         workIds: populationContract.presentation.workIds,
-        bangumiSubjectByWorkId: fullWikiEnabled || bangumiPublicBindings === null
+        bangumiSubjectByWorkId: fullWikiEnabled || STATIC_SITE_MODE || bangumiPublicBindings === null
           ? null
           : new Map(bangumiPublicBindings.bindings.map(binding => [binding.egsWorkId, binding.bangumiSubjectId]))
       });
