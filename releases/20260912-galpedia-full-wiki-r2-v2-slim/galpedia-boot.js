@@ -233,10 +233,10 @@ async function ensureRoute() {
   const hash = location.hash;
   // The full catalog's person identities and relation projection live in the
   // shared runtime. Do not show the smaller legacy directory on a cold visit.
-  if (root.dataset.personDirectory === 'full-wiki' && /^#persons\/person(?:[/?]|$)/u.test(hash)) return ensureRuntime();
+  if (!STATIC_SITE_MODE && root.dataset.personDirectory === 'full-wiki' && /^#persons\/person(?:[/?]|$)/u.test(hash)) return ensureRuntime();
   // Detail/editing routes still use the existing complete workbench. Directory
   // browsing is independent and never imports that workbench speculatively.
-  if (!/^#companies(?:[/?]|$)/u.test(hash) && !/^#persons(?:\?|$)/u.test(hash)) return ensureRuntime();
+  if (!/^#companies(?:[/?]|$)/u.test(hash) && !/^#persons(?:[/?]|$)/u.test(hash)) return ensureRuntime();
   const request = routeSession.begin(hash);
   retryLoading.hidden = true;
   if (createRuntimeLoading()) {

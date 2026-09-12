@@ -3,8 +3,8 @@ import { parseSelectionShare } from './share-selection.js';
 import { formatUiLocationHash, parseUiLocationHash } from './ui-location-state.js';
 
 export function projectUiLocation({ state, person, company, workId, subject, workPage }) {
-  if (person.open) return person.id !== null ? { page: 'persons', personId: person.id }
-    : { page: 'persons', query: person.query, role: person.role, pageNumber: person.page };
+  if (person.open) return { page: 'persons', personId: person.id,
+    query: person.query, role: person.role, pageNumber: person.page };
   if (company.open) return company.id !== null ? { page: 'companies', companyId: company.id }
     : { page: 'companies', query: company.query, sort: company.sort, hasImage: company.hasImage, pageNumber: company.page };
   if (state.workspaceMode === 'ranking') return { page: 'ranking', subject };

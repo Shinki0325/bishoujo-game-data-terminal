@@ -1,6 +1,8 @@
 import {createWorkspaceSession} from './workspace-session.js';
 import {createViewLifetime} from './view-lifetime.js';
 import {createStaticSiteDataClient} from './page-data-client.js';
+import {configuredAssetBase} from './runtime-config.js';
+import {resolveAssetUrl} from './asset-url.js';
 import {createSelectionCard} from '../views/selection-view.js';
 import {createSelectionCardPresentation} from './selection-card-presentation.js';
 import {
@@ -53,9 +55,11 @@ export function createWorkbenchLanding({documentRef=document,locationRef=locatio
       voteCount: record.voteCount ?? record.votes,
       presentationMemberCount: record.presentationMemberCount ?? 1
     }));
+    const assetBase = configuredAssetBase({ documentRef });
+    const imageUrl = value => !value ? null : /^[a-z][a-z0-9+.-]*:/iu.test(value) ? value : resolveAssetUrl(value, assetBase);
     const coverUrls = new Map(works.map(work => [work.workId, {
-      thumbnailUrl: work.coverPath ?? null,
-      previewUrl: work.previewUrl ?? null
+      thumbnailUrl: imageUrl(work.coverPath),
+      previewUrl: imageUrl(work.previewUrl)
     }]));
     return {works, coverUrls};
   }

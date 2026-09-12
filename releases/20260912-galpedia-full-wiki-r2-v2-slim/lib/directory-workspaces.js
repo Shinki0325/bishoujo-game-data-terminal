@@ -4,9 +4,9 @@ import { resolveAssetUrl } from './asset-url.js';
 import { createViewLifetime } from './view-lifetime.js';
 import { createWorkspaceSession } from './workspace-session.js';
 
-export function isIndependentDirectoryRoute(hash) {
+export function isIndependentDirectoryRoute(hash, { staticPersons = false } = {}) {
   const route = parseUiLocationHash(hash);
-  return route?.page === 'companies' || (route?.page === 'persons' && !route.personId);
+  return route?.page === 'companies' || (route?.page === 'persons' && (staticPersons || !route.personId));
 }
 
 export function createDirectoryWorkspaces({ navigate, activateFull, staticPersons = false }) {
@@ -16,7 +16,12 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
   let activeTicket;
   let personView, companyView, personData, companyData;
   let personLocation, companyLocation;
-  let personStaticClient, personRenderSequence = 0;
+  let personStaticClient, personRenderSequence = 0, personDetailClientPromise;
+  const loadStaticPerson = async id => {
+    personDetailClientPromise ??= import('./person-static-detail-client.js')
+      .then(module => module.createStaticPersonDetailClient()).catch(error => { personDetailClientPromise = null; throw error; });
+    return (await personDetailClientPromise).loadPerson(id);
+  };
   let personSearch, companySearch, companyImageUrl, worksForCompany;
   let detailSort = { sortKey: 'releaseDate', direction: 'asc' };
   const get = id => document.getElementById(id);
@@ -38,6 +43,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
       personLocation.pageNumber = page.remotePage.pageNumber;
       get('person-directory-total').textContent = page.totalPersonCount.toLocaleString('zh-CN') + ' 位人物';
       personView.render(page); replace(personLocation);
+      if (personLocation.personId) personView.openPerson(personLocation.personId);
       loading.hidden = true; get('person-view').setAttribute('aria-busy', 'false');
       ticket.complete({ empty: page.persons.length === 0 });
     } catch (error) {
@@ -99,7 +105,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
   return {
     async show(hash) {
       if (session.disposed) return;
-      if (!isIndependentDirectoryRoute(hash)) { session.suspend(); return; }
+      if (!isIndependentDirectoryRoute(hash, { staticPersons })) { session.suspend(); return; }
       const route = parseUiLocationHash(hash);
       const ticket = session.begin(route.page);
       activeTicket = ticket;
@@ -122,10 +128,27 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
             onSearch: ticket.guard(query => { personLocation.query = query; personLocation.pageNumber = 1; paintPersons(); replace(personLocation); }),
             onRoleChange: ticket.guard(role => { personLocation.role = role; personLocation.pageNumber = 1; if (staticPersons) { void paintPersons(); replace(personLocation); return; } ticket.complete({ empty: get('person-directory-count').textContent === '0' }); replace(personLocation); }),
             onPageChange: ticket.guard(pageNumber => { personLocation.pageNumber = pageNumber; if (staticPersons) void paintPersons(); replace(personLocation); }),
-            onSelect(personId) { if (ticket.isCurrent()) navigate(`#persons/person/${personId}`); return false; }
+            onLoadPerson: staticPersons ? loadStaticPerson : undefined,
+            imageUrlForWork: work => resolveAssetUrl(work.workThumbnailPath ?? work.projectedThumbnailPath ?? work.coverPath, assetBase),
+            onOpenWork: ticket.guard(workId => navigate('#work/' + workId)),
+            onOpenCompany: ticket.guard(companyId => navigate('#companies/company/' + companyId)),
+            onOpenPerson: ticket.guard(personId => {
+              if (staticPersons) {
+                personLocation.personId = personId; history.pushState(null, '', formatUiLocationHash(personLocation));
+                personView.openPerson(personId);
+              } else navigate('#persons/person/' + personId);
+            }),
+            onSelect(personId) {
+              if (!ticket.isCurrent()) return false;
+              if (staticPersons) {
+                personLocation.personId = personId || null;
+                history.pushState(null, '', formatUiLocationHash(personLocation)); return true;
+              }
+              if (personId) navigate('#persons/person/' + personId); return false;
+            }
           });
           personView = mounted;
-          ticket.scope.add(() => { if (personView === mounted) personView = null; mounted.dispose(); });
+          ticket.scope.add(() => { if (personView === mounted) personView = null; mounted.dispose(); get('person-detail-dialog')?.close(); });
           personView.setRoleFilter(route.role);
           await paintPersons();
           if (!staticPersons) personView.setPageNumber(route.pageNumber);

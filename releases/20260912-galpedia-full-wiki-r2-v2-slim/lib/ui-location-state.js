@@ -83,7 +83,7 @@ export function parseUiLocationHash(hash) {
     return { page: 'persons', query: queryValue(params, 'query'), role: PERSON_ROLES.has(role) ? role : 'all', pageNumber: positivePage(params.get('page')), personId: null };
   }
   const personMatch = /^persons\/person\/([^/]+)$/u.exec(route);
-  if (personMatch) return { page: 'persons', query: '', role: 'all', pageNumber: 1, personId: safeId(personMatch[1]) };
+  if (personMatch) { const role = queryValue(params, 'role'); return { page: 'persons', query: queryValue(params, 'query'), role: PERSON_ROLES.has(role) ? role : 'all', pageNumber: positivePage(params.get('page')), personId: safeId(personMatch[1]) }; }
   return null;
 }
 
@@ -91,7 +91,6 @@ export function formatUiLocationHash(state) {
   if (state === null || typeof state !== 'object' || Array.isArray(state)) throw new TypeError('state must be an object');
   if (state.page === 'ranking') return `#ranking?subject=${state.subject === 'company' ? 'company' : 'work'}`;
   if (state.page === 'persons') {
-    if (safeId(state.personId)) return `#persons/person/${state.personId}`;
     const params = new URLSearchParams();
     const query = limitedText(state.query);
     const role = PERSON_ROLES.has(state.role) ? state.role : 'all';
@@ -99,7 +98,7 @@ export function formatUiLocationHash(state) {
     if (role !== 'all') params.set('role', role);
     if (positivePage(state.pageNumber) > 1) params.set('page', String(positivePage(state.pageNumber)));
     const encoded = params.toString();
-    return `#persons${encoded ? `?${encoded}` : ''}`;
+    return `#persons${safeId(state.personId) ? `/person/${state.personId}` : ''}${encoded ? `?${encoded}` : ''}`;
   }
   if (state.page === 'companies') {
     if (safeCompanyId(state.companyId)) return `#companies/company/${state.companyId}`;

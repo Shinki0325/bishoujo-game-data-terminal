@@ -819,6 +819,14 @@ async function initialize() {
       });
     }
   }
+  if (STATIC_SITE_MODE) {
+    const { PERSON_SEARCH_DIRECTORY } = await import('./lib/person-search-directory-config.js');
+    personWorkIndexRuntime = createPersonWorkIndexRuntime({
+      indexUrl: new URL('runtime-data/person-static-work-index-v1/index.json', import.meta.url),
+      sha256: PERSON_SEARCH_DIRECTORY.personWorkIndexSha256,
+      fetchImpl: fetch, cryptoRef: crypto, cacheMode: RUNTIME_DATA_CACHE_MODE
+    });
+  }
   let presentationFamilies = null;
   // Catalog projection may split a VNDB version family at independent
   // Bangumi subjects. Person representative works are a compact summary and
@@ -1006,6 +1014,12 @@ async function initialize() {
   let personDirectoryView;
   let personRole = 'all';
   let personQuery = '';
+  let staticPersonPage = 1, staticPersonRenderSequence = 0, staticPersonServicesPromise;
+  const staticPersonServices = () => staticPersonServicesPromise ??= Promise.all([
+    import('./lib/person-static-client.js'), import('./lib/person-static-detail-client.js')
+  ]).then(([directory, detail]) => ({ directory: directory.createStaticPersonClient(), detail: detail.createStaticPersonDetailClient() }))
+    .catch(error => { staticPersonServicesPromise = null; throw error; });
+  const loadStaticPersonPage = async () => (await staticPersonServices()).directory.getPage({ query: personQuery, role: personRole, pageNumber: staticPersonPage });
   let selectedPersonId = null;
   let rankingSubject = 'work';
   let companyQuery = '';
@@ -1642,6 +1656,7 @@ async function initialize() {
       } : null
   });
   const ensurePersonRuntime = async () => {
+    if (STATIC_SITE_MODE) return (await loadStaticPersonPage()).persons;
     const status = elements.personView.querySelector('#person-directory-loading');
     if (!personWorkspace.records && personDirectoryOpen && status) {
       status.hidden = false;
@@ -1674,13 +1689,14 @@ async function initialize() {
   async function loadPersonSearchRecords() {
     if (personSearchDirectoryPromise) return personSearchDirectoryPromise;
     const request = (async () => {
-      if (fullWikiEnabled) {
+      if (fullWikiEnabled || STATIC_SITE_MODE) {
         try {
           const { loadPersonSearchDirectory } = await import('./lib/person-search-directory.js');
           return await loadPersonSearchDirectory({
             directoryManifestSha256: preparedWorkbench.fullWiki.directoryManifest.sha256
           });
         } catch (error) {
+          if (STATIC_SITE_MODE) throw error;
           console.warn('人物轻量检索索引不可用，改用完整人物目录', error);
         }
       }
@@ -1745,12 +1761,38 @@ async function initialize() {
   }
 
   function renderPersonDirectory() {
+    if (STATIC_SITE_MODE) { void renderStaticPersonDirectory(); return; }
     personWorkspace.render({
       elements: { root: elements.personView, search: elements.personSearch,
         count: elements.personDirectoryCount, list: elements.personList, empty: elements.personEmpty },
       view: personDirectoryView, query: personQuery, selectedPersonId,
       syncSearchClears: () => localSearchClears.forEach(sync => sync())
     });
+  }
+
+  async function renderStaticPersonDirectory() {
+    if (!personDirectoryOpen || !personDirectoryView) return;
+    const sequence = ++staticPersonRenderSequence;
+    const loading = elements.personView.querySelector('#person-directory-loading');
+    elements.personView.setAttribute('aria-busy', 'true');
+    loading.textContent = '正在加载人物数据…'; loading.hidden = false;
+    elements.personSearch.value = personQuery;
+    localSearchClears.forEach(sync => sync());
+    try {
+      const page = await loadStaticPersonPage();
+      if (sequence !== staticPersonRenderSequence || !personDirectoryOpen) return;
+      staticPersonPage = page.remotePage.pageNumber;
+      personDirectoryView.render(page);
+      document.querySelector('#person-directory-total').textContent = page.totalPersonCount.toLocaleString('zh-CN') + ' 位人物';
+      loading.hidden = true; elements.personView.setAttribute('aria-busy', 'false');
+      replaceUiLocation();
+      if (selectedPersonId) personDirectoryView.openPerson(selectedPersonId);
+    } catch (error) {
+      if (sequence !== staticPersonRenderSequence || !personDirectoryOpen) return;
+      elements.personView.setAttribute('aria-busy', 'false'); loading.textContent = '人物资料暂未能加载。';
+      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重试';
+      retry.addEventListener('click', () => { void renderStaticPersonDirectory(); }); loading.append(retry);
+    }
   }
 
   const companyWorkspace = createCompanyWorkspaceController({
@@ -1841,17 +1883,21 @@ async function initialize() {
     },
     onSearch(query) {
       personQuery = String(query ?? '');
+      if (STATIC_SITE_MODE) staticPersonPage = 1;
       renderPersonDirectory();
       replaceUiLocation();
     },
     onRoleChange(role) {
       personRole = role;
+      if (STATIC_SITE_MODE) { staticPersonPage = 1; renderPersonDirectory(); }
       replaceUiLocation();
     },
-    onPageChange() {
+    onPageChange(pageNumber) {
+      if (STATIC_SITE_MODE) { staticPersonPage = pageNumber; renderPersonDirectory(); return; }
       replaceUiLocation();
     },
     onLoadPerson: async (personId, summary) => {
+      if (STATIC_SITE_MODE) return (await staticPersonServices()).detail.loadPerson(personId);
       const records = await ensurePersonRuntime();
       return personWorkspace.loadPerson(personId, records.find(person => person.entityId === personId) ?? summary);
     },
@@ -2353,7 +2399,7 @@ async function initialize() {
     workbenchControls.render(projectWorkbenchControls({
       model: { ...model, ...rankingHistory.inspect('work') },
       company: { ...company, ...rankingHistory.inspect('company') }, rankingSubject, importBusy,
-      personAvailable: personRuntime !== null || personPerformanceRuntime !== null,
+      personAvailable: STATIC_SITE_MODE || personRuntime !== null || personPerformanceRuntime !== null,
       selectionMode, compareMode, companyDirectoryOpen, companySelectionMode,
       bangumiAvailable: confirmedBangumiImportBindings !== null,
       annotationCount: Object.keys(activePresentation.inspect().annotations).length,
@@ -2808,6 +2854,7 @@ async function initialize() {
     },
     persons: {
       enter(route) {
+        if (STATIC_SITE_MODE) staticPersonPage = route.pageNumber ?? 1;
         currentWorkDetailId = null;
         if (elements.detailsDialog.open) elements.detailsDialog.close();
         personDetailReturnId = null; companyDirectoryOpen = false; personDirectoryOpen = true;
@@ -2817,6 +2864,11 @@ async function initialize() {
       show() { renderWorkspace(lastRenderedModel ?? controller.inspect([])); renderPersonDirectory(); },
       ensureReady: () => ensurePersonRuntime(),
       finish(route) {
+        if (STATIC_SITE_MODE) {
+          staticPersonPage = route.pageNumber ?? 1; personDirectoryView.setRoleFilter?.(personRole);
+          renderWorkspace(lastRenderedModel ?? controller.inspect([]));
+          return renderStaticPersonDirectory();
+        }
         renderWorkspace(lastRenderedModel ?? controller.inspect([]));
         personDirectoryView.setRoleFilter?.(personRole); renderPersonDirectory();
         personDirectoryView.setPageNumber?.(route.pageNumber ?? 1);
@@ -2948,6 +3000,7 @@ async function initialize() {
     open();
   });
   elements.modePerson.addEventListener('click', () => {
+    if (STATIC_SITE_MODE) staticPersonPage = 1;
     const navigation = beginUiNavigation('modePerson');
     const interaction = interactionMetrics.begin('person-directory');
     closeMobileRankingCandidates();
