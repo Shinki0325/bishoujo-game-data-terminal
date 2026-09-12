@@ -1,5 +1,5 @@
 {
-  "closureSha256": "9dd0b7d27ada3876925cb0e65592691f5491dc3a605887c49f6cd2010d4a7077",
+  "closureSha256": "650a42ff778ee3bf080d39ee1663065e508ea6f164741092bd09ab124481b11b",
   "dataFiles": [
     {
       "bytes": 4854585,
@@ -19892,9 +19892,9 @@
       "sha256": "b2dd03e5bc0ed3a4378e49bb9c33c690e3675d4f00a1443bc11e3edc8070f9e4"
     },
     {
-      "bytes": 20768,
+      "bytes": 21260,
       "path": "lib/full-wiki-runtime.js",
-      "sha256": "f8bb952bff3d8499755117834bf41b28cc376a485aa7aa3792c04b76a8ad74ef"
+      "sha256": "9dcb0ba585e4a683678c604f38f8c8d39044072d9d54d8279ec2ee2b642ac726"
     },
     {
       "bytes": 1841,

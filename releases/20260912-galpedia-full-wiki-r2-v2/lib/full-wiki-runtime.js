@@ -3,6 +3,7 @@ const CATALOG_COLUMNS = Object.freeze(['presentationWorkId', 'displayTitle', 'na
 const SHA256 = /^[a-f0-9]{64}$/u;
 const BUCKET = /^[a-f0-9]{2}$/u;
 const ENTITY_KEYS = Object.freeze({ companies: 'sourceCompanyId', persons: 'sourcePersonId', characters: 'characterId' });
+import { createResourceRequest } from './resource-request.js';
 
 async function digest(bytes, cryptoRef) {
   const value = await cryptoRef.subtle.digest('SHA-256', bytes);
@@ -35,12 +36,12 @@ function validateShardList(items, pathForBucket) {
   return items;
 }
 
-async function readJson(url, descriptor, { fetchImpl, cryptoRef, cacheMode }) {
+async function readJson(url, descriptor, { request, cryptoRef, cacheMode }) {
   validateDescriptor(descriptor);
-  const response = await fetchImpl(url, { cache: cacheMode });
-  if (!response.ok) throw new Error(`全量资料读取失败 (${response.status})`);
-  const bytes = await response.arrayBuffer();
-  if (bytes.byteLength !== descriptor.bytes || await digest(bytes, cryptoRef) !== descriptor.sha256) throw new Error('全量资料校验失败，请重试');
+  const bytes = await request(url, { cache: cacheMode, label: `全量资料 ${descriptor.path}`, validationKey: descriptor.sha256, validate: async value => {
+    if (value.byteLength !== descriptor.bytes || await digest(value, cryptoRef) !== descriptor.sha256) throw new Error('全量资料校验失败，请重试');
+    return value;
+  }});
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
@@ -75,6 +76,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
   if (!Number.isSafeInteger(expectedCounts?.editions) || !Number.isSafeInteger(expectedCounts?.presentations)) throw new TypeError('全量资料计数配置无效');
   if (!Number.isSafeInteger(maxWorkShards) || maxWorkShards < 1) throw new TypeError('全量资料缓存上限无效');
   if (!Number.isSafeInteger(maxEntityShards) || maxEntityShards < 1 || !Number.isSafeInteger(maxGraphShards) || maxGraphShards < 1) throw new TypeError('全量关系缓存上限无效');
+  const request = createResourceRequest({ fetchImpl });
   let manifestPromise = null;
   let catalogPromise = null;
   let editionPromise = null;
@@ -94,10 +96,10 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
   async function loadManifest() {
     if (manifestPromise) return manifestPromise;
     manifestPromise = (async () => {
-      const response = await fetchImpl(manifestUrl, { cache: cacheMode });
-      if (!response.ok) throw new Error(`全量资料入口读取失败 (${response.status})`);
-      const bytes = await response.arrayBuffer();
-      if (await digest(bytes, cryptoRef) !== expectedManifestSha256) throw new Error('全量资料入口校验失败，请重试');
+      const bytes = await request(manifestUrl, { cache: cacheMode, label: '全量资料入口', validationKey: expectedManifestSha256, validate: async value => {
+        if (await digest(value, cryptoRef) !== expectedManifestSha256) throw new Error('全量资料入口校验失败，请重试');
+        return value;
+      }});
       return Object.freeze(validateManifest(JSON.parse(new TextDecoder().decode(bytes)), expectedCounts, expectedPublicationStatus));
     })().catch(error => { manifestPromise = null; throw error; });
     return manifestPromise;
@@ -107,7 +109,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
     if (catalogPromise) return catalogPromise;
     catalogPromise = (async () => {
       const manifest = await loadManifest();
-      const payload = await readJson(new URL(manifest.files.catalogIndex.path, manifestUrl), manifest.files.catalogIndex, { fetchImpl, cryptoRef, cacheMode });
+      const payload = await readJson(new URL(manifest.files.catalogIndex.path, manifestUrl), manifest.files.catalogIndex, { request, cryptoRef, cacheMode });
       if (payload.schemaVersion !== SCHEMA || JSON.stringify(payload.columns) !== JSON.stringify(CATALOG_COLUMNS) || !Array.isArray(payload.table) || payload.table.length !== manifest.counts.presentations) throw new TypeError('全量作品轻索引格式无效');
       const records = payload.table.map(row => {
         if (!Array.isArray(row) || row.length !== CATALOG_COLUMNS.length) throw new TypeError('全量作品轻索引列数无效');
@@ -127,7 +129,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
     if (editionPromise) return editionPromise;
     editionPromise = (async () => {
       const manifest = await loadManifest();
-      const payload = await readJson(new URL(manifest.files.editionIndex.path, manifestUrl), manifest.files.editionIndex, { fetchImpl, cryptoRef, cacheMode });
+      const payload = await readJson(new URL(manifest.files.editionIndex.path, manifestUrl), manifest.files.editionIndex, { request, cryptoRef, cacheMode });
       if (payload.schemaVersion !== SCHEMA || !Array.isArray(payload.records) || payload.records.length !== manifest.counts.editions) throw new TypeError('全量版本索引格式无效');
       const byId = new Map();
       for (const record of payload.records) {
@@ -150,7 +152,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
       const manifest = await loadManifest();
       const descriptor = manifest.files.workShards.find(item => item.bucket === bucketId);
       if (!descriptor) throw new Error(`全量作品分片不存在: ${bucketId}`);
-      const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { fetchImpl, cryptoRef, cacheMode });
+      const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { request, cryptoRef, cacheMode });
       if (payload.schemaVersion !== SCHEMA || payload.bucket !== bucketId || !Array.isArray(payload.records) || payload.records.length !== descriptor.records) throw new TypeError(`全量作品分片格式无效: ${bucketId}`);
       const byId = new Map();
       for (const record of payload.records) {
@@ -178,7 +180,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
       const manifest = await loadManifest();
       const descriptor = manifest.files.entityShards[entityType].files.find(item => item.bucket === bucketId);
       if (!descriptor) throw new Error(`全量实体分片不存在: ${cacheKey}`);
-      const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { fetchImpl, cryptoRef, cacheMode });
+      const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { request, cryptoRef, cacheMode });
       if (payload.schemaVersion !== SCHEMA || payload.entityType !== entityType || payload.bucket !== bucketId || !Array.isArray(payload.records) || payload.records.length !== descriptor.records) throw new TypeError(`全量实体分片格式无效: ${cacheKey}`);
       const byId = new Map();
       for (const record of payload.records) {
@@ -225,7 +227,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
         const manifest = await loadManifest();
         const descriptor = manifest.files.graphRelationShards.find(item => item.bucket === bucketId);
         if (!descriptor) throw new Error(`全量图关系分片不存在: ${bucketId}`);
-        const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { fetchImpl, cryptoRef, cacheMode });
+        const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { request, cryptoRef, cacheMode });
         if (payload.schemaVersion !== SCHEMA || payload.bucket !== bucketId || !Array.isArray(payload.records) || payload.records.length !== descriptor.records) throw new TypeError(`全量图关系分片格式无效: ${bucketId}`);
         const byId = new Map();
         for (const record of payload.records) {
@@ -256,7 +258,7 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
         const manifest = await loadManifest();
         const descriptor = manifest.files.entityRelationShards[entityType].files.find(item => item.bucket === bucketId);
         if (!descriptor) throw new Error(`全量反向关系分片不存在: ${cacheKey}`);
-        const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { fetchImpl, cryptoRef, cacheMode });
+        const payload = await readJson(new URL(descriptor.path, manifestUrl), descriptor, { request, cryptoRef, cacheMode });
         if (payload.schemaVersion !== SCHEMA || payload.entityType !== entityType || payload.bucket !== bucketId || !Array.isArray(payload.records) || payload.records.length !== descriptor.records) throw new TypeError(`全量反向关系分片格式无效: ${cacheKey}`);
         const byId = new Map();
         for (const record of payload.records) {
@@ -289,11 +291,19 @@ export function createFullWikiRuntime({ manifestUrl, expectedManifestSha256, exp
     const bangumiPersons = work.bangumiRelations
       .filter(item => item.sourceEntityCategory === 'person')
       .map(item => item.sourcePersonId || item.canonicalEntityId);
-    const [companies, persons, characters] = await Promise.all([
+    const [companiesResult, personsResult, charactersResult] = await Promise.allSettled([
       loadEntities('companies', [...work.companyRelations.map(item => item.sourceCompanyId || item.canonicalEntityId), ...bangumiCompanies]),
       loadEntities('persons', [...work.personRelations.map(item => item.sourcePersonId || item.canonicalEntityId), ...bangumiPersons]),
       loadEntities('characters', work.characterRelations.map(item => item.characterId))
     ]);
+    const optional = (result, label) => {
+      if (result.status === 'fulfilled') return result.value;
+      console.warn(`全量作品资料局部加载失败: ${label}`, result.reason);
+      return [];
+    };
+    const companies = optional(companiesResult, 'companies');
+    const persons = optional(personsResult, 'persons');
+    const characters = optional(charactersResult, 'characters');
     return Object.freeze({ work, companies, persons, characters });
   }
 
