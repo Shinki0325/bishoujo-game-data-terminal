@@ -1,0 +1,1 @@
+export const STATIC_DETAIL_INDEX = Object.freeze({"dataRevision":"a0c0367b8270b080feef0ef1fe65522144dc62343feb9d752729d92867d0d639","basePath":"../static-site-data-v1/data/a0c0367b8270b080feef0ef1fe65522144dc62343feb9d752729d92867d0d639/","index":{"bytes":33215,"sha256":"59d19ef16324c9a609d74859ed188b403dca7f9c47404618926d02d8e46dfdd6"}});
