@@ -1023,8 +1023,11 @@ async function initialize() {
   });
   const legacyWorkDetailCreditsLoader = createWorkDetailCreditsLoader({
     indexUrl: DATA_URLS.workDetailCreditsIndex,
-    catalogSnapshotId: sampleSource.snapshot?.snapshotId,
-    catalogSha256: catalogSource.sha256,
+    // This legacy index is bound to its own immutable catalog snapshot. It is
+    // used only as an explicitly compatible fallback when the full-v7 path is
+    // unavailable; binding it to the current catalog rejects every fallback.
+    catalogSnapshotId: 'egs-tier-vote-30-2026-08-05-full-v1',
+    catalogSha256: '50ae65d350e8671cc2e48af02e48522364c0aeb16e6667a9abe64d3878ac96c6',
     workIds: new Set(preparedWorkbench.uiSummary?.workIds ?? sample.works.map(work => work.workId)),
     fetchImpl: fetch,
     cryptoRef: crypto,
