@@ -17,6 +17,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
   let personView, companyView, personData, companyData;
   let personLocation, companyLocation;
   let personStaticClient, personRenderSequence = 0, personDetailClientPromise;
+  let personDetailParents = [];
   const loadStaticPerson = async id => {
     personDetailClientPromise ??= import('./person-static-detail-client.js')
       .then(module => module.createStaticPersonDetailClient()).catch(error => { personDetailClientPromise = null; throw error; });
@@ -112,6 +113,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
       try {
         if (route?.page === 'persons') {
           personLocation = route;
+          personDetailParents = [];
           const [{ getPersonWorkspaceRuntime, createStaticPersonClient }, { createPersonDirectoryView }, { filterPersonsBySearch, withCjkPersonSearchKey }] = await Promise.all([
             staticPersons ? import('./person-static-client.js') : import('./person-workspace-data.js'), import('../views/person-directory-view.js'), import('./person-search.js')
           ]);
@@ -134,6 +136,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
             onOpenCompany: ticket.guard(companyId => navigate('#companies/company/' + companyId)),
             onOpenPerson: ticket.guard(personId => {
               if (staticPersons) {
+                if (personLocation.personId && personLocation.personId !== personId) personDetailParents.push(personLocation.personId);
                 personLocation.personId = personId; history.pushState(null, '', formatUiLocationHash(personLocation));
                 personView.openPerson(personId);
               } else navigate('#persons/person/' + personId);
@@ -141,6 +144,12 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
             onSelect(personId) {
               if (!ticket.isCurrent()) return false;
               if (staticPersons) {
+                if (!personId && personDetailParents.length) {
+                  const parent = personDetailParents.pop(); personLocation.personId = parent;
+                  history.replaceState(null, '', formatUiLocationHash(personLocation));
+                  setTimeout(ticket.guard(() => { personView.openPerson(parent); }), 0); return true;
+                }
+                if (personId) personDetailParents = [];
                 personLocation.personId = personId || null;
                 history.pushState(null, '', formatUiLocationHash(personLocation)); return true;
               }
