@@ -2,6 +2,35 @@ import { loadPersonDisplayNames } from './full-wiki-person-names.js';
 import { createCharacterNamesLoader } from './full-wiki-character-names-v2.js';
 import { adaptFullWikiWorkDetail } from './full-wiki-work-detail-adapter.js';
 
+async function withStaticPersonLinks(model, loadPersonNames) {
+  const groups = [
+    ...Object.values(model.staff ?? {}),
+    ...(model.cast ?? []).map(character => character.actors),
+    ...(model.songs ?? []).flatMap(song => Object.values(song.credits ?? {}))
+  ].filter(Array.isArray);
+  const needsIdentity = person => !/^per_[A-Za-z0-9]+$/u.test(person.personId ?? '')
+    && [person.canonicalEntityId, person.sourcePersonId, person.creatorId].some(Boolean);
+  if (!groups.some(group => group.some(needsIdentity))) return model;
+  // Static models retain source identities. Resolve those against the pinned
+  // directory identity map; display names are never identity lookup keys.
+  const names = await loadPersonNames();
+  const link = person => {
+    if (!needsIdentity(person)) return person;
+    const preferred = [person.canonicalEntityId, person.sourcePersonId, person.creatorId]
+      .filter(Boolean).map(id => names?.get(id)).find(row => /^per_[A-Za-z0-9]+$/u.test(row?.entityId ?? ''));
+    return preferred ? { ...person, personId: preferred.entityId, personDisplayName: preferred.displayName } : person;
+  };
+  const linkedGroups = groups => Object.fromEntries(Object.entries(groups)
+    .map(([key, entries]) => [key, Array.isArray(entries) ? entries.map(link) : entries]));
+  return { ...model,
+    ...(model.staff ? { staff: linkedGroups(model.staff) } : {}),
+    ...(model.cast ? { cast: model.cast.map(character => ({ ...character,
+      ...(character.actors ? { actors: character.actors.map(link) } : {}) })) } : {}),
+    ...(model.songs ? { songs: model.songs.map(song => ({ ...song,
+      ...(song.credits ? { credits: linkedGroups(song.credits) } : {}) })) } : {})
+  };
+}
+
 function staticPayloadToHydrated(payload) {
   const relationGroups = {};
   for (const row of payload.relations ?? []) (relationGroups[row.kind] ??= []).push(row);
@@ -50,9 +79,10 @@ export function createFullWikiWorkDetailLoader({
       if (staticDataClient && (!staticWorkIds || staticWorkIds.has(String(workId)))) {
         try {
           const payload = await staticDataClient.getWorkDetail(workId);
-          if (payload?.model) return payload.model;
+          if (payload?.model) return withStaticPersonLinks(payload.model, loadPersonNames);
           const hydrated = staticPayloadToHydrated(payload);
-          return adaptFullWikiWorkDetail(hydrated, { editionWorkId: String(workId), resolveCharacterImage: entity => {
+          const personNames = await loadPersonNames();
+          return adaptFullWikiWorkDetail(hydrated, { editionWorkId: String(workId), personNames, resolveCharacterImage: entity => {
             const media = payload.entities?.characters?.find(row => row.id === entity?.characterId)?.media;
             const thumb = media?.thumbnail?.asset;
             const preview = media?.preview?.asset;
