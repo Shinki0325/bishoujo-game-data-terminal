@@ -1303,7 +1303,8 @@ async function initialize() {
     }
   }
 
-  companyDirectory = fullWikiDirectories ? await companyDirectoryPromise : preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
+  const staticCompanies = STATIC_SITE_MODE ? (await import('./lib/company-static-client.js')).getStaticCompanyClient() : null;
+  companyDirectory = staticCompanies ? await staticCompanies.loadDirectory() : fullWikiDirectories ? await companyDirectoryPromise : preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
@@ -1798,7 +1799,7 @@ async function initialize() {
       total: document.querySelector('#company-directory-total') },
     renderView: model => companyDirectoryView.render(model),
     isActive: () => companyDirectoryOpen,
-    loadWorkIds: fullWikiDirectories ? fullWikiDirectories.companyWorkIds : preparedWorkbench.workerOwned
+    loadWorkIds: staticCompanies ? staticCompanies.workIds : fullWikiDirectories ? fullWikiDirectories.companyWorkIds : preparedWorkbench.workerOwned
       ? (id, sort) => filterWorkerClient.companyWorkIds(id, sort) : null,
     loadWorks: ids => workData.get(ids),
     onSelectionResolved: id => { selectedCompanyId = id; },

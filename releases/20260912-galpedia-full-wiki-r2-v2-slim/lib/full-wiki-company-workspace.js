@@ -2,9 +2,11 @@ import {resolveCompanyWorkIds} from './full-wiki-company-relations.js';
 import {WORKBENCH_DEMAND} from './workbench-demand-config.js';
 import {readWorkbenchFile,validateWorkbenchManifest,decodeWorkbenchPayload} from './workbench-demand-data.js';
 import {createFullWikiDirectories} from './full-wiki-directories.js';
+import {STATIC_SITE_MODE} from './runtime-config.js';
 
 let pending;
 export function loadFullWikiCompanyWorkspace() {
+  if(STATIC_SITE_MODE)return import('./company-static-client.js').then(module=>module.getStaticCompanyClient().loadWorkspace());
   pending ??= (async()=>{
     const url=new URL(WORKBENCH_DEMAND.manifestPath,import.meta.url);
     const manifest=validateWorkbenchManifest(await readWorkbenchFile(url,WORKBENCH_DEMAND.sha256));
