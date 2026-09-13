@@ -1,0 +1,149 @@
+{
+  "assets": [
+    {
+      "bytes": 829504,
+      "count": 16509,
+      "path": "assets-0.json.gz",
+      "rawBytes": 5414876,
+      "sha256": "cd7837f7894469640e53c6bbf420379d18b8b4ee273053e50b6e898a668089ac"
+    },
+    {
+      "bytes": 821728,
+      "count": 16350,
+      "path": "assets-1.json.gz",
+      "rawBytes": 5363507,
+      "sha256": "a587f866d0e4ed308890037a83ae12348f023bacee0aefd7b78402b5cbb8dbf0"
+    },
+    {
+      "bytes": 831170,
+      "count": 16539,
+      "path": "assets-2.json.gz",
+      "rawBytes": 5425088,
+      "sha256": "bf7677a61087e3440baf924de44436f5e187c9c54c78a36bb03b6d04538d759f"
+    },
+    {
+      "bytes": 828726,
+      "count": 16483,
+      "path": "assets-3.json.gz",
+      "rawBytes": 5406281,
+      "sha256": "35083c31eb3ab45eb95b8804d4378a8e93f24562891aa7c18d2dcdacb6f345f4"
+    },
+    {
+      "bytes": 835002,
+      "count": 16617,
+      "path": "assets-4.json.gz",
+      "rawBytes": 5450436,
+      "sha256": "1d50cccab910e457b24351f534916467b6b95102594d612d7c8efb7d9d7cea39"
+    },
+    {
+      "bytes": 830935,
+      "count": 16533,
+      "path": "assets-5.json.gz",
+      "rawBytes": 5422779,
+      "sha256": "fe7d7a90292e398f1e9384fed9b32d3aecc1ecdc78454487fd40b1f6291b98f1"
+    },
+    {
+      "bytes": 827585,
+      "count": 16470,
+      "path": "assets-6.json.gz",
+      "rawBytes": 5402620,
+      "sha256": "e415f40087ff527bd9c145d0b623d715d84ffc7c6c6347622f3d2ca92ed702d0"
+    },
+    {
+      "bytes": 846499,
+      "count": 16854,
+      "path": "assets-7.json.gz",
+      "rawBytes": 5528986,
+      "sha256": "51187c9d8df972b01abcaacc6dc6d8f981535b22399aecfe6525ff0e3fe95a06"
+    },
+    {
+      "bytes": 830229,
+      "count": 16513,
+      "path": "assets-8.json.gz",
+      "rawBytes": 5415370,
+      "sha256": "54b78fc4e6977a27f7f7e237667331cc6d3bb2d1e1c8c75bdcc10588f8aa9817"
+    },
+    {
+      "bytes": 839097,
+      "count": 16699,
+      "path": "assets-9.json.gz",
+      "rawBytes": 5477807,
+      "sha256": "72f563b7b17e20cc655bb2ff56c28213438e778fb45bcbfb15622d74415d8fa1"
+    },
+    {
+      "bytes": 825162,
+      "count": 16428,
+      "path": "assets-a.json.gz",
+      "rawBytes": 5388631,
+      "sha256": "27ff89f273602b71d35ff66dbe33538c17ec4b166542d79c67a935827416c596"
+    },
+    {
+      "bytes": 828753,
+      "count": 16490,
+      "path": "assets-b.json.gz",
+      "rawBytes": 5408839,
+      "sha256": "8a84edb0094d805a3a1fbb73ba7387056f15096ac4468798313121730f09d1d7"
+    },
+    {
+      "bytes": 827437,
+      "count": 16462,
+      "path": "assets-c.json.gz",
+      "rawBytes": 5399811,
+      "sha256": "6a8e37bd08a64d0c9856cb3f24d306bb0d2ca595ba1ebfd9037f6b0b771e90ee"
+    },
+    {
+      "bytes": 834581,
+      "count": 16608,
+      "path": "assets-d.json.gz",
+      "rawBytes": 5447451,
+      "sha256": "1de0ab5129ee5ee05fda53393633cb5d9f69a463b1f04d9e7bec9dd757bad167"
+    },
+    {
+      "bytes": 828273,
+      "count": 16482,
+      "path": "assets-e.json.gz",
+      "rawBytes": 5406051,
+      "sha256": "5da000c456d44d63a2e9fc05ca4161d319c4c4ef33456f1a23166dd1e6e96eac"
+    },
+    {
+      "bytes": 821782,
+      "count": 16344,
+      "path": "assets-f.json.gz",
+      "rawBytes": 5361362,
+      "sha256": "b611136ab34724235addab5e7e0930d0539c2fe368bb236724aaae25608a32b8"
+    }
+  ],
+  "count": 264381,
+  "evidence": [
+    {
+      "bytes": 934753,
+      "contentType": "application/json; charset=utf-8",
+      "family": "cover-v1-thumbnail",
+      "sha256": "766df28404bb41c85e3572f95cda516eaeed56d85457e1ef5aacec863d373f24",
+      "url": "https://assets.bishojo.date/assets-manifest.json"
+    },
+    {
+      "bytes": 815835,
+      "contentType": "application/json; charset=utf-8",
+      "family": "cover-v1-preview",
+      "sha256": "c533cee2bdf99bc01cd96d301b2575393ae216014abb79af307d0dceb1b93e30",
+      "url": "https://assets.bishojo.date/egs-tier/v1/preview-manifest.json"
+    },
+    {
+      "bytes": 75666008,
+      "contentType": "application/json; charset=utf-8",
+      "family": "cover-v2-object",
+      "sha256": "002f2bdb8aa35067bd2080569c005c09071aae680a0fd77b1ef4b77315d95e0b",
+      "url": "https://assets.bishojo.date/egs-tier/v2/media-manifest.json"
+    },
+    {
+      "bytes": 16389449,
+      "contentType": "application/json; charset=utf-8",
+      "family": "character-v1",
+      "sha256": "c5a16f4db11d7b5db744eddc08287c3c5bef381ac29ec994a8d5426d17d44160",
+      "url": "https://wiki-assets.bishojo.date/terminal-wiki/v1/assets-manifest.json"
+    }
+  ],
+  "schema": "galpedia-static-public-media-manifest-v1",
+  "sourceManifestSha256": "cc721f8bc7d6e142ffcaa919e3b221213adc68f8fa5b524d7bf9019b3481e195"
+}

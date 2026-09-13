@@ -1,0 +1,1 @@
+export const PUBLIC_COVER_MIRROR = Object.freeze({"base":"https://wiki-assets.bishojo.date/","path":"runtime-data/public-cover-mirror-v1/manifest.json","bytes":3693,"sha256":"ba53ebe0746646462a057c89e7592d62cee009bdda7e2bf5e3bc83c298b136fb"});

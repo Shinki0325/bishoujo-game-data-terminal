@@ -1,0 +1,10 @@
+{
+  "authority": {
+    "bytes": 5695752,
+    "path": "authority.json.gz",
+    "rawBytes": 42750303,
+    "rawSha256": "91dcf14643966493df068ac36e8c4eea273645fb10f451357bc2728725c06416",
+    "sha256": "7d3f4c3daf4a7a717461c7fe86e396b6ddad7dfc7b7865aadc56b438b50a6e17"
+  },
+  "schema": "galpedia-static-authority-manifest-v1"
+}

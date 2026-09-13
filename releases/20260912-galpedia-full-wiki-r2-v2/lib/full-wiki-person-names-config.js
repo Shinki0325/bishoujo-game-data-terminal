@@ -1,1 +1,0 @@
-export const PERSON_NAMES = Object.freeze({"url": "../data/terminal-wiki-display-names-v1/persons.json?v=20260910", "sha256": "6b23ff3ee4e5f82e226624280e6754f0ea780773c2dbb27550249263ca9b7ced", "bytes": 5069547});
