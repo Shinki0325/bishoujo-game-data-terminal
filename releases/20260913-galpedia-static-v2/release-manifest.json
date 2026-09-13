@@ -1,5 +1,5 @@
 {
-  "closureSha256": "7a12df1edb0c4cb7dad5ed10f34cadfa5495f826c281a52daf2116133b6b5ce2",
+  "closureSha256": "e0c793cdaba5b729a9e28b3d36b77cda27a11ba0ad1b6934306ee84e2fcab11c",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -461021,9 +461021,9 @@
       "sha256": "c80bccaf8599e4ab7e62f94e9432fdaa9989cecc2710d46ce8076ec0791130c2"
     },
     {
-      "bytes": 4949,
+      "bytes": 6758,
       "path": "lib/full-wiki-work-detail-loader.js",
-      "sha256": "0c9cac2f9038d0a49a384c32bd33748851bb8abaf1c5365c6f1c448f87b8e15c"
+      "sha256": "40e1d54ae617c587915a0ab5c9fe15dc35d5091aec79002feae2e630e21ebc35"
     },
     {
       "bytes": 9255,
@@ -461781,7 +461781,7 @@
       "sha256": "714ef50034280ae4c6be5b78fa1e53e11a399d29cbc4d74a8bf3311cf0ea209b"
     }
   ],
-  "releaseId": "20260913-galpedia-static-v1",
+  "releaseId": "20260913-galpedia-static-v2",
   "runtimeDataRevision": "8a3437c7128fabece42acacadf663a7a9f6a08bf200509870858eb01a4843503",
   "schemaVersion": "egs-tier-immutable-release-closure-v1",
   "staticFiles": [
@@ -461908,7 +461908,7 @@
     {
       "bytes": 76446,
       "path": "index.html",
-      "sha256": "ba2d5e340e5c289df55ef603b2abaebc395622f78934c26e4c79c13dc66b1775"
+      "sha256": "ea1a27ce576ee023fd18c1f32f9f9540dc703fa7aa07b75e3df478e94dfd5ed2"
     },
     {
       "bytes": 991249,
