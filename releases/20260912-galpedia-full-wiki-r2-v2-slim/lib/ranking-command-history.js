@@ -13,7 +13,9 @@ export function createRankingCommandHistory({ subjects, announce = () => {}, lim
   function labelFor(before, after) {
     if (JSON.stringify(before.tiers) !== JSON.stringify(after.tiers)) return '修改等级';
     if (JSON.stringify(before.selected) !== JSON.stringify(after.selected)) return '调整候选';
-    const target = after.tiers.find(tier => (after.order[tier.id] ?? []).some(id => !(before.order[tier.id] ?? []).includes(id)));
+    // Company rankings own selection/order; their shared tier definitions are
+    // held by the work controller and are absent from company snapshots.
+    const target = (after.tiers ?? []).find(tier => (after.order[tier.id] ?? []).some(id => !(before.order[tier.id] ?? []).includes(id)));
     return target ? `移至 ${target.name}` : '调整排榜顺序';
   }
   function board(change, label) {

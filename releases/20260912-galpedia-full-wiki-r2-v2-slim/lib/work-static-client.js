@@ -3,6 +3,7 @@ import { WORKBENCH_DEMAND } from './workbench-demand-config.js';
 import { createResourceRequest } from './resource-request.js';
 import { createWorkbenchStore, readWorkbenchFile, validateWorkbenchManifest, restoreWorkbenchContext } from './workbench-demand-data.js';
 import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
+import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
   && Array.isArray(a)===Array.isArray(b) && Object.keys(a).length===Object.keys(b).length
@@ -122,7 +123,7 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   if(WORK_STATIC.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('作品静态源已变化');
   const client=createStaticWorkData({fetchImpl,cryptoRef}),url=new URL(WORKBENCH_DEMAND.manifestPath,import.meta.url);
   const [{uiData,uiSummary},manifest]=await Promise.all([client.startup(),readWorkbenchFile(url,WORKBENCH_DEMAND.sha256,{fetchImpl,cryptoRef}).then(value=>validateWorkbenchManifest(value))]);
-  const workData=createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef});
+  const workData=withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null);
   const staticQueryClient=createStaticWorkQueryClient({data:client,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,uiSummary,workerOwned:true,workData,staticQueryClient};
