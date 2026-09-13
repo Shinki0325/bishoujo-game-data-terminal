@@ -1,4 +1,4 @@
-import { DEFAULT_ASSET_BASE, validateAssetBase } from './asset-url.js';
+import { DEFAULT_ASSET_BASE, validateAssetBase } from './asset-url-core.js';
 
 export const PREVIEW_MANIFEST_PATH = 'egs-tier/v1/preview-manifest.json';
 export const ENRICHMENT_SIDECAR_SHA256 = '4e314a155a2058a5816b55212b9cb949dbbab0e5bc0f5df4f39dde2467771a45';

@@ -2,8 +2,8 @@ import {createWorkspaceSession} from './workspace-session.js';
 import {createViewLifetime} from './view-lifetime.js';
 import {createStaticSiteDataClient} from './page-data-client.js';
 import {configuredAssetBase} from './runtime-config.js';
-import {resolveAssetUrl} from './asset-url.js';
-import {createSelectionCard} from '../views/selection-view.js';
+import {resolveAssetUrl, installExternalCoverImageRecovery} from './asset-url-core.js';
+import {createSelectionCard} from '../views/selection-card.js';
 import {createSelectionCardPresentation} from './selection-card-presentation.js';
 import {
   WORKBENCH_LANDING_SNAPSHOT_KEY,
@@ -34,6 +34,7 @@ export function canShowWorkbenchLanding(locationRef, storage) {
 
 export function createWorkbenchLanding({documentRef=document,locationRef=location,storage=localStorage,storageKey=DEFAULT_WORKBENCH_STATE_STORAGE_KEY,isReady,navigate,onVisible}) {
   const session=createWorkspaceSession(),lifetime=createViewLifetime();
+  lifetime.add(installExternalCoverImageRecovery(documentRef));
   const cardPresentation=createSelectionCardPresentation({
     read:key=>{
       try{return storage?.getItem?.(key)??null;}catch{return null;}
