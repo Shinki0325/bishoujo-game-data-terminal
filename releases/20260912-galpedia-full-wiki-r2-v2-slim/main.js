@@ -638,7 +638,7 @@ async function initialize() {
     ),
     timeoutMs: 10000
   });
-  if (/^#works(?:[/?]|$)/u.test(window.location.hash)) filterWorkerClient.preload();
+  if (!STATIC_SITE_MODE && /^#works(?:[/?]|$)/u.test(window.location.hash)) filterWorkerClient.preload();
   const interactionMetrics = createInteractionMetrics();
   const assetBase = configuredAssetBase();
   const highDensityPreviewsEnabled = canUseHighDensityPreview({
@@ -662,7 +662,7 @@ async function initialize() {
     dataRevision: STATIC_SITE_DATA_REVISION
   });
   const { loadWorkbenchData, workbenchQueryWork } = await import('./lib/workbench-demand-data.js');
-  const preparedWorkbench = await loadWorkbenchData({
+  const preparedWorkbench = STATIC_SITE_MODE ? await (await import('./lib/work-static-client.js')).loadStaticWorkbench() : await loadWorkbenchData({
     legacyLoader: () => loadLegacyWorkbenchData({
       startupMetrics,
       publishDiagnostics(runtimeDiagnostics) {
@@ -671,7 +671,7 @@ async function initialize() {
       }
     })
   });
-  if(preparedWorkbench.workerOwned)filterWorkerClient=getOwnedWorkbenchClient();
+  if(preparedWorkbench.workerOwned)filterWorkerClient=preparedWorkbench.staticQueryClient ?? getOwnedWorkbenchClient();
   // Workbench export boundary: all legacy inputs have passed their original validators.
   const { catalogSource, sampleSource, sample, runtimeDiagnostics, populationContract, enrichment, workAliasesById, workPinyinById, workDisplayTitlesById, ratedDisplayWorks, presentationFamiliesSource, bangumiPublicBindings, confirmedBangumiImportBindings, brands, companyProfile } = preparedWorkbench;
   let workData = preparedWorkbench.workData ?? null;
@@ -3269,10 +3269,11 @@ async function initialize() {
   return { search: query => {
     globalSearch ??= createGalpediaSearch({
       works: preparedWorkbench.workerOwned ? [] : ratedDisplayWorks,
-      searchWorks: query => staticSiteData.searchWorks(query),
+      searchWorks: preparedWorkbench.workerOwned ? query => filterWorkerClient.searchWorks(query) : null,
       companyDirectory,
       enrichment: { workAliasesById: workerWorkAliasesById, workPinyinById: workerWorkPinyinById, workDisplayTitlesById },
       loadPersons: async () => {
+        if (STATIC_SITE_MODE) return (await loadPersonSearchRecords()).records;
         try {
           const rows = await staticSiteData.getPersonsDirectory();
           if (rows.length) return rows.map(row => ({
