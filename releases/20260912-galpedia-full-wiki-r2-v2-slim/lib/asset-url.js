@@ -1,3 +1,4 @@
+import {PUBLIC_COVER_MIRROR} from './public-cover-mirror-config.js';
 import {isLocalPreviewOrigin} from './detail-view-stats.js';
 import {lookupFullWikiPublicMediaUrl} from './full-wiki-public-media-map.js';
 export const DEFAULT_ASSET_BASE = '/backend/exports/egs-tier-beta-v1/';
@@ -122,6 +123,12 @@ export function assetPathFromWork(work) {
   throw new AssetUrlError('work must provide a thumbnail asset path', { path: 'work.thumbnailPath' });
 }
 
+function mirroredPublicMediaUrl(publicUrl, descriptor) {
+  const url = new URL(approvedPublicMediaUrl(publicUrl, descriptor));
+  const path = url.pathname.slice(1);
+  return V2_OBJECT_PATH_PATTERN.test(path) ? new URL(path, PUBLIC_COVER_MIRROR.base).href : url.href;
+}
+
 export function resolveAssetUrl(relativePath, assetBase = DEFAULT_ASSET_BASE) {
   const base = validateAssetBase(assetBase);
   const path = validateRelativeAssetPath(relativePath);
@@ -131,9 +138,9 @@ export function resolveAssetUrl(relativePath, assetBase = DEFAULT_ASSET_BASE) {
   }
   if (path.startsWith('data/terminal-wiki-media-v1/') && !(isLocalPreviewOrigin(globalThis.location?.origin) && new URLSearchParams(globalThis.location?.search ?? '').get('localMedia') === '1')) {
     const mappedPublicUrl = lookupFullWikiPublicMediaUrl(path.slice('data/terminal-wiki-media-v1/'.length));
-    if (mappedPublicUrl !== null) return approvedPublicMediaUrl(mappedPublicUrl, {sha256: mappedPublicUrl.split('/').pop()?.replace(/\.webp$/u, '')});
+    if (mappedPublicUrl !== null) return mirroredPublicMediaUrl(mappedPublicUrl, {sha256: mappedPublicUrl.split('/').pop()?.replace(/\.webp$/u, '')});
   }
-  if (APPROVED_PUBLIC_MEDIA_PATTERNS.some(pattern => pattern.test(path))) return new URL(path, APPROVED_PUBLIC_MEDIA_BASE).href;
+  if (APPROVED_PUBLIC_MEDIA_PATTERNS.some(pattern => pattern.test(path))) return new URL(path, PUBLIC_COVER_MIRROR.base).href;
   if(path.startsWith('data/terminal-wiki-media-v1/')) {
     return new URL(`../${path}`,import.meta.url).href;
   }
@@ -182,8 +189,8 @@ export function recoverExternalCoverImage(image) {
   if (image === null || typeof image !== 'object') return Object.freeze({ recovered: false });
   const declaredUrl = image.getAttribute?.('src') || image.src || '';
   const activeUrl = image.currentSrc || declaredUrl;
-  const declaredPath = externalV2ObjectPath(declaredUrl, PRIMARY_COVER_ASSET_BASE);
-  const activePath = externalV2ObjectPath(activeUrl, PRIMARY_COVER_ASSET_BASE);
+  const declaredPath = externalV2ObjectPath(declaredUrl, PUBLIC_COVER_MIRROR.base) ?? externalV2ObjectPath(declaredUrl, PRIMARY_COVER_ASSET_BASE);
+  const activePath = externalV2ObjectPath(activeUrl, PUBLIC_COVER_MIRROR.base) ?? externalV2ObjectPath(activeUrl, PRIMARY_COVER_ASSET_BASE);
   const path = declaredPath ?? activePath;
   if (path === null) return Object.freeze({ recovered: false });
 

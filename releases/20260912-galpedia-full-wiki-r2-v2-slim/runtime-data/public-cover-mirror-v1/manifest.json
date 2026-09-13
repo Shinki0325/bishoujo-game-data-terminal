@@ -1,0 +1,127 @@
+{
+  "assets": [
+    {
+      "bytes": 189567,
+      "count": 3287,
+      "path": "assets-0.json.gz",
+      "rawBytes": 1771758,
+      "sha256": "1e1b89a987548ee097ea0aa95eaa42e5cf15ec6e9ffb95daace4c716efe9eb5d"
+    },
+    {
+      "bytes": 184264,
+      "count": 3194,
+      "path": "assets-1.json.gz",
+      "rawBytes": 1721622,
+      "sha256": "a451b03d343e734351b836420af63ac7beecbe996f1771bea8553cbbe52c1352"
+    },
+    {
+      "bytes": 188338,
+      "count": 3268,
+      "path": "assets-2.json.gz",
+      "rawBytes": 1761560,
+      "sha256": "4ea20861b592bc26e6855ae4add3461cd1b3310802a5c53a636bbd9ee9a7998b"
+    },
+    {
+      "bytes": 189795,
+      "count": 3291,
+      "path": "assets-3.json.gz",
+      "rawBytes": 1773937,
+      "sha256": "77eba074a0ced06b1265f194700b962459d94bc85f5363e15386d51199ff0550"
+    },
+    {
+      "bytes": 190532,
+      "count": 3304,
+      "path": "assets-4.json.gz",
+      "rawBytes": 1780977,
+      "sha256": "cfdd79874d1b2da74784175ec45f339db431befe5eba33500bb7206cf0e2c7f5"
+    },
+    {
+      "bytes": 189282,
+      "count": 3279,
+      "path": "assets-5.json.gz",
+      "rawBytes": 1767484,
+      "sha256": "630b9f30616f367a10505f798c557a6465d3abd290db9a3f25bc0e4366220895"
+    },
+    {
+      "bytes": 186776,
+      "count": 3235,
+      "path": "assets-6.json.gz",
+      "rawBytes": 1743761,
+      "sha256": "99da820dc4b6fae40a19613d06ca1af148ce9f8dccd9729e3156a33584196cab"
+    },
+    {
+      "bytes": 189787,
+      "count": 3287,
+      "path": "assets-7.json.gz",
+      "rawBytes": 1771751,
+      "sha256": "ae5fd4a51302ceb614e20995ccf9356cc07c8eb991e9522433cb6f257e7a5216"
+    },
+    {
+      "bytes": 193201,
+      "count": 3349,
+      "path": "assets-8.json.gz",
+      "rawBytes": 1805148,
+      "sha256": "6063014b2ade62a819d4fa391266d1c05de50ad92d12226e6f0d8edbcd5eaf7f"
+    },
+    {
+      "bytes": 189011,
+      "count": 3279,
+      "path": "assets-9.json.gz",
+      "rawBytes": 1767422,
+      "sha256": "8f9606de88df82bbb64547100364924cecf018ce891fabe63b70c8bcd98c3e78"
+    },
+    {
+      "bytes": 187418,
+      "count": 3248,
+      "path": "assets-a.json.gz",
+      "rawBytes": 1750808,
+      "sha256": "5884d04080e96a236aa93ed99e9bb9c04b0b6d93b2e7efec196559d7c4cf8818"
+    },
+    {
+      "bytes": 188375,
+      "count": 3266,
+      "path": "assets-b.json.gz",
+      "rawBytes": 1760443,
+      "sha256": "385457659d766cc98aa591197c6fdf96ebd94599a73d18960e7b51706119446c"
+    },
+    {
+      "bytes": 188133,
+      "count": 3258,
+      "path": "assets-c.json.gz",
+      "rawBytes": 1756170,
+      "sha256": "bd9ca4f6f1835db26a1935f2e38c32d13e2d2015db2be0073103bf57c9fd2c24"
+    },
+    {
+      "bytes": 190217,
+      "count": 3298,
+      "path": "assets-d.json.gz",
+      "rawBytes": 1777756,
+      "sha256": "11ed6553915165c753d27faf594b536fd6c6adbe3428b25c9a753ad1c72046c1"
+    },
+    {
+      "bytes": 189317,
+      "count": 3282,
+      "path": "assets-e.json.gz",
+      "rawBytes": 1769085,
+      "sha256": "f83a4f28328f2356c237df11ea378efdc2d21d082d9fe989fa17a20369f17d52"
+    },
+    {
+      "bytes": 184332,
+      "count": 3196,
+      "path": "assets-f.json.gz",
+      "rawBytes": 1722704,
+      "sha256": "6b866ac3f078ece10ddc80f43cdcf8366e48ef4e8cc1032fd0c810eb589a9981"
+    }
+  ],
+  "base": "https://wiki-assets.bishojo.date/",
+  "bytes": 1692528700,
+  "count": 52321,
+  "delivery": {
+    "method": "source-sha256-and-r2-etag",
+    "status": "uploaded",
+    "verifiedCount": 52321
+  },
+  "publicAdmissionManifestSha256": "c0392d6c0a7d8ec6789451a834d9c750dd85b059d99ad7bce9ac780e354bc27e",
+  "schema": "galpedia-cover-mirror-manifest-v1",
+  "sourceMediaManifestSha256": "cc721f8bc7d6e142ffcaa919e3b221213adc68f8fa5b524d7bf9019b3481e195"
+}
