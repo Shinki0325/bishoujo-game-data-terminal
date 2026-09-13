@@ -3263,6 +3263,14 @@ async function initialize() {
   keeperReady = true;
   renderKeeperGuidance();
   openShareImportDialog();
+  if (STATIC_SITE_MODE) {
+    // User intent starts the complete shared engine before the first query.
+    // Ordinary browsing/scrolling never downloads it speculatively.
+    const warmQuery = () => { void ensureFilterWorker().then(() => filterWorkerClient.preload()).catch(() => {}); };
+    for (const id of ['title-search','mobile-title-search','global-search-input','home-search-input','filter-toggle','mobile-filter-toggle']) {
+      document.getElementById(id)?.addEventListener('focus', warmQuery);
+    }
+  }
   let globalSearch = null;
   return { search: query => {
     globalSearch ??= createGalpediaSearch({

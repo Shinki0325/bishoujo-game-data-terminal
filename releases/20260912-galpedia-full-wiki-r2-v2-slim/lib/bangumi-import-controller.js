@@ -13,6 +13,13 @@ export function createBangumiImportController({
   let pendingBangumiPublicImport = null, bangumiPublicImportAbort = null;
   let bangumiImportTitles = new Map(), bangumiPublicImportRequest = 0, bangumiImport = null;
   let focusTimer = null;
+  let bindingsPromise = null;
+  const readBindings = () => bindingsPromise ??= Promise.resolve().then(() => (
+    typeof confirmedBindings === 'function' ? confirmedBindings() : confirmedBindings
+  )).then(value => {
+    if (!Array.isArray(value)) throw new Error('已确认的 Bangumi 映射不可用');
+    return value;
+  }).catch(error => { bindingsPromise = null; throw error; });
   function cancelFocus() {
     if (focusTimer !== null) document.defaultView.clearTimeout(focusTimer);
     focusTimer = null;
@@ -180,7 +187,8 @@ export function createBangumiImportController({
     onPhase('loading');
     setBangumiPublicImportStatus('正在读取 Bangumi 公开游戏收藏…');
     try {
-      bangumiImport = await loadImportModule();
+      const [module, bindings] = await Promise.all([loadImportModule(), readBindings()]);
+      bangumiImport = module;
       const { fetchBangumiPublicGameCollections, planBangumiPublicImport } = bangumiImport;
       if (request !== bangumiPublicImportRequest) return;
       const result = await fetchBangumiPublicGameCollections({
@@ -190,7 +198,7 @@ export function createBangumiImportController({
       if (request !== bangumiPublicImportRequest) return;
       const plan = planBangumiPublicImport({
         collections: result.collections,
-        confirmedBindings: confirmedBindings,
+        confirmedBindings: bindings,
         currentSelectedWorkIds: getSelectedWorkIds(),
         workLimit: workLimit,
         presentationFamilyForWork: workId => familyForWork(workId)
@@ -229,6 +237,9 @@ export function createBangumiImportController({
     onOpen({ fromEmpty });
     resetBangumiPublicImportDialog();
     showDialog(elements.bangumiPublicImportDialog);
+    // Begin the small pinned mapping while the user enters their account.
+    // Closing the dialog cancels its transaction, not this reusable resource.
+    if (confirmedBindings !== null) void readBindings().catch(() => {});
     cancelFocus();
     focusTimer = document.defaultView.setTimeout(() => {
       focusTimer = null;

@@ -1,4 +1,6 @@
 import { WORK_STATIC } from './work-static-config.js';
+import { WORK_BROWSE } from './work-browse-config.js';
+import { createBrowseStartupData } from './work-browse-data.js';
 import { WORKBENCH_DEMAND } from './workbench-demand-config.js';
 import { createResourceRequest } from './resource-request.js';
 import { createWorkbenchStore, readWorkbenchFile, validateWorkbenchManifest, restoreWorkbenchContext } from './workbench-demand-data.js';
@@ -92,7 +94,7 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
   const delegate=async(method,...args)=>(await engine())[method](...args);
   const invalidate=()=>{activeRevision=null;mode='changed';sequence++;};
   return Object.freeze({
-    preload(){alive();},
+    preload(){alive();return engine();},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
     async query(input){
       alive();const ticket=++sequence;const defaults=!disabled&&input.paged&&!input.includeProjectedCounts?await data.defaults():null;
@@ -120,11 +122,17 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
 }
 
 export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=globalThis.crypto}={}) {
-  if(WORK_STATIC.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('作品静态源已变化');
+  if(WORK_STATIC.sourceManifestSha256!==WORKBENCH_DEMAND.sha256 || WORK_BROWSE.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('作品静态源已变化');
   const client=createStaticWorkData({fetchImpl,cryptoRef}),url=new URL(WORKBENCH_DEMAND.manifestPath,import.meta.url);
-  const [{uiData,uiSummary},manifest]=await Promise.all([client.startup(),readWorkbenchFile(url,WORKBENCH_DEMAND.sha256,{fetchImpl,cryptoRef}).then(value=>validateWorkbenchManifest(value))]);
+  const browse=createBrowseStartupData({config:WORK_BROWSE,fetchImpl,cryptoRef});
+  const [{uiData,uiSummary},manifest,site]=await Promise.all([browse.startup(),readWorkbenchFile(url,WORKBENCH_DEMAND.sha256,{fetchImpl,cryptoRef}).then(value=>validateWorkbenchManifest(value)),client.manifest()]);
+  if(site.startup.sha256!==WORK_BROWSE.sourceStartupSha256)throw Error('浏览投影来源已变化');
+  validateWorkbenchUISummary(uiSummary,site.count);
+  if(uiData?.schema!=='galpedia-owned-ui-v1'||uiData.sample?.works?.length!==0||uiData.ratedDisplayWorks?.length!==0)throw Error('作品UI投影无效');
+  restoreWorkbenchContext(uiData);
   const workData=withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null);
   const staticQueryClient=createStaticWorkQueryClient({data:client,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
-  return {...uiData,uiSummary,workerOwned:true,workData,staticQueryClient};
+  return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
+    uiSummary,workerOwned:true,workData,staticQueryClient};
 }
