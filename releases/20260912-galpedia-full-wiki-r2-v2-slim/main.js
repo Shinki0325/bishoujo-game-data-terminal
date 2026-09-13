@@ -657,10 +657,7 @@ async function initialize() {
     baseUrl: new URL('./static-site-data-v1/', import.meta.url),
     dataRevision: STATIC_SITE_DATA_REVISION
   });
-  const staticPageData = createPageDataClient({
-    baseUrl: new URL(`./static-site-data-v1/data/${STATIC_SITE_DATA_REVISION}/`, import.meta.url),
-    dataRevision: STATIC_SITE_DATA_REVISION
-  });
+  const staticPageData = createPageDataClient();
   const { loadWorkbenchData, workbenchQueryWork } = await import('./lib/workbench-demand-data.js');
   const preparedWorkbench = STATIC_SITE_MODE ? await (await import('./lib/work-static-client.js')).loadStaticWorkbench() : await loadWorkbenchData({
     legacyLoader: () => loadLegacyWorkbenchData({
