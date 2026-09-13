@@ -1,6 +1,7 @@
 import {PUBLIC_COVER_MIRROR} from './public-cover-mirror-config.js';
 import {isLocalPreviewOrigin} from './detail-view-stats.js';
 import {lookupFullWikiPublicMediaUrl} from './full-wiki-public-media-map.js';
+import {coverObjectSha, publicCoverMirror} from './public-cover-mirror.js';
 export const DEFAULT_ASSET_BASE = '/backend/exports/egs-tier-beta-v1/';
 
 export const PRIMARY_COVER_ASSET_BASE = 'https://assets.bishojo.date/';
@@ -154,10 +155,13 @@ export function resolveAssetUrl(relativePath, assetBase = DEFAULT_ASSET_BASE) {
       return new URL(path, terminalAssetBase()).href;
     }
     if (path === 'assets/cover-unavailable.webp') {
-      return new URL(V2_FALLBACK_PATH, base).href;
+      return publicCoverMirror.peek(V2_FALLBACK_PATH) ?? new URL(V2_FALLBACK_PATH, base).href;
     }
     const match = /^assets\/(?:covers|previews)\/([0-9a-f]{2})\/([0-9a-f]{64}\.webp)$/u.exec(path);
-    if (match) return new URL(`egs-tier/v2/objects/sha256/${match[1]}/${match[2]}`, base).href;
+    if (match) {
+      const objectPath = `egs-tier/v2/objects/sha256/${match[1]}/${match[2]}`;
+      return publicCoverMirror.peek(objectPath) ?? new URL(objectPath, base).href;
+    }
   }
   if (/^[a-z][a-z0-9+.-]*:/iu.test(base)) {
     return new URL(path, base).href;
@@ -175,9 +179,9 @@ function externalV2ObjectPath(urlValue, assetBase) {
   } catch {
     return null;
   }
-  if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) return null;
+  if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname) || url.search || url.hash || url.username || url.password) return null;
   const path = url.pathname.slice(base.pathname.length);
-  return V2_OBJECT_PATH_PATTERN.test(path) ? path : null;
+  return coverObjectSha(path) ? path : null;
 }
 
 export function fallbackCoverAssetUrl(urlValue) {
@@ -185,55 +189,71 @@ export function fallbackCoverAssetUrl(urlValue) {
   return path === null ? null : new URL(path, FALLBACK_COVER_ASSET_BASE).href;
 }
 
-export function recoverExternalCoverImage(image) {
-  if (image === null || typeof image !== 'object') return Object.freeze({ recovered: false });
+export function recoverExternalCoverImage(image, { mirror = publicCoverMirror, isActive = () => true } = {}) {
+  if (image === null || typeof image !== 'object' || image.dataset?.characterImageState) return Object.freeze({ recovered: false });
   const declaredUrl = image.getAttribute?.('src') || image.src || '';
   const activeUrl = image.currentSrc || declaredUrl;
-  const declaredPath = externalV2ObjectPath(declaredUrl, PUBLIC_COVER_MIRROR.base) ?? externalV2ObjectPath(declaredUrl, PRIMARY_COVER_ASSET_BASE);
-  const activePath = externalV2ObjectPath(activeUrl, PUBLIC_COVER_MIRROR.base) ?? externalV2ObjectPath(activeUrl, PRIMARY_COVER_ASSET_BASE);
+  const objectPath = url => externalV2ObjectPath(url, PUBLIC_COVER_MIRROR.base)
+    ?? externalV2ObjectPath(url, PRIMARY_COVER_ASSET_BASE) ?? externalV2ObjectPath(url, FALLBACK_COVER_ASSET_BASE);
+  const declaredPath = objectPath(declaredUrl);
+  const activePath = objectPath(activeUrl);
   const path = declaredPath ?? activePath;
   if (path === null) return Object.freeze({ recovered: false });
-
   const previous = imageRecoveryState.get(image);
-  const stage = previous?.path === path ? previous.stage : 0;
+  const current = declaredPath ? declaredUrl : activeUrl;
+  if (previous?.path === path && previous.url === current) return Object.freeze({ recovered: previous.pending });
+  const state = { path, url: current, pending: true };
+  imageRecoveryState.set(image, state);
   image.removeAttribute?.('srcset');
   image.removeAttribute?.('sizes');
-
-  const nextStage = stage === 0 ? 1 : 2;
-  const nextUrl = new URL(
-    path,
-    nextStage === 1 ? PRIMARY_COVER_ASSET_BASE : FALLBACK_COVER_ASSET_BASE
-  ).href;
-  imageRecoveryState.set(image, Object.freeze({ path, stage: nextStage }));
-  image.removeAttribute?.('src');
-  image.src = nextUrl;
-  return Object.freeze({
-    recovered: true,
-    stage: nextStage === 1 ? 'retry-primary' : 'fallback',
-    url: nextUrl
-  });
+  const stillCurrent = () => isActive() && image.isConnected !== false
+    && imageRecoveryState.get(image) === state && (image.getAttribute?.('src') || image.src || '') === declaredUrl;
+  const finish = nextUrl => {
+    if (!stillCurrent()) { state.pending = false; return; }
+    state.pending = false;
+    if (nextUrl) { state.url = nextUrl; image.removeAttribute?.('src'); image.src = nextUrl; }
+    else {
+      // Deliver the original failure to the owning view only after lookup has
+      // finished. The exhausted state prevents the capture listener restarting.
+      const EventRef = image.ownerDocument?.defaultView?.Event ?? globalThis.Event;
+      image.dispatchEvent?.(new EventRef('error'));
+    }
+  };
+  const isMirror = externalV2ObjectPath(current, PUBLIC_COVER_MIRROR.base) !== null;
+  const completion = isMirror
+    ? Promise.resolve().then(() => finish(new URL(path, PUBLIC_COVER_MIRROR.base).href))
+    : Promise.resolve().then(() => mirror.resolve(path)).then(finish, () => finish(null));
+  return Object.freeze({ recovered: true, stage: isMirror ? 'retry-primary' : 'verify-mirror', completion });
 }
 
 export function installExternalCoverImageRecovery(documentRef = globalThis.document) {
   if (documentRef === null || typeof documentRef?.addEventListener !== 'function') {
     throw new TypeError('documentRef must provide addEventListener');
   }
-  const installed = installedRecoveryDocuments.get(documentRef);
-  if (installed) return installed;
-  const onImageError = event => {
+  let installed = installedRecoveryDocuments.get(documentRef);
+  if (!installed) {
+    installed = { owners: 0 };
+    installed.onImageError = event => {
     const image = event?.target;
     if (String(image?.tagName ?? '').toUpperCase() !== 'IMG') return;
-    const outcome = recoverExternalCoverImage(image);
+    const outcome = recoverExternalCoverImage(image, { isActive: () => installed.owners > 0 });
     if (!outcome.recovered) return;
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
-  };
-  documentRef.addEventListener('error', onImageError, true);
+    };
+    documentRef.addEventListener('error', installed.onImageError, true);
+    installedRecoveryDocuments.set(documentRef, installed);
+  }
+  installed.owners++;
+  let active = true;
   const uninstall = () => {
-    documentRef.removeEventListener?.('error', onImageError, true);
-    installedRecoveryDocuments.delete(documentRef);
+    if (!active) return;
+    active = false;
+    if (--installed.owners === 0) {
+      documentRef.removeEventListener?.('error', installed.onImageError, true);
+      installedRecoveryDocuments.delete(documentRef);
+    }
   };
-  installedRecoveryDocuments.set(documentRef, uninstall);
   return uninstall;
 }
 

@@ -1,6 +1,6 @@
 import { parseUiLocationHash, formatUiLocationHash } from './ui-location-state.js';
 import { configuredAssetBase } from './runtime-config.js';
-import { resolveAssetUrl } from './asset-url.js';
+import { resolveAssetUrl, installExternalCoverImageRecovery } from './asset-url.js';
 import { createViewLifetime } from './view-lifetime.js';
 import { createWorkspaceSession } from './workspace-session.js';
 
@@ -11,6 +11,7 @@ export function isIndependentDirectoryRoute(hash, { staticPersons = false } = {}
 
 export function createDirectoryWorkspaces({ navigate, activateFull, staticPersons = false }) {
   const lifetime = createViewLifetime();
+  lifetime.add(installExternalCoverImageRecovery(document));
   const session = createWorkspaceSession();
   const assetBase = configuredAssetBase();
   let activeTicket;
