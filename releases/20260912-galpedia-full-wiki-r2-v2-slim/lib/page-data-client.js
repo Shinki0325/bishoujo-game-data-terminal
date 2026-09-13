@@ -1,7 +1,7 @@
 import { createResourceRequest } from './resource-request.js';
 import { STATIC_DETAIL_INDEX } from './static-detail-index-config.js';
 
-export function createPageDataClient({ baseUrl = new URL(STATIC_DETAIL_INDEX.basePath, import.meta.url), dataRevision = STATIC_DETAIL_INDEX.dataRevision, indexDescriptor = STATIC_DETAIL_INDEX.index, fetchImpl = globalThis.fetch, cryptoRef = globalThis.crypto, requestPolicy = {}, maxCacheBytes = 32 * 1024 * 1024 } = {}) {
+export function createPageDataClient({ baseUrl = new URL(STATIC_DETAIL_INDEX.basePath, import.meta.url), dataRevision = STATIC_DETAIL_INDEX.dataRevision, indexDescriptor = STATIC_DETAIL_INDEX.index, fetchImpl = globalThis.fetch, cryptoRef = globalThis.crypto, decompress = globalThis.DecompressionStream, requestPolicy = {}, maxCacheBytes = 32 * 1024 * 1024 } = {}) {
   baseUrl = new URL(baseUrl);
   const request = createResourceRequest({ ...requestPolicy, fetchImpl });
   const cache = new Map();
@@ -59,9 +59,23 @@ export function createPageDataClient({ baseUrl = new URL(STATIC_DETAIL_INDEX.bas
         if (!Number.isSafeInteger(descriptor.bytes) || descriptor.bytes !== bytes.byteLength || !/^[a-f0-9]{64}$/u.test(descriptor.sha256 ?? '')) throw new Error('static detail length or digest invalid');
         const sha = Array.from(new Uint8Array(await cryptoRef.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
         if (sha !== descriptor.sha256) throw new Error('static detail digest mismatch');
-        const payload = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(bytes));
+        if(index.compression==='gzip'&&descriptor.compression!=='gzip')throw Error('static detail compression mismatch');
+        if(descriptor.compression!==undefined&&descriptor.compression!=='gzip')throw Error('static detail compression unsupported');
+        let raw=bytes;
+        if(descriptor.compression==='gzip') {
+          if(!Number.isSafeInteger(descriptor.rawBytes)||descriptor.rawBytes<1||descriptor.rawBytes>16*1024*1024
+            ||!/^[a-f0-9]{64}$/u.test(descriptor.rawSha256??'')||typeof decompress!=='function')throw Error('static detail decompression budget invalid');
+          const reader=new Blob([bytes]).stream().pipeThrough(new decompress('gzip')).getReader(),chunks=[];let size=0;
+          try {while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>descriptor.rawBytes)throw Error('static detail decompression budget exceeded');chunks.push(value);}
+            if(size!==descriptor.rawBytes)throw Error('static detail decompression length mismatch');
+          }finally{await reader.cancel().catch(()=>{});}
+          raw=new Uint8Array(size);let offset=0;for(const chunk of chunks){raw.set(chunk,offset);offset+=chunk.length;}
+          const rawSha=Array.from(new Uint8Array(await cryptoRef.subtle.digest('SHA-256',raw)),b=>b.toString(16).padStart(2,'0')).join('');
+          if(rawSha!==descriptor.rawSha256)throw Error('static detail original digest mismatch');
+        }
+        const payload = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(raw));
         if (payload.dataRevision !== index.dataRevision || payload.workId !== key || payload.schemaVersion !== index.schemaVersion) throw new Error('static detail identity or revision mismatch');
-        entry.bytes = bytes.byteLength;
+        entry.bytes = raw.byteLength;
         return payload;
       }}).then(value => {
         cacheBytes += entry.bytes;
