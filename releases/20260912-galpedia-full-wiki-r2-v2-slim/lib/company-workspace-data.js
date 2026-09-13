@@ -1,5 +1,5 @@
 import { FULL_WIKI_RUNTIME } from './full-wiki-runtime-config.js';
-import { loadFullWikiCompanyWorkspace } from './full-wiki-company-workspace.js';
+import { loadFullWikiCompanyDirectory, loadFullWikiCompanyWorkspace } from './full-wiki-company-workspace.js';
 import { loadRuntimeSource } from './runtime-source-cache.js';
 import { DATA_URLS, RUNTIME_FEATURES, ENRICHMENT_SIDECAR_SHA256, COMPANY_PROFILE_SIDECAR_SHA256, BANGUMI_PUBLIC_BINDINGS_SHA256 } from './runtime-config.js';
 import { prepareBackendBetaFixture } from './backend-beta-fixture.js';
@@ -20,6 +20,10 @@ const pin = (source, hash, label) => {
 
 // Company browsing needs the catalogue and its display projections, not score
 // engines, character graphs, media-clearance auditing, export or ranking code.
+export function loadCompanyDirectory() {
+  return FULL_WIKI_RUNTIME.enabled ? loadFullWikiCompanyDirectory() : loadCompanyWorkspace();
+}
+
 export function loadCompanyWorkspace() {
   if (FULL_WIKI_RUNTIME.enabled) return loadFullWikiCompanyWorkspace();
   pending ??= (async () => {

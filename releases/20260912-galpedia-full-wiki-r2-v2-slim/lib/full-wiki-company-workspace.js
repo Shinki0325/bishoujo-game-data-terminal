@@ -5,3 +5,7 @@ import { getStaticCompanyClient } from './company-static-client.js';
 export function loadFullWikiCompanyWorkspace() {
   return getStaticCompanyClient().loadWorkspace();
 }
+
+export function loadFullWikiCompanyDirectory() {
+  return getStaticCompanyClient().loadDirectory();
+}

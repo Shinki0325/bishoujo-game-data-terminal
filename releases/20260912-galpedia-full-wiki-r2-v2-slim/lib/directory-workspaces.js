@@ -16,6 +16,8 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
   const assetBase = configuredAssetBase();
   let activeTicket;
   let personView, companyView, personData, companyData;
+  let companyWorksData, companyWorksLoader, companyWorksPending;
+  let companyDetailState = 'idle';
   let personLocation, companyLocation;
   let personStaticClient, personRenderSequence = 0, personDetailClientPromise;
   let personDetailParents = [];
@@ -73,6 +75,21 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     if (!companyView || !companyData || !session.isActive('companies')) return;
     const route = companyLocation, [sortKey, direction] = route.sort.split('-');
     const companies = companySearch(companyData, route.query, { sortKey, direction, hasAvatar: route.hasImage ? true : null });
+    if (!companyWorksData && companyDetailState === 'idle' && companies.some(company => company.companyId === route.companyId)) {
+      const ticket = activeTicket;
+      companyDetailState = 'loading';
+      // The shared resource may finish after navigation; only the current view
+      // observes its result. A failed detail leaves the directory usable.
+      companyWorksPending ??= companyWorksLoader().then(data => {
+        companyWorksData = data;
+        return data;
+      }).catch(error => { companyWorksPending = null; throw error; });
+      companyWorksPending.then(ticket.guard(() => {
+        companyDetailState = 'ready'; paintCompanies();
+      }), ticket.guard(() => {
+        companyDetailState = 'error'; paintCompanies();
+      }));
+    }
     get('company-directory-search').value = route.query;
     get('company-search-clear').hidden = !route.query;
     get('company-has-image').checked = route.hasImage;
@@ -81,7 +98,9 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     get('company-directory-count').parentElement.hidden = companies.length === companyData.companies.length;
     companyView.render({
       companies, selectedCompanyId: route.companyId, sortValue: route.sort,
-      selectedWorks: route.companyId ? worksForCompany(companyData, route.companyId, detailSort) : [],
+      selectedWorks: route.companyId && companyWorksData ? worksForCompany(companyWorksData, route.companyId, detailSort) : [],
+      detailState: companyWorksData ? 'ready' : companyDetailState === 'error' ? 'error' : 'loading',
+      onRetryDetail: activeTicket.guard(() => { companyDetailState = 'idle'; paintCompanies(); }),
       detailWorkSortKey: detailSort.sortKey, detailWorkSortDirection: detailSort.direction,
       selectedCompanyIds: new Set(), selectionMode: false,
       imageUrlForCompany: company => companyImageUrl(company, assetBase),
@@ -164,13 +183,15 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
           if (!staticPersons) personView.setPageNumber(route.pageNumber);
         } else if (route?.page === 'companies') {
           companyLocation = route;
-          const [{ loadCompanyWorkspace }, view, model] = await Promise.all([
+          const [{ loadCompanyDirectory, loadCompanyWorkspace }, view, model] = await Promise.all([
             import('./company-workspace-data.js'), import('../views/company-directory-view.js'), import('./company-directory.js')
           ]);
           if (!ticket.isCurrent()) return;
-          const directory = await loadCompanyWorkspace();
+          const directory = await loadCompanyDirectory();
           if (!ticket.isCurrent()) return;
           companyData = directory;
+          companyWorksLoader = loadCompanyWorkspace;
+          companyDetailState = 'idle';
           companySearch = model.searchCompanyDirectory; worksForCompany = model.worksForCompany; companyImageUrl = view.companyImageUrl;
           const mounted = view.createCompanyDirectoryView({
             root: get('company-view'), selectionMode: false,
