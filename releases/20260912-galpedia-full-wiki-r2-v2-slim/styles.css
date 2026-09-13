@@ -9286,6 +9286,9 @@ dialog::backdrop {
 .person-directory-avatar, .person-detail-avatar { display:grid; place-items:center; border:1px solid var(--border-strong); background:var(--surface-muted); color:var(--accent); font-weight:700; }
 .person-directory-avatar { width:38px; height:38px; border-radius:50%; font-size:15px; }
 .person-directory-character-image { width:42px; height:42px; object-fit:cover; object-position:top center; border:1px solid var(--border-strong); border-radius:50%; background:var(--surface-muted); }
+.character-image-retry { margin:4px 0 8px; padding:5px 10px; border:1px solid var(--border-strong); border-radius:6px; color:var(--text); background:var(--surface-muted); font:inherit; font-size:12px; cursor:pointer; }
+img[data-character-image-state]:not([data-character-image-state="loaded"]) { opacity:0; }
+.person-representative-item[data-character-image-state="error"]::after { content:'图片暂时无法加载'; font-size:11px; color:var(--muted); }
 .person-directory-work-image { width:42px; height:42px; object-fit:cover; border:1px solid var(--border-strong); border-radius:4px; background:var(--surface-muted); }
 .person-directory-person { min-width:0; }
 .person-directory-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

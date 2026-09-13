@@ -1,4 +1,5 @@
 import { characterDescription, metadataConflictNotice, profileFactsView } from './work-detail-character-enrichment-overlay.js';
+import { createCharacterImageGroup } from '../lib/character-image-loader.js';
 
 const TAB_ORDER = Object.freeze(['staff', 'cast', 'songs']);
 const TAB_LABELS = Object.freeze({
@@ -298,7 +299,7 @@ function staffPane(documentRef, staff) {
 }
 
 
-function castPane(documentRef, cast) {
+function castPane(documentRef, cast, images) {
   const list = documentRef.createElement('ul');
   list.className = 'details-cast-list';
   for (const entry of orderedCast(cast)) {
@@ -313,20 +314,12 @@ function castPane(documentRef, cast) {
     if (entry?.image?.url) {
       const image = documentRef.createElement('img');
       image.alt = '';
-      image.loading = 'lazy';
       image.decoding = 'async';
-      image.src = entry.image.url;
-      image.addEventListener('load', () => { portrait.dataset.state = 'loaded'; placeholder.hidden = true; });
-      image.addEventListener('error', () => {
-        if (entry.image.fallbackUrl && image.dataset.fallbackAttempted !== 'true') {
-          image.dataset.fallbackAttempted = 'true';
-          image.src = entry.image.fallbackUrl;
-          return;
-        }
-        portrait.dataset.state = 'error';
-        image.remove();
-        placeholder.hidden = false;
-        placeholder.textContent = '图片加载失败';
+      images.load(image, { url: entry.image.url, fallbackUrl: entry.image.fallbackUrl, onState(state) {
+        portrait.dataset.state = state;
+        placeholder.hidden = state === 'loaded';
+        placeholder.textContent = state === 'error' ? '图片加载失败' : state === 'retrying' ? '正在重试…' : '正在加载…';
+      }
       });
       portrait.append(image);
     }
@@ -478,7 +471,10 @@ export function createWorkDetailCreditsView({ root, tabs, content, status }) {
       pane.dataset.pane = tabId;
       pane.setAttribute('role', 'tabpanel');
       if (tabId === 'staff') pane.append(staffPane(documentRef, work.staff));
-      if (tabId === 'cast') pane.append(castPane(documentRef, work.cast));
+      if (tabId === 'cast') {
+        const images = createCharacterImageGroup(documentRef);
+        pane.append(images.button, castPane(documentRef, work.cast, images));
+      }
       if (tabId === 'songs') pane.append(songsPane(documentRef, work.songs));
       return pane;
     });

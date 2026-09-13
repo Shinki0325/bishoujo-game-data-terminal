@@ -1,5 +1,6 @@
 import { formatReleaseDate, releaseDateSortCompare } from '../lib/work-release-date.js';
 import { createWorkspaceSession } from '../lib/workspace-session.js';
+import { createCharacterImageGroup } from '../lib/character-image-loader.js';
 const PAGE_SIZE = 48;
 const REPRESENTATIVE_CHARACTER_LIMIT = 3;
 const REPRESENTATIVE_LOAD_CONCURRENCY = 6;
@@ -142,6 +143,9 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
   }
   const search = root.querySelector('#person-directory-search');
   const list = root.querySelector('#person-directory-list');
+  const directoryImages = createCharacterImageGroup(documentRef);
+  list.before(directoryImages.button);
+  lifetime.add(() => directoryImages.dispose());
   const empty = root.querySelector('#person-directory-empty');
   const count = root.querySelector('#person-directory-count');
   const previous = root.querySelector('#person-page-previous');
@@ -203,9 +207,9 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     for (const character of rows) {
       if (!character?.imageUrl) continue;
       const image = node(documentRef, 'img', 'person-directory-character-image');
-      image.src = character.imageUrl; image.alt = ''; image.title = [character.name, characterRoleLabel(character.role), character.title].filter(Boolean).join(' · '); image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+      image.alt = ''; image.title = [character.name, characterRoleLabel(character.role), character.title].filter(Boolean).join(' · '); image.referrerPolicy = 'no-referrer';
       image.dataset.characterId = character.characterId;
-      image.addEventListener('error', () => { image.remove(); }, { once: true });
+      directoryImages.load(image, { url: character.imageUrl });
       faces.append(image);
     }
     if (!faces.children.length && state === 'ready') {
@@ -453,6 +457,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
       const representative = node(documentRef, 'section', 'person-detail-block person-detail-representative');
       const heading = node(documentRef, 'div', 'person-detail-block-heading');
       heading.append(node(documentRef, 'h3', '', '代表角色'));
+      const representativeImages = createCharacterImageGroup(documentRef);
+      heading.append(representativeImages.button);
       representative.append(heading);
       const list = node(documentRef, 'div', 'person-representative-list');
       const characters = Array.isArray(person.representativeCharacters) ? person.representativeCharacters : [];
@@ -466,7 +472,11 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         item.dataset.characterId = character.characterId;
         item.title = [character.name || '未命名角色', characterRoleLabel(character.role), character.title].filter(Boolean).join(' · ');
         const image = character.imageUrl ? node(documentRef, 'img', 'person-representative-image') : null;
-        if (image) { image.src = character.imageUrl; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer'; image.addEventListener('error', () => { image.hidden = true; }, { once: true }); item.append(image); }
+        if (image) {
+          image.alt = ''; image.referrerPolicy = 'no-referrer';
+          representativeImages.load(image, { url: character.imageUrl, onState(state) { item.dataset.characterImageState = state; } });
+          item.append(image);
+        }
         item.append(node(documentRef, 'strong', '', character.name || '未命名角色'));
         if (character.title) item.append(node(documentRef, 'span', 'person-representative-context', character.title));
         list.append(item);
