@@ -2,6 +2,8 @@ const QUERY_PARAMETER = 'interactionMetrics';
 const STAGES = Object.freeze([
   'interaction-start',
   'debounce-complete',
+  'query-ready',
+  'query-return',
   'worker-return',
   'controller-ready',
   'presentation-ready',
@@ -35,7 +37,12 @@ function copyRecord(record) {
     reason: record.reason,
     marks: Object.freeze({ ...marks }),
     debounceMs: duration('interaction-start', 'debounce-complete'),
+    // Retain the historical aggregate for comparable existing reports.
     queryMs: duration('debounce-complete', 'worker-return'),
+    querySetupMs: duration('debounce-complete', 'query-ready'),
+    // Execution includes lazy engine startup on its first non-default query.
+    queryExecutionMs: duration('query-ready', 'query-return'),
+    pageDataMs: duration('query-return', 'worker-return'),
     controllerMs: duration('worker-return', 'controller-ready'),
     presentationMs: duration('controller-ready', 'presentation-ready'),
     modelMs: duration('presentation-ready', 'model-ready'),

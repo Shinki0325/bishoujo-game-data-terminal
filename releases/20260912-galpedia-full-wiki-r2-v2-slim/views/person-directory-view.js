@@ -1,3 +1,4 @@
+import { setListState } from '../lib/list-state.js';
 import { formatReleaseDate, releaseDateSortCompare } from '../lib/work-release-date.js';
 import { createWorkspaceSession } from '../lib/workspace-session.js';
 import { createCharacterImageGroup } from '../lib/character-image-loader.js';
@@ -373,6 +374,8 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
 
   function invalidateDetailRequest() {
     detailSession.suspend();
+    const status = documentRef.querySelector('#person-detail-load-status');
+    if (status) setListState({status,state:'ready'});
     detailInFlight = null;
     detailDisplayedId = null;
     dialog?.setAttribute('aria-busy', 'false');
@@ -396,7 +399,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     showDialog();
     markCurrentRows();
     dialog?.setAttribute('aria-busy', 'true');
-    if (status) { status.hidden = false; syncLocalFeedback(status, '正在补充人物资料…'); }
+    if (status) setListState({status,state:'loading',message:'正在补充人物资料…'});
     const flight = { personId, request, promise: null };
     detailInFlight = flight;
     const promise = (async () => {
@@ -409,12 +412,13 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         restoreDetailViewState(viewState);
         detailDisplayedId = personId;
         request.complete();
-        if (status) status.hidden = true;
+        if (status) setListState({status,state:'ready'});
       } catch (error) {
         if (request.isCurrent()) {
           request.fail(error);
           detailDisplayedId = personId;
-          if (status) syncLocalFeedback(status, '完整资料暂时未能加载，先显示已收录摘要。');
+          if (status) setListState({status,state:'error',message:'完整资料暂时未能加载，先显示已收录摘要。',
+            retry:() => { detailDisplayedId = null; void loadDetail(person); }});
         }
       } finally {
         if (request.isCurrent()) dialog?.setAttribute('aria-busy', 'false');

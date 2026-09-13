@@ -1,3 +1,4 @@
+import { setListState } from '../lib/list-state.js';
 import { characterDescription, metadataConflictNotice, profileFactsView } from './work-detail-character-enrichment-overlay.js';
 import { createCharacterImageGroup } from '../lib/character-image-loader.js';
 
@@ -453,8 +454,7 @@ export function createWorkDetailCreditsView({ root, tabs, content, status }) {
       return false;
     }
     root.hidden = false;
-    status.hidden = true;
-    status.replaceChildren();
+    setListState({status,state:'ready'});
     tabs.hidden = false;
     tabButtons = available.map(tabId => {
       const button = documentRef.createElement('button');
@@ -493,9 +493,8 @@ export function createWorkDetailCreditsView({ root, tabs, content, status }) {
     activeTabId = null;
     tabs.replaceChildren();
     content.replaceChildren();
-    status.replaceChildren();
+    setListState({status,state:'ready'});
     tabs.hidden = true;
-    status.hidden = true;
     root.hidden = true;
   }
 
@@ -518,24 +517,14 @@ export function createWorkDetailCreditsView({ root, tabs, content, status }) {
       root.hidden = false;
       tabs.hidden = true;
       content.replaceChildren();
-      status.hidden = false;
-      status.dataset.state = 'loading';
-      status.textContent = '正在加载制作资料…';
+      setListState({status,state:'loading',message:'正在载入制作资料…'});
     },
     renderWork,
     renderError(onRetry) {
       root.hidden = false;
       tabs.hidden = true;
       content.replaceChildren();
-      status.hidden = false;
-      status.dataset.state = 'error';
-      const message = documentRef.createElement('span');
-      message.textContent = '制作资料暂时无法加载。';
-      const retry = documentRef.createElement('button');
-      retry.type = 'button';
-      retry.textContent = '重试';
-      retry.addEventListener('click', onRetry);
-      status.replaceChildren(message, retry);
+      setListState({status,state:'error',message:'制作资料暂时无法加载。',retry:onRetry});
     }
   });
 }

@@ -33,6 +33,7 @@ export function createWorkbenchQueryController({
       if (state.workspaceMode === 'ranking' && !directoryOpen) await ensureRankingView();
       if (needsFiltering) await ensureFilterWorker();
       if (!generation.isCurrent()) return stale(interaction, 'superseded-search-load');
+      metrics.stage(interaction, 'query-ready');
       outcome = needsFiltering ? await query({
         ...(workerOwned ? { paged: true, pageNumber } : {}),
         filterState: state.filterState, selectedWorkIds: state.selectedWorkIds,
@@ -41,6 +42,7 @@ export function createWorkbenchQueryController({
       // A superseded query must not request another page of display data.
       if (!generation.isCurrent()) return stale(interaction, 'superseded-render');
       if (outcome.status === 'stale') return stale(interaction, 'stale-query');
+      metrics.stage(interaction, 'query-return');
       if (workerOwned) {
         const pinnedIds=[...new Set([...state.selectedWorkIds, ...comparisonIds])];
         if (typeof workData.getList!=='function') {

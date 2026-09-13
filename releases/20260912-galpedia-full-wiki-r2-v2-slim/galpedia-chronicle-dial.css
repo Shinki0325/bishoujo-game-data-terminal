@@ -191,3 +191,30 @@ html[data-gp-dials-suspended] .gp-dial__rotor { animation-play-state: paused; }
   97.5% { transform: rotate(715.2969deg); }
   100% { transform: rotate(720.0000deg); }
 }
+
+/* Regional loading uses the existing Chronicle Dial and never blanks ready cards. */
+.gp-loading-view--inline { flex-direction: row; gap: 8px; }
+[data-state="loading"]:has(> .gp-loading-view[hidden]) { visibility: hidden; }
+#catalog-list-state[data-state="loading"], #catalog-list-state[data-state="error"], .gp-detail-opening {
+  position: fixed;
+  inset-inline: 12px;
+  top: auto;
+  bottom: calc(var(--mobile-nav-height, 0px) + 16px);
+  z-index: 70;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  min-height: 0;
+  margin: 0 auto;
+  padding: 10px 14px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+/* The cold route owns one page-level dial until it hands off to the view. */
+html.galpedia #catalog-results:has(> .galpedia-load-status:not([hidden])) #catalog-list-state[data-state="loading"],
+html.galpedia #person-directory-panel:has(> .galpedia-load-status:not([hidden])) #person-directory-loading[data-state="loading"],
+html.galpedia .company-directory-layout:has(.galpedia-load-status:not([hidden])) [data-state="loading"] {
+  visibility: hidden;
+}

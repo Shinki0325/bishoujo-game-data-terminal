@@ -1,3 +1,4 @@
+import { setListState } from './list-state.js';
 import { createWorkspaceSession } from './workspace-session.js';
 import { createViewLifetime } from './view-lifetime.js';
 // Keyboard and async state belong to the command surface, not the data index.
@@ -35,7 +36,10 @@ export function createCommandSearch({ ensureRuntime, navigate, beforeOpen = () =
       options[index].scrollIntoView({ block: 'nearest' });
     } else input.removeAttribute('aria-activedescendant');
   }
+  const feedback = (state, message = '', retry = null) => setListState({status,state,message,retry});
   function invalidate() {
+    feedback('ready');
+    results.setAttribute('aria-busy', 'false');
     queries.suspend(); clearTimeout(debounce); loadedQuery = null;
     select(-1); options = []; results.replaceChildren();
     input.setAttribute('aria-expanded', 'false');
@@ -51,8 +55,9 @@ export function createCommandSearch({ ensureRuntime, navigate, beforeOpen = () =
     const query = input.value.trim();
     invalidate();
     const token = queries.begin('command-query');
-    if (!query) { status.textContent = '输入名称、别名或拼音，探索作品、会社与人物。'; return; }
-    status.textContent = '正在检索作品、会社与人物…';
+    if (!query) { feedback('info', '输入名称、别名或拼音，探索作品、会社与人物。'); return; }
+    feedback('loading', '正在检索作品、会社与人物…');
+    results.setAttribute('aria-busy', 'true');
     try {
       const api = await ensureRuntime();
       if (!token.isCurrent() || !dialog.open) return;
@@ -90,9 +95,13 @@ export function createCommandSearch({ ensureRuntime, navigate, beforeOpen = () =
       // Empty groups still have explicit “view all” commands, but no fabricated
       // selected entity. The user can choose one deliberately with arrow keys.
       if (count) select(options.findIndex(option => !option.classList.contains('search-all')));
-      status.textContent = count ? `“${query}”的匹配结果 · 每类最多展示 5 项` : `没有找到“${query}”，可尝试其他名称或别名。`;
+      results.setAttribute('aria-busy', 'false');
+      feedback('info', count ? `“${query}”的匹配结果 · 每类最多展示 5 项` : `没有找到“${query}”，可尝试其他名称或别名。`);
     } catch (error) {
-      if (token.fail(error) && dialog.open) status.textContent = '搜索资料暂时无法加载，请稍后重试。';
+      if (token.fail(error) && dialog.open) {
+        results.setAttribute('aria-busy', 'false');
+        feedback('error', '搜索资料暂时无法加载。', () => { void run(); });
+      }
     }
   }
   function open(query = '') {
@@ -138,7 +147,7 @@ export function createCommandSearch({ ensureRuntime, navigate, beforeOpen = () =
   });
   lifetime.listen(input, 'compositionstart', () => { composing = true; invalidate(); });
   lifetime.listen(input, 'compositionend', () => { composing = false; invalidate(); debounce = setTimeout(run, 200); });
-  lifetime.listen(input, 'input', () => { invalidate(); status.textContent = input.value.trim() ? '正在检索…' : '输入名称、别名或拼音，探索作品、会社与人物。'; if (!composing) debounce = setTimeout(run, 200); });
+  lifetime.listen(input, 'input', () => { invalidate(); feedback('info', input.value.trim() ? '输入完成后开始检索…' : '输入名称、别名或拼音，探索作品、会社与人物。'); if (!composing) debounce = setTimeout(run, 200); });
   lifetime.add(() => { clearTimeout(debounce); queries.dispose(); shortcuts.remove(); });
   return {
     open,

@@ -9786,36 +9786,20 @@ button.person-representative-item:focus-visible { outline:2px solid var(--accent
   gap: 9px;
 }
 
-#person-directory-loading:not([hidden]):not(.is-error)::before,
-#person-detail-dialog[aria-busy="true"] #person-detail-load-status:not([hidden])::before {
-  content: "";
-  width: 13px;
-  height: 13px;
-  display: inline-block;
-  flex: 0 0 13px;
-  vertical-align: middle;
-  margin-inline-end: 6px;
-  border: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: person-directory-loading-spin .75s linear infinite;
-}
-
 .person-directory-faces[data-representative-state="loading"] {
   min-height: 42px;
   position: relative;
 }
 
+/* Image slots stay quiet: reserve their geometry without animating every row. */
 .person-directory-faces[data-representative-state="loading"]::after {
   content: "";
-  width: 15px;
-  height: 15px;
+  width: 32px;
+  height: 36px;
   display: block;
   margin: auto;
-  border: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: person-directory-loading-spin .75s linear infinite;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
 }
 
 .person-directory-faces[data-representative-state="error"] {
@@ -9836,18 +9820,6 @@ button.person-representative-item:focus-visible { outline:2px solid var(--accent
   width: 42px;
   color: var(--text-muted);
   text-align: center;
-}
-
-@keyframes person-directory-loading-spin {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #person-directory-loading:not([hidden]):not(.is-error)::before,
-  #person-detail-dialog[aria-busy="true"] #person-detail-load-status:not([hidden])::before,
-  .person-directory-faces[data-representative-state="loading"]::after {
-    animation: none;
-  }
 }
 
 /* v1.0.5 framework interaction migration: media zoom, locator, display/tray/export controls. */

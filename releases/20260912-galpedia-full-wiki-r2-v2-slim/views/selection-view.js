@@ -326,21 +326,20 @@ export function createSelectionView({
   function requestRemotePage() {
     const generation = hydrationSession.begin('result-page');
     remotePagePending = true;
+    setListState({status:elements.listState,state:'loading',message:'正在载入下一页作品…'});
     elements.grid.setAttribute('aria-busy', 'true');
     elements.grid.inert = true;
     elements.selectCurrentPage.disabled = true;
     elements.pageInput.value = String(pageIndex + 1);
     Promise.resolve().then(() => generation.isCurrent() ? onPageRequest(pageIndex + 1) : undefined).then(success => {
-      if (success === false) throw new Error('page request did not complete');
+      // The query owner already rendered its error (including retry cooldown).
+      if (success === false && elements.listState.dataset.state !== 'error') throw new Error('page request did not complete');
     }).catch(error => {
       if (!generation.isCurrent()) return;
       generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
-      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
-      const retry = documentRef.createElement('button');
-      retry.type = 'button'; retry.textContent = '重新载入';
-      retry.addEventListener('click', requestRemotePage, {once:true});
-      elements.listState.append(retry);
+      elements.grid.inert = false;
+      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。',retry:requestRemotePage,retryAt:error.retryAt});
       console.warn('work result page failed', error);
     });
   }
@@ -412,11 +411,8 @@ export function createSelectionView({
       if (!generation.isCurrent()) return;
       generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
-      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。'});
-      const retry = documentRef.createElement('button');
-      retry.type = 'button'; retry.textContent = '重新载入';
-      retry.addEventListener('click', () => renderLatest(), {once:true});
-      elements.listState.append(retry);
+      elements.grid.inert = false;
+      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。',retry:() => renderLatest(),retryAt:error.retryAt});
       console.warn('work card hydration failed', error);
     });
   }
@@ -424,6 +420,8 @@ export function createSelectionView({
   function renderLatestReady(hydratedWorks = null) {
     const model = latestModel;
     if (model === null) return;
+    elements.grid.setAttribute('aria-busy', 'false');
+    elements.grid.inert = false;
       const activeElement = documentRef.activeElement;
       const activeCard = activeElement?.parentElement;
       const focusTarget = activeCard?.dataset?.workId && activeElement?.dataset?.controlType
@@ -592,6 +590,17 @@ export function createSelectionView({
     getRenderedWorks() {
       return renderedModel === latestModel ? [...latestWorksById.values()] : [];
     },
+    beginLoading() {
+      elements.grid.setAttribute('aria-busy', 'true');
+      elements.grid.inert = true;
+      elements.selectCurrentPage.disabled = true;
+      setListState({status:elements.listState,state:'loading',message:'正在更新作品列表…'});
+    },
+    showLoadingError(retry, error) {
+      elements.grid.setAttribute('aria-busy', 'false');
+      elements.grid.inert = false;
+      setListState({status:elements.listState,state:'error',message:'作品列表暂时无法更新。',retry,retryAt:error?.retryAt});
+    },
     cancelPendingTitleQuery() {
       return titleCommit.cancel();
     },
@@ -637,6 +646,7 @@ export function createSelectionView({
     // Keep pagination/model ownership; only pending visual updates are suspended.
     suspend() {
       hydrationSession.suspend();
+      setListState({status:elements.listState,state:'ready'});
       remotePagePending = false;
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;

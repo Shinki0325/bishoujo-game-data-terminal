@@ -3,13 +3,16 @@ import { createWorkspaceSession } from './workspace-session.js';
 // Owns only the pending detail opening, not the route or the shared work data.
 export function createWorkDetailController({
   hydrateWork = null, readAliases = null, readLocation,
-  showReady, onError
+  showReady, onError, onPending = null
 }) {
   const session = createWorkspaceSession();
   async function open(work, options = {}) {
     const sequence = session.begin('work-detail');
     const location = readLocation();
+    let finishPending;
     try {
+      const cleanup = onPending?.();
+      if (typeof cleanup === 'function') finishPending = sequence.scope.add(cleanup);
       if (hydrateWork) work = await hydrateWork(work);
       if (!sequence.isCurrent()) return;
       if (readAliases) {
@@ -29,8 +32,7 @@ export function createWorkDetailController({
       if (!sequence.isCurrent()) return;
       sequence.fail(error);
       onError(error);
-    }
+    } finally { finishPending?.(); }
   }
   return Object.freeze({ open, suspend() { session.suspend(); } });
 }
-

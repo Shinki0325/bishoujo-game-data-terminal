@@ -1,3 +1,4 @@
+import { setListState } from './lib/list-state.js';
 import { captureWorkbenchLandingSnapshot } from './lib/workbench-landing-snapshot.js';
 import { releaseDateInfo } from './lib/work-release-date.js';
 import { loadPersonDisplayNames } from './lib/full-wiki-person-names.js';
@@ -1622,7 +1623,11 @@ async function initialize() {
     onPageChange() {
       replaceUiLocation();
     },
-    onPageRequest() { return render(); },
+    onPageRequest() {
+      const interaction = interactionMetrics.begin('page-change');
+      interactionMetrics.stage(interaction, 'debounce-complete');
+      return render([], interaction);
+    },
     assetBase,
     cardSurfaceSelection: true
   });
@@ -1773,7 +1778,7 @@ async function initialize() {
     const sequence = ++staticPersonRenderSequence;
     const loading = elements.personView.querySelector('#person-directory-loading');
     elements.personView.setAttribute('aria-busy', 'true');
-    loading.textContent = '正在加载人物数据…'; loading.hidden = false;
+    setListState({status:loading,state:'loading',message:'正在载入人物资料…'});
     elements.personSearch.value = personQuery;
     localSearchClears.forEach(sync => sync());
     try {
@@ -1782,14 +1787,13 @@ async function initialize() {
       staticPersonPage = page.remotePage.pageNumber;
       personDirectoryView.render(page);
       document.querySelector('#person-directory-total').textContent = page.totalPersonCount.toLocaleString('zh-CN') + ' 位人物';
-      loading.hidden = true; elements.personView.setAttribute('aria-busy', 'false');
+      setListState({status:loading,state:'ready'}); elements.personView.setAttribute('aria-busy', 'false');
       replaceUiLocation();
       if (selectedPersonId) personDirectoryView.openPerson(selectedPersonId);
     } catch (error) {
       if (sequence !== staticPersonRenderSequence || !personDirectoryOpen) return;
-      elements.personView.setAttribute('aria-busy', 'false'); loading.textContent = '人物资料暂未能加载。';
-      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重试';
-      retry.addEventListener('click', () => { void renderStaticPersonDirectory(); }); loading.append(retry);
+      elements.personView.setAttribute('aria-busy', 'false');
+      setListState({status:loading,state:'error',message:'人物资料暂未能加载。',retry:() => { void renderStaticPersonDirectory(); }});
     }
   }
 
@@ -2375,11 +2379,16 @@ async function initialize() {
     renderView: key => workspaceHostView.render(key),
     isMobile: () => window.matchMedia('(max-width: 899px)').matches,
     setCandidatesOpen: setMobileRankingCandidatesOpen,
-    suspendCompany: () => companyWorkspace.suspend(),
+    suspendCompany: () => { companyWorkspace.suspend(); companyDirectoryView?.suspend(); },
     suspendDetails: () => detailOpening.suspend(),
     cancelRankingPreload,
     suspendSelection: () => selectionView.suspend(),
-    suspendPerson: () => personDirectoryView?.suspend?.()
+    suspendPerson: () => {
+      ++staticPersonRenderSequence;
+      setListState({status:elements.personView.querySelector('#person-directory-loading'),state:'ready'});
+      elements.personView.setAttribute('aria-busy', 'false');
+      personDirectoryView?.suspend?.();
+    }
   });
   const workbenchControls = createWorkbenchControlsView({
     // This exported whitelist contains only the controls owned by this view.
@@ -2448,12 +2457,15 @@ async function initialize() {
     captureWorkspaceScroll();
     const state = controller.inspectState();
     const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
+    const updatingSelection = !personDirectoryOpen && !companyDirectoryOpen && state.workspaceMode !== 'ranking';
+    if (updatingSelection) selectionView.beginLoading();
     const queryResult = await workbenchQuery.run({
       state, directoryOpen: personDirectoryOpen || companyDirectoryOpen,
       comparisonIds: comparison.ids, pageNumber: selectionView.getPageNumber(),
       includeFilterCounts, visibleBrands
     }, interaction);
     if (queryResult.status === 'error' && queryResult.generation.isCurrent()) {
+      if (updatingSelection) selectionView.showLoadingError(() => { void render(); }, queryResult.error);
       announce(state.workspaceMode === 'ranking' ? '排榜暂时未能加载，请重新进入排榜重试。' : '筛选计算失败，可继续调整条件重试。', 'error');
       console.error(queryResult.error);
     }
@@ -2735,6 +2747,13 @@ async function initialize() {
     }
   });
   const detailOpening = createWorkDetailController({
+    onPending() {
+      const status = document.createElement('p');
+      status.className = 'gp-detail-opening'; status.setAttribute('role', 'status');
+      (document.querySelector('dialog[open]') ?? document.body).append(status);
+      setListState({status,state:'loading',message:'正在载入作品详情…'});
+      return () => { setListState({status,state:'ready'}); status.remove(); };
+    },
     hydrateWork: async work => {
       const hydrated = workData ? (await workData.hydrate([work]))[0] : work;
       if (!fullWikiEnabled) return hydrated;

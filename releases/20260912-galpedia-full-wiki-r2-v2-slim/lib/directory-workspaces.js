@@ -1,3 +1,4 @@
+import { setListState } from './list-state.js';
 import { parseUiLocationHash, formatUiLocationHash } from './ui-location-state.js';
 import { configuredAssetBase } from './runtime-config.js';
 import { resolveAssetUrl, installExternalCoverImageRecovery } from './asset-url.js';
@@ -39,7 +40,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     get('person-view').setAttribute('aria-busy', 'true');
     get('person-directory-search').value = personLocation.query;
     get('person-search-clear').hidden = !personLocation.query;
-    loading.textContent = '正在加载人物数据…'; loading.hidden = false;
+    setListState({status:loading,state:'loading',message:'正在载入人物资料…'});
     get('person-page-previous').disabled = true; get('person-page-next').disabled = true;
     try {
       const page = await personStaticClient.getPage({ ...personLocation });
@@ -48,14 +49,12 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
       get('person-directory-total').textContent = page.totalPersonCount.toLocaleString('zh-CN') + ' 位人物';
       personView.render(page); replace(personLocation);
       if (personLocation.personId) personView.openPerson(personLocation.personId);
-      loading.hidden = true; get('person-view').setAttribute('aria-busy', 'false');
+      setListState({status:loading,state:'ready'}); get('person-view').setAttribute('aria-busy', 'false');
       ticket.complete({ empty: page.persons.length === 0 });
     } catch (error) {
       if (!ticket.isCurrent() || sequence !== personRenderSequence) return;
       get('person-view').setAttribute('aria-busy', 'false');
-      loading.textContent = '人物资料暂未能加载。';
-      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重试';
-      retry.addEventListener('click', ticket.guard(() => { void paintStaticPersons(); })); loading.append(retry);
+      setListState({status:loading,state:'error',message:'人物资料暂未能加载。',retry:ticket.guard(() => { void paintStaticPersons(); })});
       ticket.fail(error);
     }
   }
@@ -67,7 +66,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     get('person-directory-total').textContent = `${personData.records.length.toLocaleString('zh-CN')} 位人物`;
     get('person-view').setAttribute('aria-busy', 'false');
     const legacyLoading = get('person-directory-loading');
-    if (legacyLoading) legacyLoading.hidden = true;
+    if (legacyLoading) setListState({status:legacyLoading,state:'ready'});
     personView.render({ persons: personSearch(personData.records, personLocation.query), totalPersonCount: personData.records.length, activityAxis: personData.activityAxis });
     activeTicket.complete({ empty: get('person-directory-count').textContent === '0' });
   }
@@ -130,6 +129,10 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
       const route = parseUiLocationHash(hash);
       const ticket = session.begin(route.page);
       activeTicket = ticket;
+      if (route.page === 'persons') ticket.scope.add(() => {
+        setListState({status:get('person-directory-loading'),state:'ready'});
+        get('person-view').setAttribute('aria-busy', 'false');
+      });
       try {
         if (route?.page === 'persons') {
           personLocation = route;

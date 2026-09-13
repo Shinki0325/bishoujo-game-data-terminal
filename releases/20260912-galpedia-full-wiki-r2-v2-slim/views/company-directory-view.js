@@ -105,6 +105,9 @@ export function createCompanyDirectoryView({
   const detailMeta = requireElement(root, 'company-detail-meta');
   const detailClose = root.querySelector?.('#company-detail-close');
   const detailWorks = requireElement(root, 'company-detail-works');
+  const detailStatus = text(documentRef, 'div', 'list-state', '');
+  detailStatus.setAttribute('role', 'status');
+  lifetime.add(() => setListState({status:detailStatus,state:'ready'}));
   const detailSort = requireElement(root, 'company-detail-sort');
   const detailSortDirection = requireElement(root, 'company-detail-sort-direction');
   const detailSortDirectionIcon = requireElement(root, 'company-detail-sort-direction-icon');
@@ -300,7 +303,8 @@ export function createCompanyDirectoryView({
     if (!isMobile && layout && detail.parentElement !== layout) layout.append(detail);
     detail.hidden = selected === null;
     detail.setAttribute('aria-busy', String(selected !== null && detailState === 'loading'));
-    if (!selected) return;
+    if (!selected) { setListState({status:detailStatus,state:'ready'}); return; }
+    if (selectedCompanyChanged) setListState({status:detailStatus,state:'ready'});
     detailTitle.textContent = selected.brandName;
     detailAvatar.replaceChildren();
     imageFor(detailAvatar, selected, 'company-detail-avatar-image', imageUrlForCompany);
@@ -315,13 +319,11 @@ export function createCompanyDirectoryView({
     });
     detailWorks.replaceChildren();
     if (detailState !== 'ready') {
-      const status = text(documentRef, 'div', 'list-state', '');
-      status.setAttribute('role', 'status');
-      setListState({status, state: detailState,
+      setListState({status:detailStatus, state: detailState,
         message: detailState === 'loading' ? '正在载入会社作品…' : '会社作品加载失败，请重试。',
         retry: onRetryDetail});
-      detailWorks.append(status);
-    }
+      detailWorks.append(detailStatus);
+    } else setListState({status:detailStatus,state:'ready'});
     for (const work of detailState === 'ready' ? selectedWorks : []) {
       const item = documentRef.createElement('button');
       item.type = 'button';
@@ -396,6 +398,10 @@ export function createCompanyDirectoryView({
   });
 
   return Object.freeze({
+    suspend() {
+      setListState({status:detailStatus,state:'ready'});
+      detail.setAttribute('aria-busy', 'false');
+    },
     dispose() {
       lifetime.dispose();
       // Mobile places the detail between cards. Return the owned panel before
