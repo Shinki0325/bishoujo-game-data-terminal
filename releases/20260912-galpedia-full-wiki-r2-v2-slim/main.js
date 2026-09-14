@@ -1427,8 +1427,8 @@ async function initialize() {
     return request;
   }
 
-  async function resolveCoverUrls(works) {
-    if (workData) works = await workData.hydrate(works);
+  async function resolveCoverUrls(works, {list = false} = {}) {
+    if (workData) works = await (list && workData.hydrateList ? workData.hydrateList(works) : workData.hydrate(works));
     const entries = await Promise.all(works.map(async work => [work.workId, await coverSourcesForWork(work)]));
     return new Map(entries);
   }
@@ -1565,7 +1565,7 @@ async function initialize() {
 
   const selectionView = createSelectionView({
     prepareWorks: workData ? async works => {
-      const hydrated = await workData.hydrate(works);
+      const hydrated = await (workData.hydrateList ? workData.hydrateList(works) : workData.hydrate(works));
       return presentationFamilies?.decorateWorks(hydrated) ?? hydrated;
     } : null,
     // Contract marker: createSelectionView({ root, onToggleWork, onToggleCurrentPage, onToggleCurrentResults, onToggleSelectedOnly, onOpenDetails, onFilterChange, assetBase })
@@ -2493,7 +2493,7 @@ async function initialize() {
         ...rankingModel.candidateWorks, ...rankingModel.tiers.flatMap(tier => tier.works)
       ]);
     } else if (!companyDirectoryOpen && !ranking) {
-      renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(result.works));
+      renderCoverUrls = await resolveCoverUrls(selectionInitialWorks(result.works), {list:true});
     }
     if (!generation.isCurrent()) {
       interactionMetrics.cancel(interaction, 'superseded-media');

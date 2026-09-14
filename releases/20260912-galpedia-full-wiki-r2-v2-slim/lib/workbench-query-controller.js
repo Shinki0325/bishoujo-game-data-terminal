@@ -52,7 +52,7 @@ export function createWorkbenchQueryController({
         } else {
           const [pinned,display]=await Promise.all([
             workData.get(pinnedIds),
-            outcome.workIds.length===0 ? Promise.resolve(new Map()) : workData.getList(outcome.workIds)
+            outcome.workIds.length===0 ? Promise.resolve(new Map()) : workData.getList(outcome.workIds,{listPage:outcome.listPage})
           ]);
           if (!generation.isCurrent()) return stale(interaction, 'superseded-hydration');
           // Pinned selected/comparison rows keep their edition projection even

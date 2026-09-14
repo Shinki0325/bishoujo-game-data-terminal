@@ -6,6 +6,8 @@ import { createResourceRequest } from './resource-request.js';
 import { createWorkbenchStore, readWorkbenchFile, validateWorkbenchManifest, restoreWorkbenchContext } from './workbench-demand-data.js';
 import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
 import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
+import { WORK_LIST } from './work-list-config.js';
+import { createWorkListData, withWorkListData } from './work-list-data.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
   && Array.isArray(a)===Array.isArray(b) && Object.keys(a).length===Object.keys(b).length
@@ -86,32 +88,37 @@ export function createStaticWorkData({config=WORK_STATIC,fetchImpl=globalThis.fe
 
 // Default browsing and detail metadata have pinned projections. Any other
 // query delegates to the existing complete engine with its original inputs.
-export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256}) {
-  let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,disabled=false;
+export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null}) {
+  let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false;
   const alive=()=>{if(terminated)throw Error('作品查询已结束');};
   const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init(payload);return real;})
     .catch(error=>{realPromise=null;throw error;});};
   const delegate=async(method,...args)=>(await engine())[method](...args);
-  const invalidate=()=>{activeRevision=null;mode='changed';sequence++;};
+  const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
   return Object.freeze({
     preload(){alive();return engine();},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
     async query(input){
       alive();const ticket=++sequence;const defaults=!disabled&&input.paged&&!input.includeProjectedCounts?await data.defaults():null;
       if(ticket!==sequence)return {status:'stale'};
-      if(defaults&&same(input.filterState,defaults.filterState)){
+      const preset=defaults&&listData?await listData.query(input.filterState,defaults.filterState):null;
+      if(ticket!==sequence)return {status:'stale'};
+      const rows=preset??(defaults&&same(input.filterState,defaults.filterState)?defaults:null);
+      if(rows){
         if(!Number.isSafeInteger(input.pageNumber)||input.pageNumber<1)throw Error('作品页码无效');
-        const changed=mode!==null&&mode!=='static';if(mode!=='static')virtualRevision++;
-        mode='static';activeRevision=`static:${virtualRevision}`;
-        const index=changed?0:Math.min(input.pageNumber,defaults.pages.length)-1,row=defaults.pages[index];
-        const selected=new Set(input.selectedWorkIds??[]),selectedCount=defaults.workIds.reduce((n,id)=>n+Number(selected.has(id)),0);
-        return {status:'ok',workIds:[...row.workIds],counts:defaults.counts,page:{...row.page,resultRevision:activeRevision,
-          selectAllState:selectedCount===0?'none':selectedCount===defaults.workIds.length?'all':'some',unselectedCount:defaults.workIds.length-selectedCount}};
+        const changed=mode!==null&&(mode!=='static'||!same(activeRows?.workIds,rows.workIds));
+        if(mode!=='static'||changed)virtualRevision++;
+        mode='static';activeRevision=`static:${virtualRevision}`;activeRows=rows;
+        const index=changed?0:Math.min(input.pageNumber,rows.pages.length)-1,row=rows.pages[index];
+        const selected=new Set(input.selectedWorkIds??[]),selectedCount=rows.workIds.reduce((n,id)=>n+Number(selected.has(id)),0);
+        return {status:'ok',workIds:rows.workIds.slice(row.page.start,row.page.end),counts:rows.counts,
+          ...(row.listPage?{listPage:row.listPage}:{}),page:{...row.page,resultRevision:activeRevision,
+          selectAllState:selectedCount===0?'none':selectedCount===rows.workIds.length?'all':'some',unselectedCount:rows.workIds.length-selectedCount}};
       }
-      mode='worker';activeRevision=null;const result=await delegate('query',input);return ticket===sequence?result:{status:'stale'};
+      mode='worker';activeRevision=null;activeRows=null;const result=await delegate('query',input);return ticket===sequence?result:{status:'stale'};
     },
     async resultIds(revision){alive();if(typeof revision==='string'&&revision.startsWith('static:')){
-      if(revision!==activeRevision)throw Error('作品结果已变化');const rows=await data.defaults();if(revision!==activeRevision)throw Error('作品结果已变化');return [...rows.workIds];
+      if(revision!==activeRevision||!activeRows)throw Error('作品结果已变化');return [...activeRows.workIds];
     }if(mode!=='worker')throw Error('作品结果已变化');return delegate('resultIds',revision);},
     async workMetadata(ids,kind){alive();return ['aliases','titles','person-summary'].includes(kind)?data.metadata(ids,kind):delegate('workMetadata',ids,kind);},
     searchWorks:query=>delegate('searchWorks',query),companyWorkIds:(id,options)=>delegate('companyWorkIds',id,options),personCatalog:()=>delegate('personCatalog'),
@@ -130,8 +137,10 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   validateWorkbenchUISummary(uiSummary,site.count);
   if(uiData?.schema!=='galpedia-owned-ui-v1'||uiData.sample?.works?.length!==0||uiData.ratedDisplayWorks?.length!==0)throw Error('作品UI投影无效');
   restoreWorkbenchContext(uiData);
-  const workData=withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null);
-  const staticQueryClient=createStaticWorkQueryClient({data:client,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
+  if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
+  const listData=createWorkListData({config:WORK_LIST,fetchImpl,cryptoRef});
+  const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData);
+  const staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
     uiSummary,workerOwned:true,workData,staticQueryClient};
