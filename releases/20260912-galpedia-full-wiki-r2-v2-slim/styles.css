@@ -1882,6 +1882,13 @@ input[type="range"] {
   margin: 0;
 }
 
+/* Keep one clear action in fields that already provide an accessible button. */
+.search-field-clearable input[type="search"]::-webkit-search-cancel-button,
+.gp-local-search input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
+}
+
 .search-field-clearable {
   position: relative;
 }

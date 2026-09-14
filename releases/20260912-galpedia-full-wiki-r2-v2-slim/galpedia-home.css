@@ -99,9 +99,9 @@
   .galpedia-search-form button { padding: 9px; font-size: 12px; }
   .home-actions { gap: 10px; }
   .home-actions a { min-width: 0; flex: 1; padding: 11px 14px; font-size: 13px; }
-  .home-stats { margin-top: 26px; justify-content: space-between; }
-  .home-stats > div { flex: 1; padding: 0 19px; }
-  .home-stats dd { font-size: 24px; }
+  .home-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin-top: 26px; }
+  .home-stats > div { min-width: 0; padding: 0 10px; }
+  .home-stats dd { font-size: clamp(20px,6vw,24px); }
   .home-portals { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 0; padding: 20px 0; }
   .home-portals a { padding: 4px 15px; }
   .home-portals a:nth-child(odd) { padding-left: 0; }

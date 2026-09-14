@@ -321,6 +321,21 @@ window.addEventListener('popstate', () => { syncHome(); if (!isHome()) void ensu
 
 let handbook;
 let handbookLoad;
+let handbookAttempt = 0;
+let clearHelpFeedback = () => {};
+
+function loadHandbook() {
+  if (!handbookLoad) {
+    const retryUrl = new URL('./lib/galpedia-help.js', import.meta.url);
+    if (handbookAttempt++) retryUrl.searchParams.set('retry', String(handbookAttempt));
+    // A failed module fetch is cached by the browser. Retry the entry URL;
+    // its relative dependencies keep their canonical, shared URLs.
+    handbookLoad = (handbookAttempt === 1 ? import('./lib/galpedia-help.js') : import(retryUrl.href))
+      .then(module => { handbook = module.createHelpDrawer(); return { handbook, context: module.currentHelpArticle }; })
+      .catch(error => { handbookLoad = null; throw error; });
+  }
+  return handbookLoad;
+}
 
 const helpTargets = { 'mobile-help-button': 'works.mobile', 'ranking-help-button': 'tier.overview', 'ranking-coachmark-help': 'tier.overview', 'ranking-immersive-help': 'tier.live', 'company-help-button': 'companies.overview' };
 document.addEventListener('click', event => {
@@ -328,13 +343,28 @@ document.addEventListener('click', event => {
   if (!button || button.disabled) return;
   if (button.id !== 'site-info-button' && !helpTargets[button.id] && !button.dataset.helpArticle) return;
   event.preventDefault(); event.stopImmediatePropagation();
+  clearHelpFeedback();
   const token = helpSession.begin('handbook');
-  handbookLoad ??= import('./lib/galpedia-help.js').then(module => { handbook = module.createHelpDrawer(); return { handbook, context: module.currentHelpArticle }; }).catch(error => { handbookLoad = null; throw error; });
-  void handbookLoad.then(({ handbook, context }) => {
+  const children = [...button.childNodes], label = button.getAttribute('aria-label'), title = button.getAttribute('title');
+  const restore = () => {
+    button.replaceChildren(...children); button.removeAttribute('aria-busy');
+    for (const [name,value] of [['aria-label',label],['title',title]]) {
+      if(value === null)button.removeAttribute(name);else button.setAttribute(name,value);
+    }
+  };
+  clearHelpFeedback = restore;
+  button.setAttribute('aria-busy','true'); button.title = '正在打开手册…';
+  token.scope.add(restore);
+  void loadHandbook().then(({ handbook, context }) => {
     if (!token.isCurrent()) return;
+    restore();
     handbook.open(button.dataset.helpArticle || helpTargets[button.id] || context(), button);
     token.complete();
-  }).catch(error => { if (!token.fail(error)) return; status.hidden = false; if (statusText) statusText.textContent = '手册暂时无法加载，请重试。'; });
+  }).catch(error => {
+    if (!token.fail(error)) return;
+    button.removeAttribute('aria-busy'); button.textContent = '重试';
+    button.title = '手册没能打开，点击重试'; button.setAttribute('aria-label',button.title);
+  });
 }, true);
 function focusDestination(route) {
   if (location.hash !== route) return;
@@ -361,8 +391,10 @@ createCommandSearch({
   navigate: route => { navigate(route); void ensureRuntime().then(() => focusDestination(route)).catch(() => {}); }
 });
 fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {
+  if (!['works','companies','persons'].every(key => Number.isSafeInteger(snapshot[key]) && snapshot[key] >= 0) || !/^\d{4}-\d{2}-\d{2}$/.test(snapshot.date)) throw new Error('invalid snapshot');
   for (const element of document.querySelectorAll('[data-home-count]')) element.textContent = Number(snapshot[element.dataset.homeCount]).toLocaleString('en-US');
-  document.querySelector('#home-snapshot').textContent = `${snapshot.date} 快照`;
+  document.querySelector('#home-snapshot').textContent = `${snapshot.dateLabel || '资料整理于'} ${snapshot.date}`;
+  document.querySelector('.home-stats').title = '作品按合并版本后的条目统计；会社与人物按当前收录条目统计。';
 }).catch(() => { document.querySelector('#home-snapshot').textContent = '收录统计暂不可用'; });
 syncHome();
 if (!isHome()) void ensureRoute().catch(() => {});

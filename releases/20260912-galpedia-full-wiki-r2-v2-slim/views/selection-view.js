@@ -462,7 +462,7 @@ export function createSelectionView({
       if(!keepPending)setListState({
         status: elements.listState,
         state: model.works.length === 0 ? 'empty' : 'ready',
-        message: '没有匹配的作品。'
+        message: model.filterState?.selectedOnly ? '这里还没有作品。可以先去作品库选择。' : '没有匹配的作品，可以换个名称，或放宽筛选条件。'
       });
       const nextCardCache = new Map();
       const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
@@ -623,6 +623,7 @@ export function createSelectionView({
         labelPrefix: '排序',
         documentRef
       });
+      elements.pagination.hidden = (model.page?.total ?? model.works.length) === 0;
       elements.pagePrevious.disabled = pageIndex <= 0;
       elements.pageNext.disabled = pageIndex >= pages.length - 1;
       elements.pageInput.value = String(pageIndex + 1);
