@@ -7,7 +7,7 @@ const stale = () => new Error('作品结果已更新');
 // These are display projections, never a replacement for edition/detail data.
 export function createWorkCardData({config, workIds, fetchImpl = globalThis.fetch,
   cryptoRef = globalThis.crypto, decompress = globalThis.DecompressionStream,
-  requestPolicy = {}, maxCacheBytes = 4 * 1024 * 1024, concurrency = 8} = {}) {
+  requestPolicy = {}, maxCacheBytes = 4 * 1024 * 1024, concurrency = 16} = {}) {
   if (config?.schema !== 'galpedia-work-card-config-v1'
     || config.basePath !== '../runtime-data/work-card-v1/'
     || !digestPattern.test(config.sourceManifestSha256 ?? '')
