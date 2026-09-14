@@ -91,7 +91,7 @@ export function createStaticWorkData({config=WORK_STATIC,fetchImpl=globalThis.fe
 export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null,prepareCards=null}) {
   let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false;
   const alive=()=>{if(terminated)throw Error('作品查询已结束');};
-  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init(payload);return real;})
+  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init({...payload,includeWorkbenchUI:false});return real;})
     .catch(error=>{realPromise=null;throw error;});};
   const delegate=async(method,...args)=>(await engine())[method](...args);
   const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
@@ -126,7 +126,7 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
     async workMetadata(ids,kind){alive();return ['aliases','titles','person-summary'].includes(kind)?data.metadata(ids,kind):delegate('workMetadata',ids,kind);},
     searchWorks:query=>delegate('searchWorks',query),companyWorkIds:(id,options)=>delegate('companyWorkIds',id,options),personCatalog:()=>delegate('personCatalog'),
     warmSearch:()=>delegate('warmSearch'),installPersonWorkIndex(value){invalidate();return delegate('installPersonWorkIndex',value);},installSearchText(value){invalidate();return delegate('installSearchText',value);},
-    update(next){disabled=true;payload=next;invalidate();return delegate('update',next);},
+    update(next){disabled=true;payload=next;invalidate();return delegate('update',{...next,includeWorkbenchUI:false});},
     terminate(){if(terminated)return false;terminated=true;sequence++;real?.terminate();return true;}
   });
 }

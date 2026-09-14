@@ -68,11 +68,15 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
     }
     const source=message.payload.workbenchSource;
     try {
+      if(message.payload.includeWorkbenchUI!==undefined&&typeof message.payload.includeWorkbenchUI!=='boolean')throw new TypeError('invalid workbench UI delivery option');
+      // Static pages already loaded their pinned UI projection. Keep the
+      // legacy delivery path for callers that need the worker to supply it.
+      const includeUI=message.payload.includeWorkbenchUI!==false;
       const replacing=!owned||owned.sha256!==source.sha256||owned.media!==source.media;
       const bundle=replacing?await loadSource(source):null,data=bundle?.data;
-      const uiSummary=replacing?createWorkbenchUISummary(data,{includeCompanies:!(FULL_WIKI_RUNTIME.enabled&&Boolean(data.fullWiki))}):null;
-      const uiData=replacing?createOwnedWorkbenchUI(data):null;
-      if(data&&onData)onData({id:message.id,type:'workbench-data',manifestSha256:source.sha256,uiData,uiSummary});
+      const uiSummary=replacing&&includeUI?createWorkbenchUISummary(data,{includeCompanies:!(FULL_WIKI_RUNTIME.enabled&&Boolean(data.fullWiki))}):null;
+      const uiData=replacing&&includeUI?createOwnedWorkbenchUI(data):null;
+      if(data&&onData&&includeUI)onData({id:message.id,type:'workbench-data',manifestSha256:source.sha256,uiData,uiSummary});
       // UI metadata is independent of the query window. Let the main thread
       // validate/prepare it while this Worker validates families and builds its
       // window. Queries still require all validation below to succeed.
@@ -93,7 +97,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       if(replacing)search=null;
       owned={sha256:source.sha256,media:source.media,options:updated,data:replacing?data:owned.data};
       window=nextWindow;
-      return data&&!onData?{...result,manifestSha256:source.sha256,uiData,uiSummary}:result;
+      return data&&!onData&&includeUI?{...result,manifestSha256:source.sha256,uiData,uiSummary}:result;
     }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message,code:error.code}};}
   };
 }
