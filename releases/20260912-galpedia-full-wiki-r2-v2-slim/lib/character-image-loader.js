@@ -1,3 +1,4 @@
+import { isLocalPreviewOrigin } from './detail-view-stats.js';
 // All character views share a small request pool. A failed connection must not
 // remove the image node: it is needed for bounded retry and online recovery.
 const loaders = new WeakMap();
@@ -12,7 +13,7 @@ export function createCharacterImageBackup(windowRef) {
   let pending = null, checkedAt = 0, available = false;
   return async originalUrl => {
     const location = windowRef.location;
-    if (!location || !['favorite.bishojo.date', 'localhost'].includes(location.hostname) || !windowRef.fetch) return null;
+    if (!location || (location.hostname !== 'favorite.bishojo.date' && !isLocalPreviewOrigin(location.origin)) || !windowRef.fetch) return null;
     let original;
     try { original = new URL(originalUrl); } catch { return null; }
     const path = /^\/terminal-wiki\/v1\/characters\/v1\/images\/([a-f0-9]{2})\/([a-f0-9]{64})\.webp$/u.exec(original.pathname);
