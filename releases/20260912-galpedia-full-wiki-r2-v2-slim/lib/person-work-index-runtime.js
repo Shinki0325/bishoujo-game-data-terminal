@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { normalizePersonWorkIndex } from './person-work-index.js';
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
@@ -34,7 +35,7 @@ export function createPersonWorkIndexRuntime({
   async function load() {
     if (loadPromise !== null) return loadPromise;
     loadPromise = (async () => {
-      const response = await fetchImpl(indexUrl, { cache: cacheMode });
+      const response = await fetchImpl(resolveSharedDataURL(indexUrl), { cache: cacheMode });
       if (!response?.ok) throw new Error(`person work index failed: HTTP ${response?.status ?? 'unknown'}`);
       const bytes = await response.arrayBuffer();
       if (await sha256Hex(bytes, cryptoRef) !== sha256) {

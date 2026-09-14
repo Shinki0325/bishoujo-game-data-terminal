@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { createWorkDetailCreditsLoader, validateWorkDetailCreditsIndex, validateWorkDetailCreditsShard } from './work-detail-credits.js';
 
 const SCHEMA_VERSION = 'egs-platform-entity-projection-v1';
@@ -583,13 +584,13 @@ export function createPersonCharacterVMLoader({ detailIndexUrl, catalogSnapshotI
   async function loadState() {
     if (statePromise) return statePromise;
     statePromise = (async () => {
-      const response = await fetchImpl(detailIndexUrl, { cache: cacheMode });
+      const response = await fetchImpl(resolveSharedDataURL(detailIndexUrl), { cache: cacheMode });
       if (!response.ok) throw new Error(`作品制作资料目录加载失败：HTTP ${response.status}`);
       const index = JSON.parse(new TextDecoder().decode(await response.arrayBuffer()));
       const prepared = validateWorkDetailCreditsIndex(index, { catalogSnapshotId, catalogSha256, workIds });
       const records = [];
       for (const descriptor of prepared.descriptors) {
-        const url = new URL(descriptor.path, detailIndexUrl); const shardResponse = await fetchImpl(url, { cache: cacheMode });
+        const url = new URL(descriptor.path, detailIndexUrl); const shardResponse = await fetchImpl(resolveSharedDataURL(url), { cache: cacheMode });
         if (!shardResponse.ok) throw new Error(`作品制作资料分片加载失败：HTTP ${shardResponse.status}`);
         const bytes = await shardResponse.arrayBuffer();
         if (bytes.byteLength !== descriptor.bytes || await sha256Hex(bytes, cryptoRef) !== descriptor.sha256) throw new Error(`作品制作资料分片 ${descriptor.bucketId} 完整性校验失败`);
@@ -842,7 +843,7 @@ export async function verifyProjectionEnvelopeIntegrity(value, binding, options 
 }
 
 async function fetchJsonBytes(url, label, { fetchImpl, cacheMode }) {
-  const response = await fetchImpl(url, { cache: cacheMode });
+  const response = await fetchImpl(resolveSharedDataURL(url), { cache: cacheMode });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
   const bytes = await response.arrayBuffer();
   try {

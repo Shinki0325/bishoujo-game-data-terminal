@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import {personDirectoryTransportRequest} from './person-directory-transport-codec.js';
 import {PERSON_DIRECTORY_INDEX} from './full-wiki-person-directory-index-config.js';
 
@@ -31,7 +32,7 @@ function requestEntry(fetchImpl, request) {
   let entry = entries.get(key);
   if (entry) return entry;
   entry = {promise: null};
-  entry.promise = Promise.resolve().then(() => fetchImpl(request.url)).then(response => {
+  entry.promise = Promise.resolve().then(() => fetchImpl(resolveSharedDataURL(request.url))).then(response => {
     if (!response?.ok) throw new Error(`人物窄目录预取失败 (${response?.status ?? 0})`);
     return response.arrayBuffer();
   }).catch(error => {

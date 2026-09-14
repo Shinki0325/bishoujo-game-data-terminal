@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './lib/shared-data-url.js';
 import { setListState } from './lib/list-state.js';
 import { createFilterDraftSession } from './lib/filter-draft-session.js';
 import { captureWorkbenchLandingSnapshot } from './lib/workbench-landing-snapshot.js';
@@ -540,7 +541,7 @@ export function partitionWorkDetailFilters(work, filterById) {
 }
 
 async function fetchJson(url, label) {
-  const response = await fetch(url, { cache: 'default' });
+  const response = await fetch(resolveSharedDataURL(url), { cache: 'default' });
   if (!response.ok) throw new Error(`${label} 加载失败：HTTP ${response.status}`);
   return response.json();
 }

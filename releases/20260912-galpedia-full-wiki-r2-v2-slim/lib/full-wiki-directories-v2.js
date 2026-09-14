@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { yieldMainThread, sortWithYield } from './yield-main-thread.js';
 import * as personDirectoryTransportCodec from './person-directory-transport-codec.js';
 import { createCharacterNamesLoader, characterDisplayName } from './full-wiki-character-names-v2.js';
@@ -64,7 +65,7 @@ export function createFullWikiDirectories({
     // the original request path and all validations below remain mandatory.
     const prefetched = takePersonDirectoryIndexBytes(url, {fetchImpl});
     const data = prefetched ? await prefetched : await (async () => {
-      const response = await fetchImpl(url);
+      const response = await fetchImpl(resolveSharedDataURL(url));
       if (!response.ok) throw new Error('全量目录读取失败');
       return response.arrayBuffer();
     })();

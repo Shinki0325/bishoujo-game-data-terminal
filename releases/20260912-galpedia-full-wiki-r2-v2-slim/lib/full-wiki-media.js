@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import {isLocalPreviewOrigin} from './detail-view-stats.js';
 import {approvedPublicMediaPath,approvedPublicMediaUrl} from './asset-url.js';
 const SHA=/^[a-f0-9]{64}$/u;
@@ -26,7 +27,7 @@ export function createFullWikiMedia({manifestUrl,manifestSha256,localPreview=fal
   if(!Number.isSafeInteger(maxRecords)||maxRecords<1)throw new TypeError('图片记录缓存容量无效');
   const cache=new Map(),pending=new Map(),recordCache=new Map(),recordPending=new Map();
   let generation=0,manifestPromise=null,characterAvailabilityPromise=null;
-  async function read(url,sha){const response=await fetchImpl(url);if(!response.ok)throw new Error(`图片索引读取失败 (${response.status})`);const bytes=await response.arrayBuffer();if(sha&&await digest(bytes,cryptoRef)!==sha)throw new Error('图片索引校验失败');return JSON.parse(new TextDecoder().decode(bytes));}
+  async function read(url,sha){const response=await fetchImpl(resolveSharedDataURL(url));if(!response.ok)throw new Error(`图片索引读取失败 (${response.status})`);const bytes=await response.arrayBuffer();if(sha&&await digest(bytes,cryptoRef)!==sha)throw new Error('图片索引校验失败');return JSON.parse(new TextDecoder().decode(bytes));}
   async function manifest(){return manifestPromise??=read(manifestUrl,manifestSha256).then(m=>{if(m.schema!=='terminal-wiki-public-media-index-v1')throw new TypeError('图片清单版本不兼容');return m;}).catch(e=>{manifestPromise=null;throw e;});}
   // Local preview media is served from a private, generated selection.  Keep
   // only the character IDs with an actual thumbnail; never expose its paths

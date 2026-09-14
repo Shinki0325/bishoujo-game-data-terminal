@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { createResourceRequest } from './resource-request.js';
 import { STATIC_DETAIL_INDEX } from './static-detail-index-config.js';
 
@@ -94,7 +95,7 @@ export function createStaticSiteDataClient({ baseUrl = new URL('../static-site-d
   let manifestPromise;
   const cache = new Map();
   async function manifest() {
-    if (!manifestPromise) manifestPromise = fetch(new URL('data-manifest.json', baseUrl), { cache: 'no-store' }).then(async response => {
+    if (!manifestPromise) manifestPromise = fetch(resolveSharedDataURL(new URL('data-manifest.json', baseUrl)), { cache: 'no-store' }).then(async response => {
       if (!response.ok) throw new Error(`static site manifest request failed: ${response.status}`);
       const value = await response.json();
       if (value?.schemaVersion !== 'galpedia-static-site-v1' || (dataRevision && value.dataRevision !== dataRevision)) throw new Error('static site revision mismatch');
@@ -106,7 +107,7 @@ export function createStaticSiteDataClient({ baseUrl = new URL('../static-site-d
     const site = await manifest();
     const path = relative.replace(/^data\/[^/]+\//u, '');
     const url = new URL(`data/${site.dataRevision}/${path}`, baseUrl);
-    if (!cache.has(url.href)) cache.set(url.href, fetch(url, { cache: 'no-store' }).then(async response => {
+    if (!cache.has(url.href)) cache.set(url.href, fetch(resolveSharedDataURL(url), { cache: 'no-store' }).then(async response => {
       if (!response.ok) throw new Error(`static site data request failed: ${response.status}`);
       const payload = await response.json();
       if (payload.dataRevision !== site.dataRevision) throw new Error('static site payload revision mismatch');

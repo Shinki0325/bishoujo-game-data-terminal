@@ -1,9 +1,10 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { PERSON_NAMES } from './full-wiki-person-names-config.js';
 
 let pending;
 export function loadPersonDisplayNames() {
   if (!pending) pending = (async () => {
-    const response = await fetch(new URL(PERSON_NAMES.url, import.meta.url));
+    const response = await fetch(resolveSharedDataURL(new URL(PERSON_NAMES.url, import.meta.url)));
     if (!response.ok) throw new Error('人物显示名读取失败');
     const bytes = await response.arrayBuffer();
     const sha = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), n => n.toString(16).padStart(2, '0')).join('');

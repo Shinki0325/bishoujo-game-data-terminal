@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 // Read-only resource recovery. Success caches belong to the data services,
 // not this layer; a shared request owns its timeout, never a page's signal.
 export class ResourceRequestError extends Error {
@@ -36,7 +37,7 @@ export function createResourceRequest({
       const bytes = await Promise.race([
         Promise.resolve().then(async () => {
           let response;
-          try { response = await fetchImpl(url, { cache, signal: controller.signal }); }
+          try { response = await fetchImpl(resolveSharedDataURL(url), { cache, signal: controller.signal }); }
           catch (cause) { throw new ResourceRequestError(`${label} 网络读取失败`, { kind: 'network', cause }); }
           if (!response.ok) {
             void response.body?.cancel?.().catch(() => {});

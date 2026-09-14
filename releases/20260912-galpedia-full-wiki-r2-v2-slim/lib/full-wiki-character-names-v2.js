@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { CHARACTER_NAMES } from './full-wiki-character-names-config-v2.js';
 
 export function characterDisplayName(entity, names = {}, fallback = '') {
@@ -15,7 +16,7 @@ export function createCharacterNamesLoader({ fetchImpl = globalThis.fetch, crypt
   let pending;
   return function load() {
     if (!pending) pending = (async () => {
-      const response = await fetchImpl(new URL(CHARACTER_NAMES.url, import.meta.url));
+      const response = await fetchImpl(resolveSharedDataURL(new URL(CHARACTER_NAMES.url, import.meta.url)));
       if (!response.ok) throw new Error('角色中文名读取失败');
       const bytes = await response.arrayBuffer();
       const sha = Array.from(new Uint8Array(await cryptoRef.subtle.digest('SHA-256', bytes)), n => n.toString(16).padStart(2, '0')).join('');

@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { filterPersonsBySearch } from './person-search.js';
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
@@ -308,7 +309,7 @@ export function createM2PersonRuntime({ entitiesUrl, relationsUrl, baseEntitiesU
   if(loadCatalogWorks!==null&&typeof loadCatalogWorks!=='function')throw new TypeError('loadCatalogWorks must be a function');
   let statePromise = null;
   async function fetchJson(url, expectedSha, projection) {
-    const response = await fetchImpl(url, { cache: cacheMode });
+    const response = await fetchImpl(resolveSharedDataURL(url), { cache: cacheMode });
     if (!response.ok) throw new Error(`M2 ${projection} payload failed: HTTP ${response.status}`);
     const bytes = await response.arrayBuffer();
     if (!SHA256_PATTERN.test(expectedSha) || await sha256Hex(bytes, cryptoRef) !== expectedSha) throw new Error(`M2 ${projection} payload integrity failed`);
@@ -318,7 +319,7 @@ export function createM2PersonRuntime({ entitiesUrl, relationsUrl, baseEntitiesU
     if (statePromise) return statePromise;
     statePromise = (async () => {
       if (manifestUrl !== null) {
-        const response = await fetchImpl(manifestUrl, { cache: cacheMode });
+        const response = await fetchImpl(resolveSharedDataURL(manifestUrl), { cache: cacheMode });
         if (!response.ok) throw new Error(`M2 manifest failed: HTTP ${response.status}`);
         const manifestBytes = await response.arrayBuffer();
         if (await sha256Hex(manifestBytes, cryptoRef) !== M2_PERSON_MANIFEST_SHA256) throw new Error('M2 manifest integrity failed');

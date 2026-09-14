@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import {PERSON_FIRST_PAGE} from './person-first-page-config.js';
 import {PERSON_DIRECTORY_INDEX} from './full-wiki-person-directory-index-config.js';
 import {FULL_WIKI_RUNTIME} from './full-wiki-runtime-config.js';
@@ -16,7 +17,7 @@ export async function loadPersonFirstPage({config=PERSON_FIRST_PAGE,indexConfig=
     ||config.directoryManifestSha256!==indexConfig.directoryManifestSha256)throw Error('人物首屏来源版本不匹配');
   if(config.schema!=='terminal-wiki-person-first-page-v1'||!/^\.\.\/runtime-data\/person-first-page-v1\/person-first-page\.[a-f0-9]{16}\.json$/u.test(config.url)
     ||!/^[a-f0-9]{64}$/u.test(config.sha256)||!Number.isSafeInteger(config.bytes)||config.bytes<1||config.bytes>100000)throw Error('人物首屏配置无效');
-  const response=await fetchImpl(new URL(config.url,import.meta.url));if(!response.ok)throw Error('人物首屏暂不可用');
+  const response=await fetchImpl(resolveSharedDataURL(new URL(config.url,import.meta.url)));if(!response.ok)throw Error('人物首屏暂不可用');
   const bytes=await response.arrayBuffer();
   const sha=Array.from(new Uint8Array(await cryptoRef.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
   if(bytes.byteLength!==config.bytes||sha!==config.sha256)throw Error('人物首屏校验失败');

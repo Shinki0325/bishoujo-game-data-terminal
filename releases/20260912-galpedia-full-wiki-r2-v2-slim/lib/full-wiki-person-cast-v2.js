@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { PERSON_CAST } from './full-wiki-person-cast-config-v2.js';
 
 const DEFAULT_MANIFEST_URL = new URL(PERSON_CAST.url, import.meta.url);
@@ -10,7 +11,7 @@ export function createPersonCastLoader({ manifestUrl = DEFAULT_MANIFEST_URL, fet
   const shardCache = new Map();
   let manifestPromise = null;
   async function readJson(url, expectedSha = null, expectedBytes = null) {
-    const response = await fetchImpl(url);
+    const response = await fetchImpl(resolveSharedDataURL(url));
     if (!response.ok) throw new Error('人物角色投影读取失败');
     const bytes = new Uint8Array(await response.arrayBuffer());
     if (expectedBytes !== null && bytes.byteLength !== expectedBytes) throw new Error('人物角色投影大小校验失败');

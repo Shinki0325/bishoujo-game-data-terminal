@@ -1,3 +1,4 @@
+import { resolveSharedDataURL } from './shared-data-url.js';
 import { PRECOMPUTED_PERSON_SEARCH_KEYS } from './person-search.js';
 import { PERSON_DIRECTORY_INDEX } from './full-wiki-person-directory-index-config.js';
 import { PERSON_SEARCH_DIRECTORY } from './person-search-directory-config.js';
@@ -135,7 +136,7 @@ async function decode(body) {
 
 async function load(fetchImpl, cryptoRef, overrideDirectoryManifestSha256) {
   assertConfig(overrideDirectoryManifestSha256);
-  const response = await fetchImpl(new URL(PERSON_SEARCH_DIRECTORY.url, import.meta.url));
+  const response = await fetchImpl(resolveSharedDataURL(new URL(PERSON_SEARCH_DIRECTORY.url, import.meta.url)));
   if (!response?.ok) throw makeResponseError('人物轻量检索载荷读取失败', response?.status);
   if (typeof response.arrayBuffer !== 'function') throw new TypeError('人物轻量检索响应不支持 arrayBuffer');
   const bytes = await response.arrayBuffer();
