@@ -86,6 +86,7 @@ export function createSelectionCard(documentRef, work, {
   previewUrl = null,
   eagerCover = false,
   priorityCover = false,
+  cardSize = null,
   display = DEFAULT_SELECTION_CARD_DISPLAY,
   mobileSortKey = 'median',
   selectionEnabled = true,
@@ -143,11 +144,11 @@ export function createSelectionCard(documentRef, work, {
   image.fetchPriority = priorityCover ? 'high' : 'auto';
   if (typeof coverUrl === 'string' && coverUrl.length > 0) {
     if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
-      .getPropertyValue('--selection-card-size')?.trim() || '180px';
+    const resolvedCardSize = cardSize ?? (documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
+      .getPropertyValue('--selection-card-size')?.trim() || '180px');
     applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl,
       thumbnailWidth: work.coverWidth, previewWidth: work.previewWidth,
-      sizes: `${eagerCover ? '' : 'auto, '}(max-width: 720px) calc((100vw - 44px) / 3), ${cardSize}` });
+      sizes: `${eagerCover ? '' : 'auto, '}(max-width: 720px) calc((100vw - 44px) / 3), ${resolvedCardSize}` });
   } else {
     try {
       imageAsset(image, work, assetBase);

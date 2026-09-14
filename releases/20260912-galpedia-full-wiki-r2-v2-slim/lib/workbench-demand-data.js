@@ -4,6 +4,8 @@ import { createResourceRequest } from './resource-request.js';
 import { decodeWorkbenchTable } from './workbench-table.js';
 import { decodeWorkbenchContext } from './workbench-context.js';
 import { snapshotSearchText } from './search-text.js';
+import { WORK_SEARCH } from './work-search-config.js';
+import { loadPrecomputedSearchText } from './work-search-data.js';
 import { RUNTIME_FEATURES, ENRICHMENT_SIDECAR_SHA256, COMPANY_PROFILE_SIDECAR_SHA256, PRESENTATION_FAMILIES_SIDECAR_SHA256, BANGUMI_PUBLIC_BINDINGS_SHA256 } from './runtime-config.js';
 
 export const WORKBENCH_SCHEMA = 'galpedia-workbench-demand-v1';
@@ -235,11 +237,22 @@ export async function loadWorkerWorkbenchBundle(source,{config=WORKBENCH_DEMAND,
     }
     descriptor=compact;
   }
+  const preparedSearch=deferred&&descriptor===compact;
+  if(preparedSearch&&(WORK_SEARCH.sourceManifestSha256!==config.sha256||WORK_SEARCH.sourceWorkerSha256!==compact.sha256
+    ||WORK_SEARCH.rawSha256!==manifest.searchText?.sha256))
+    throw new TypeError('预计算搜索来源不匹配');
+  const searchPromise=preparedSearch?loadPrecomputedSearchText(WORK_SEARCH,{fetchImpl,cryptoRef}):null;
+  searchPromise?.catch(()=>{});
   const bytes=await readWorkbenchBytes(new URL(descriptor.path,url),descriptor.sha256,{fetchImpl,cryptoRef});
   if(descriptor===compact && bytes.byteLength!==compact.bytes)throw new TypeError('紧凑查询数据长度不匹配');
   const body=JSON.parse(new TextDecoder().decode(bytes));
   if(deferred&&body.mediaMode!=='on-demand-v1')throw new TypeError('查询线程媒体索引不兼容');
   const data=decodeWorkbenchPayload(body,manifest,{allowDeferredMedia:deferred,includePersonCatalog:false});
+  if(searchPromise){
+    const search=await searchPromise;
+    snapshotSearchText(search,data.ratedDisplayWorks.map(work=>work.workId));
+    data.searchText=search;
+  }
   if(deferred)data.mediaData=createWorkbenchStore(manifest,data.ratedDisplayWorks,{baseUrl:url,fetchImpl,cryptoRef});
   return {data,bytes};
 }

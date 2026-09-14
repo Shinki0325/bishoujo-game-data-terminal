@@ -444,6 +444,8 @@ export function createSelectionView({
         message: '没有匹配的作品。'
       });
       const nextCardCache = new Map();
+      const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
+        .getPropertyValue('--selection-card-size')?.trim() || '180px';
       const cards = visibleWorks.map((work, index) => {
         const workId = work.workId;
         const coverUrl = latestCoverUrls?.get?.(workId)?.thumbnailUrl ?? null;
@@ -463,6 +465,7 @@ export function createSelectionView({
           const cardEpoch = selectionModeEpoch;
           const currentWork = () => latestWorksById.get(workId) ?? null;
           const card = createSelectionCard(documentRef, work, {
+            cardSize,
             eagerCover: index < 12,
             priorityCover: index === 0,
             view: model.view,
