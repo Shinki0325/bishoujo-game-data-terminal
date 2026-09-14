@@ -105,6 +105,7 @@ export function createWorkCardData({config, workIds, fetchImpl = globalThis.fetc
     return entry.promise;
   }
   return Object.freeze({
+    prepare: () => directory().then(() => undefined),
     async get(requested, {isCurrent = () => true} = {}) {
       if (!Array.isArray(requested) || requested.length > 119 || new Set(requested).size !== requested.length
         || requested.some(id => typeof id !== 'string') || typeof isCurrent !== 'function') throw Error('卡片请求无效');

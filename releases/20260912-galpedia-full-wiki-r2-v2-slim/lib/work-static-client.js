@@ -8,8 +8,6 @@ import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
 import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
 import { WORK_LIST } from './work-list-config.js';
 import { createWorkListData, withWorkListData } from './work-list-data.js';
-import { WORK_CARD } from './work-card-config.js';
-import { createWorkCardData } from './work-card-data.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
   && Array.isArray(a)===Array.isArray(b) && Object.keys(a).length===Object.keys(b).length
@@ -90,7 +88,7 @@ export function createStaticWorkData({config=WORK_STATIC,fetchImpl=globalThis.fe
 
 // Default browsing and detail metadata have pinned projections. Any other
 // query delegates to the existing complete engine with its original inputs.
-export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null}) {
+export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null,prepareCards=null}) {
   let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false;
   const alive=()=>{if(terminated)throw Error('作品查询已结束');};
   const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init(payload);return real;})
@@ -117,6 +115,9 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
           ...(row.listPage?{listPage:row.listPage}:{}),page:{...row.page,resultRevision:activeRevision,
           selectAllState:selectedCount===0?'none':selectedCount===rows.workIds.length?'all':'some',unselectedCount:rows.workIds.length-selectedCount}};
       }
+      // Start the routing index alongside an actual full-engine result query.
+      // Filter-count previews and preset lists do not need card transport.
+      if(input.paged&&!input.includeProjectedCounts&&prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});
       mode='worker';activeRevision=null;activeRows=null;const result=await delegate('query',input);return ticket===sequence?result:{status:'stale'};
     },
     async resultIds(revision){alive();if(typeof revision==='string'&&revision.startsWith('static:')){
@@ -141,10 +142,16 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   restoreWorkbenchContext(uiData);
   if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
   const listData=createWorkListData({config:WORK_LIST,fetchImpl,cryptoRef});
-  if(WORK_CARD.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('卡片投影来源已变化');
-  const cardData=createWorkCardData({config:WORK_CARD,workIds:uiSummary.workIds,fetchImpl,cryptoRef});
-  const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData,cardData);
+  let cardData,cardPromise;
+  const cards=()=>cardPromise??=Promise.all([import('./work-card-config.js'),import('./work-card-data.js')]).then(([{WORK_CARD},{createWorkCardData}])=>{
+    if(WORK_CARD.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('卡片投影来源已变化');
+    return cardData=createWorkCardData({config:WORK_CARD,workIds:uiSummary.workIds,fetchImpl,cryptoRef});
+  }).catch(error=>{cardPromise=null;throw error;});
+  const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData,{
+    get:async(...args)=>(await cards()).get(...args),isListCard:work=>cardData?.isListCard(work)===true
+  });
   const staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
+    prepareCards:async()=>(await cards()).prepare(),
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
     uiSummary,workerOwned:true,workData,staticQueryClient};
