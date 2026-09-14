@@ -48,6 +48,7 @@ function queryCacheKey(payload) {
       ? {__undefined: true} : payload.visibleBrands,
     companyLimit: payload.companyLimit === undefined
       ? {__undefined: true} : payload.companyLimit,
+    visibleFilterIds:payload.visibleFilterIds,
     // Release status/date matching is defined against the current UTC day.
     // Prevent a long-lived worker from reusing yesterday's future/released
     // classification after midnight UTC.
@@ -118,17 +119,21 @@ export function createFilterWorkerRuntime() {
           queryCache.clear();
           return { id, type: 'ready', workCount: queryIndex.works.length };
         }
-        if (type !== 'query') throw new Error(`unsupported filter worker message: ${String(type)}`);
+        if (!['query','query-counts'].includes(type)) throw new Error(`unsupported filter worker message: ${String(type)}`);
+        const preview=type==='query-counts';
+        const queryPayload=preview?{...payload,filterState:{...payload.filterState,sortKey:'voteCount',sortDirection:'desc'},includeProjectedCounts:true}:payload;
 
         const start = typeof performance === 'object' && typeof performance.now === 'function'
           ? performance.now()
           : 0;
-        const key = queryCacheKey(payload);
+        if(preview&&payload.personWorkIndex){installQueryPersonWorkIndex(queryIndex,payload.personWorkIndex);queryCache.clear();}
+        const key = (preview?'counts:':'query:')+queryCacheKey(queryPayload);
         const cached = queryCache.get(key);
         if (cached !== undefined) {
           return {
             id,
-            type: 'result',
+            type: preview?'counts':'result',
+            ...(preview?{total:cached.workIds.length}:{}),
             workIds: cached.workIds,
             counts: cached.counts,
             cacheHit: true,
@@ -137,17 +142,18 @@ export function createFilterWorkerRuntime() {
         }
         const results = queryIndexedCatalog(
           queryIndex,
-          payload.filterState,
-          payload.selectedWorkIds ?? []
+          queryPayload.filterState,
+          queryPayload.selectedWorkIds ?? []
         );
-        const counts = payload.includeProjectedCounts
+        const counts = queryPayload.includeProjectedCounts
           ? projectedCountsForIndex(
               queryIndex,
-              payload.filterState,
-              payload.selectedWorkIds ?? [],
+              queryPayload.filterState,
+              queryPayload.selectedWorkIds ?? [],
               {
                 visibleBrands: payload.visibleBrands,
                 companyLimit: payload.companyLimit
+                ,...(preview?{visibleFilterIds:payload.visibleFilterIds??[]}: {})
               }
             )
           : EMPTY_COUNTS;
@@ -158,7 +164,8 @@ export function createFilterWorkerRuntime() {
         queryCache.set(key, entry);
         return {
           id,
-          type: 'result',
+          type: preview?'counts':'result',
+          ...(preview?{total:entry.workIds.length}:{}),
           workIds: entry.workIds,
           counts: entry.counts,
           cacheHit: false,

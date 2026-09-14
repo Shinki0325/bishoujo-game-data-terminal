@@ -49,7 +49,9 @@ export function createFilterDrawerController({
   applyButton,
   mediaQuery,
   documentRef,
-  onOpen = () => {}
+  onOpen = () => {},
+  onClose = () => {},
+  onApply = () => true
 }) {
   assertElement(drawer, 'drawer');
   assertElement(toggle, 'toggle');
@@ -79,6 +81,7 @@ export function createFilterDrawerController({
   function close({ returnFocus = true } = {}) {
     if (!open) return false;
     open = false;
+    onClose();
     sync({ returnFocus });
     return true;
   }
@@ -98,13 +101,14 @@ export function createFilterDrawerController({
   }
 
   toggle.addEventListener('click', () => {
-    open = !open;
+    if(open){close();return;}
+    open = true;
     sync({ focusDrawer: open, returnFocus: !open });
     if (open) onOpen();
   });
   closeButton.addEventListener('click', () => close());
   backdrop.addEventListener('click', () => close());
-  applyButton.addEventListener('click', () => close());
+  applyButton.addEventListener('click', () => {if(onApply()!==false)close();});
   documentRef.addEventListener('keydown', event => {
     if (event.defaultPrevented || documentRef.querySelector?.('dialog:modal')) return;
     if (event.key === 'Tab' && open) {
@@ -115,10 +119,11 @@ export function createFilterDrawerController({
   });
   mediaQuery.addEventListener?.('change', () => {
     const returnFocus = open && isInside(documentRef.activeElement, drawer);
+    if(open)onClose();
     open = false;
     sync({ returnFocus });
   });
 
   sync();
-  return Object.freeze({ sync });
+  return Object.freeze({ sync, close });
 }

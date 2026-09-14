@@ -121,6 +121,7 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
       if(input.paged&&!input.includeProjectedCounts&&prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});
       mode='worker';activeRevision=null;activeRows=null;const result=await delegate('query',input);return ticket===sequence?result:{status:'stale'};
     },
+    counts:input=>delegate('counts',input),
     async resultIds(revision){alive();if(typeof revision==='string'&&revision.startsWith('static:')){
       if(revision!==activeRevision||!activeRows)throw Error('作品结果已变化');return [...activeRows.workIds];
     }if(mode!=='worker')throw Error('作品结果已变化');return delegate('resultIds',revision);},

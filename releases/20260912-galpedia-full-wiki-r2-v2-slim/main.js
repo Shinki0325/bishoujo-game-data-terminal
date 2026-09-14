@@ -1,4 +1,5 @@
 import { setListState } from './lib/list-state.js';
+import { createFilterDraftSession } from './lib/filter-draft-session.js';
 import { captureWorkbenchLandingSnapshot } from './lib/workbench-landing-snapshot.js';
 import { releaseDateInfo } from './lib/work-release-date.js';
 import { loadPersonDisplayNames } from './lib/full-wiki-person-names.js';
@@ -947,7 +948,8 @@ async function initialize() {
   }
   window.addEventListener('pagehide', () => filterWorkerClient.terminate(), { once: true });
 
-  let filterView;
+  let filterView, filterDraft, filterDrawer;
+  let requestedFilterState=null;
   let importBusy = false;
   const rankingExport = createRankingExportController({
     isImportBusy: () => importBusy, getSubject: () => rankingSubject,
@@ -1541,16 +1543,22 @@ async function initialize() {
     }
   });
 
+  function requestWorkbenchFilterChange(patch, interaction = null) {
+    requestedFilterState=controller.previewFilterState({...requestedFilterState,...patch});
+    const target=requestedFilterState;workbenchQuery.suspend();
+    if(target.personIds?.length&&personWorkIndex===null){
+      selectionView.beginLoading({filterState:target});
+      void ensurePersonFilterIndex().then(()=>{if(requestedFilterState===target)void render([],interaction);})
+        .catch(error=>{if(requestedFilterState===target)selectionView.showLoadingError(()=>requestWorkbenchFilterChange(target),error);});
+    }else void render([],interaction);
+    return true;
+  }
+
   function commitTitleQuery(titleQuery, interaction = null) {
     const previous = String(controller.inspectState().filterState.titleQuery ?? '');
     const next = String(titleQuery ?? '');
     interactionMetrics.stage(interaction, 'debounce-complete');
-    const result = runStateChange(() => controller.setFilterState({ titleQuery: next }), [], interaction);
-    if (previous.trim() !== next.trim()) {
-      if (previous.trim().length === 0 && next.trim().length > 0) pushUiLocation();
-      else replaceUiLocation();
-    }
-    return result;
+    return requestWorkbenchFilterChange({titleQuery:next},interaction);
   }
 
   function clearTitleQuery() {
@@ -1596,7 +1604,7 @@ async function initialize() {
       return runStateChange(() => controller.toggleCurrentResults(workIds));
     },
     onToggleSelectedOnly(selectedOnly) {
-      return runStateChange(() => controller.setFilterState({ selectedOnly }));
+      return requestWorkbenchFilterChange({selectedOnly});
     },
     onOpenDetails(work) {
       openWorkDetails(work);
@@ -1613,9 +1621,7 @@ async function initialize() {
       );
       if (Object.hasOwn(patch, 'titleQuery')) return commitTitleQuery(patch.titleQuery, activeInteraction);
       interactionMetrics.stage(activeInteraction, 'debounce-complete');
-      const result = runStateChange(() => controller.setFilterState(patch), [], activeInteraction);
-      replaceUiLocation();
-      return result;
+      return requestWorkbenchFilterChange(patch,activeInteraction);
     },
     onInteractionStart(kind) {
       return interactionMetrics.begin(kind);
@@ -1726,13 +1732,13 @@ async function initialize() {
         // Candidate names need only the small index. Prepare the actual
         // relation index concurrently; selecting a person still awaits its
         // validated Worker installation through onFilterChange below.
-        void ensurePersonFilterIndex().catch(() => {});
+        void personWorkIndexRuntime?.load().catch(() => {});
         const [{ projectPersonFilterOptions }, directory] = await Promise.all([
           import('./lib/person-filter-options.js'),
           loadPersonSearchRecords()
         ]);
         const index = directory.indexedPersonIds instanceof Set
-          ? directory.indexedPersonIds : await ensurePersonFilterIndex();
+          ? directory.indexedPersonIds : await personWorkIndexRuntime.load();
         return projectPersonFilterOptions(directory.records, index);
       })();
       state.pending = pending;
@@ -2455,10 +2461,11 @@ async function initialize() {
 
   async function render(visibleBrands = [], interaction = null) {
     captureWorkspaceScroll();
-    const state = controller.inspectState();
-    const includeFilterCounts = elements.filterDrawer.classList.contains('is-open');
+    const appliedState = controller.inspectState(), filterTarget=requestedFilterState;
+    const state=filterTarget?{...appliedState,filterState:filterTarget}:appliedState;
+    const includeFilterCounts = false;
     const updatingSelection = !personDirectoryOpen && !companyDirectoryOpen && state.workspaceMode !== 'ranking';
-    if (updatingSelection) selectionView.beginLoading();
+    if (updatingSelection) selectionView.beginLoading({filterState:state.filterState});
     const queryResult = await workbenchQuery.run({
       state, directoryOpen: personDirectoryOpen || companyDirectoryOpen,
       comparisonIds: comparison.ids, pageNumber: selectionView.getPageNumber(),
@@ -2472,7 +2479,7 @@ async function initialize() {
     if (queryResult.status !== 'ready') return false;
     const { outcome, generation } = queryResult;
     if (!generation.isCurrent()) return false;
-    const model = controller.inspect(outcome.workIds);
+    const model = {...controller.inspect(outcome.workIds),state};
     interactionMetrics.stage(interaction, 'controller-ready');
     const ranking = model.state.workspaceMode === 'ranking' && !personDirectoryOpen && !companyDirectoryOpen;
     const companyState = ranking && rankingSubject === 'company' ? companyRanking.inspect() : null;
@@ -2500,7 +2507,7 @@ async function initialize() {
       return false;
     }
     interactionMetrics.stage(interaction, 'media-ready');
-    workbenchResults.renderCounts({ model, companyState, ...result });
+
     renderWorkspace(model);
     if (personDirectoryOpen) renderPersonDirectory();
     else if (companyDirectoryOpen) renderCompanyDirectory();
@@ -2520,6 +2527,10 @@ async function initialize() {
         isCurrent: () => generation.isCurrent() && !personDirectoryOpen && !companyDirectoryOpen
       }).catch(() => {});
     }
+    if(filterTarget&&requestedFilterState===filterTarget){
+      controller.setFilterState(filterTarget);requestedFilterState=null;replaceUiLocation();
+    }
+    workbenchResults.renderCounts({model,companyState,...result});
     interactionMetrics.stage(interaction, 'dom-updated');
     workbenchResults.renderFilters({
       model, visibleBrands, includeFilterCounts, counts: outcome.counts,
@@ -2552,49 +2563,50 @@ async function initialize() {
       return counts;
     }, Object.create(null)),
     onFilterChange(nextFilterState) {
-      const interaction = interactionMetrics.begin('filter');
-      interactionMetrics.stage(interaction, 'debounce-complete');
-      if (nextFilterState.personIds?.length > 0 && personWorkIndex === null) {
-        const result = controller.setFilterState(nextFilterState);
-        void ensurePersonFilterIndex()
-          .then(() => render([], interaction))
-          .catch(error => {
-            interactionMetrics.cancel(interaction, 'person-index-error');
-            announce('人物筛选索引加载失败，请稍后重试。', 'error');
-            console.error(error);
-          });
-        return result;
-      }
-      return runStateChange(() => controller.setFilterState(nextFilterState), [], interaction);
+      if(filterDraft?.isOpen)return filterDraft.change(nextFilterState);
+      const interaction=interactionMetrics.begin('filter');
+      interactionMetrics.stage(interaction,'debounce-complete');
+      return requestWorkbenchFilterChange(nextFilterState,interaction);
     },
-    onAttributeSelectionChange(groupId, selectedIds) {
-      const interaction = interactionMetrics.begin('filter');
-      interactionMetrics.stage(interaction, 'debounce-complete');
-      return runStateChange(() => {
-        const current = controller.inspectState().filterState.attributeSelections;
-        return controller.setFilterState({
-          attributeSelections: {
-            ...current,
-            [groupId]: [...selectedIds]
-          }
-        });
-      }, [], interaction);
+    onAttributeSelectionChange(groupId,selectedIds){
+      const current=filterDraft?.isOpen?filterDraft.state():controller.inspectState().filterState;
+      const next={...current,attributeSelections:{...current.attributeSelections,[groupId]:[...selectedIds]}};
+      if(filterDraft?.isOpen)return filterDraft.change(next);
+      return requestWorkbenchFilterChange(next,interactionMetrics.begin('filter'));
     },
     personOptions: [],
     onPersonFilterFocus() {
       void ensurePersonFilterOptions();
     },
-    onRequestCounts(_filterState, visibleBrands) {
-      const interaction = interactionMetrics.begin('filter-counts');
-      interactionMetrics.stage(interaction, 'debounce-complete');
-      void render(visibleBrands, interaction);
-    }
+    onRequestCounts(_filterState,visibleBrands){filterDraft?.requestCounts({visibleBrands});}
   });
   // Keep the shared filter drawer outside desktop mode roots so mobile can hide
   // ranking/selection panels without hiding the filter surface itself.
   elements.workspace.insertBefore(elements.filterDrawer, elements.workspace.firstChild);
   elements.workspace.insertBefore(elements.filterBackdrop, elements.workspace.firstChild);
-  createFilterDrawerController({
+  elements.filterApply.textContent='应用筛选';
+  filterDraft=createFilterDraftSession({
+    readApplied:()=>controller.inspectState().filterState,
+    render(state,result){
+      filterView.render(state,{...result.counts,current:result.total??null});
+      const status=document.getElementById('filter-result-status');
+      setListState({status,state:result.status==='ready'?'info':result.status,
+        message:result.status==='ready'?'预计结果，点击应用生效':result.status==='error'?'数量暂不可用，仍可应用筛选':'正在统计…'});
+      elements.filterResultCount.textContent=Number.isSafeInteger(result.total)?`预计 ${result.total} 项`:'—';
+    },
+    async preview(filterState,{visibleBrands=[]},isCurrent){
+      await ensureFilterWorker();
+      const previewPeople=filterState.personIds?.length?await personWorkIndexRuntime.load():null;
+      if(!isCurrent())return {status:'stale'};
+      const result=await filterWorkerClient.counts({filterState,selectedWorkIds:controller.inspectState().selectedWorkIds,
+        visibleBrands,visibleFilterIds:filterView.visibleFilterIds(),companyLimit:6,
+        ...(previewPeople?{personWorkIndex:previewPeople}:{})});
+      return result.status==='stale'?result:{status:'ready',total:result.total,counts:result.counts};
+    },
+    commit(state){const interaction=interactionMetrics.begin('filter-apply');interactionMetrics.stage(interaction,'debounce-complete');
+      requestWorkbenchFilterChange(state,interaction);}
+  });
+  filterDrawer=createFilterDrawerController({
     drawer: elements.filterDrawer,
     toggle: elements.filterToggle,
     closeButton: elements.filterClose,
@@ -2602,10 +2614,12 @@ async function initialize() {
     applyButton: elements.filterApply,
     mediaQuery: window.matchMedia('(max-width: 899px)'),
     documentRef: document,
-    onOpen() {
-      elements.filterDrawer.setAttribute('aria-busy', 'true');
-      void render().finally(() => elements.filterDrawer.setAttribute('aria-busy', 'false'));
-    }
+    onOpen(){filterView.setDraftEditing(true);filterDraft.open();},
+    onApply(){if(!filterView.flushDraft())return false;return filterDraft.apply();},
+    onClose(){filterDraft.close();filterView.setDraftEditing(false);
+      setListState({status:document.getElementById('filter-result-status'),state:'ready'});
+      filterView.renderSummary(controller.inspectState().filterState,Number(elements.catalogResultCount.textContent.split('/')[0])||0);}
+
   });
   const importCoordinator = createImportCoordinator({
     readText: file => file.text(),
@@ -2847,6 +2861,7 @@ async function initialize() {
       rankingLocatorRequestToken += 1;
       rankingLocatorModel = null;
       rankingLocatorModelKey = '';
+      filterDrawer?.close();requestedFilterState=null;
       workbenchQuery.suspend(); companyWorkspace.suspend(); detailOpening.suspend();
       selectionView.suspend(); cancelRankingPreload();
     },
@@ -3286,7 +3301,7 @@ async function initialize() {
     // User intent starts the complete shared engine before the first query.
     // Ordinary browsing/scrolling never downloads it speculatively.
     const warmQuery = () => { void ensureFilterWorker().then(() => filterWorkerClient.preload()).catch(() => {}); };
-    for (const id of ['title-search','mobile-title-search','global-search-input','home-search-input','filter-toggle','mobile-filter-toggle']) {
+    for (const id of ['title-search','mobile-title-search','global-search-input','home-search-input']) {
       document.getElementById(id)?.addEventListener('focus', warmQuery);
     }
   }

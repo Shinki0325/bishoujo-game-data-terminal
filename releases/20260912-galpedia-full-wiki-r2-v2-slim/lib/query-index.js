@@ -3,6 +3,7 @@ import { snapshotSearchText } from './search-text.js';
 
 const searchTextInstallers = new WeakMap();
 const searchTextWarmers = new WeakMap();
+const matchingCaches = new WeakMap();
 export function warmQuerySearchText(index, options) {
   const warm = searchTextWarmers.get(index);
   if (!warm) throw new TypeError('unknown query index');
@@ -12,6 +13,7 @@ export function installQuerySearchText(index, searchText) {
   const install = searchTextInstallers.get(index);
   if (!install) throw new TypeError('unknown query index');
   install(searchText);
+  matchingCaches.delete(index);
 }
 import { attributeSelectionsToFormula } from './attribute-filters.js';
 import {
@@ -563,6 +565,7 @@ export function createQueryIndex({
     // Compile and validate before swapping, so rejected updates are atomic.
     const next = compilePersonWorkPositions(workSnapshots, value);
     personWorkPositions = next;
+    matchingCaches.delete(index);
   });
   searchTextInstallers.set(index, installSearchText);
   searchTextWarmers.set(index, ({batchSize = 128, yieldTask = () => new Promise(resolve => setTimeout(resolve, 0)), cancelled = () => false} = {}) => {
@@ -589,7 +592,13 @@ export function createQueryIndex({
 }
 
 export function queryIndexedCatalog(index, filterState, selectedWorkIds = EMPTY_SELECTED_WORK_IDS) {
-  const positions = matchingPositions(index, filterState, selectedWorkIds);
+  const {sortKey,sortDirection,...matchingState}=filterState;
+  const key=JSON.stringify([matchingState,filterState.selectedOnly?selectedWorkIds:[],Math.floor(Date.now()/86400000)]);
+  let cache=matchingCaches.get(index);if(!cache){cache=new Map();matchingCaches.set(index,cache);}
+  let matches=cache.get(key);
+  if(matches){cache.delete(key);cache.set(key,matches);}
+  else{matches=matchingPositions(index,filterState,selectedWorkIds);cache.set(key,matches);while(cache.size>8)cache.delete(cache.keys().next().value);}
+  const positions = [...matches];
   positions.sort((left, right) => comparePositions(index, left, right, filterState));
   return positions.map(position => index.works[position]);
 }
@@ -604,7 +613,7 @@ export function projectedCountsForIndex(
   index,
   filterState,
   selectedWorkIds = EMPTY_SELECTED_WORK_IDS,
-  { visibleBrands = index.brands, companyLimit = 24 } = {}
+  { visibleBrands = index.brands, companyLimit = 24, visibleFilterIds = index.knownFilterIds } = {}
 ) {
   const currentPositions = matchingPositions(index, filterState, selectedWorkIds);
   const current = countDistinctGroups(index, currentPositions);
@@ -623,7 +632,8 @@ export function projectedCountsForIndex(
   const yearProjection = createYearProjection(index, yearPositions);
   const requests = [];
   const patches = [];
-  for (const filterId of index.knownFilterIds) {
+  if(!Array.isArray(visibleFilterIds)||visibleFilterIds.some(id=>!index.knownFilterIds.includes(id)))throw new TypeError('invalid visible filter IDs');
+  for (const filterId of visibleFilterIds) {
     const active = filterState.positiveFilterIds?.includes(filterId)
       || filterState.excludedFilterIds?.includes(filterId);
     if (active) {

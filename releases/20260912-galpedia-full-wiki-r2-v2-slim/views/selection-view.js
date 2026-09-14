@@ -243,6 +243,16 @@ export function createSelectionView({
   let renderedWorkKey = '';
   let pageIndex = 0;
   let latestModel = null;
+  let requestedSort=null,updating=false,resultCommitModel=null;
+  function syncRequestedSort(state){
+    elements.sortKey.value=state.sortKey;
+    syncSortDirectionControl({button:elements.sortDirectionToggle,icon:elements.sortDirectionIcon,label:elements.sortDirectionLabel,direction:state.sortDirection,documentRef});
+
+  }
+  // Overlay feedback below the existing toolbar; keep its compact controls and geometry.
+  const controls=elements.sortKey.closest?.('.catalog-controls');
+  controls?.append(elements.listState);
+  elements.listState.classList.add('catalog-update-state');
   let remotePagePending = false;
   let latestCoverUrls = null;
   let cardDisplay = DEFAULT_SELECTION_CARD_DISPLAY;
@@ -288,7 +298,7 @@ export function createSelectionView({
       .map(work => work.workId));
   });
   elements.selectAllResults.addEventListener('click', () => {
-    if (latestModel === null) return;
+    if (latestModel === null || updating) return;
     onToggleCurrentResults(latestModel.page ? null : latestModel.works.map(work => work.workId));
   });
   elements.selectedWorksToggle.addEventListener('click', () => {
@@ -300,13 +310,16 @@ export function createSelectionView({
     if (latestModel === null) return;
     const interaction = onInteractionStart('sort-direction');
     titleCommit.flush();
-    onFilterChange({ sortDirection: latestModel.filterState.sortDirection === 'asc' ? 'desc' : 'asc' }, interaction);
+    const state=requestedSort??latestModel.filterState;
+    requestedSort={...state,sortDirection:state.sortDirection==='asc'?'desc':'asc'};syncRequestedSort(requestedSort);
+    onFilterChange({sortDirection:requestedSort.sortDirection},interaction);
   });
   elements.sortKey.addEventListener('change', () => {
     const sortKey = elements.sortKey.value;
     if (!FILTER_SORT_KEYS.has(sortKey)) return;
     const interaction = onInteractionStart('sort-key');
     titleCommit.flush();
+    requestedSort={...(requestedSort??latestModel.filterState),sortKey};syncRequestedSort(requestedSort);
     onFilterChange({ sortKey }, interaction);
   });
   bindTitleQueryInput(elements.title,titleCommit,onInteractionStart);
@@ -331,7 +344,7 @@ export function createSelectionView({
     remotePagePending = true;
     setListState({status:elements.listState,state:'loading',message:'正在载入下一页作品…'});
     elements.grid.setAttribute('aria-busy', 'true');
-    elements.grid.inert = true;
+    elements.grid.inert = false;
     elements.selectCurrentPage.disabled = true;
     elements.pageInput.value = String(pageIndex + 1);
     Promise.resolve().then(() => generation.isCurrent() ? onPageRequest(pageIndex + 1) : undefined).then(success => {
@@ -400,7 +413,7 @@ export function createSelectionView({
       return renderLatestReady(hydratedPage);
     }
     elements.grid.setAttribute('aria-busy', 'true');
-    elements.grid.inert = true;
+    elements.grid.inert = false;
     elements.selectCurrentPage.disabled = true;
     setListState({status:elements.listState,state:'loading',message:'正在载入作品资料…'});
     return Promise.resolve(prepareWorks(inputs)).then(works => {
@@ -423,7 +436,8 @@ export function createSelectionView({
   function renderLatestReady(hydratedWorks = null) {
     const model = latestModel;
     if (model === null) return;
-    elements.grid.setAttribute('aria-busy', 'false');
+    const keepPending=updating&&resultCommitModel!==model;
+    elements.grid.setAttribute('aria-busy', String(keepPending));
     elements.grid.inert = false;
       const activeElement = documentRef.activeElement;
       const activeCard = activeElement?.parentElement;
@@ -442,7 +456,7 @@ export function createSelectionView({
       activeVisibleWorkIds = new Set(visibleWorks.map(work => work.workId));
       latestWorksById = new Map(visibleWorks.map(work => [work.workId, work]));
       latestSelectedWorkIds = selected;
-      setListState({
+      if(!keepPending)setListState({
         status: elements.listState,
         state: model.works.length === 0 ? 'empty' : 'ready',
         message: '没有匹配的作品。'
@@ -577,7 +591,8 @@ export function createSelectionView({
         model.works.every(work => selected.has(work.workId)) ? 'all' : pageSelected > 0 ? 'some' : 'none'
       ));
       elements.selectCurrentPage.setAttribute('aria-pressed', String(pageState === 'all'));
-      elements.selectCurrentPage.disabled = capacityBlocked || visibleWorks.length === 0;
+      elements.selectCurrentPage.disabled = keepPending || capacityBlocked || visibleWorks.length === 0;
+      elements.selectAllResults.disabled=keepPending;
       if (capacityBlocked) {
         elements.selectCurrentPage.setAttribute('title', capacityMessage);
         elements.selectCurrentPage.setAttribute('aria-describedby', 'selection-capacity-status');
@@ -595,12 +610,12 @@ export function createSelectionView({
       elements.selectedWorksToggle.setAttribute('aria-pressed', String(Boolean(model.filterState.selectedOnly)));
       elements.selectedWorksToggle.textContent = '查看已选';
       if (!titleCommit.pending()) elements.title.value = model.filterState.titleQuery;
-      elements.sortKey.value = model.filterState.sortKey;
+      elements.sortKey.value = (requestedSort??model.filterState).sortKey;
       syncSortDirectionControl({
         button: elements.sortDirectionToggle,
         icon: elements.sortDirectionIcon,
         label: elements.sortDirectionLabel,
-        direction: model.filterState.sortDirection,
+        direction: (requestedSort??model.filterState).sortDirection,
         labelPrefix: '排序',
         documentRef
       });
@@ -608,6 +623,8 @@ export function createSelectionView({
       elements.pageNext.disabled = pageIndex >= pages.length - 1;
       elements.pageInput.value = String(pageIndex + 1);
       elements.pageTotal.textContent = String(pages.length);
+      if(!keepPending){requestedSort=null;updating=false;resultCommitModel=null;}
+      syncRequestedSort(requestedSort??model.filterState);
       renderedModel = model;
   }
 
@@ -617,16 +634,19 @@ export function createSelectionView({
     getRenderedWorks() {
       return renderedModel === latestModel ? [...latestWorksById.values()] : [];
     },
-    beginLoading() {
-      elements.grid.setAttribute('aria-busy', 'true');
-      elements.grid.inert = true;
-      elements.selectCurrentPage.disabled = true;
-      setListState({status:elements.listState,state:'loading',message:'正在更新作品列表…'});
+    beginLoading({filterState}={}) {
+      updating=true;
+      if(filterState){requestedSort={...filterState};syncRequestedSort(requestedSort);}
+      elements.grid.setAttribute('aria-busy', 'true');elements.grid.inert=false;
+      elements.selectCurrentPage.disabled=true;elements.selectAllResults.disabled=true;
+      const changed=filterState&&latestModel&&(filterState.sortKey!==latestModel.filterState.sortKey||filterState.sortDirection!==latestModel.filterState.sortDirection);
+      const label=elements.sortKey.selectedOptions?.[0]?.textContent??'所选方式';
+      setListState({status:elements.listState,state:'loading',message:changed?`正在按${label}排序 · 保留上次结果…`:'正在更新作品列表 · 保留上次结果…'});
     },
     showLoadingError(retry, error) {
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
-      setListState({status:elements.listState,state:'error',message:'作品列表暂时无法更新。',retry,retryAt:error?.retryAt});
+      setListState({status:elements.listState,state:'error',message:'更新失败，当前仍显示上次结果。',retry,retryAt:error?.retryAt});
     },
     cancelPendingTitleQuery() {
       return titleCommit.cancel();
@@ -664,6 +684,7 @@ export function createSelectionView({
         ...model,
         selectionMode: typeof model.selectionMode === 'boolean' ? model.selectionMode : defaultSelectionMode
       };
+      resultCommitModel=latestModel;
       if (selectionModeActive !== latestModel.selectionMode) selectionModeEpoch += 1;
       selectionModeActive = latestModel.selectionMode;
       latestCoverUrls = coverUrls;
@@ -672,6 +693,7 @@ export function createSelectionView({
 
     // Keep pagination/model ownership; only pending visual updates are suspended.
     suspend() {
+      requestedSort=null;updating=false;resultCommitModel=null;
       hydrationSession.suspend();
       setListState({status:elements.listState,state:'ready'});
       remotePagePending = false;

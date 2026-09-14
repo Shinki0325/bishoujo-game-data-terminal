@@ -628,6 +628,17 @@ h3 {
   text-align: center;
 }
 
+/* Transient feedback uses no permanent toolbar or list space. */
+.catalog-controls {position:relative;}
+.catalog-controls > #catalog-list-state {
+  position:absolute;top:100%;left:0;right:0;z-index:20;display:flex;
+  min-height:24px;margin:0;padding:3px 8px;border:0;border-radius:0;
+  justify-content:flex-start;font-size:12px;line-height:1.4;text-align:left;
+  background:var(--surface);box-shadow:0 2px 4px rgb(0 0 0 / 8%);
+}
+.catalog-controls > #catalog-list-state[hidden] {display:none !important;}
+#filter-result-status {display:inline-flex;align-items:center;min-height:24px;font-size:12px;}
+
 .list-state[data-state="error"] {
   color: #ffd9d5;
   border-color: #b85a52;

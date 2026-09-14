@@ -50,6 +50,7 @@ export function createFilterWorkerClient(input) {
   const { workerFactory, timeoutMs, initTimeoutMs=timeoutMs, onWorkbenchData } = clientOptions(input);
   let nextRequestId = 1;
   let latestQueryId = 0;
+  let latestCountsId = 0;
   let initialized = false;
   let initPayload = null;
   let initPromise = null;
@@ -94,6 +95,9 @@ export function createFilterWorkerClient(input) {
       entry.resolve({ status: 'stale', requestId: message.id });
       return;
     }
+    if(message.type==='stale'||(entry.type==='query-counts'&&message.id!==latestCountsId)){
+      entry.resolve({status:'stale',requestId:message.id});return;
+    }
     if (message.type === 'error') {
       entry.reject(new FilterWorkerError(
         message.error?.message ?? 'filter worker query failed',
@@ -123,6 +127,9 @@ export function createFilterWorkerClient(input) {
       if (message.page !== undefined) result.page = message.page;
       entry.resolve(result);
       return;
+    }
+    if(entry.type==='query-counts'&&message.type==='counts'){
+      entry.resolve({status:'ok',total:message.total,counts:message.counts});return;
     }
     if (entry.type === 'result-ids' && message.type === 'result-ids') {
       entry.resolve(message.workIds);
@@ -171,11 +178,12 @@ export function createFilterWorkerClient(input) {
     const id = nextRequestId;
     nextRequestId += 1;
     if (type === 'query') latestQueryId = id;
+    if(type==='query-counts')latestCountsId=id;
     const promise = new Promise((resolve, reject) => {
       const timer = globalThis.setTimeout(() => {
         // Speculative preparation is optional. A slow background batch must
         // not tear down an otherwise responsive numeric/query index.
-        if (type === 'warm-search') {
+        if (type === 'warm-search' || type === 'query-counts') {
           pending.delete(id);
           reject(new FilterWorkerError('search preparation timed out', {code:'WORKER_TIMEOUT', requestId:id}));
           return;
@@ -237,6 +245,7 @@ export function createFilterWorkerClient(input) {
       if (initialized) return request('query', payload);
       return ensureInitialized().then(() => request('query', payload));
     },
+    async counts(payload) {await ensureInitialized();return request('query-counts',payload);},
     async installPersonWorkIndex(personWorkIndex) {
       await ensureInitialized();
       const result = await request('person-index', { personWorkIndex });

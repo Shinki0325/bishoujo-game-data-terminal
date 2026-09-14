@@ -49,6 +49,12 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
         return {id:message.id,type:'work-search',works:(await search(message.payload.query)).works};
       } catch(error) {return {id:message.id,type:'error',error:{name:error.name,message:error.message}};}
     }
+    if(message?.type==='query-counts'&&window){
+      try {
+      const result=runtime.handle(message);
+      return result.type==='counts'?window.project(result,{...message.payload,countsOnly:true}):result;
+      } catch(error) {return {id:message.id,type:'error',error:{name:error.name,message:error.message}};}
+    }
     if (message?.type === 'result-ids' || (message?.type === 'query' && message.payload?.paged)) {
       try {
         if (!window) throw new TypeError('owned result window has not been initialized');

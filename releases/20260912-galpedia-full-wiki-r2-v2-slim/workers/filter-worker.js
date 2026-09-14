@@ -4,6 +4,7 @@ const runtimeReady = import('../lib/filter-worker-runtime.js')
   .then(module=>module.createFilterWorkerRuntime());
 runtimeReady.catch(()=>{});
 let sourceHandler=null,queue=Promise.resolve();
+const latest=new Map();
 async function handle(message) {
   if(message?.payload?.workbenchSource){
     if(!sourceHandler){
@@ -27,12 +28,17 @@ async function handle(message) {
 }
 
 self.addEventListener('message', event => {
+  if(['query','query-counts'].includes(event.data?.type))latest.set(event.data.type,event.data.id);
   if (event.data?.type === 'warm-search') {
     void runtimeReady.then(runtime=>runtime.warmSearch(event.data)).then(result => self.postMessage(result))
       .catch(error=>self.postMessage({id:event.data?.id,type:'error',error:{name:error.name,message:error.message}}));
     return;
   }
   queue=queue.then(async()=>{
+  if(['query','query-counts'].includes(event.data?.type)){
+    await new Promise(resolve=>setTimeout(resolve,0));
+    if(latest.get(event.data.type)!==event.data.id){self.postMessage({id:event.data.id,type:'stale'});return;}
+  }
   const result = await handle(event.data);
   self.postMessage(result,result.workbenchBytes?[result.workbenchBytes]:[]);
   // Start inside the worker itself: a busy UI thread must not delay the first

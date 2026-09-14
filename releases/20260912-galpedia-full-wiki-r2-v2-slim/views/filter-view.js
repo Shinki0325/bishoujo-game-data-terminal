@@ -372,6 +372,7 @@ export function createFilterView({
     yearCounts.set(year, count);
   }
 
+  let draftEditing = false;
   function markResultPending() {
     if (!elements.resultStatus) return;
     elements.resultStatus.textContent = '正在更新…';
@@ -564,8 +565,8 @@ export function createFilterView({
       button.dataset.selected = String(selected.has(brand.brandId));
       button.setAttribute('aria-pressed', String(selected.has(brand.brandId)));
       const count = selected.has(brand.brandId)
-        ? currentCounts.current
-        : currentCounts.brands?.[brand.brandId] ?? brand.sampleWorkCount ?? 0;
+        ? currentCounts.current ?? '—'
+        : currentCounts.brands?.[brand.brandId] ?? (draftEditing ? '—' : brand.sampleWorkCount ?? 0);
       button.classList.toggle('is-active', selected.has(brand.brandId));
       button.classList.toggle('is-zero', count === 0);
       const name = documentRef.createElement('span');
@@ -833,8 +834,10 @@ export function createFilterView({
       details.open = openGroupId === group.groupId;
       details.addEventListener('toggle', () => {
         if (details.open) {
+          const changed=openGroupId!==group.groupId;
           openGroupId = group.groupId;
           closeSiblingGroups(details);
+          if(changed)requestCounts();
         } else if (openGroupId === group.groupId) {
           openGroupId = null;
         }
@@ -852,8 +855,8 @@ export function createFilterView({
       for (const filter of group.filters) {
         const isSelected = selected.has(filter.filterId);
         const facetCount = isSelected
-          ? currentCounts.current
-          : currentCounts.filters?.[filter.filterId] ?? 0;
+          ? currentCounts.current ?? '—'
+          : currentCounts.filters?.[filter.filterId] ?? (draftEditing ? '—' : 0);
         const button = documentRef.createElement('button');
         button.type = 'button';
         button.className = 'facet-control attribute-state-button';
@@ -927,8 +930,10 @@ export function createFilterView({
       details.open = openGroupId === group.groupId;
       details.addEventListener('toggle', () => {
         if (details.open) {
+          const changed=openGroupId!==group.groupId;
           openGroupId = group.groupId;
           closeSiblingGroups(details);
+          if(changed)requestCounts();
         } else if (openGroupId === group.groupId) {
           openGroupId = null;
         }
@@ -946,8 +951,8 @@ export function createFilterView({
       for (const filter of group.filters) {
         const state = tagState(currentState, filter.filterId);
         const facetCount = state === 'neutral'
-          ? currentCounts.filters?.[filter.filterId] ?? 0
-          : currentCounts.current;
+          ? currentCounts.filters?.[filter.filterId] ?? (draftEditing ? '—' : 0)
+          : currentCounts.current ?? '—';
         const button = documentRef.createElement('button');
         button.type = 'button';
         button.className = 'facet-control tag-state-button';
@@ -982,6 +987,7 @@ export function createFilterView({
   }
 
   function renderActiveChips() {
+    if(draftEditing)return;
     const chips = [];
     function addChip(key, label, removeCondition) {
       const button = documentRef.createElement('button');
@@ -1587,7 +1593,7 @@ export function createFilterView({
   function renderAppliedSummary() {
     const appliedCount = activeFilterCount(currentState);
     const badge = optionalElement(root, 'filter-applied-count');
-    if (badge) {
+    if (badge && !draftEditing) {
       badge.hidden = appliedCount === 0;
       badge.textContent = String(appliedCount);
       badge.setAttribute('aria-label', `已应用 ${appliedCount} 项筛选`);
@@ -1596,8 +1602,8 @@ export function createFilterView({
     const drawerCount = drawerFilterCount(currentState);
     if (elements.draftSummary) {
       elements.draftSummary.textContent = drawerCount === 0
-        ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`
-        : `${drawerCount} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+        ? `当前范围 · ${currentCounts.current===null?'待统计':new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`
+        : `${drawerCount} 项筛选 · ${currentCounts.current===null?'待统计':new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
     }
     if (elements.clearAll) elements.clearAll.hidden = drawerCount === 0;
     if (elements.resultStatus) {
@@ -1610,9 +1616,9 @@ export function createFilterView({
         ? '已清除评分门槛；有预定日期的按近到远优先，同日及未定作品中有 Bangumi 资料的优先。'
         : '选择未发售或未定时，清除评分与评分人数门槛。';
     }
-    elements.summary.textContent = appliedCount === 0
-      ? `当前范围 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
-      : `${activeFilterCount(currentState)} 项筛选 · ${new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
+    if(!draftEditing) elements.summary.textContent = appliedCount === 0
+      ? `当前范围 · ${currentCounts.current===null?'待统计':new Intl.NumberFormat('zh-CN').format(currentCounts.current)}`
+      : `${activeFilterCount(currentState)} 项筛选 · ${currentCounts.current===null?'待统计':new Intl.NumberFormat('zh-CN').format(currentCounts.current)} 个结果`;
   }
   function applyProspectiveCounts(prospectiveCounts, resultCount) {
     if (!prospectiveCounts || typeof prospectiveCounts !== 'object') {
@@ -1677,6 +1683,7 @@ export function createFilterView({
   function renderYearPreview(values, committed = false) {
     if (!elements.releaseYearPreview) return;
     let count = currentCounts.current;
+    if(count===null){elements.releaseYearPreview.textContent="正在统计结果…";return;}
     if (!committed) {
       const projected = countYearRange(values);
       if (projected === null) {
@@ -1691,7 +1698,24 @@ export function createFilterView({
   }
 
   return Object.freeze({
+    setDraftEditing(value) {
+      emitNumeric.cancel();emitYear.cancel();emitAdvanced.cancel();
+      advancedDraftInvalid=false;clearFormulaError();draftEditing=Boolean(value);
+    },
+    flushDraft() {
+      flushPendingEdits();
+      return !advancedDraftInvalid && [elements.minimumScore,elements.minimumVotes,elements.releaseYearStart,elements.releaseYearEnd]
+        .every(element=>!element||element.checkValidity?.()!==false);
+    },
+    visibleFilterIds(){return groups.filter(group=>group.groupId===openGroupId).flatMap(group=>group.filters.map(f=>f.filterId));},
     renderSummary(filterState, resultCount, prospectiveCounts = null) {
+      if(draftEditing){
+        const savedState=currentState,savedCounts=currentCounts;
+        draftEditing=false;currentState=cloneFilterState(filterState);currentCounts={...currentCounts,current:resultCount};
+        try{renderAppliedSummary();renderActiveChips();}
+        finally{currentState=savedState;currentCounts=savedCounts;draftEditing=true;}
+        return;
+      }
       currentState = cloneFilterState(filterState);
       applyProspectiveCounts(prospectiveCounts, resultCount);
       renderYearHistogram(currentState);
@@ -1703,7 +1727,7 @@ export function createFilterView({
     render(filterState, prospectiveCounts = {}) {
       currentState = cloneFilterState(filterState);
       currentCounts = {
-        current: prospectiveCounts.current ?? 0,
+        current: prospectiveCounts.current ?? (draftEditing ? null : 0),
         filters: prospectiveCounts.filters ?? {},
         brands: prospectiveCounts.brands ?? {},
         yearCounts: prospectiveCounts.yearCounts ?? null,

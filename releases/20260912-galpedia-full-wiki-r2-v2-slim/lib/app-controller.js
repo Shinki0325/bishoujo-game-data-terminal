@@ -461,6 +461,9 @@ export function createAppController({ sample, catalogAuthority = null, resolveWo
       return cloneValue(state);
     },
 
+    previewFilterState(nextFilterState) {
+      return cloneValue(validateState({...state,filterState:{...state.filterState,...cloneValue(nextFilterState)}},stateAuthority).filterState);
+    },
     setFilterState(nextFilterState) {
       if (nextFilterState === null || typeof nextFilterState !== 'object' || Array.isArray(nextFilterState)) {
         throw new TypeError('nextFilterState must be an object');

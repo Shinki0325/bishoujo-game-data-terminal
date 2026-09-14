@@ -114,6 +114,7 @@ export function createWorkbenchResultWindow(data) {
         writeProjected(result.workIds, payload.filterState.sortKey, payload.filterState.sortDirection, bangumiFirst, projected);
       }
       const ids = projected.map(work => work.workId);
+      if(payload.countsOnly)return {id:result.id,type:'counts',total:ids.length,counts:result.counts};
       const changed = resultIds !== null && (ids.length !== resultIds.length || ids.some((id, i) => id !== resultIds[i]));
       if (resultIds === null || changed) revision++;
       resultIds = ids;
