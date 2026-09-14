@@ -2481,6 +2481,12 @@ input[type="range"] {
   pointer-events: none;
 }
 
+.selection-card-missing-image:has(.selection-card-image-retry) { align-content: center; gap: 8px; }
+.selection-card-image-retry {
+  pointer-events: auto; padding: 3px 10px; border: 1px solid currentColor;
+  border-radius: 5px; background: var(--surface); color: inherit; font: inherit; cursor: pointer;
+}
+
 .ranking-card-missing-image {
   padding: 8px;
   font-size: 10px;

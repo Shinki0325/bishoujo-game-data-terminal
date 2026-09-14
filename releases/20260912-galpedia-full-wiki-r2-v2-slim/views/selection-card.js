@@ -1,4 +1,4 @@
-import { applyImageAsset, AssetUrlError } from '../lib/asset-url-core.js';
+import { applyImageAsset, AssetUrlError, resetExternalCoverImageRecovery } from '../lib/asset-url-core.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js';
 import { createActionIcon } from '../lib/action-icons.js';
@@ -60,19 +60,47 @@ function appendCardRating(documentRef, parent, className, text) {
   return rating;
 }
 
-function installMissingImageFallback(documentRef, card, image) {
+function installMissingImageFallback(documentRef, card, image, {knownMissing = false, title = ''} = {}) {
+  const thumbnailUrl = image.getAttribute?.('src') || image.src;
+  let fallback = null;
+  const clearFailure = () => {
+    card.classList.remove('is-image-missing');
+    image.hidden = false;
+    fallback?.remove();
+    fallback = null;
+  };
+  image.addEventListener('load', () => { if (image.naturalWidth > 0) clearFailure(); });
   image.addEventListener('error', () => {
+    if (image.complete && image.naturalWidth > 0) return;
     if (card.classList.contains('is-image-missing')) return;
+    image.removeAttribute?.('srcset');
+    image.removeAttribute?.('sizes');
     image.src = '';
     image.removeAttribute?.('src');
     image.hidden = true;
     card.classList.add('is-image-missing');
-    const fallback = documentRef.createElement('span');
+    fallback = documentRef.createElement('span');
     fallback.className = 'selection-card-missing-image';
-    fallback.textContent = '封面缺失';
-    fallback.setAttribute('aria-hidden', 'true');
+    if (knownMissing) {
+      fallback.textContent = '封面缺失';
+      fallback.setAttribute('aria-hidden', 'true');
+    } else {
+      appendTextElement(documentRef, fallback, 'span', 'selection-card-image-error', '封面加载失败');
+      const retry = appendTextElement(documentRef, fallback, 'button', 'selection-card-image-retry', '重试');
+      retry.type = 'button';
+      retry.setAttribute('aria-label', `重新加载 ${title} 的封面`);
+      retry.addEventListener('click', event => {
+        event.stopPropagation();
+        if (card.isConnected === false) return;
+        if (documentRef.activeElement === retry) card.querySelector?.('.selection-card-cover')?.focus({preventScroll:true});
+        clearFailure();
+        resetExternalCoverImageRecovery(image);
+        image.loading = 'eager';
+        image.src = thumbnailUrl;
+      });
+    }
     card.append(fallback);
-  }, { once: true });
+  });
 }
 
 export function createSelectionCard(documentRef, work, {
@@ -161,7 +189,10 @@ export function createSelectionCard(documentRef, work, {
   }
   image.alt = '';
   image.decoding = 'async';
-  installMissingImageFallback(documentRef, card, image);
+  installMissingImageFallback(documentRef, card, image, {
+    knownMissing: work.coverPath === 'assets/cover-unavailable.webp' && !work.projectedThumbnailPath && !coverUrl?.startsWith('blob:'),
+    title: displayTitle
+  });
 
   const cover = documentRef.createElement('button');
   cover.type = 'button';

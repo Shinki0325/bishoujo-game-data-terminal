@@ -190,6 +190,7 @@ export function fallbackCoverAssetUrl(urlValue) {
 
 export function recoverExternalCoverImage(image, { mirror = publicCoverMirror, isActive = () => true } = {}) {
   if (image === null || typeof image !== 'object' || image.dataset?.characterImageState) return Object.freeze({ recovered: false });
+  if (image.complete && image.naturalWidth > 0) return Object.freeze({ recovered: false });
   const declaredUrl = image.getAttribute?.('src') || image.src || '';
   const activeUrl = image.currentSrc || declaredUrl;
   const objectPath = url => externalV2ObjectPath(url, PUBLIC_COVER_MIRROR.base)
@@ -223,6 +224,12 @@ export function recoverExternalCoverImage(image, { mirror = publicCoverMirror, i
     ? Promise.resolve().then(() => finish(new URL(path, PUBLIC_COVER_MIRROR.base).href))
     : Promise.resolve().then(() => mirror.resolve(path)).then(finish, () => finish(null));
   return Object.freeze({ recovered: true, stage: isMirror ? 'retry-primary' : 'verify-mirror', completion });
+}
+
+// An explicit retry starts a fresh bounded attempt; exhausted requests do not
+// restart themselves. Replacing this token also invalidates any late lookup.
+export function resetExternalCoverImageRecovery(image) {
+  imageRecoveryState.delete(image);
 }
 
 export function installExternalCoverImageRecovery(documentRef = globalThis.document) {
