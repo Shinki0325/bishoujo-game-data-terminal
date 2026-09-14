@@ -1801,7 +1801,7 @@ async function initialize() {
     const sequence = ++staticPersonRenderSequence;
     const loading = elements.personView.querySelector('#person-directory-loading');
     elements.personView.setAttribute('aria-busy', 'true');
-    setListState({status:loading,state:'loading',message:'正在载入人物资料…'});
+    setListState({status:loading,state:'loading',layout:'panel',message:'正在加载人物列表',detail:'人物资料加载完成后，会自动更新列表。',slowLabel:'人物资料仍在加载，请再等一会儿。'});
     elements.personSearch.value = personQuery;
     localSearchClears.forEach(sync => sync());
     try {
@@ -1816,7 +1816,7 @@ async function initialize() {
     } catch (error) {
       if (sequence !== staticPersonRenderSequence || !personDirectoryOpen) return;
       elements.personView.setAttribute('aria-busy', 'false');
-      setListState({status:loading,state:'error',message:'人物资料暂未能加载。',retry:() => { void renderStaticPersonDirectory(); }});
+      setListState({status:loading,state:'error',layout:'panel',message:'人物列表没能加载出来',detail:'资料暂时没有加载成功，可以再试一次。',retry:() => { void renderStaticPersonDirectory(); }});
     }
   }
 
@@ -2783,7 +2783,7 @@ async function initialize() {
       const status = document.createElement('p');
       status.className = 'gp-detail-opening'; status.setAttribute('role', 'status');
       (document.querySelector('dialog[open]') ?? document.body).append(status);
-      setListState({status,state:'loading',message:'正在载入作品详情…'});
+      setListState({status,state:'loading',layout:'panel',message:'正在加载作品详情',detail:'作品介绍和相关资料加载完成后，会显示在这里。',slowLabel:'作品资料仍在加载，请再等一会儿。'});
       return () => { setListState({status,state:'ready'}); status.remove(); };
     },
     hydrateWork: async work => {

@@ -43,6 +43,7 @@ export function setListState({ status, state, message = '', retry = null, retryA
   }
   status.dataset.state = state;
   status.dataset.layout = layout;
+  status.classList.toggle('gp-guide-state', layout === 'panel');
   status.hidden = state === 'ready';
   status.textContent = '';
   if (state === 'ready') return status;

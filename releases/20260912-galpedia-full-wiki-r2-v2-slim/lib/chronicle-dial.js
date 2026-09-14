@@ -49,6 +49,19 @@
     const label = document.createElement('span');
     label.className = 'gp-loading-view__label';
     host.replaceChildren(createDial(options), label);
+    let description = null;
+    if (options.eyebrow) {
+      const eyebrow = document.createElement('span');
+      eyebrow.className = 'keeper-guide-card-eyebrow list-state-eyebrow';
+      eyebrow.textContent = options.eyebrow;
+      host.insertBefore(eyebrow, label);
+    }
+    if (options.detail) {
+      description = document.createElement('span');
+      description.className = 'list-state-detail';
+      description.textContent = options.detail;
+      host.append(description);
+    }
     host.hidden = true;
     // Live region is supplied by the caller, preferably outside region[aria-busy].
     // The graphic is decorative; no invented aria-valuenow, no per-frame announcements.
@@ -69,6 +82,7 @@
       clearTimers(); const token = ++generation;
       active = true; currentLabel = String(message);
       host.hidden = true; label.textContent = currentLabel; setBusy(true); announce('');
+      if (description) description.textContent = options.detail;
       revealTimer = setTimeout(() => {
         if (disposed || !active || token !== generation) return;
         host.hidden = false; announce(currentLabel);
@@ -76,9 +90,10 @@
       if (slowAfter > 0) {
         slowTimer = setTimeout(() => {
           if (disposed || !active || token !== generation) return;
-          const extra = options.slowLabel || '载入时间较长，请稍候。';
-          label.textContent = currentLabel + ' ' + extra;
-          if (!host.hidden) announce(label.textContent);
+          const extra = options.slowLabel || '还需要一点时间，请稍等一会儿。';
+          if (description) description.textContent = extra;
+          else label.textContent = currentLabel + ' ' + extra;
+          if (!host.hidden) announce(currentLabel + ' ' + extra);
         }, slowAfter);
       }
       return Object.freeze({

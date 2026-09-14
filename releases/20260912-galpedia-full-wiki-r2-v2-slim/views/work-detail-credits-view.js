@@ -517,14 +517,14 @@ export function createWorkDetailCreditsView({ root, tabs, content, status }) {
       root.hidden = false;
       tabs.hidden = true;
       content.replaceChildren();
-      setListState({status,state:'loading',message:'正在载入制作资料…'});
+      setListState({status,state:'loading',layout:'panel',message:'正在加载制作人员与角色',detail:'制作人员和角色资料加载完成后，会显示在这里。',slowLabel:'人物资料仍在加载，请再等一会儿。'});
     },
     renderWork,
     renderError(onRetry) {
       root.hidden = false;
       tabs.hidden = true;
       content.replaceChildren();
-      setListState({status,state:'error',message:'制作资料暂时无法加载。',retry:onRetry});
+      setListState({status,state:'error',layout:'panel',message:'人物资料没能加载出来',detail:'作品介绍仍然可以查看，人物资料可以再试一次。',retry:onRetry});
     }
   });
 }

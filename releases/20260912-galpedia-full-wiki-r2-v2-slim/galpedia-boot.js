@@ -2,6 +2,7 @@ import { createWorkspaceSession } from './lib/workspace-session.js';
 // Small home shell: the data workspace is loaded only for a route or a search.
 import { createActionIcon } from './lib/action-icons.js';
 import { createCommandSearch } from './lib/galpedia-command-search.js';
+import { setListState } from './lib/list-state.js';
 
 const root = document.documentElement;
 const home = document.querySelector('#galpedia-home');
@@ -42,11 +43,6 @@ let directoryController;
 const routeSession = createWorkspaceSession();
 const helpSession = createWorkspaceSession();
 const focusSession = createWorkspaceSession();
-const retryLoading = document.createElement('button');
-retryLoading.type = 'button'; retryLoading.textContent = '重试'; retryLoading.hidden = true;
-retryLoading.className = 'toolbar-button toolbar-button-neutral';
-status?.append(retryLoading);
-retryLoading.addEventListener('click', () => { void ensureRoute().catch(() => {}); });
 let lastWorkspaceRoute = '#works';
 const dialRevealDelay = 160;
 let statusRevealTimer = null;
@@ -74,23 +70,48 @@ function placeLoadingStatus() {
       : route === '#ranking'
         ? document.querySelector('#ranking-view')
         : document.querySelector('#catalog-results');
-  if (target && status.parentElement !== target) target.append(status);
+  if (target && status.parentElement !== target) {
+    const toolbar=target.querySelector(':scope > .results-toolbar');
+    if(toolbar)toolbar.after(status);else target.prepend(status);
+  }
   status.dataset.loadRegion = route.slice(1) || 'works';
 }
 function createRuntimeLoading() {
   if (!runtimeLoading && globalThis.GalpediaDial && loadIndicator) {
+    setListState({status:loadIndicator,state:'ready'});
+    loadIndicator.classList.add('gp-guide-state','gp-loading-view--panel');
+    loadIndicator.dataset.layout='panel';
+    loadIndicator.removeAttribute('role');loadIndicator.setAttribute('aria-hidden','true');
     runtimeLoading = globalThis.GalpediaDial.createLoadingController({
       host: loadIndicator,
       region: workspace,
       announcer: statusText,
       variant: 'standard',
-      size: 72,
+      size: 104,
       theme: 'inherit',
       delay: 160,
-      slowAfter: 8000
+      slowAfter: 8000,
+      stacked: true,
+      eyebrow: '庭守提示',
+      detail: '资料正在加载，完成后会自动显示。',
+      slowLabel: '资料仍在加载，请再等一会儿。'
     });
   }
   return runtimeLoading;
+}
+function pageLoadingTitle() {
+  if(location.hash.startsWith('#ranking'))return '正在加载排榜页面';
+  if(location.hash.startsWith('#persons'))return '正在加载人物库';
+  if(location.hash.startsWith('#companies'))return '正在加载会社库';
+  return '正在加载作品库';
+}
+function showLoadingError(message, error) {
+  runtimeTicket?.fail(message);runtimeTicket=null;runtimeLoading=null;
+  statusText.textContent='';statusText.classList.add('visually-hidden');
+  loadIndicator.removeAttribute('aria-hidden');loadIndicator.setAttribute('role','status');
+  setListState({status:loadIndicator,state:'error',layout:'panel',message,
+    detail:'资料暂时没有加载成功，可以再试一次。',retryAt:error?.retryAt,
+    retry:()=>{if(runtimeFailed){location.reload();return;}void ensureRoute().catch(()=>{});}});
 }
 let runtimeTicket = null;
 const nav = document.querySelector('#workspace-mode');
@@ -147,10 +168,9 @@ async function ensureRuntime() {
   if (!runtimePromise) {
     routeSession.suspend();
     directoryController?.dispose(); directoryController = null;
-    retryLoading.hidden = true;
     prepareLoadingRegion();
     placeLoadingStatus();
-    if (!createRuntimeLoading() && statusText) statusText.textContent = '正在准备资料库…';
+    if (!createRuntimeLoading() && statusText) statusText.textContent = pageLoadingTitle();
     // On a full-wiki person deep link, start the hash-pinned person directory
     // byte request before main.js begins its module/runtime cascade.  The
     // transport is imported dynamically here and statically by the directory
@@ -183,7 +203,7 @@ async function ensureRuntime() {
       createRuntimeLoading();
       if (runtimeLoading && !isHome()) {
         status.hidden = true;
-        runtimeTicket = runtimeLoading.begin('正在准备资料库…');
+        runtimeTicket = runtimeLoading.begin(pageLoadingTitle());
         clearTimeout(statusRevealTimer);
         statusRevealTimer = setTimeout(() => {
           statusRevealTimer = null;
@@ -192,7 +212,7 @@ async function ensureRuntime() {
       } else if (!isHome() && statusText) {
         status.hidden = false;
         statusText.classList.remove('visually-hidden');
-        statusText.textContent = '正在准备资料库…';
+        statusText.textContent = pageLoadingTitle();
       }
       return mainReady;
     }).then(module => module.ready).then(api => {
@@ -217,9 +237,7 @@ async function ensureRuntime() {
       clearTimeout(statusRevealTimer);
       statusRevealTimer = null;
       status.hidden = isHome();
-      runtimeTicket?.fail('资料库暂时未能加载，请刷新页面重试。');
-      runtimeTicket = null;
-      if (!runtimeLoading && statusText) statusText.textContent = '资料库暂时未能加载，请刷新页面重试。';
+      showLoadingError('这次没能打开资料库',error);
       throw error;
     });
   }
@@ -229,7 +247,7 @@ async function ensureRuntime() {
 async function ensureRoute() {
   if (isHome()) return;
   prepareLoadingRegion(); placeLoadingStatus();
-  if (runtimePromise) return ensureRuntime();
+  if (runtimePromise) { runtimeTicket?.update(pageLoadingTitle()); return ensureRuntime(); }
   const hash = location.hash;
   // The full catalog's person identities and relation projection live in the
   // shared runtime. Do not show the smaller legacy directory on a cold visit.
@@ -238,11 +256,10 @@ async function ensureRoute() {
   // browsing is independent and never imports that workbench speculatively.
   if (!/^#companies(?:[/?]|$)/u.test(hash) && !/^#persons(?:[/?]|$)/u.test(hash)) return ensureRuntime();
   const request = routeSession.begin(hash);
-  retryLoading.hidden = true;
   if (createRuntimeLoading()) {
     status.hidden = false;
-    runtimeTicket = runtimeLoading.begin(hash.startsWith('#persons') ? '正在载入人物资料…' : '正在载入会社资料…');
-  } else { status.hidden = false; statusText.classList.remove('visually-hidden'); statusText.textContent = '正在载入资料…'; }
+    runtimeTicket = runtimeLoading.begin(pageLoadingTitle());
+  } else { status.hidden = false; statusText.classList.remove('visually-hidden'); statusText.textContent = pageLoadingTitle(); }
   try {
     const { createDirectoryWorkspaces } = await import('./lib/directory-workspaces.js');
     if (!request.isCurrent() || runtimePromise) return;
@@ -254,9 +271,7 @@ async function ensureRoute() {
   } catch (error) {
     if (!request.isCurrent() || runtimePromise) return;
     request.fail(error);
-    runtimeTicket?.fail('本栏目暂时未能加载，请重试。'); runtimeTicket = null;
-    status.hidden = false; statusText.classList.remove('visually-hidden');
-    statusText.textContent = '本栏目暂时未能加载，请重试。'; retryLoading.hidden = false;
+    showLoadingError('这次没能打开这个栏目',error);status.hidden = false;
     console.warn('directory workspace load failed', error);
   }
 }

@@ -40,7 +40,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     get('person-view').setAttribute('aria-busy', 'true');
     get('person-directory-search').value = personLocation.query;
     get('person-search-clear').hidden = !personLocation.query;
-    setListState({status:loading,state:'loading',message:'正在载入人物资料…'});
+    setListState({status:loading,state:'loading',layout:'panel',message:'正在加载人物列表',detail:'人物资料加载完成后，会自动更新列表。',slowLabel:'人物资料仍在加载，请再等一会儿。'});
     get('person-page-previous').disabled = true; get('person-page-next').disabled = true;
     try {
       const page = await personStaticClient.getPage({ ...personLocation });
@@ -54,7 +54,7 @@ export function createDirectoryWorkspaces({ navigate, activateFull, staticPerson
     } catch (error) {
       if (!ticket.isCurrent() || sequence !== personRenderSequence) return;
       get('person-view').setAttribute('aria-busy', 'false');
-      setListState({status:loading,state:'error',message:'人物资料暂未能加载。',retry:ticket.guard(() => { void paintStaticPersons(); })});
+      setListState({status:loading,state:'error',layout:'panel',message:'人物列表没能加载出来',detail:'资料暂时没有加载成功，可以再试一次。',retry:ticket.guard(() => { void paintStaticPersons(); })});
       ticket.fail(error);
     }
   }

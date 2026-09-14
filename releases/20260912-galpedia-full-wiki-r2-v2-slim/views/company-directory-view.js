@@ -319,8 +319,10 @@ export function createCompanyDirectoryView({
     });
     detailWorks.replaceChildren();
     if (detailState !== 'ready') {
-      setListState({status:detailStatus, state: detailState,
-        message: detailState === 'loading' ? '正在载入会社作品…' : '会社作品加载失败，请重试。',
+      setListState({status:detailStatus, state: detailState, layout:'panel',
+        message: detailState === 'loading' ? '正在加载会社作品' : '会社作品没能加载出来',
+        detail: detailState === 'loading' ? '这家会社的作品加载完成后，会显示在这里。' : '会社简介仍然可以查看，作品列表可以再试一次。',
+        slowLabel:'作品资料仍在加载，请再等一会儿。',
         retry: onRetryDetail});
       detailWorks.append(detailStatus);
     } else setListState({status:detailStatus,state:'ready'});
