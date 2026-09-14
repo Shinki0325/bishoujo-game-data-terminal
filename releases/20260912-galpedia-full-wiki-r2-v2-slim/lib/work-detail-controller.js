@@ -11,7 +11,7 @@ export function createWorkDetailController({
     const location = readLocation();
     let finishPending;
     try {
-      const cleanup = onPending?.();
+      const cleanup = onPending?.(work);
       if (typeof cleanup === 'function') finishPending = sequence.scope.add(cleanup);
       if (hydrateWork) work = await hydrateWork(work);
       if (!sequence.isCurrent()) return;

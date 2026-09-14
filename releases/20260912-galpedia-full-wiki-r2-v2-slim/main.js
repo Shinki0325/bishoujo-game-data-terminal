@@ -2779,12 +2779,16 @@ async function initialize() {
     }
   });
   const detailOpening = createWorkDetailController({
-    onPending() {
-      const status = document.createElement('p');
-      status.className = 'gp-detail-opening'; status.setAttribute('role', 'status');
-      (document.querySelector('dialog[open]') ?? document.body).append(status);
-      setListState({status,state:'loading',layout:'panel',message:'正在加载作品详情',detail:'作品介绍和相关资料加载完成后，会显示在这里。',slowLabel:'作品资料仍在加载，请再等一会儿。'});
-      return () => { setListState({status,state:'ready'}); status.remove(); };
+    onPending(work) {
+      const focused=document.activeElement?.closest('[data-work-id], .company-directory-work');
+      const origin=focused??[...document.querySelectorAll('.selection-card')].find(card=>card.dataset.workId===work.workId);
+      if(!origin?.getClientRects().length)return;
+      const target=origin.querySelector('.selection-card-cover')??origin;
+      const status=document.createElement('span'),busy=origin.getAttribute('aria-busy');
+      status.className='work-detail-opening-note';status.setAttribute('role','status');
+      status.textContent='正在加载详情…';target.classList.add('is-detail-loading');
+      origin.setAttribute('aria-busy','true');target.append(status);
+      return()=>{status.remove();target.classList.remove('is-detail-loading');if(busy===null)origin.removeAttribute('aria-busy');else origin.setAttribute('aria-busy',busy);};
     },
     hydrateWork: async work => {
       const hydrated = workData ? (await workData.hydrate([work]))[0] : work;

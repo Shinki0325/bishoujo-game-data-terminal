@@ -44,12 +44,13 @@ export function setListState({ status, state, message = '', retry = null, retryA
   status.dataset.state = state;
   status.dataset.layout = layout;
   status.classList.toggle('gp-guide-state', layout === 'panel');
+  status.classList.toggle('gp-detail-state', layout === 'text');
   status.hidden = state === 'ready';
   status.textContent = '';
   if (state === 'ready') return status;
   const documentRef = status.ownerDocument;
   const dial = documentRef.defaultView?.GalpediaDial;
-  if (state === 'loading' && dial) {
+  if (state === 'loading' && dial && layout !== 'text') {
     const panel = layout === 'panel';
     const host = documentRef.createElement('span');
     host.className = panel ? 'gp-loading-view--panel' : 'gp-loading-view--inline';

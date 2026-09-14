@@ -399,7 +399,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
     showDialog();
     markCurrentRows();
     dialog?.setAttribute('aria-busy', 'true');
-    if (status) setListState({status,state:'loading',layout:'panel',message:'正在加载人物资料',detail:'完整资料还在加载，已显示的介绍可以继续查看。',slowLabel:'完整资料仍在加载，已显示的介绍可以继续查看。'});
+    if (status) setListState({status,state:'loading',layout:'text',message:'正在补充人物资料…'});
     const flight = { personId, request, promise: null };
     detailInFlight = flight;
     const promise = (async () => {
@@ -417,7 +417,7 @@ export function createPersonDirectoryView({ root, onSearch, onRoleChange, onSele
         if (request.isCurrent()) {
           request.fail(error);
           detailDisplayedId = personId;
-          if (status) setListState({status,state:'error',layout:'panel',message:'完整的人物资料没能加载出来',detail:'已有介绍仍然可以查看，更多资料可以再试一次。',
+          if (status) setListState({status,state:'error',layout:'text',message:'完整资料未能加载。',
             retry:() => { detailDisplayedId = null; void loadDetail(person); }});
         }
       } finally {

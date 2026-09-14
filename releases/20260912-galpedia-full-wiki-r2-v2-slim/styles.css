@@ -667,17 +667,25 @@ html.galpedia #galpedia-load-status {
   margin:0;padding:24px 16px;grid-column:1 / -1;
 }
 html.galpedia #galpedia-load-indicator.gp-guide-state {flex-wrap:nowrap;margin:0 auto;}
-html.galpedia :is(#person-detail-load-status,#details-credits-status).gp-guide-state[data-layout="panel"] {
-  width:min(320px,calc(100% - 32px));margin:24px auto;padding:22px 24px;
-}
 html.galpedia .gp-guide-state[data-layout="panel"]::before {content:none;display:none;}
+html.galpedia .gp-detail-state[data-layout="text"] {
+  display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px;
+  min-height:0;margin:0;padding:8px 14px;border:0;background:transparent;box-shadow:none;
+  color:var(--text-muted);font-size:12px;line-height:1.5;
+}
+html.galpedia .gp-detail-state[hidden] {display:none;}
+html.galpedia .gp-detail-state[data-layout="text"]::before {content:none;display:none;}
+html.galpedia .gp-detail-state .list-state-retry {width:auto;min-height:28px;padding:3px 10px;}
+.is-detail-loading {position:relative;}
+html.galpedia .work-detail-opening-note {
+  position:absolute;inset:auto 6px 6px;padding:4px 6px;border:1px solid var(--border);
+  border-radius:4px;background:var(--surface);color:var(--text);font-size:11px;line-height:1.4;
+  text-align:center;white-space:nowrap;pointer-events:none;z-index:5;
+}
 html.galpedia .catalog-controls {position:relative;}
 html.galpedia .catalog-controls > #catalog-list-state[data-layout="panel"] {
   position:absolute;inset:auto;top:calc(100% + 20px);left:50%;transform:translateX(-50%);
   max-width:none;margin:0;z-index:70;
-}
-html.galpedia .gp-detail-opening.gp-guide-state[data-layout="panel"] {
-  position:fixed;inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);margin:0;z-index:70;
 }
 html.galpedia .gp-guide-state .gp-loading-view--panel {width:100%;gap:12px;}
 html.galpedia .gp-guide-state[data-layout="panel"] .list-state-eyebrow {width:100%;margin-bottom:-7px;}
