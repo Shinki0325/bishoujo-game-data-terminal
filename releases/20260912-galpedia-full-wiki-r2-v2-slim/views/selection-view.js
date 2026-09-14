@@ -18,6 +18,9 @@ const FILTER_SORT_KEYS = new Set([
 ]);
 const FILTER_SORT_DIRECTIONS = new Set(['asc', 'desc']);
 const DEBOUNCE_MS = 150;
+// Two normal pages, including the visible one. Detached cards never form an
+// additional rendered grid, and old callbacks still require a visible work ID.
+const MAX_CACHED_CARDS = 198;
 
 function assertFunction(value, name) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function`);
@@ -37,7 +40,7 @@ export function selectionInitialWorks(works) {
 
 function releaseGridImages(grid) {
   for (const image of Array.from(grid.querySelectorAll?.('img') ?? [])) {
-    image.src = '';
+    image.removeAttribute?.('srcset');
     image.removeAttribute?.('src');
   }
 }
@@ -435,6 +438,7 @@ export function createSelectionView({
       pageIndex = Math.min(pageIndex, pages.length - 1);
       const page = pages[pageIndex];
       const visibleWorks = hydratedWorks ?? (model.page ? model.works : model.works.slice(page.start, page.end));
+      const previousVisibleWorkIds = activeVisibleWorkIds;
       activeVisibleWorkIds = new Set(visibleWorks.map(work => work.workId));
       latestWorksById = new Map(visibleWorks.map(work => [work.workId, work]));
       latestSelectedWorkIds = selected;
@@ -459,8 +463,13 @@ export function createSelectionView({
           previewUrl
         });
         let entry = cardCache.get(workId);
-        if (entry === undefined || entry.structureKey !== structureKey || entry.epoch !== selectionModeEpoch) {
+        // Revisiting a failed cover keeps the old rebuild-and-retry behavior.
+        // Same-page selection updates must not create an image retry loop.
+        const retryCover = entry && !previousVisibleWorkIds.has(workId)
+          && entry.card.classList.contains('is-image-missing');
+        if (entry === undefined || entry.structureKey !== structureKey || entry.epoch !== selectionModeEpoch || retryCover) {
           entry?.deactivate();
+          if (entry) releaseGridImages(entry.card);
           let active = true;
           const cardEpoch = selectionModeEpoch;
           const currentWork = () => latestWorksById.get(workId) ?? null;
@@ -526,11 +535,26 @@ export function createSelectionView({
         return entry.card;
       });
       for (const [workId, entry] of cardCache) {
-        if (nextCardCache.get(workId) === entry) continue;
-        entry.deactivate();
-        releaseGridImages(entry.card);
+        if (nextCardCache.has(workId)) continue;
+        if (entry.epoch !== selectionModeEpoch) {
+          entry.deactivate();
+          releaseGridImages(entry.card);
+          continue;
+        }
+        // Keep recently visited cards detached, with their decoded images.
+        // Visibility checks above disable every callback until reuse.
+        nextCardCache.set(workId, entry);
       }
       reconcileKeyedChildren(elements.grid, cards);
+      // Visible entries were inserted first, followed by retained entries in
+      // recency order. Evict only the excess detached cards.
+      let cacheIndex = 0;
+      for (const [workId, entry] of nextCardCache) {
+        if (++cacheIndex <= Math.max(MAX_CACHED_CARDS, cards.length)) continue;
+        entry.deactivate();
+        releaseGridImages(entry.card);
+        nextCardCache.delete(workId);
+      }
       cardCache = nextCardCache;
       if (focusTarget !== null) {
         const focusedCard = cards.find(card => card.dataset.workId === focusTarget.workId);

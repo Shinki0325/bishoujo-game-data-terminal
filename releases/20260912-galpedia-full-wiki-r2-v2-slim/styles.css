@@ -2376,6 +2376,17 @@ input[type="range"] {
   aspect-ratio: 1;
 }
 
+/* Library text has variable height. Keep it in layout, and defer only the
+   fixed-size cover so scrolling never changes a card's reserved height. */
+.catalog-grid > .selection-card {
+  contain: layout style paint;
+}
+
+.catalog-grid > .selection-card > .selection-card-cover {
+  content-visibility: auto;
+  contain-intrinsic-size: var(--selection-card-size);
+}
+
 .tier-track .work-card,
 .ranking-card {
   width: var(--ranking-card-size-scaled);
