@@ -83,14 +83,15 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
   });
 }
 
-export function withWorkListData(full,list) {
+export function withWorkListData(full,list,cards=null) {
+  const isListCard = work => list.isListCard(work) || cards?.isListCard(work) === true;
   return Object.freeze({...full,
-    getList(ids,{listPage}={}) {return listPage?list.page(listPage,ids):full.getList(ids);},
+    getList(ids,{listPage,isCurrent}={}) {return listPage?list.page(listPage,ids):cards?cards.get(ids,{isCurrent}):full.getList(ids);},
     async hydrateList(works) {
-      const missing=works.filter(work=>!list.isListCard(work));
+      const missing=works.filter(work=>!isListCard(work));
       if(!missing.length)return works;
       const rows=await full.hydrate(missing),byId=new Map(rows.map(row=>[row.workId,row]));
-      return works.map(work=>list.isListCard(work)?work:byId.get(work.workId)??work);
+      return works.map(work=>isListCard(work)?work:byId.get(work.workId)??work);
     }
   });
 }

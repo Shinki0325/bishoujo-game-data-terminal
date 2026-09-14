@@ -8,6 +8,8 @@ import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
 import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
 import { WORK_LIST } from './work-list-config.js';
 import { createWorkListData, withWorkListData } from './work-list-data.js';
+import { WORK_CARD } from './work-card-config.js';
+import { createWorkCardData } from './work-card-data.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
   && Array.isArray(a)===Array.isArray(b) && Object.keys(a).length===Object.keys(b).length
@@ -139,7 +141,9 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   restoreWorkbenchContext(uiData);
   if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
   const listData=createWorkListData({config:WORK_LIST,fetchImpl,cryptoRef});
-  const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData);
+  if(WORK_CARD.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('卡片投影来源已变化');
+  const cardData=createWorkCardData({config:WORK_CARD,workIds:uiSummary.workIds,fetchImpl,cryptoRef});
+  const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData,cardData);
   const staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
