@@ -98,6 +98,7 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
   const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
   return Object.freeze({
     preload(){alive();if(prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});return engine();},
+    prewarmSort(filterState,connection){alive();return listData?.prewarm(filterState,connection);},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
     async query(input){
       alive();const ticket=++sequence;const defaults=!disabled&&input.paged&&!input.includeProjectedCounts?await data.defaults():null;

@@ -1555,7 +1555,6 @@ async function initialize() {
   }
 
   function commitTitleQuery(titleQuery, interaction = null) {
-    const previous = String(controller.inspectState().filterState.titleQuery ?? '');
     const next = String(titleQuery ?? '');
     interactionMetrics.stage(interaction, 'debounce-complete');
     return requestWorkbenchFilterChange({titleQuery:next},interaction);
@@ -3304,6 +3303,14 @@ async function initialize() {
     for (const id of ['title-search','mobile-title-search','global-search-input','home-search-input']) {
       document.getElementById(id)?.addEventListener('focus', warmQuery);
     }
+    const sortControl=document.getElementById('sort-key');let sortWarmTimer;
+    sortControl?.addEventListener('focus',()=>{
+      clearTimeout(sortWarmTimer);
+      sortWarmTimer=setTimeout(()=>{
+        if(document.activeElement===sortControl)void Promise.resolve(filterWorkerClient.prewarmSort?.(controller.inspectState().filterState)).catch(()=>{});
+      },350);
+    });
+    for(const event of ['change','blur'])sortControl?.addEventListener(event,()=>clearTimeout(sortWarmTimer));
   }
   let globalSearch = null;
   return { search: query => {

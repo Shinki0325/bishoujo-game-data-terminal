@@ -19,9 +19,11 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
     throw Error('列表分发配置无效');
   if(!Number.isFinite(remoteCooldownMs)||remoteCooldownMs<0)throw Error('列表分发冷却无效');
   const request=createResourceRequest({...requestPolicy,fetchImpl}),cache=new Map(),grants=new Map(),remoteGrants=new Map();
+  const warmRequest=createResourceRequest({...requestPolicy,maxAttempts:1,cooldownMs:0,
+    fetchImpl:(url,init)=>fetchImpl(url,{...init,priority:'low'})});
   const remoteRequest=delivery?createResourceRequest({fetchImpl,timeoutMs:remoteTimeoutMs,maxAttempts:1,cooldownMs:0}):null;
-  let cacheBytes=0,remoteRetryAt=0,remoteRequests=0,remoteFallbacks=0;
-  function read(descriptor,kind) {
+  let cacheBytes=0,remoteRetryAt=0,remoteRequests=0,remoteFallbacks=0,warmed=false,foreground=0;
+  function read(descriptor,kind,background=false) {
     const path=descriptor?.path;
     if(!/^(?:query-[A-Za-z]+-(?:asc|desc)|page-[a-f0-9]{64})\.json\.gz$/u.test(path??'')
       ||!path.startsWith(kind+'-')||!/^[a-f0-9]{64}$/u.test(descriptor.sha256??'')
@@ -59,6 +61,8 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
             position=row.page.end;
           }
           if(position!==value.workIds.length)throw Error('列表分页不完整');
+          const first=config.firstPages?.[`${value.filterState.sortKey}-${value.filterState.sortDirection}`];
+          if(first&&!sameFields(first,value.pages[0].listPage))throw Error('排序首屏描述不符');
           const remoteQuery=delivery?.querySha256[`${value.filterState.sortKey}-${value.filterState.sortDirection}`]===key;
           for(const row of value.pages){
             grants.set(row.listPage.path,row.listPage);
@@ -79,7 +83,7 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
       }
       // Both origins must satisfy the same pinned bytes, source and size checks.
       // A failed mirror never changes the query result or selects another release.
-      return request(new URL(config.basePath+path,import.meta.url),options);
+      return (background?warmRequest:request)(new URL(config.basePath+path,import.meta.url),options);
     }).then(value=>{
         cacheBytes+=entry.bytes;
         for(const [k,item]of cache){if(cacheBytes<=maxCacheBytes)break;if(item.bytes){cache.delete(k);cacheBytes-=item.bytes;}}
@@ -89,10 +93,25 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
   }
   return Object.freeze({
     async query(filterState,defaults) {
+      foreground++;
       if(!sameFields(defaults,config.filterState))throw Error('列表默认条件来源已变化');
       if(!sameFields(filterState,{...defaults,sortKey:filterState?.sortKey,sortDirection:filterState?.sortDirection}))return null;
       const descriptor=config.queries?.[`${filterState.sortKey}-${filterState.sortDirection}`];
+      const first=config.firstPages?.[`${filterState.sortKey}-${filterState.sortDirection}`];
+      // Start both pinned files now; only a validated query grants display access.
+      if(descriptor&&first)void Promise.resolve().then(()=>read(first,'page')).catch(()=>{});
       return descriptor?read(descriptor,'query'):null;
+    },
+    async prewarm(filterState,connection=globalThis.navigator?.connection) {
+      if(warmed||connection?.saveData||/^(slow-2g|2g|3g)$/u.test(connection?.effectiveType??'')
+        ||!sameFields(filterState,{...config.filterState,sortKey:filterState?.sortKey,sortDirection:filterState?.sortDirection}))return false;
+      const sort=filterState.sortKey==='median'?'vndbScore-desc':'median-desc';
+      const q=config.queries?.[sort],p=config.firstPages?.[sort];
+      if(!q||!p||q.bytes+p.bytes>64*1024)return false;
+      warmed=true;const ticket=foreground;
+      await read(q,'query',true);
+      if(ticket!==foreground)return false;
+      await read(p,'page',true);return true;
     },
     async page(descriptor,ids) {
       if(!sameFields(grants.get(descriptor?.path),descriptor))throw Error('列表页面未获查询授权');
