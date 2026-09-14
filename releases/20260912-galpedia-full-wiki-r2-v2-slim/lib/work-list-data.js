@@ -8,11 +8,19 @@ const listCard = Symbol('validated-list-card');
 // List transport is an exact projection of pinned query results, never a new
 // authority for details, selected editions, rankings or complex filters.
 export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=globalThis.crypto,
-  decompress=globalThis.DecompressionStream,requestPolicy={},maxCacheBytes=4*1024*1024}={}) {
+  decompress=globalThis.DecompressionStream,requestPolicy={},maxCacheBytes=4*1024*1024,
+  delivery=null,remoteTimeoutMs=2500,remoteCooldownMs=60000,now=Date.now}={}) {
   if(config?.schema!=='galpedia-work-list-config-v1'||config.basePath!=='../runtime-data/work-list-v1/'
     ||!/^[a-f0-9]{64}$/u.test(config.sourceManifestSha256??''))throw Error('列表资料配置无效');
-  const request=createResourceRequest({...requestPolicy,fetchImpl}),cache=new Map(),grants=new Map();
-  let cacheBytes=0;
+  if(delivery&&(delivery.schema!=='galpedia-work-list-delivery-config-v1'
+    ||delivery.sourceManifestSha256!==config.sourceManifestSha256||delivery.minPageNumber!==2
+    ||delivery.publicBase!=='https://wiki-assets.bishojo.date/galpedia-static/v1/objects/sha256/'
+    ||!delivery.querySha256||Object.entries(delivery.querySha256).some(([sort,sha])=>config.queries?.[sort]?.sha256!==sha)))
+    throw Error('列表分发配置无效');
+  if(!Number.isFinite(remoteCooldownMs)||remoteCooldownMs<0)throw Error('列表分发冷却无效');
+  const request=createResourceRequest({...requestPolicy,fetchImpl}),cache=new Map(),grants=new Map(),remoteGrants=new Map();
+  const remoteRequest=delivery?createResourceRequest({fetchImpl,timeoutMs:remoteTimeoutMs,maxAttempts:1,cooldownMs:0}):null;
+  let cacheBytes=0,remoteRetryAt=0,remoteRequests=0,remoteFallbacks=0;
   function read(descriptor,kind) {
     const path=descriptor?.path;
     if(!/^(?:query-[A-Za-z]+-(?:asc|desc)|page-[a-f0-9]{64})\.json\.gz$/u.test(path??'')
@@ -23,7 +31,7 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
     const key=descriptor.sha256;
     if(cache.has(key)){const entry=cache.get(key);cache.delete(key);cache.set(key,entry);return entry.promise;}
     const entry={bytes:0,promise:null};
-    entry.promise=request(new URL(config.basePath+path,import.meta.url),{label:'作品列表资料',validationKey:key,
+    const options={label:'作品列表资料',validationKey:key,
       validate:async bytes=>{
         const hash=Array.from(new Uint8Array(await cryptoRef.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
         if(bytes.byteLength!==descriptor.bytes||hash!==key)throw Error('列表资料摘要不符');
@@ -51,14 +59,28 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
             position=row.page.end;
           }
           if(position!==value.workIds.length)throw Error('列表分页不完整');
-          for(const row of value.pages)grants.set(row.listPage.path,row.listPage);
+          const remoteQuery=delivery?.querySha256[`${value.filterState.sortKey}-${value.filterState.sortDirection}`]===key;
+          for(const row of value.pages){
+            grants.set(row.listPage.path,row.listPage);
+            remoteGrants.set(row.listPage.path,remoteQuery&&row.page.pageNumber>=delivery.minPageNumber);
+          }
         } else {
           if(!Array.isArray(value.works)||value.works.length>119||value.works.some(w=>typeof w?.workId!=='string')
             ||new Set(value.works.map(w=>w.workId)).size!==value.works.length)throw Error('列表卡片身份无效');
           for(const row of value.works)Object.defineProperty(row,listCard,{value:true,enumerable:true});
         }
         entry.bytes=length;return value;
-      }}).then(value=>{
+      }};
+    entry.promise=Promise.resolve().then(async()=>{
+      if(remoteRequest&&kind==='page'&&remoteGrants.get(path)&&now()>=remoteRetryAt){
+        remoteRequests++;
+        try{return await remoteRequest(new URL(`${key.slice(0,2)}/${key}.json.gz`,delivery.publicBase),options);}
+        catch{remoteFallbacks++;remoteRetryAt=now()+remoteCooldownMs;}
+      }
+      // Both origins must satisfy the same pinned bytes, source and size checks.
+      // A failed mirror never changes the query result or selects another release.
+      return request(new URL(config.basePath+path,import.meta.url),options);
+    }).then(value=>{
         cacheBytes+=entry.bytes;
         for(const [k,item]of cache){if(cacheBytes<=maxCacheBytes)break;if(item.bytes){cache.delete(k);cacheBytes-=item.bytes;}}
         return value;
@@ -79,7 +101,7 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
       return new Map(value.works.map(w=>[w.workId,w]));
     },
     isListCard:work=>work?.[listCard]===true,
-    stats:()=>({cacheBytes,cached:cache.size})
+    stats:()=>({cacheBytes,cached:cache.size,remoteRequests,remoteFallbacks,remoteRetryAt})
   });
 }
 

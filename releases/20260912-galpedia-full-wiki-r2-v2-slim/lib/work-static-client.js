@@ -7,6 +7,7 @@ import { createWorkbenchStore, readWorkbenchFile, validateWorkbenchManifest, res
 import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
 import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
 import { WORK_LIST } from './work-list-config.js';
+import { WORK_LIST_DELIVERY } from './work-list-delivery-config.js';
 import { createWorkListData, withWorkListData } from './work-list-data.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
@@ -141,7 +142,7 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   if(uiData?.schema!=='galpedia-owned-ui-v1'||uiData.sample?.works?.length!==0||uiData.ratedDisplayWorks?.length!==0)throw Error('作品UI投影无效');
   restoreWorkbenchContext(uiData);
   if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
-  const listData=createWorkListData({config:WORK_LIST,fetchImpl,cryptoRef});
+  const listData=createWorkListData({config:WORK_LIST,delivery:WORK_LIST_DELIVERY,fetchImpl,cryptoRef});
   let cardData,cardPromise;
   const cards=()=>cardPromise??=Promise.all([import('./work-card-config.js'),import('./work-card-data.js')]).then(([{WORK_CARD},{createWorkCardData}])=>{
     if(WORK_CARD.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('卡片投影来源已变化');
