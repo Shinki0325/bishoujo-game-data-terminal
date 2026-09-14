@@ -7,6 +7,7 @@ import { setListState } from '../lib/list-state.js';
 import { DEFAULT_SELECTION_CARD_DISPLAY, normalizeSelectionCardDisplay } from '../lib/selection-card-presentation.js';
 import { syncSortDirectionControl } from '../lib/ui-sort-control.js';
 import { selectionPages } from '../lib/selection-pages.js';
+import { DEFAULT_FILTER_STATE } from '../lib/state.js';
 
 const SELECT_ALL_STATES = new Set(['none', 'some', 'all']);
 const FILTER_SORT_KEYS = new Set([
@@ -200,6 +201,7 @@ export function createSelectionView({
   onPageChange = () => {},
   onPageRequest = null,
   onCancelUpdate = null,
+  onSearchAll = null,
   prepareWorks = null,
   assetBase,
   cardSurfaceSelection = false
@@ -245,6 +247,12 @@ export function createSelectionView({
   let pageIndex = 0;
   let appliedPageIndex = 0;
   let latestModel = null;
+  const searchAll = typeof onSearchAll==='function' ? documentRef.createElement('button') : null;
+  if(searchAll){
+    searchAll.id='catalog-search-all';searchAll.type='button';searchAll.className='toolbar-button toolbar-button-neutral';
+    searchAll.textContent='清除筛选后搜索全库';searchAll.hidden=true;
+    searchAll.addEventListener('click',()=>{onSearchAll();elements.title.focus();});
+  }
   let requestedSort=null,updating=false,resultCommitModel=null;
   let loadingReturnFocus=null;
   function syncRequestedSort(state){
@@ -464,6 +472,10 @@ export function createSelectionView({
         state: model.works.length === 0 ? 'empty' : 'ready',
         message: model.filterState?.selectedOnly ? '这里还没有作品。可以先去作品库选择。' : '没有匹配的作品，可以换个名称，或放宽筛选条件。'
       });
+      if(searchAll&&!keepPending)searchAll.hidden=model.works.length!==0||!Object.keys(DEFAULT_FILTER_STATE)
+        .filter(key=>!['titleQuery','sortKey','sortDirection'].includes(key))
+        .some(key=>JSON.stringify(model.filterState[key])!==JSON.stringify(DEFAULT_FILTER_STATE[key]));
+      if(searchAll&&!keepPending&&!searchAll.hidden)elements.listState.append(searchAll);
       const nextCardCache = new Map();
       const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
         .getPropertyValue('--selection-card-size')?.trim() || '180px';
@@ -640,6 +652,7 @@ export function createSelectionView({
       return renderedModel === latestModel ? [...latestWorksById.values()] : [];
     },
     beginLoading({filterState}={}) {
+      if(searchAll)searchAll.hidden=true;
       if(!updating)loadingReturnFocus=documentRef.activeElement;
       updating=true;
       if(filterState){requestedSort={...filterState};syncRequestedSort(requestedSort);}
@@ -648,7 +661,9 @@ export function createSelectionView({
       const changed=filterState&&latestModel&&(filterState.sortKey!==latestModel.filterState.sortKey||filterState.sortDirection!==latestModel.filterState.sortDirection);
       const label=elements.sortKey.selectedOptions?.[0]?.textContent??'所选方式';
       elements.listState.dataset.phase='updating';
-      setListState({status:elements.listState,state:'loading',layout:'panel',message:changed?'正在调整作品顺序':'正在整理作品列表',detail:changed?`已选择「${label}」，排好后会自动更新。`:'整理好后会自动显示，你也可以继续调整条件。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
+      const hasRows=latestWorksById.size>0;
+      if(!renderedModel)elements.pagination.hidden=true;
+      setListState({status:elements.listState,state:'loading',layout:'panel',message:changed?'正在调整作品顺序':renderedModel?'正在整理作品列表':'正在准备作品库',detail:changed?`已选择「${label}」，排好后会自动更新。`:renderedModel?'整理好后会自动显示，你也可以继续调整条件。':'首次进入会多花一点时间，正在准备全库的搜索、筛选和翻页。',cancel:hasRows?onCancelUpdate:null,slowLabel:hasRows?'还需要一点时间。你可以继续调整条件，或先看原来的作品。':'全库资料仍在准备，完成后会自动显示。'});
     },
     updateLoadingPhase(phase) {
       if(!updating)return;
@@ -659,12 +674,15 @@ export function createSelectionView({
       };
       if(!messages[phase])return;
       elements.listState.dataset.phase=phase;
-      setListState({status:elements.listState,state:'loading',layout:'panel',message:messages[phase],detail:phase==='initializing-search'?'第一次查找会多花一点时间，你可以继续修改搜索条件。':phase==='querying'?'你可以继续调整条件，找到后会自动更新列表。':'整理好后会自动显示，原来的作品会先留在这里。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
+      const hasRows=latestWorksById.size>0;
+      setListState({status:elements.listState,state:'loading',layout:'panel',message:messages[phase],detail:phase==='initializing-search'?'第一次查找会多花一点时间，你可以继续修改搜索条件。':phase==='querying'?'你可以继续调整条件，找到后会自动更新列表。':hasRows?'整理好后会自动显示，原来的作品会先留在这里。':'整理好后会自动显示作品列表。',cancel:hasRows?onCancelUpdate:null,slowLabel:hasRows?'还需要一点时间。你可以继续调整条件，或先看原来的作品。':'资料仍在准备，完成后会自动显示。'});
     },
     showLoadingError(retry, error) {
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
-      setListState({status:elements.listState,state:'error',layout:'panel',message:'这次没能加载出来',detail:'原来的作品还在。可以再试一次，也可以先继续浏览。',retry,retryAt:error?.retryAt,cancel:onCancelUpdate});
+      const hasRows=latestWorksById.size>0;
+      if(!hasRows)elements.pagination.hidden=true;
+      setListState({status:elements.listState,state:'error',layout:'panel',message:'这次没能加载出来',detail:hasRows?'原来的作品还在。可以再试一次，也可以先继续浏览。':'作品库还没准备好，请再试一次。',retry,retryAt:error?.retryAt,cancel:hasRows?onCancelUpdate:null});
     },
     cancelPendingTitleQuery() {
       return titleCommit.cancel();

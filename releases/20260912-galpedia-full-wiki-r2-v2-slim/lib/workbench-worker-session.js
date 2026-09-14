@@ -18,7 +18,9 @@ export function workbenchSourceDescriptor() {
 export function getOwnedWorkbenchClient() {
   return client??=createFilterWorkerClient({
     workerFactory:()=>new Worker(new URL('../workers/filter-worker.js',import.meta.url),{type:'module'}),
-    timeoutMs:10000,initTimeoutMs:30000,onWorkbenchData:message=>receiveData?.(message)
+    // First initialization includes the full display-card store. Keep normal
+    // interactions bounded separately from the one-time cold preparation.
+    timeoutMs:10000,initTimeoutMs:60000,onWorkbenchData:message=>receiveData?.(message)
   });
 }
 export function loadOwnedWorkbench() {

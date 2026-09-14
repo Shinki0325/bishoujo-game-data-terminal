@@ -106,14 +106,13 @@ export function canCaptureWorkbenchLanding(locationRef) {
 
 export function hasPersistedWorkbenchState(storage, storageKey = DEFAULT_WORKBENCH_STATE_STORAGE_KEY) {
   try {
-    // Keep the original landing predicate's prefix scan and its permissive
-    // zero-length/missing-storage behavior. `storageKey` remains in the
-    // signature for callers that pass the configured state key.
-    void storageKey;
+    // Theme/welcome/guide preferences do not constitute a saved workspace.
+    // Any stored workspace payload, including a corrupt one, blocks defaults
+    // until the normal state recovery path has decided how to handle it.
+    if(typeof storage?.getItem==='function')return storage.getItem(storageKey)!==null;
     for (let index = 0; index < (storage?.length ?? 0); index += 1) {
       const key = storage.key(index);
-      if (typeof key === 'string' && key.startsWith('egs-tier-terminal:')
-        && key !== THEME_KEY && key !== WORKBENCH_LANDING_SNAPSHOT_KEY) return true;
+      if(key===storageKey)return true;
     }
     return false;
   } catch {

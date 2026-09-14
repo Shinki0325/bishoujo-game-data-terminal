@@ -144,6 +144,7 @@ export function createFilterWorkerClient(input) {
     if (entry.type === 'company-work-ids' && message.type === 'company-work-ids') {entry.resolve(message.workIds);return;}
     if (entry.type === 'person-catalog' && message.type === 'person-catalog') {entry.resolve(message.works);return;}
     if (entry.type === 'work-metadata' && message.type === 'work-metadata') {entry.resolve(message.rows);return;}
+    if (entry.type === 'work-list-cards' && message.type === 'work-list-cards') {entry.resolve(message.rows);return;}
     entry.reject(new FilterWorkerError('filter worker returned an unexpected response', {
       code: 'WORKER_PROTOCOL_ERROR',
       requestId: message.id
@@ -281,6 +282,10 @@ export function createFilterWorkerClient(input) {
     async workMetadata(workIds, kind) {
       await ensureInitialized();
       return request('work-metadata',{workIds,kind});
+    },
+    async listCards(workIds) {
+      await ensureInitialized();
+      return request('work-list-cards',{workIds});
     },
     async warmSearch() {
       await ensureInitialized();

@@ -4,13 +4,19 @@ const equal = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const sameFields = (a,b) => a && b && Object.keys(a).length === Object.keys(b).length
   && Object.keys(a).every(key => Object.hasOwn(b,key) && equal(a[key],b[key]));
 const listCard = Symbol('validated-list-card');
+const sharedLists = new WeakMap();
+export function getSharedWorkListData(config) {
+  if(!sharedLists.has(config))sharedLists.set(config,createWorkListData({config,maxCacheBytes:8*1024*1024}));
+  return sharedLists.get(config);
+}
 
 // List transport is an exact projection of pinned query results, never a new
 // authority for details, selected editions, rankings or complex filters.
 export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=globalThis.crypto,
   decompress=globalThis.DecompressionStream,requestPolicy={},maxCacheBytes=4*1024*1024,
   delivery=null,remoteTimeoutMs=2500,remoteCooldownMs=60000,now=Date.now}={}) {
-  if(config?.schema!=='galpedia-work-list-config-v1'||config.basePath!=='../runtime-data/work-list-v1/'
+  const fullCatalog = config?.basePath === '../runtime-data/work-full-list-v1/';
+  if(config?.schema!=='galpedia-work-list-config-v1'||!['../runtime-data/work-list-v1/','../runtime-data/work-full-list-v1/'].includes(config.basePath)
     ||!/^[a-f0-9]{64}$/u.test(config.sourceManifestSha256??''))throw Error('列表资料配置无效');
   if(delivery&&(delivery.schema!=='galpedia-work-list-delivery-config-v1'
     ||delivery.sourceManifestSha256!==config.sourceManifestSha256||delivery.minPageNumber!==2
@@ -65,6 +71,7 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
           if(first&&!sameFields(first,value.pages[0].listPage))throw Error('排序首屏描述不符');
           const remoteQuery=delivery?.querySha256[`${value.filterState.sortKey}-${value.filterState.sortDirection}`]===key;
           for(const row of value.pages){
+            if(!row.listPage) { if(!fullCatalog)throw Error('列表页面描述缺失'); continue; }
             grants.set(row.listPage.path,row.listPage);
             remoteGrants.set(row.listPage.path,remoteQuery&&row.page.pageNumber>=delivery.minPageNumber);
           }
@@ -92,6 +99,18 @@ export function createWorkListData({config,fetchImpl=globalThis.fetch,cryptoRef=
     cache.set(key,entry);return entry.promise;
   }
   return Object.freeze({
+    ownsPage: descriptor => sameFields(grants.get(descriptor?.path),descriptor),
+    async prepare() {
+      if(!fullCatalog)return;
+      // Warm compact ordering indexes and two pages per common sort once.
+      // No complete card corpus or original detail shards are duplicated.
+      for(let offset=0;offset<Object.keys(config.queries).length;offset+=2) {
+        await Promise.all(Object.values(config.queries).slice(offset,offset+2).map(async descriptor=>{
+          const value=await read(descriptor,'query');
+          await Promise.all(value.pages.slice(0,2).filter(row=>row.listPage).map(row=>read(row.listPage,'page')));
+        }));
+      }
+    },
     async query(filterState,defaults) {
       foreground++;
       if(!sameFields(defaults,config.filterState))throw Error('列表默认条件来源已变化');

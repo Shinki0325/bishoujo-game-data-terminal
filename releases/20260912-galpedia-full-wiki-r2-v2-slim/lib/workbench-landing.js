@@ -1,10 +1,11 @@
 import {createWorkspaceSession} from './workspace-session.js';
 import {createViewLifetime} from './view-lifetime.js';
-import {createStaticSiteDataClient} from './page-data-client.js';
 import {configuredAssetBase} from './runtime-config.js';
 import {resolveAssetUrl, installExternalCoverImageRecovery} from './asset-url-core.js';
 import {createSelectionCard} from '../views/selection-card.js';
 import {createSelectionCardPresentation} from './selection-card-presentation.js';
+import { WORK_FULL_LIST } from './work-full-list-config.js';
+import { getSharedWorkListData } from './work-list-data.js';
 import {
   WORKBENCH_LANDING_SNAPSHOT_KEY,
   captureWorkbenchLandingSnapshot,
@@ -42,10 +43,11 @@ export function createWorkbenchLanding({documentRef=document,locationRef=locatio
     write:()=>{}
   });
   let preview=null,style=null,held=[],pending=null,previewRoute=null;
-  const staticSiteData = createStaticSiteDataClient();
   async function loadStaticLanding() {
-    const page = await staticSiteData.getBrowsePage('worksDefault', 1);
-    const records = Array.isArray(page.records) ? page.records : [];
+    const lists=getSharedWorkListData(WORK_FULL_LIST);
+    const query=await lists.query(WORK_FULL_LIST.filterState,WORK_FULL_LIST.filterState);
+    const first=query.pages[0];
+    const records=[...(await lists.page(first.listPage,query.workIds.slice(first.page.start,first.page.end))).values()];
     const works = records.map(record => ({
       ...record,
       workId: String(record.workId ?? record.default_edition_id ?? record.id),
@@ -59,8 +61,8 @@ export function createWorkbenchLanding({documentRef=document,locationRef=locatio
     const assetBase = configuredAssetBase({ documentRef });
     const imageUrl = value => !value ? null : /^[a-z][a-z0-9+.-]*:/iu.test(value) ? value : resolveAssetUrl(value, assetBase);
     const coverUrls = new Map(works.map(work => [work.workId, {
-      thumbnailUrl: imageUrl(work.coverPath),
-      previewUrl: imageUrl(work.previewUrl)
+      thumbnailUrl: imageUrl(work.projectedThumbnailPath ?? work.thumbnailPath ?? work.coverPath),
+      previewUrl: imageUrl(work.projectedPreviewPath ?? work.previewUrl)
     }]));
     return {works, coverUrls};
   }
@@ -100,11 +102,11 @@ export function createWorkbenchLanding({documentRef=document,locationRef=locatio
       preview.setAttribute('aria-label',snapshot?'上次作品结果预览':'默认排序的首屏作品');
       const note=documentRef.createElement('p');note.className='workbench-landing-note';note.setAttribute('role','status');
       note.textContent=snapshot
-        ? `先恢复上次显示的 ${Math.min(payload.works.length,28)} 部作品 · 完整筛选与排序正在准备，详情可点击后等待打开。`
-        : `先展示默认排序前 ${Math.min(payload.works.length,28)} 部作品 · 全库搜索与筛选正在准备，详情可点击后等待打开。`;
+        ? `先恢复上次显示的 ${Math.min(payload.works.length,12)} 部作品 · 正在准备搜索和筛选，准备好后即可继续操作。`
+        : `先显示全库排序前 ${Math.min(payload.works.length,12)} 部作品 · 正在准备搜索和筛选，准备好后即可继续操作。`;
       const cards=documentRef.createElement('div');cards.className='catalog-grid';cards.id='workbench-first-page-grid';
       const assetBase=documentRef.querySelector('meta[name="egs-tier-asset-base"]')?.content;
-      for(const [index,work] of payload.works.slice(0,28).entries())cards.append(createSelectionCard(documentRef,work,{
+      for(const [index,work] of payload.works.slice(0,12).entries())cards.append(createSelectionCard(documentRef,work,{
         eagerCover:index<12,priorityCover:index===0,
         view:'full',selected:false,selectionEnabled:false,assetBase,
         display,

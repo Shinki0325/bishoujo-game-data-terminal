@@ -187,7 +187,7 @@ function frozenDefaultFilterState() {
     ['mode', 'basic'],
     ['titleQuery', ''],
     ['minimumScore', 0],
-    ['minimumVoteCount', 30],
+    ['minimumVoteCount', 0],
     ['brandIds', Object.freeze([])],
     ['attributeSelections', DEFAULT_ATTRIBUTE_SELECTIONS],
     ['basicOperator', 'AND'],

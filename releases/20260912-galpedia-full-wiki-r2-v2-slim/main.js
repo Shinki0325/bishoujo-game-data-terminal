@@ -737,7 +737,12 @@ async function initialize() {
     companyAliasesById: workerCompanyAliasesById,
     companyPinyinById: workerCompanyPinyinById
   };
-  const ensureFilterWorker = createLazyResource(() => startupMetrics.measureAsync('filter-worker-init', () => filterWorkerClient.init(filterWorkerPayload)));
+  const ensureFilterWorker = createLazyResource(() => startupMetrics.measureAsync('filter-worker-init', async () => {
+    await filterWorkerClient.init(filterWorkerPayload);
+    // The library is interactive only after its shared query engine and the
+    // common list resources are prepared, including restored filtered sessions.
+    if(STATIC_SITE_MODE)await filterWorkerClient.preload();
+  }));
   if (/^#works(?:[/?]|$)/u.test(window.location.hash)) {
     void ensureFilterWorker().catch(() => {});
     // Let the initialization message leave before preparing directory/UI models.
@@ -1651,6 +1656,11 @@ async function initialize() {
       return render([], interaction);
     },
     onCancelUpdate: cancelWorkbenchUpdate,
+    onSearchAll(){
+      const {titleQuery,sortKey,sortDirection}=controller.inspectState().filterState;
+      controller.clearFilters();controller.setFilterState({titleQuery,sortKey,sortDirection});
+      selectionView.setPageNumber(1,{scroll:false,notify:false});void render();
+    },
     assetBase,
     cardSurfaceSelection: true
   });
@@ -2936,9 +2946,12 @@ async function initialize() {
         setWorkSelectionMode(false); rankingSubject = 'work';
         const [sortKey, sortDirection] = route.sort.split('-');
         controller.setWorkspaceMode('selection');
-        // URL carries title/sort only: do not merge a previous tag/attribute draft.
-        controller.clearFilters();
-        controller.setFilterState({ titleQuery: route.query, sortKey, sortDirection });
+        // A plain library entry resumes the saved conditions. Explicit search
+        // links describe a fresh all-library query and keep their URL semantics.
+        if(!/^#works\/?$/u.test(window.location.hash)){
+          controller.clearFilters();
+          controller.setFilterState({ titleQuery: route.query, sortKey, sortDirection });
+        }
         currentWorkDetailId = null;
       },
       setPage: page => selectionView.setPageNumber(page, { scroll: false, notify: false }),
@@ -3320,8 +3333,8 @@ async function initialize() {
   renderKeeperGuidance();
   openShareImportDialog();
   if (STATIC_SITE_MODE) {
-    // User intent starts the complete shared engine before the first query.
-    // Ordinary browsing/scrolling never downloads it speculatively.
+    // Routes that have not entered the work library can still prepare it from
+    // explicit search intent. Library initialization already awaited this work.
     const warmQuery = () => { void ensureFilterWorker().then(() => filterWorkerClient.preload()).catch(() => {}); };
     for (const id of ['title-search','mobile-title-search','global-search-input','home-search-input']) {
       document.getElementById(id)?.addEventListener('focus', warmQuery);

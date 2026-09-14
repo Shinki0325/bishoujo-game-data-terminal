@@ -8,7 +8,9 @@ import { validateWorkbenchUISummary } from './workbench-ui-summary.js';
 import { withFullWikiWorkMedia } from './full-wiki-work-data.js';
 import { WORK_LIST } from './work-list-config.js';
 import { WORK_LIST_DELIVERY } from './work-list-delivery-config.js';
-import { createWorkListData, withWorkListData } from './work-list-data.js';
+import { createWorkListData, getSharedWorkListData, withWorkListData } from './work-list-data.js';
+import { WORK_FULL_LIST } from './work-full-list-config.js';
+import { selectionPages } from './selection-pages.js';
 
 const same = (a,b) => a===b || (a && b && typeof a==='object' && typeof b==='object'
   && Array.isArray(a)===Array.isArray(b) && Object.keys(a).length===Object.keys(b).length
@@ -89,15 +91,15 @@ export function createStaticWorkData({config=WORK_STATIC,fetchImpl=globalThis.fe
 
 // Default browsing and detail metadata have pinned projections. Any other
 // query delegates to the existing complete engine with its original inputs.
-export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null,prepareCards=null}) {
+export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null,prepareCards=null,includeWorkCards=false}) {
   let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false,engineReady=false;
   const alive=()=>{if(terminated)throw Error('作品查询已结束');};
-  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init({...payload,includeWorkbenchUI:false});engineReady=true;return real;})
+  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init({...payload,includeWorkbenchUI:false,...(includeWorkCards?{includeWorkCards:true}:{})});engineReady=true;return real;})
     .catch(error=>{realPromise=null;engineReady=false;throw error;});};
   const delegate=async(method,...args)=>(await engine())[method](...args);
   const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
   return Object.freeze({
-    preload(){alive();if(prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});return engine();},
+    preload(){alive();return Promise.all([engine(),prepareCards?.(),listData?.prepare?.()]);},
     prewarmSort(filterState,connection){alive();return listData?.prewarm(filterState,connection);},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
     async query(input,{onProgress=()=>{}}={}){
@@ -111,7 +113,10 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
         const changed=mode!==null&&(mode!=='static'||!same(activeRows?.workIds,rows.workIds));
         if(mode!=='static'||changed)virtualRevision++;
         mode='static';activeRevision=`static:${virtualRevision}`;activeRows=rows;
-        const index=changed?0:Math.min(input.pageNumber,rows.pages.length)-1,row=rows.pages[index];
+        const pages=selectionPages(rows.workIds.length);
+        const index=changed?0:Math.min(input.pageNumber,pages.length)-1,page=pages[index];
+        const compiled=rows.pages.find(row=>row.page.start===page.start&&row.page.end===page.end);
+        const row={page:{...page,pageNumber:index+1,pageCount:pages.length,total:rows.workIds.length},listPage:compiled?.listPage};
         const selected=new Set(input.selectedWorkIds??[]),selectedCount=rows.workIds.reduce((n,id)=>n+Number(selected.has(id)),0);
         return {status:'ok',workIds:rows.workIds.slice(row.page.start,row.page.end),counts:rows.counts,
           ...(row.listPage?{listPage:row.listPage}:{}),page:{...row.page,resultRevision:activeRevision,
@@ -128,6 +133,7 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
       const result=await ready.query(input);return ticket===sequence?result:{status:'stale'};
     },
     counts:input=>delegate('counts',input),
+    listCards:ids=>delegate('listCards',ids),
     async resultIds(revision){alive();if(typeof revision==='string'&&revision.startsWith('static:')){
       if(revision!==activeRevision||!activeRows)throw Error('作品结果已变化');return [...activeRows.workIds];
     }if(mode!=='worker')throw Error('作品结果已变化');return delegate('resultIds',revision);},
@@ -149,17 +155,34 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   if(uiData?.schema!=='galpedia-owned-ui-v1'||uiData.sample?.works?.length!==0||uiData.ratedDisplayWorks?.length!==0)throw Error('作品UI投影无效');
   restoreWorkbenchContext(uiData);
   if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
-  const listData=createWorkListData({config:WORK_LIST,delivery:WORK_LIST_DELIVERY,fetchImpl,cryptoRef});
-  let cardData,cardPromise;
-  const cards=()=>cardPromise??=Promise.all([import('./work-card-config.js'),import('./work-card-data.js')]).then(([{WORK_CARD},{createWorkCardData}])=>{
-    if(WORK_CARD.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('卡片投影来源已变化');
-    return cardData=createWorkCardData({config:WORK_CARD,workIds:uiSummary.workIds,fetchImpl,cryptoRef});
-  }).catch(error=>{cardPromise=null;throw error;});
+  if(WORK_FULL_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('全库列表来源已变化');
+  const legacyLists=createWorkListData({config:WORK_LIST,delivery:WORK_LIST_DELIVERY,fetchImpl,cryptoRef});
+  const fullLists=fetchImpl===globalThis.fetch&&cryptoRef===globalThis.crypto?getSharedWorkListData(WORK_FULL_LIST)
+    :createWorkListData({config:WORK_FULL_LIST,fetchImpl,cryptoRef,maxCacheBytes:8*1024*1024});
+  let fullListsAvailable=true;
+  const fullFallback=error=>{fullListsAvailable=false;console.warn('全库预计算列表暂不可用，使用已准备的查询引擎',error);};
+  const listData={
+    async prepare(){try{await fullLists.prepare();}catch(error){fullFallback(error);}},
+    async query(filterState,defaults){
+      if(fullListsAvailable){try{const result=await fullLists.query(filterState,WORK_FULL_LIST.filterState);if(result)return result;}catch(error){fullFallback(error);}}
+      return legacyLists.query(filterState,defaults);
+    },
+    prewarm:(filterState,connection)=>fullListsAvailable?fullLists.prewarm(filterState,connection):legacyLists.prewarm(filterState,connection),
+    page:(descriptor,ids)=>(fullLists.ownsPage(descriptor)?fullLists:legacyLists).page(descriptor,ids),
+    isListCard:work=>fullLists.isListCard(work)||legacyLists.isListCard(work)
+  };
+  const displayedCards=new WeakSet();let staticQueryClient;
   const workData=withWorkListData(withFullWikiWorkMedia(createWorkbenchStore(manifest,uiSummary.workIds,{baseUrl:url,fetchImpl,cryptoRef}),null),listData,{
-    get:async(...args)=>(await cards()).get(...args),isListCard:work=>cardData?.isListCard(work)===true
+    async get(ids,{isCurrent=()=>true}={}){
+      if(!isCurrent())throw Error('作品结果已更新');
+      const rows=await staticQueryClient.listCards(ids);
+      if(!isCurrent())throw Error('作品结果已更新');
+      if(rows.length!==ids.length||rows.some((row,i)=>row.workId!==ids[i]))throw Error('全库卡片响应不符');
+      for(const row of rows)displayedCards.add(row);
+      return new Map(rows.map(row=>[row.workId,row]));
+    },isListCard:work=>displayedCards.has(work)
   });
-  const staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,
-    prepareCards:async()=>(await cards()).prepare(),
+  staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,includeWorkCards:true,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
     uiSummary,workerOwned:true,workData,staticQueryClient};

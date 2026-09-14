@@ -7,6 +7,12 @@ import {FULL_WIKI_RUNTIME} from './full-wiki-runtime-config.js';
 export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onData}) {
   let owned=null, window=null, search=null;
   return async message=>{
+    if(message?.type==='work-list-cards') {
+      try {
+        if(!owned?.cards)throw Error('全库浏览资料尚未准备');
+        return {id:message.id,type:'work-list-cards',rows:owned.cards.get(message.payload?.workIds)};
+      }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message}};}
+    }
     if (message?.type === 'work-metadata') {
       try {
         if(!owned)throw new TypeError('owned catalog has not been initialized');
@@ -75,11 +81,17 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
     const source=message.payload.workbenchSource;
     try {
       if(message.payload.includeWorkbenchUI!==undefined&&typeof message.payload.includeWorkbenchUI!=='boolean')throw new TypeError('invalid workbench UI delivery option');
+      if(message.payload.includeWorkCards!==undefined&&typeof message.payload.includeWorkCards!=='boolean')throw new TypeError('invalid workbench card delivery option');
       // Static pages already loaded their pinned UI projection. Keep the
       // legacy delivery path for callers that need the worker to supply it.
       const includeUI=message.payload.includeWorkbenchUI!==false;
       const replacing=!owned||owned.sha256!==source.sha256||owned.media!==source.media;
+      const cardsPending=message.payload.includeWorkCards
+        ? import('./work-full-cards.js').then(module=>module.loadFullWorkCards(source.sha256)) : null;
+      cardsPending?.catch(()=>{});
       const bundle=replacing?await loadSource(source):null,data=bundle?.data;
+      const cards=cardsPending?await cardsPending:owned?.cards??null;
+      cards?.bind((data??owned.data).ratedDisplayWorks.map(work=>work.workId));
       const uiSummary=replacing&&includeUI?createWorkbenchUISummary(data,{includeCompanies:!(FULL_WIKI_RUNTIME.enabled&&Boolean(data.fullWiki))}):null;
       const uiData=replacing&&includeUI?createOwnedWorkbenchUI(data):null;
       if(data&&onData&&includeUI)onData({id:message.id,type:'workbench-data',manifestSha256:source.sha256,uiData,uiSummary});
@@ -101,7 +113,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       if(result.type==='error')return result;
       if (!replacing) nextWindow.invalidate();
       if(replacing)search=null;
-      owned={sha256:source.sha256,media:source.media,options:updated,data:replacing?data:owned.data};
+      owned={sha256:source.sha256,media:source.media,options:updated,data:replacing?data:owned.data,cards};
       window=nextWindow;
       return data&&!onData&&includeUI?{...result,manifestSha256:source.sha256,uiData,uiSummary}:result;
     }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message,code:error.code,
