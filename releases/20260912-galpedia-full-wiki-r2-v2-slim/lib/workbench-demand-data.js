@@ -243,7 +243,12 @@ export async function loadWorkerWorkbenchBundle(source,{config=WORKBENCH_DEMAND,
     throw new TypeError('预计算搜索来源不匹配');
   const searchPromise=preparedSearch?loadPrecomputedSearchText(WORK_SEARCH,{fetchImpl,cryptoRef}):null;
   searchPromise?.catch(()=>{});
-  const bytes=await readWorkbenchBytes(new URL(descriptor.path,url),descriptor.sha256,{fetchImpl,cryptoRef});
+  // The initial query bundle shares bandwidth with cards and search data.
+  // Keep its read budget inside the 60s initialization window without applying
+  // the small-resource 15s timeout to a healthy large transfer. Retries and SHA
+  // checks remain unchanged; normal interaction requests keep their own limit.
+  const requestResource=createResourceRequest({fetchImpl,timeoutMs:30000});
+  const bytes=await readWorkbenchBytes(new URL(descriptor.path,url),descriptor.sha256,{fetchImpl,cryptoRef,requestResource});
   if(descriptor===compact && bytes.byteLength!==compact.bytes)throw new TypeError('紧凑查询数据长度不匹配');
   const body=JSON.parse(new TextDecoder().decode(bytes));
   if(deferred&&body.mediaMode!=='on-demand-v1')throw new TypeError('查询线程媒体索引不兼容');
