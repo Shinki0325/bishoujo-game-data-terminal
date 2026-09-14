@@ -713,7 +713,7 @@ async function initialize() {
     workData, workerOwned: preparedWorkbench.workerOwned,
     ensureFilterWorker: () => ensureFilterWorker(),
     ensureRankingView: () => ensureRankingView(),
-    query: request => filterWorkerClient.query(request),
+    query: (request, options) => filterWorkerClient.query(request, options),
     resultIds: revision => filterWorkerClient.resultIds(revision),
     metrics: interactionMetrics
   });
@@ -1570,6 +1570,23 @@ async function initialize() {
     return commitTitleQuery('', interaction);
   }
 
+  function cancelWorkbenchUpdate() {
+    selectionView.cancelPendingTitleQuery();
+    requestedFilterState=null;
+    workbenchQuery.suspend();
+    selectionView.suspend();
+    selectionView.restoreAppliedPage();
+    const title=controller.inspectState().filterState.titleQuery;
+    elements.titleSearch.value=title;
+    elements.mobileTitleSearch.value=title;
+    elements.titleSearchClear.hidden=!title;
+    elements.mobileTitleSearchClear.hidden=!title;
+    selectionView.restoreLoadingFocus();
+    // Restore the applied query/window; the cancelled observer cannot commit.
+    // A shared initial preparation can finish and be reused by a later query.
+    void render();
+  }
+
   const selectionView = createSelectionView({
     prepareWorks: workData ? async works => {
       const hydrated = await (workData.hydrateList ? workData.hydrateList(works) : workData.hydrate(works));
@@ -1633,6 +1650,7 @@ async function initialize() {
       interactionMetrics.stage(interaction, 'debounce-complete');
       return render([], interaction);
     },
+    onCancelUpdate: cancelWorkbenchUpdate,
     assetBase,
     cardSurfaceSelection: true
   });
@@ -2468,7 +2486,8 @@ async function initialize() {
     const queryResult = await workbenchQuery.run({
       state, directoryOpen: personDirectoryOpen || companyDirectoryOpen,
       comparisonIds: comparison.ids, pageNumber: selectionView.getPageNumber(),
-      includeFilterCounts, visibleBrands
+      includeFilterCounts, visibleBrands,
+      onProgress: phase => { if(updatingSelection)selectionView.updateLoadingPhase(phase); }
     }, interaction);
     if (queryResult.status === 'error' && queryResult.generation.isCurrent()) {
       if (updatingSelection) selectionView.showLoadingError(() => { void render(); }, queryResult.error);

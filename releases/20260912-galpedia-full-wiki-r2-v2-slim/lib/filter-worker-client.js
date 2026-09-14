@@ -1,9 +1,10 @@
 export class FilterWorkerError extends Error {
-  constructor(message, { code = 'WORKER_QUERY_FAILED', requestId = null, cause } = {}) {
+  constructor(message, { code = 'WORKER_QUERY_FAILED', requestId = null, cause, retryAt = 0 } = {}) {
     super(message, cause === undefined ? undefined : { cause });
     this.name = 'FilterWorkerError';
     this.code = code;
     this.requestId = requestId;
+    this.retryAt = Number.isFinite(retryAt) ? Math.max(0, retryAt) : 0;
   }
 }
 
@@ -103,7 +104,8 @@ export function createFilterWorkerClient(input) {
         message.error?.message ?? 'filter worker query failed',
         {
           code: message.error?.code ?? 'WORKER_QUERY_FAILED',
-          requestId: message.id
+          requestId: message.id,
+          retryAt: message.error?.retryAt
         }
       ));
       return;

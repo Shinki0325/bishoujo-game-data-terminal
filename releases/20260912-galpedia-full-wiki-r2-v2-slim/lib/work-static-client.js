@@ -90,17 +90,17 @@ export function createStaticWorkData({config=WORK_STATIC,fetchImpl=globalThis.fe
 // Default browsing and detail metadata have pinned projections. Any other
 // query delegates to the existing complete engine with its original inputs.
 export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha256,listData=null,prepareCards=null}) {
-  let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false;
+  let real,realPromise,payload,terminated=false,sequence=0,mode=null,virtualRevision=0,activeRevision=null,activeRows=null,disabled=false,engineReady=false;
   const alive=()=>{if(terminated)throw Error('作品查询已结束');};
-  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init({...payload,includeWorkbenchUI:false});return real;})
-    .catch(error=>{realPromise=null;throw error;});};
+  const engine=()=>{alive();return realPromise??=Promise.resolve().then(async()=>{real??=await workerFactory();if(terminated){real.terminate();alive();}await real.init({...payload,includeWorkbenchUI:false});engineReady=true;return real;})
+    .catch(error=>{realPromise=null;engineReady=false;throw error;});};
   const delegate=async(method,...args)=>(await engine())[method](...args);
   const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
   return Object.freeze({
     preload(){alive();if(prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});return engine();},
     prewarmSort(filterState,connection){alive();return listData?.prewarm(filterState,connection);},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
-    async query(input){
+    async query(input,{onProgress=()=>{}}={}){
       alive();const ticket=++sequence;const defaults=!disabled&&input.paged&&!input.includeProjectedCounts?await data.defaults():null;
       if(ticket!==sequence)return {status:'stale'};
       const preset=defaults&&listData?await listData.query(input.filterState,defaults.filterState):null;
@@ -120,7 +120,12 @@ export function createStaticWorkQueryClient({data,workerFactory,count,sourceSha2
       // Start the routing index alongside an actual full-engine result query.
       // Filter-count previews and preset lists do not need card transport.
       if(input.paged&&!input.includeProjectedCounts&&prepareCards) Promise.resolve().then(prepareCards).catch(()=>{});
-      mode='worker';activeRevision=null;activeRows=null;const result=await delegate('query',input);return ticket===sequence?result:{status:'stale'};
+      mode='worker';activeRevision=null;activeRows=null;
+      if(!engineReady)onProgress('initializing-search');
+      const ready=await engine();
+      if(ticket!==sequence)return {status:'stale'};
+      onProgress('querying');
+      const result=await ready.query(input);return ticket===sequence?result:{status:'stale'};
     },
     counts:input=>delegate('counts',input),
     async resultIds(revision){alive();if(typeof revision==='string'&&revision.startsWith('static:')){

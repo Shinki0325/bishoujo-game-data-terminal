@@ -199,6 +199,7 @@ export function createSelectionView({
   onInteractionStart = () => null,
   onPageChange = () => {},
   onPageRequest = null,
+  onCancelUpdate = null,
   prepareWorks = null,
   assetBase,
   cardSurfaceSelection = false
@@ -242,8 +243,10 @@ export function createSelectionView({
   assertFunction(onPageChange, 'onPageChange');
   let renderedWorkKey = '';
   let pageIndex = 0;
+  let appliedPageIndex = 0;
   let latestModel = null;
   let requestedSort=null,updating=false,resultCommitModel=null;
+  let loadingReturnFocus=null;
   function syncRequestedSort(state){
     elements.sortKey.value=state.sortKey;
     syncSortDirectionControl({button:elements.sortDirectionToggle,icon:elements.sortDirectionIcon,label:elements.sortDirectionLabel,direction:state.sortDirection,documentRef});
@@ -342,7 +345,7 @@ export function createSelectionView({
   function requestRemotePage() {
     const generation = hydrationSession.begin('result-page');
     remotePagePending = true;
-    setListState({status:elements.listState,state:'loading',message:'正在载入下一页作品…'});
+    setListState({status:elements.listState,state:'loading',layout:'panel',message:'正在翻到下一页',detail:'下一页还需要一点时间，你可以先看看当前的作品。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
     elements.grid.setAttribute('aria-busy', 'true');
     elements.grid.inert = false;
     elements.selectCurrentPage.disabled = true;
@@ -355,7 +358,7 @@ export function createSelectionView({
       generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
-      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。',retry:requestRemotePage,retryAt:error.retryAt});
+      setListState({status:elements.listState,state:'error',layout:'panel',message:'这次没能加载出来',detail:'原来的作品还在。可以再试一次，也可以先继续浏览。',retry:requestRemotePage,retryAt:error.retryAt,cancel:onCancelUpdate});
       console.warn('work result page failed', error);
     });
   }
@@ -415,7 +418,7 @@ export function createSelectionView({
     elements.grid.setAttribute('aria-busy', 'true');
     elements.grid.inert = false;
     elements.selectCurrentPage.disabled = true;
-    setListState({status:elements.listState,state:'loading',message:'正在载入作品资料…'});
+    setListState({status:elements.listState,state:'loading',layout:'panel',message:'正在整理作品列表',detail:'整理好后会自动显示，原来的作品会先留在这里。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
     return Promise.resolve(prepareWorks(inputs)).then(works => {
       if (!generation.isCurrent() || latestModel !== model) return;
       hydratedInputs=inputs;hydratedPage=works;
@@ -428,7 +431,7 @@ export function createSelectionView({
       generation.fail(error);
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
-      setListState({status:elements.listState,state:'error',message:'作品资料加载失败，请重试。',retry:() => renderLatest(),retryAt:error.retryAt});
+      setListState({status:elements.listState,state:'error',layout:'panel',message:'这次没能加载出来',detail:'原来的作品还在。可以再试一次，也可以先继续浏览。',retry:() => renderLatest(),retryAt:error.retryAt,cancel:onCancelUpdate});
       console.warn('work card hydration failed', error);
     });
   }
@@ -560,6 +563,7 @@ export function createSelectionView({
         nextCardCache.set(workId, entry);
       }
       reconcileKeyedChildren(elements.grid, cards);
+      if(!keepPending)appliedPageIndex=pageIndex;
       // Visible entries were inserted first, followed by retained entries in
       // recency order. Evict only the excess detached cards.
       let cacheIndex = 0;
@@ -635,21 +639,41 @@ export function createSelectionView({
       return renderedModel === latestModel ? [...latestWorksById.values()] : [];
     },
     beginLoading({filterState}={}) {
+      if(!updating)loadingReturnFocus=documentRef.activeElement;
       updating=true;
       if(filterState){requestedSort={...filterState};syncRequestedSort(requestedSort);}
       elements.grid.setAttribute('aria-busy', 'true');elements.grid.inert=false;
       elements.selectCurrentPage.disabled=true;elements.selectAllResults.disabled=true;
       const changed=filterState&&latestModel&&(filterState.sortKey!==latestModel.filterState.sortKey||filterState.sortDirection!==latestModel.filterState.sortDirection);
       const label=elements.sortKey.selectedOptions?.[0]?.textContent??'所选方式';
-      setListState({status:elements.listState,state:'loading',message:changed?`正在按${label}排序 · 保留上次结果…`:'正在更新作品列表 · 保留上次结果…'});
+      elements.listState.dataset.phase='updating';
+      setListState({status:elements.listState,state:'loading',layout:'panel',message:changed?'正在调整作品顺序':'正在整理作品列表',detail:changed?`已选择「${label}」，排好后会自动更新。`:'整理好后会自动显示，你也可以继续调整条件。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
+    },
+    updateLoadingPhase(phase) {
+      if(!updating)return;
+      const messages={
+        'initializing-search':'正在查找作品',
+        'querying':'正在查找作品',
+        'loading-results':'正在整理作品列表'
+      };
+      if(!messages[phase])return;
+      elements.listState.dataset.phase=phase;
+      setListState({status:elements.listState,state:'loading',layout:'panel',message:messages[phase],detail:phase==='initializing-search'?'第一次查找会多花一点时间，你可以继续修改搜索条件。':phase==='querying'?'你可以继续调整条件，找到后会自动更新列表。':'整理好后会自动显示，原来的作品会先留在这里。',cancel:onCancelUpdate,slowLabel:'还需要一点时间。你可以继续调整条件，或先看原来的作品。'});
     },
     showLoadingError(retry, error) {
       elements.grid.setAttribute('aria-busy', 'false');
       elements.grid.inert = false;
-      setListState({status:elements.listState,state:'error',message:'更新失败，当前仍显示上次结果。',retry,retryAt:error?.retryAt});
+      setListState({status:elements.listState,state:'error',layout:'panel',message:'这次没能加载出来',detail:'原来的作品还在。可以再试一次，也可以先继续浏览。',retry,retryAt:error?.retryAt,cancel:onCancelUpdate});
     },
     cancelPendingTitleQuery() {
       return titleCommit.cancel();
+    },
+    restoreLoadingFocus() {
+      if(loadingReturnFocus?.isConnected&&loadingReturnFocus.getClientRects?.().length)loadingReturnFocus.focus({preventScroll:true});
+      loadingReturnFocus=null;
+    },
+    restoreAppliedPage() {
+      pageIndex=appliedPageIndex;
     },
 
     setSelectionMode(active) {

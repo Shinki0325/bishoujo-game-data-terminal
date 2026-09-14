@@ -14,10 +14,11 @@ export function createWorkbenchQueryController({
     return { status: 'stale' };
   };
   async function run({ state, directoryOpen, comparisonIds, pageNumber,
-    includeFilterCounts, visibleBrands }, interaction) {
+    includeFilterCounts, visibleBrands, onProgress = () => {} }, interaction) {
     const generation = session.begin('workbench-render');
     ticket = generation;
     page = null;
+    const progress = phase => { if (generation.isCurrent()) onProgress(phase); };
     let outcome;
     try {
       // Pin the current board before hydration. This method is closure-bound
@@ -38,11 +39,12 @@ export function createWorkbenchQueryController({
         ...(workerOwned ? { paged: true, pageNumber } : {}),
         filterState: state.filterState, selectedWorkIds: state.selectedWorkIds,
         includeProjectedCounts: includeFilterCounts, visibleBrands, companyLimit: 24
-      }) : { status: 'success', workIds: [], counts: null };
+      }, { onProgress: progress }) : { status: 'success', workIds: [], counts: null };
       // A superseded query must not request another page of display data.
       if (!generation.isCurrent()) return stale(interaction, 'superseded-render');
       if (outcome.status === 'stale') return stale(interaction, 'stale-query');
       metrics.stage(interaction, 'query-return');
+      progress('loading-results');
       if (workerOwned) {
         const pinnedIds=[...new Set([...state.selectedWorkIds, ...comparisonIds])];
         if (typeof workData.getList!=='function') {

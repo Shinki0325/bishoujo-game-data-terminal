@@ -650,6 +650,34 @@ h3 {
   padding: 4px 10px;
 }
 
+.list-state-cancel {flex:none;min-height:32px;padding:4px 14px;font-size:13px;}
+html.galpedia .catalog-controls {position:relative;}
+html.galpedia #catalog-list-state[data-layout="panel"]:has(> .gp-loading-view[hidden]) {display:none;}
+html.galpedia .catalog-controls > #catalog-list-state[data-layout="panel"] {
+  position:absolute;inset:auto;top:calc(100% + 20px);left:50%;transform:translateX(-50%);
+  width:min(320px,calc(100vw - 32px));max-width:none;min-height:0;box-sizing:border-box;
+  margin:0;padding:22px 24px;z-index:70;flex-wrap:wrap;justify-content:center;gap:12px;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,var(--border));
+  border-radius:8px;background:color-mix(in srgb,var(--accent-soft) 38%,var(--surface));
+  color:var(--text);text-align:center;
+  box-shadow:0 14px 42px rgb(31 24 48 / 16%),0 2px 8px rgb(31 24 48 / 5%);
+}
+#catalog-list-state .gp-loading-view--panel {width:100%;gap:12px;}
+#catalog-list-state[data-layout="panel"] .list-state-eyebrow {width:100%;margin-bottom:-7px;}
+#catalog-list-state[data-layout="panel"] .gp-loading-view__label,
+#catalog-list-state[data-layout="panel"] .list-state-message {
+  width:100%;font-size:16px;font-weight:650;line-height:1.5;letter-spacing:.03em;
+}
+#catalog-list-state[data-layout="panel"] .list-state-detail {
+  display:block;width:100%;min-height:3.4em;font-size:13px;line-height:1.7;
+  color:var(--text-muted);font-weight:400;text-wrap:balance;
+}
+#catalog-list-state[data-layout="panel"] .list-state-cancel,
+#catalog-list-state[data-layout="panel"] .list-state-retry {
+  flex:0 0 auto;width:auto;min-width:88px;min-height:34px;height:auto;
+  max-width:140px;white-space:nowrap;margin:2px 0 0;border-radius:8px;
+}
+
 /* Company cards intentionally share the square work-card footprint. */
 .company-directory-list {
   grid-template-columns: repeat(auto-fill, var(--selection-card-size));

@@ -104,6 +104,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       owned={sha256:source.sha256,media:source.media,options:updated,data:replacing?data:owned.data};
       window=nextWindow;
       return data&&!onData&&includeUI?{...result,manifestSha256:source.sha256,uiData,uiSummary}:result;
-    }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message,code:error.code}};}
+    }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message,code:error.code,
+      ...(Number.isFinite(error.retryAt)?{retryAt:error.retryAt}:{})}};}
   };
 }
