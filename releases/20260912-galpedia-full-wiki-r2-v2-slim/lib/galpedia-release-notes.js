@@ -110,5 +110,26 @@ const V106_RELEASE = Object.freeze({
   ])
 });
 
-export const GALPEDIA_RELEASE_NOTES = Object.freeze([V106_RELEASE, V105_RELEASE, V104_RELEASE, V1_RELEASE]);
+const V107_RELEASE = Object.freeze({
+  version: 'v1.0.7-beta', label: '公测版', date: '2026-09-14',
+  releaseId: '20260913-galpedia-static-v3',
+  notice: '目前处于公测阶段，首次进入作品库需要准备全库资料，完成后可继续翻页、排序和查找。',
+  summary: Object.freeze([
+    '默认浏览 30,612 部作品，先展示少量预览，准备完成后每页显示 48 部。',
+    '改进筛选、排序与连续查找，加载提示放在正在等待的内容区。',
+    '修复封面加载失败被误报为缺失的问题，完善角色图片重试与恢复。'
+  ]),
+  log: Object.freeze([
+    Object.freeze({title:'全库默认展示', text:'新用户默认浏览完整作品库，不再默认限制为评分人数达到30的作品；已有筛选继续保留。先展示12部预览，准备完成后每页显示48部，不会一次展开全部作品。'}),
+    Object.freeze({title:'初始化与连续浏览', text:'首次进入作品库时集中准备查询、常用排序和卡片资料，后续操作复用已加载内容；往返翻页复用卡片，减少重复处理。首次准备仍需要等待。'}),
+    Object.freeze({title:'筛选与排序', text:'筛选面板先编辑条件，点击“应用筛选”后再更新列表；排序时保留原结果，失败可以重试，快速切换以最后一次操作为准。保留原排序名称、方向图标和紧凑布局。'}),
+    Object.freeze({title:'内容区加载提示', text:'栏目和列表使用统一的庭守表盘与提示；详情只在对应位置显示简短文字，打开作品时在所点卡片提示，不再用大面板遮挡详情。'}),
+    Object.freeze({title:'封面与角色图片恢复', text:'有封面地址但加载失败时显示“封面加载失败”，并提供重试；修复恢复成功后仍被旧失败状态遮住的问题。角色图片采用有限重试，网络恢复后可以重新加载，图片失败时保留文字和资料入口。'}),
+    Object.freeze({title:'首页统计与页面细节', text:'首页更新为30,612部作品、12,212家会社和53,075位人物；修复窄屏统计溢出、手册失败重试、空结果分页和重复清除按钮。'}),
+    Object.freeze({title:'更新时保留浏览上下文', text:'新旧页面共享已发布的原始资料，保留打开中的旧页面所需资源，减少更新后继续浏览时遇到资料无法读取的情况。'}),
+    Object.freeze({title:'资料范围说明', text:'本次主要调整展示、交互和资源加载方式，没有新增一轮原始数据库采集；作品按合并版本后的条目统计。'})
+  ])
+});
+
+export const GALPEDIA_RELEASE_NOTES = Object.freeze([V107_RELEASE, V106_RELEASE, V105_RELEASE, V104_RELEASE, V1_RELEASE]);
 export const CURRENT_GALPEDIA_RELEASE = GALPEDIA_RELEASE_NOTES[0];
