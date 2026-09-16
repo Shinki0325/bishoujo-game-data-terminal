@@ -13,10 +13,14 @@ export function createWorkDetailController({
     try {
       const cleanup = onPending?.(work);
       if (typeof cleanup === 'function') finishPending = sequence.scope.add(cleanup);
-      if (hydrateWork) work = await hydrateWork(work);
+      const [hydrated, aliasRows] = await Promise.all([
+        hydrateWork ? hydrateWork(work) : work,
+        readAliases ? readAliases([work.workId]) : null
+      ]);
+      work = hydrated;
       if (!sequence.isCurrent()) return;
       if (readAliases) {
-        const rows = await readAliases([work.workId]);
+        const rows = aliasRows;
         if (rows.length !== 1) throw new Error('作品名称资料缺失');
         options = { ...options, aliases: new Map(rows.map(row => [row.workId, row.aliases])) };
       }

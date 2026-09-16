@@ -241,8 +241,11 @@ export async function loadWorkerWorkbenchBundle(source,{config=WORKBENCH_DEMAND,
   if(preparedSearch&&(WORK_SEARCH.sourceManifestSha256!==config.sha256||WORK_SEARCH.sourceWorkerSha256!==compact.sha256
     ||WORK_SEARCH.rawSha256!==manifest.searchText?.sha256))
     throw new TypeError('预计算搜索来源不匹配');
-  const searchPromise=preparedSearch?loadPrecomputedSearchText(WORK_SEARCH,{fetchImpl,cryptoRef}):null;
-  searchPromise?.catch(()=>{});
+  // The search carrier is intentionally deferred.  Title search installs it
+  // through the worker on first use; ordinary browsing never pays its 4.5 MiB.
+  const loadSearchText=preparedSearch?()=>loadPrecomputedSearchText(WORK_SEARCH,{fetchImpl,cryptoRef}).then(search=>{
+    snapshotSearchText(search,workerData?.ratedDisplayWorks?.map(work=>work.workId)??[]); return search;
+  }):null;
   // The initial query bundle shares bandwidth with cards and search data.
   // Keep its read budget inside the 60s initialization window without applying
   // the small-resource 15s timeout to a healthy large transfer. Retries and SHA
@@ -252,14 +255,10 @@ export async function loadWorkerWorkbenchBundle(source,{config=WORKBENCH_DEMAND,
   if(descriptor===compact && bytes.byteLength!==compact.bytes)throw new TypeError('紧凑查询数据长度不匹配');
   const body=JSON.parse(new TextDecoder().decode(bytes));
   if(deferred&&body.mediaMode!=='on-demand-v1')throw new TypeError('查询线程媒体索引不兼容');
-  const data=decodeWorkbenchPayload(body,manifest,{allowDeferredMedia:deferred,includePersonCatalog:false});
-  if(searchPromise){
-    const search=await searchPromise;
-    snapshotSearchText(search,data.ratedDisplayWorks.map(work=>work.workId));
-    data.searchText=search;
-  }
-  if(deferred)data.mediaData=createWorkbenchStore(manifest,data.ratedDisplayWorks,{baseUrl:url,fetchImpl,cryptoRef});
-  return {data,bytes};
+  const workerData=decodeWorkbenchPayload(body,manifest,{allowDeferredMedia:deferred,includePersonCatalog:false});
+  if(loadSearchText) workerData.loadSearchText=loadSearchText;
+  if(deferred)workerData.mediaData=createWorkbenchStore(manifest,workerData.ratedDisplayWorks,{baseUrl:url,fetchImpl,cryptoRef});
+  return {data:workerData,bytes};
 }
 export function decodeWorkbenchPayload(body,manifest,{includePersonCatalog=true,allowDeferredMedia=false}={}) {
   if(body.mediaMode!==undefined&&(!allowDeferredMedia||body.mediaMode!=='on-demand-v1'))throw new TypeError('按需媒体索引不能用作完整作品资料');

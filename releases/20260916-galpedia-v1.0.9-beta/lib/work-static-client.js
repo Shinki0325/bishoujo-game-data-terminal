@@ -1,6 +1,6 @@
 import {withRemoteWorkQueries} from './release-query-client.js';
 const remoteConfig={"schema":"galpedia-work-query-http-v1","buildSha":"b83b51376c8c3d98d539fa5f3ca041b0640d713df03967b3604229e09419e8fd","releaseSha":"cf0d653f4f39e4389034c73a0fe016c948c7191daf92049393f55e9ce249a4e2","snapshotDay":"2026-09-15","pageSize":48,"entries":[{"key":"4654dcd0c669d87e70938f217630b6fe6207225af6edafbcd44ee3128759d7c5","filter":{"mode":"basic","titleQuery":"","minimumScore":0,"minimumVoteCount":1,"brandIds":[],"attributeSelections":{"game-type":[],"platform":[],"length":[]},"basicOperator":"AND","positiveFilterIds":[],"excludedFilterIds":[],"excludeNukige":false,"advancedExpression":"","releaseYearStart":1987,"releaseYearEnd":2026,"releaseStatus":"all","sortKey":"releaseDate","sortDirection":"asc","selectedOnly":false,"personIds":[],"personRole":"all"},"total":28480,"validFrom":null,"validUntil":null},{"key":"18e7c7eff53d5c20c076066bc8e948aad8b5f244847c40558a07f6f7a2681d87","filter":{"mode":"basic","titleQuery":"","minimumScore":1,"minimumVoteCount":1,"brandIds":[],"attributeSelections":{"game-type":[],"platform":[],"length":[]},"basicOperator":"AND","positiveFilterIds":[],"excludedFilterIds":[],"excludeNukige":false,"advancedExpression":"","releaseYearStart":1987,"releaseYearEnd":2026,"releaseStatus":"all","sortKey":"releaseDate","sortDirection":"asc","selectedOnly":false,"personIds":[],"personRole":"all"},"total":28456,"validFrom":null,"validUntil":null}],"endpoint":"/api/work-query/v1/page"};
-import {loadCompanyWorkFilter,withCompanyBrands} from './company-work-filter-loader.js';
+import {loadCompanyWorkFilter} from './company-work-filter-loader.js';
 import { WORK_STATIC } from './work-static-config.js';
 import { WORK_BROWSE } from './work-browse-config.js';
 import { createBrowseStartupData } from './work-browse-data.js';
@@ -102,6 +102,10 @@ function createLocalStaticWorkQueryClient({data,workerFactory,count,sourceSha256
   const delegate=async(method,...args)=>(await engine())[method](...args);
   const invalidate=()=>{activeRevision=null;activeRows=null;mode='changed';sequence++;};
   return Object.freeze({
+    // Start only the compact query engine. Full card pages and list warming
+    // remain demand driven so the first interactive render does not wait for
+    // the 7.4 MiB all-card bundle.
+    start(){alive();return engine();},
     preload(){alive();return Promise.all([engine(),prepareCards?.(),listData?.prepare?.()]);},
     prewarmSort(filterState,connection){alive();return listData?.prewarm(filterState,connection);},
     async init(next){alive();if(next?.workbenchSource?.sha256!==sourceSha256)throw Error('作品查询源不符');payload=next;return {status:'ready',workCount:count};},
@@ -157,7 +161,6 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
   validateWorkbenchUISummary(uiSummary,site.count);
   if(uiData?.schema!=='galpedia-owned-ui-v1'||uiData.sample?.works?.length!==0||uiData.ratedDisplayWorks?.length!==0)throw Error('作品UI投影无效');
   restoreWorkbenchContext(uiData);
-  withCompanyBrands(uiData,await loadCompanyWorkFilter());
   if(WORK_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256||WORK_LIST.sourceDefaultsSha256!==site.defaults.sha256)throw Error('列表投影来源已变化');
   if(WORK_FULL_LIST.sourceManifestSha256!==WORKBENCH_DEMAND.sha256)throw Error('全库列表来源已变化');
   const legacyLists=createWorkListData({config:WORK_LIST,delivery:WORK_LIST_DELIVERY,fetchImpl,cryptoRef});
@@ -186,9 +189,12 @@ export async function loadStaticWorkbench({fetchImpl=globalThis.fetch,cryptoRef=
       return new Map(rows.map(row=>[row.workId,row]));
     },isListCard:work=>displayedCards.has(work)
   });
-  staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,includeWorkCards:true,
+  staticQueryClient=createStaticWorkQueryClient({data:client,listData,count:manifest.count,sourceSha256:WORKBENCH_DEMAND.sha256,includeWorkCards:false,
     workerFactory:async()=> (await import('./workbench-worker-session.js')).getOwnedWorkbenchClient()});
   return {...uiData,bangumiPublicBindings:null,confirmedBangumiImportBindings:()=>browse.bindings(),
+    // Company projection is large and only needed by company filters and
+    // reviewed company work lists. Keep the promise out of startup.
+    loadCompanyWorkFilter,
     uiSummary,workerOwned:true,workData,staticQueryClient};
 }
 

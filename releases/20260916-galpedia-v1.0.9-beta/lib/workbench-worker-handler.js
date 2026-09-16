@@ -6,12 +6,40 @@ import {FULL_WIKI_RUNTIME} from './full-wiki-runtime-config.js';
 
 // Serial worker dispatcher owns query inputs; UI receives display data once.
 export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onData}) {
-  let owned=null, window=null, search=null;
+  let owned=null, window=null, search=null, cardsPromise=null, companyPromise=null, searchPromise=null;
+  const ensureCards=async()=>{
+    if(owned?.cards)return owned.cards;
+    if(!owned)throw new TypeError('owned catalog has not been initialized');
+    cardsPromise??=import('./work-full-cards.js').then(module=>module.loadFullWorkCards(owned.sha256));
+    const cards=await cardsPromise;
+    cards.bind(owned.data.ratedDisplayWorks.map(work=>work.workId));
+    owned={...owned,cards};
+    return cards;
+  };
+  const ensureSearch=async()=>{
+    if(owned?.options?.searchText)return owned.options.searchText;
+    if(!owned?.data?.loadSearchText)return null;
+    searchPromise??=owned.data.loadSearchText();
+    const searchText=await searchPromise;
+    const result=runtime.handle({type:'search-text',payload:{searchText}});
+    if(result.type==='error')throw new Error(result.error?.message??'搜索索引安装失败');
+    owned={...owned,options:{...owned.options,searchText}};
+    return searchText;
+  };
+  const ensureCompany=async()=>{
+    if(owned?.options?.companyWorkIndex)return owned.options.companyWorkIndex;
+    companyPromise??=loadCompanyWorkFilter();
+    const companyWorkIndex=await companyPromise;
+    const result=runtime.handle({type:'update',payload:{...owned.options,companyWorkIndex}});
+    if(result.type==='error')throw new Error(result.error?.message??'会社筛选索引安装失败');
+    owned={...owned,options:{...owned.options,companyWorkIndex}}; window?.invalidate();
+    return companyWorkIndex;
+  };
   return async message=>{
     if(message?.type==='work-list-cards') {
       try {
-        if(!owned?.cards)throw Error('全库浏览资料尚未准备');
-        return {id:message.id,type:'work-list-cards',rows:owned.cards.get(message.payload?.workIds)};
+        const cards=await ensureCards();
+        return {id:message.id,type:'work-list-cards',rows:cards.get(message.payload?.workIds)};
       }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message}};}
     }
     if (message?.type === 'work-metadata') {
@@ -41,6 +69,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
     if (message?.type === 'work-search') {
       try {
         if (!owned) throw new TypeError('owned work search has not been initialized');
+        await ensureSearch();
         if (typeof message.payload?.query !== 'string' || message.payload.query.length > 1000) throw new TypeError('invalid work search query');
         if (!search) {
           const [{createGalpediaSearch},{buildCompanyDirectory}] = await Promise.all([
@@ -58,6 +87,9 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
     }
     if(message?.type==='query-counts'&&window){
       try {
+      const filter=message.payload?.filterState;
+      if (filter?.titleQuery || filter?.advancedExpression) await ensureSearch();
+      if (filter?.brandIds?.length) await ensureCompany();
       const result=runtime.handle(message);
       return result.type==='counts'?window.project(result,{...message.payload,countsOnly:true}):result;
       } catch(error) {return {id:message.id,type:'error',error:{name:error.name,message:error.message}};}
@@ -65,6 +97,9 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
     if (message?.type === 'result-ids' || (message?.type === 'query' && message.payload?.paged)) {
       try {
         if (!window) throw new TypeError('owned result window has not been initialized');
+        const filter=message.payload?.filterState;
+        if (filter?.titleQuery || filter?.advancedExpression) await ensureSearch();
+        if (filter?.brandIds?.length) await ensureCompany();
         if (message.type === 'result-ids') return {id:message.id,type:'result-ids',workIds:window.ids(message.payload.resultRevision)};
         const result = runtime.handle(message);
         return result.type === 'result' ? window.project(result, message.payload) : result;
@@ -87,12 +122,8 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       // legacy delivery path for callers that need the worker to supply it.
       const includeUI=message.payload.includeWorkbenchUI!==false;
       const replacing=!owned||owned.sha256!==source.sha256||owned.media!==source.media;
-      const cardsPending=message.payload.includeWorkCards
-        ? import('./work-full-cards.js').then(module=>module.loadFullWorkCards(source.sha256)) : null;
-      cardsPending?.catch(()=>{});
       const bundle=replacing?await loadSource(source):null,data=bundle?.data;
-      const cards=cardsPending?await cardsPending:owned?.cards??null;
-      cards?.bind((data??owned.data).ratedDisplayWorks.map(work=>work.workId));
+      const cards=owned?.cards??null;
       const uiSummary=replacing&&includeUI?createWorkbenchUISummary(data,{includeCompanies:!(FULL_WIKI_RUNTIME.enabled&&Boolean(data.fullWiki))}):null;
       const uiData=replacing&&includeUI?createOwnedWorkbenchUI(data):null;
       if(data&&onData&&includeUI)onData({id:message.id,type:'workbench-data',manifestSha256:source.sha256,uiData,uiSummary});
@@ -100,9 +131,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       // validate/prepare it while this Worker validates families and builds its
       // window. Queries still require all validation below to succeed.
       const nextWindow = replacing ? createWorkbenchResultWindow(data) : window;
-      const reviewedCompanies=replacing?await loadCompanyWorkFilter():owned.options.companyWorkIndex;
       const options=replacing?{
-        companyWorkIndex:reviewedCompanies,
         works:data.ratedDisplayWorks.map(projectWork),
         knownFilterIds:data.sample.filters.map(filter=>filter.filterId),brands:data.brands,
         workAliasesById:data.workAliasesById,workPinyinById:data.workPinyinById,
@@ -117,6 +146,7 @@ export function createWorkbenchWorkerHandler({runtime,loadSource,projectWork,onD
       if (!replacing) nextWindow.invalidate();
       if(replacing)search=null;
       owned={sha256:source.sha256,media:source.media,options:updated,data:replacing?data:owned.data,cards};
+      cardsPromise=null; companyPromise=null; searchPromise=null;
       window=nextWindow;
       return data&&!onData&&includeUI?{...result,manifestSha256:source.sha256,uiData,uiSummary}:result;
     }catch(error){return {id:message.id,type:'error',error:{name:error.name,message:error.message,code:error.code,

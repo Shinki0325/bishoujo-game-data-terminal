@@ -63,17 +63,22 @@ export function createWorkbenchNavigationController({
         if (current()) persons.finish(route);
         return true;
       }
+      if (route.workId !== null) {
+        // A direct detail deep link needs one work shard, not a full result
+        // query. Render the dialog from the pinned work reference first; the
+        // normal list query remains unchanged for #works pages.
+        works.enter(route);
+        const work = works.find(route.workId);
+        if (work) {
+          await works.open(work);
+          if (locationRef.hash.startsWith('#works/work/')) update();
+        } else update();
+        return true;
+      }
       works.enter(route);
       await render();
       if (!current()) return true;
       works.setPage(route.pageNumber);
-      if (route.workId !== null) {
-        const work = works.find(route.workId);
-        if (work) {
-          works.open(work);
-          if (locationRef.hash.startsWith('#works/work/')) update();
-        } else update();
-      }
       return true;
     } finally {
       if (generation.isCurrent()) applying = false;

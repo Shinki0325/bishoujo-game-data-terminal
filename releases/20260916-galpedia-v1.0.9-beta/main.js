@@ -742,7 +742,7 @@ async function initialize() {
     await filterWorkerClient.init(filterWorkerPayload);
     // The library is interactive only after its shared query engine and the
     // common list resources are prepared, including restored filtered sessions.
-    if(STATIC_SITE_MODE)await filterWorkerClient.preload();
+    if(STATIC_SITE_MODE)await filterWorkerClient.start();
   }));
   if (/^#works(?:[/?]|$)/u.test(window.location.hash)) {
     void ensureFilterWorker().catch(() => {});
@@ -1313,7 +1313,10 @@ async function initialize() {
   }
 
   const staticCompanies = STATIC_SITE_MODE ? (await import('./lib/company-static-client.js')).getStaticCompanyClient() : null;
-  companyDirectory = staticCompanies ? await staticCompanies.loadDirectory() : fullWikiDirectories ? await companyDirectoryPromise : preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
+  // The compact company summary is enough to paint the directory shell. The
+  // reviewed company payload (25 MiB decoded) is fetched only when a company
+  // work list/filter actually needs it.
+  companyDirectory = preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : staticCompanies ? await staticCompanies.loadDirectory() : fullWikiDirectories ? await companyDirectoryPromise : buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
