@@ -1313,10 +1313,11 @@ async function initialize() {
   }
 
   const staticCompanies = STATIC_SITE_MODE ? (await import('./lib/company-static-client.js')).getStaticCompanyClient() : null;
-  // The compact company summary is enough to paint the directory shell. The
-  // reviewed company payload (25 MiB decoded) is fetched only when a company
-  // work list/filter actually needs it.
-  companyDirectory = preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : staticCompanies ? await staticCompanies.loadDirectory() : fullWikiDirectories ? await companyDirectoryPromise : buildCompanyDirectory({
+  // Full Wiki deliberately omits companies from the Worker startup summary;
+  // use its already-started directory promise instead of restoring an empty
+  // but structurally valid summary. Static and legacy paths retain the compact
+  // summary fast path.
+  companyDirectory = staticCompanies ? await staticCompanies.loadDirectory() : fullWikiDirectories ? await companyDirectoryPromise : preparedWorkbench.uiSummary ? restoreCompanySummary(preparedWorkbench.uiSummary.companies) : buildCompanyDirectory({
     brands,
     works: ratedDisplayWorks,
     companyAliasesById: enrichment?.companyAliasesById,
