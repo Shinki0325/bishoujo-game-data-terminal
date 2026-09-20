@@ -1,0 +1,1545 @@
+{
+  "schemaVersion": "galpedia-analysis-full-v1",
+  "releaseId": "20260920-galpedia-v1.0.10-beta",
+  "counts": {
+    "editions": 34941,
+    "works": 30612,
+    "characters": 113166
+  },
+  "fields": [
+    {
+      "id": "median",
+      "label": "EGS 评分中位数",
+      "short": "EGS 评分中位数",
+      "type": "number",
+      "unit": "分",
+      "group": "评分",
+      "pack": "core",
+      "source": "EGS 评分中位数 · 已发布快照",
+      "range": [
+        0,
+        100
+      ],
+      "coverage": 32017
+    },
+    {
+      "id": "votes",
+      "label": "EGS 评价人数",
+      "short": "EGS 评价人数",
+      "type": "number",
+      "unit": "人",
+      "group": "评分",
+      "pack": "core",
+      "source": "EGS 评价人数 · 已发布快照",
+      "coverage": 32101
+    },
+    {
+      "id": "bangumi",
+      "label": "Bangumi 评分",
+      "short": "Bangumi 评分",
+      "type": "number",
+      "unit": "分",
+      "group": "评分",
+      "pack": "core",
+      "source": "Bangumi 评分 · 已发布快照",
+      "range": [
+        0,
+        10
+      ],
+      "coverage": 20340
+    },
+    {
+      "id": "bangumiVotes",
+      "label": "Bangumi 评价人数",
+      "short": "Bangumi 评价人数",
+      "type": "number",
+      "unit": "人",
+      "group": "评分",
+      "pack": "core",
+      "source": "Bangumi 评价人数 · 已发布快照",
+      "coverage": 20340
+    },
+    {
+      "id": "vndb",
+      "label": "VNDB 评分",
+      "short": "VNDB 评分",
+      "type": "number",
+      "unit": "分",
+      "group": "评分",
+      "pack": "core",
+      "source": "VNDB 评分 · 已发布快照",
+      "range": [
+        0,
+        100
+      ],
+      "coverage": 15636
+    },
+    {
+      "id": "vndbVotes",
+      "label": "VNDB 评价人数",
+      "short": "VNDB 评价人数",
+      "type": "number",
+      "unit": "人",
+      "group": "评分",
+      "pack": "core",
+      "source": "VNDB 评价人数 · 已发布快照",
+      "coverage": 21322
+    },
+    {
+      "id": "year",
+      "label": "发行年份",
+      "short": "发行年份",
+      "type": "number",
+      "unit": "年",
+      "group": "作品",
+      "pack": "core",
+      "source": "发行年份 · 已发布快照",
+      "coverage": 34941
+    },
+    {
+      "id": "month",
+      "label": "发行月份",
+      "short": "发行月份",
+      "type": "number",
+      "unit": "月",
+      "group": "作品",
+      "pack": "core",
+      "source": "发行月份 · 已发布快照",
+      "range": [
+        1,
+        12
+      ],
+      "coverage": 34941
+    },
+    {
+      "id": "versionCount",
+      "label": "版本数量",
+      "short": "版本数量",
+      "type": "number",
+      "unit": "个",
+      "group": "作品",
+      "pack": "core",
+      "source": "版本数量 · 已发布快照",
+      "coverage": 34941
+    },
+    {
+      "id": "decade",
+      "label": "发行年代",
+      "short": "发行年代",
+      "type": "category",
+      "unit": "",
+      "group": "作品",
+      "pack": "core",
+      "source": "发行年代 · 已发布快照",
+      "coverage": 34941
+    },
+    {
+      "id": "company",
+      "label": "品牌会社",
+      "short": "品牌会社",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "core",
+      "source": "品牌会社 · 已发布快照",
+      "coverage": 34941
+    },
+    {
+      "id": "tags",
+      "label": "内容标签",
+      "short": "内容标签",
+      "type": "category",
+      "unit": "",
+      "group": "标签",
+      "pack": "tags",
+      "source": "内容标签 · 已发布快照",
+      "multi": true,
+      "coverage": 6643
+    },
+    {
+      "id": "genre",
+      "label": "游戏类型",
+      "short": "游戏类型",
+      "type": "category",
+      "unit": "",
+      "group": "标签",
+      "pack": "tags",
+      "source": "游戏类型 · 已发布快照",
+      "multi": true,
+      "coverage": 34941
+    },
+    {
+      "id": "platform",
+      "label": "平台",
+      "short": "平台",
+      "type": "category",
+      "unit": "",
+      "group": "标签",
+      "pack": "tags",
+      "source": "平台 · 已发布快照",
+      "multi": false,
+      "coverage": 34941
+    },
+    {
+      "id": "developers",
+      "label": "制作会社（作品级）",
+      "short": "制作会社（作品级）",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "制作会社（作品级） · 已发布快照",
+      "multi": true,
+      "grain": "work",
+      "coverage": 24263
+    },
+    {
+      "id": "publishers",
+      "label": "发行会社（作品级）",
+      "short": "发行会社（作品级）",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "发行会社（作品级） · 已发布快照",
+      "multi": true,
+      "grain": "work",
+      "coverage": 25195
+    },
+    {
+      "id": "scenario",
+      "label": "剧本家",
+      "short": "剧本家",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "剧本家 · 已发布快照",
+      "multi": true,
+      "coverage": 22741
+    },
+    {
+      "id": "artwork",
+      "label": "原画",
+      "short": "原画",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "原画 · 已发布快照",
+      "multi": true,
+      "coverage": 23444
+    },
+    {
+      "id": "music",
+      "label": "音乐",
+      "short": "音乐",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "音乐 · 已发布快照",
+      "multi": true,
+      "coverage": 16794
+    },
+    {
+      "id": "characterDesign",
+      "label": "角色设计",
+      "short": "角色设计",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "角色设计 · 已发布快照",
+      "multi": true,
+      "coverage": 8757
+    },
+    {
+      "id": "voice",
+      "label": "声优",
+      "short": "声优",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "声优 · 已发布快照",
+      "multi": true,
+      "coverage": 17198
+    },
+    {
+      "id": "otherStaff",
+      "label": "其他制作人员",
+      "short": "其他制作人员",
+      "type": "category",
+      "unit": "",
+      "group": "会社与制作人员",
+      "pack": "people",
+      "source": "其他制作人员 · 已发布快照",
+      "multi": true,
+      "coverage": 17579
+    },
+    {
+      "id": "height",
+      "label": "角色身高",
+      "short": "角色身高",
+      "type": "number",
+      "unit": "cm",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色身高 · 已发布快照",
+      "character": true,
+      "coverage": 8649
+    },
+    {
+      "id": "weight",
+      "label": "角色体重",
+      "short": "角色体重",
+      "type": "number",
+      "unit": "kg",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色体重 · 已发布快照",
+      "character": true,
+      "coverage": 3548
+    },
+    {
+      "id": "bust",
+      "label": "角色胸围",
+      "short": "角色胸围",
+      "type": "number",
+      "unit": "cm",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色胸围 · 已发布快照",
+      "character": true,
+      "coverage": 7094
+    },
+    {
+      "id": "waist",
+      "label": "角色腰围",
+      "short": "角色腰围",
+      "type": "number",
+      "unit": "cm",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色腰围 · 已发布快照",
+      "character": true,
+      "coverage": 6899
+    },
+    {
+      "id": "hip",
+      "label": "角色臀围",
+      "short": "角色臀围",
+      "type": "number",
+      "unit": "cm",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色臀围 · 已发布快照",
+      "character": true,
+      "coverage": 6888
+    },
+    {
+      "id": "age",
+      "label": "角色年龄",
+      "short": "角色年龄",
+      "type": "number",
+      "unit": "岁",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色年龄 · 已发布快照",
+      "character": true,
+      "coverage": 4294
+    },
+    {
+      "id": "birthdayMonth",
+      "label": "角色生日月份",
+      "short": "角色生日月份",
+      "type": "category",
+      "unit": "",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色生日月份 · 已发布快照",
+      "multi": true,
+      "character": true,
+      "coverage": 4893
+    },
+    {
+      "id": "bloodType",
+      "label": "角色血型",
+      "short": "角色血型",
+      "type": "category",
+      "unit": "",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色血型 · 已发布快照",
+      "multi": true,
+      "character": true,
+      "coverage": 4155
+    },
+    {
+      "id": "cupSize",
+      "label": "角色杯型",
+      "short": "角色杯型",
+      "type": "category",
+      "unit": "",
+      "group": "角色",
+      "pack": "characters",
+      "source": "角色杯型 · 已发布快照",
+      "multi": true,
+      "character": true,
+      "coverage": 3320
+    }
+  ],
+  "packs": {
+    "core": {
+      "path": "full-data/core.json.gz",
+      "bytes": 2374064,
+      "rawBytes": 15269855,
+      "sha256": "24f22a120b41c383842d89891eb3b90d46e08234ba61606da2acbb2e1aec724c"
+    },
+    "tags": {
+      "path": "full-data/tags.json.gz",
+      "bytes": 169344,
+      "rawBytes": 1507275,
+      "sha256": "9f13c4653916321ca9447dae936f16a420a9adfad176c18f64c28113fc5f8d91"
+    },
+    "people": {
+      "path": "full-data/people.json.gz",
+      "bytes": 4396381,
+      "rawBytes": 14982214,
+      "sha256": "081e343516dd40533a66a006ae32aa08fbc91ccb86f190c27d622071c7468688"
+    },
+    "characters": {
+      "path": "full-data/characters.json.gz",
+      "bytes": 1324207,
+      "rawBytes": 16402040,
+      "sha256": "fd81166433c83db74b7b0683cb449f0a8c0fb19c438be9500ba36573edfa82e5"
+    }
+  },
+  "tagVocabulary": [
+    "0721",
+    "NTR（牛人）",
+    "NTR（被牛）",
+    "yaoi",
+    "三角",
+    "人外",
+    "兽耳娘",
+    "冬",
+    "凌辱",
+    "历史",
+    "双子",
+    "和服·巫女",
+    "四季",
+    "堕落",
+    "夏",
+    "多人",
+    "奇幻",
+    "女仆",
+    "女装",
+    "妹妹",
+    "恐怖猎奇",
+    "感动",
+    "成人",
+    "扶她",
+    "拔作",
+    "捆绑·露出",
+    "推理解密",
+    "搞笑",
+    "春",
+    "校园",
+    "母乳",
+    "治愈",
+    "热血",
+    "百合",
+    "短篇",
+    "秋",
+    "科幻",
+    "纯爱",
+    "致郁",
+    "萌萌",
+    "萝莉",
+    "野兽触手",
+    "长篇",
+    "青梅竹马",
+    "魔法少女"
+  ],
+  "proof": [
+    {
+      "path": "20260920-galpedia-v1.0.10-beta\\runtime-data\\work-full-cards-v1\\cards-f4a81b2f163eb3d5b93de9bff35b07f4f33f7a2b1b0d7bbd818406bc8d2f6ab4.json.gz",
+      "sha256": "f4a81b2f163eb3d5b93de9bff35b07f4f33f7a2b1b0d7bbd818406bc8d2f6ab4"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-v1\\startup.json.gz",
+      "sha256": "002335bc2c0754ebfb1a2ed5fe09bd8b578f56348f18948ef8e2dceb150b8cdb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\static-site-data-v1\\data\\a0c0367b8270b080feef0ef1fe65522144dc62343feb9d752729d92867d0d639\\query\\works-core.json",
+      "sha256": "e6d5bbdcf7d0b4cbdebdd47b57e0098fdb69c13ed9b826601f691d19bc2a1433"
+    },
+    {
+      "path": "20260920-galpedia-v1.0.10-beta\\runtime-data\\reviewed-company-v1\\f6125acd0ecc9ffc9b1f27cadda6efbf90e88aaece9dad74eb7681db22e53c88.json.gz",
+      "sha256": "f6125acd0ecc9ffc9b1f27cadda6efbf90e88aaece9dad74eb7681db22e53c88"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\workbench-demand\\bootstrap.7873335dd8ddb19a.json",
+      "sha256": "7873335dd8ddb19a845a299ea1216e6d8959b4c7d1f0315e4caac926ad53061d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details-index.json",
+      "sha256": "8815badd4202a215f6a5c0552d1971403f2c199ae90639b99957dd61b52fd0aa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\10.json",
+      "sha256": "ff9ea5ded86b039e5ddac64b9398cd9cc250dc4001e1f098c8c7c7f6fc93bd8c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\11.json",
+      "sha256": "9b941075f9855d54afec82c2d679087a8356af9d3a20ef1a7d8ce0563011f30c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\12.json",
+      "sha256": "da1f12f3e9df077f65d64a940d03d71ea728a8c37dce172f1150678ebc15d013"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\13.json",
+      "sha256": "132ad100c9700156b1be9f6ecd131f4509e24b860fe6773cb21706727a699343"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\14.json",
+      "sha256": "011efd059bb630aecf4171be6921ac216df26232cee2805165d965acb02232cc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\15.json",
+      "sha256": "6735af1ac489b4e36b9ec4d29c0cc121b48aff701a9d82fbe123d497131c7922"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\16.json",
+      "sha256": "c5ad86e51a24653c7c12eef3efa8bdd3c3015e48bc48a090d4278f68e7a9056d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\17.json",
+      "sha256": "9cd79b732c4aa3374e3cef01afb0e0f6b58da96f815a8dde14eac7ee72c101d6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\18.json",
+      "sha256": "12faca87a6793e86253550fbd5aab0a5d2a692f710be914452279910aa7da7fe"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\19.json",
+      "sha256": "f33d5f24f8d4d6da550e15caa7a4b5e91ab6185a8051ef062bbeba4d6d24ec44"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\20.json",
+      "sha256": "227fc99abcf88e0423ecd03bab6b71b10a12a291ea242f75043371838e2f047d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\21.json",
+      "sha256": "e181fcf1cb110f9405503f30f5908a7ed49f0aeef59dd013bf42152342af4833"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\22.json",
+      "sha256": "cdbb72fe11a3eb2474c2b696b8fcba9574ead3713b759afc2f9ab8a098187493"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\23.json",
+      "sha256": "c0ba80262a24ad74de61e3677fb0d57c6c7ec33b0a4c9b889058a040caa27d64"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\24.json",
+      "sha256": "25f77f7e2d76da7fc8281a36a16c504e761809c1b5b7ea70141625e51446a6d6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\25.json",
+      "sha256": "9cf5b974ea8a0cef68d02d385ea1d6b8fc470d40530520f3ba6c3877144fde14"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\26.json",
+      "sha256": "6ceff08b5b4e8fb3115c0d2f4d24dd4d1a766e45cb7ef80d4c1f9e8edddc34ca"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\27.json",
+      "sha256": "79b2f2144086f0ccc36eb916023f4e4bb6e04fbfcc17bb9e95daa923210dfcdb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\28.json",
+      "sha256": "c1713a1423b5eb54d91ff31ea5dfbfa80ff37709e5cd6d1f1d015c04f4c2b87a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\29.json",
+      "sha256": "549dfac9bc2d32d81df814aa83188997908cfab6bd62566794974dd088d59f23"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\30.json",
+      "sha256": "84c6bb0e8452a9c1282120262acd56603416702252c93340549433e0d49f43f9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\31.json",
+      "sha256": "8f2e37d0e133c9f7eb2e2c95c96e9b341bffda74818a9228e87294501d723f21"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\32.json",
+      "sha256": "a3b811885286efe5d600ee56ad7140602c4f633e9e223e5af0b103a5c15723ba"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\33.json",
+      "sha256": "4ecbd77cdde52b4ce72cb75494048bd7c5d187a3c08fc20e212885413e8db71c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\34.json",
+      "sha256": "2eabfe1980ecf5c118865d445ddf8f708660c38987d52993410e62128be667aa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\35.json",
+      "sha256": "e8aa3948df08c87dd24d990d34f8c27131941969722978f23c6a5e20a72fe3a9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\36.json",
+      "sha256": "e7054ab15a1a52e7171a446af9d64a208cdcf4712a6c8fc8f19d0a2fec86b2bd"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\37.json",
+      "sha256": "fdab577edfa335ca678e7af5255e4c86aa831af677db0e267344e6d00d7c9f7b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\38.json",
+      "sha256": "d8dc2d8705c20eeba362545838734ca727345ea69274695f690d476cb5d6a011"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\39.json",
+      "sha256": "3e2e91183675896ff40b8eeaa9d6c2cfcb6b9051f94fa2e3ab638508c1f8b58a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\40.json",
+      "sha256": "99fe3dd2e73fca2b07555992114845f3a2883b13c3c5210fc8e29ad8dcf74523"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\41.json",
+      "sha256": "f1272f65bf049a849873c8fd29c8ecc7a673197d44410a7ace8819b8c3876efa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\42.json",
+      "sha256": "347de9be0c68324ab8539110a564c53bfce07d7ab489c87edfc3ed43c5ef0152"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\43.json",
+      "sha256": "31f108103c5b548870d47fcf401f596bce389957795fcf91f8d288523a7bb7c7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\44.json",
+      "sha256": "8c7e6668b1eb4ddf6799c2950b0a02dfad552395d8a4976874ceb3c52798ef55"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\45.json",
+      "sha256": "42e997cad242cddf37fc8be8f27070d06cda0854a4d20d854487fe303c1e141f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\46.json",
+      "sha256": "d44d1d53da4cb7370f4b1238dcc1826a8f92dc93e3820cc59e1afe79a0a31c5f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\47.json",
+      "sha256": "3bcc75275381afa6a3b7425ba10ac2fcc7db98448fe367c0c523089e828d3d51"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\48.json",
+      "sha256": "8ebfe425d1cff0799c57dad0317630c935993d57418c979bffac20f8ea35ad39"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\49.json",
+      "sha256": "a4a365a8825a7a18e7daa9ae6e2bfea99b95e29e41fbc717b35dd9a944b670e5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\50.json",
+      "sha256": "91ae9d1de40ea8cc810334fb3a5d8d0c393b0b95ba7ab88d3935b3a446b37230"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\51.json",
+      "sha256": "7752193134e5a0e96e9b9296cfd4d074ca224489391bacc262144f8a204199f8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\52.json",
+      "sha256": "46bc2875a08db616287750ec347bf5af61bf1279d18bb27578d5d386ee1e208b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\53.json",
+      "sha256": "e20de6e8eed2ef4aecd9e153797de367e65e2e70c3585c1fc7a862afacdf418e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\54.json",
+      "sha256": "24118afd91b09b66b515bbf48e6a7158ca91f0c8316074b00c1aa1fc34538670"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\55.json",
+      "sha256": "fb2c3da78e861464e8f4f1b1f51af19b5d88c17b77b54c4062550372c51045d9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\56.json",
+      "sha256": "5b4d323666040ce2ad3e685dd8eead78760ddb646b42599de3dd62e67354c27a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\57.json",
+      "sha256": "4f957a1a121fb35bac6e426c9e2888795cb30f04d2ceed7f2bf5661ee50aab9d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\58.json",
+      "sha256": "65ff5ba6d969951ee2aaa4bc468871983df9d506567b250737e6294a001f1951"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\59.json",
+      "sha256": "13b18795af452f97757dfd3b36bce894107f3b9a5a63cdd0c4b17f82fd3bea1b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\60.json",
+      "sha256": "47cd808638cf93922768229ffa635047e0ca7f3b0556bbeb00411f0813a85c99"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\61.json",
+      "sha256": "4ba55a1566d0ad5e698ce60a9a06493dfe1a4a2794dd0782255682d64627a59e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\62.json",
+      "sha256": "05d5f772d71c0219ca92e28589899d353ecccd1465213f3da8f372df7e662c55"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\63.json",
+      "sha256": "677b218751fe30bf5e24a7b387af9d971d5eafb2bfb3bce271df66b761419a89"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\64.json",
+      "sha256": "16e7f89cb1a160a94516bd616234f5bd5bd7e0ac7adfb8fef18b469f551da3b8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\65.json",
+      "sha256": "1ae938ae76ed76401b86e8c5d112a98c6ea0aa02712cf414ffdbf8dd74f61cfa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\66.json",
+      "sha256": "bedbfd8a0039c955847107d445a7f2ad9a84e89198c1dd013207c42d9b0d95df"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\67.json",
+      "sha256": "0f2855053267ab4de7fcc711bbdabe05628dc2f0ee238b27673b7840c3cc25c8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\68.json",
+      "sha256": "699eeda442d133ddb7924e14b712afe5c2a628ec42cae40dca1235d26e7da708"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\69.json",
+      "sha256": "0d9cd00dbab371465f90492c2221db66afb8afa2384187bd08b9a3d0ccd47c80"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\70.json",
+      "sha256": "26679562babf227f3cd872aa6253564ef567a94f3f834a04c15cf5496e66ff81"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\71.json",
+      "sha256": "84a036b6632a55b2f11a2fab0a0d43e568f28f39ff4b2569ba4f32ca5c1fc026"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\72.json",
+      "sha256": "2b418604d64a2118db4c95362c11d371b1dfadd7b96aeaec3ce5168924afb185"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\73.json",
+      "sha256": "e95b4158409b04357d744b11519026ef351ab4e3336db11c93bd11eb044ef6e8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\74.json",
+      "sha256": "cd355191e635fccac183f0404f992f4de27f996465e644ae2e3391afaf55abb9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\75.json",
+      "sha256": "b0ca98b85e8794e6f0cb8a1246d573a68646b3710f06d43ee1cc2d5f3195b487"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\76.json",
+      "sha256": "16dfdf66abdaafea019efd17bffa36cbbfd8ee5c75437b1d9a99a7f9bfdaf11c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\77.json",
+      "sha256": "27a48df1a34823791f9a23dfa0e3bcb9beab666e25f67ca21fedc1a3ea5f1efd"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\78.json",
+      "sha256": "145ecb489342b33b9deaf5b3433cec2b1ccbab3e39b00caeaea564fcef8a72d0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\79.json",
+      "sha256": "9d6afcfc4e8e75951f6a77bedb2f0cec793451e364acfedf67852271c0818528"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\80.json",
+      "sha256": "3b4124b5127ef6ddcc3e4b01b69293b801f51182ca6330ad34e726e7f665fea9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\81.json",
+      "sha256": "79bfaa3d71419429f6e0405f54cfead93e618036af9b4aa2069ba24c6f990885"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\82.json",
+      "sha256": "f48019d1d38cfaa810974e4ed0799cc7d9a948cc691c9338719f606eae65e3cb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\83.json",
+      "sha256": "76935728f55c25c8afc83a07c17f98e265d27c0928997c5f9513be17780981f2"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\84.json",
+      "sha256": "54431e9f798ca881c73baf9ce0231b7d6c21126708ae77385a84bc5a16ae411c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\85.json",
+      "sha256": "a63b6fd148c469dfb11523442e8b5b42288002d8b9cc4cf0760c146646ceb72c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\86.json",
+      "sha256": "d851481ed5e93217e37170549021a187072b465e60585a356f8abfad3ad6acfc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\87.json",
+      "sha256": "af32db77cd41c46065eff2333e60a2f5e1edc02697d29e9bfce32042a8ff2412"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\88.json",
+      "sha256": "3aa12144f7472e4ab74b9d26df35f84082b181b96283079ccc5ddac64e4a83a2"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\89.json",
+      "sha256": "c4443655bd21e8e74816eff24dd1e5cb6627b071fb1b7e99a8e9561f9e938bb3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\90.json",
+      "sha256": "cafe831f63e208adb36d362fcad5f8ff066f40c90ad84a9369a779ff570a171e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\91.json",
+      "sha256": "6225b83409d9d8eafa0baa74f569e2eaf1526a55c0c5024a4b5224f63534b56d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\92.json",
+      "sha256": "91fe23557dc2114f0fd18ef620fe1ee07daf4d4d54cd02d0ac01279f11a1f1a5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\93.json",
+      "sha256": "0c6a8a7c9e5b911b50076a13293f6bbcf210271032b1603bc89a56e171a017b6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\94.json",
+      "sha256": "638f6a24b3b47cc17cc093799ddf435bb48e3dc99641e6552c953c709e6230af"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\95.json",
+      "sha256": "2049d28b2cd5676c3c6acf2b47d3f76d29b699e09360297f579f1677bf7765ff"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\96.json",
+      "sha256": "34edf624d3a45e8cf1fc4ee0d42eaf43ab56a1843918ede19955929c7c7a243c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\97.json",
+      "sha256": "c1d4290e100b944a9a5364bc88a62be10d8582562035b5726894b26fac8da9f2"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\98.json",
+      "sha256": "ad70d27f8fd66d03ffb8d9b202dbc841417a8e9c58da27b331ee8522a8f17489"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\99.json",
+      "sha256": "ab7a1451be3f8623da01a37282cdcb81c2dbeac95927c7f8d811767d5fe93608"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\00.json",
+      "sha256": "1071568585cf71d9dc0e367e5e4da579c7f6298271307d3494eec27fd33fd44c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\01.json",
+      "sha256": "0563a98b7918238d70b83326bd150c5b3944f95d5373a8a6c15cce825980a33a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\02.json",
+      "sha256": "9858decaa657a3ded181c4a60431299f9325240912194a56cc778e3239bfe70d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\03.json",
+      "sha256": "d9b23d2d0d431e619c3e172e3ac6f15c2e3f6440a7ef0ce51a18e03eb0ca7026"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\04.json",
+      "sha256": "353223d1e6ad261591556205fb492899be4c04189a47916c57b626abde1bffa5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\05.json",
+      "sha256": "0fd162bbc1786ceb94682b3826e57ce84a1dd7d9270af97505625bacec2c52bc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\06.json",
+      "sha256": "c20e1b6b33a808de83f4083be89320e281b1b30f3a31dedbbb4937bf5d6c8c84"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\07.json",
+      "sha256": "3b83e3ddee5a9ce9170f1434dbc358035193f1c11a035e00463492c740d954a2"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\08.json",
+      "sha256": "36fa8ffa308c13c460466eef9b444502fe81546461e7551519d5c17a0b604621"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\09.json",
+      "sha256": "cd094d7d89c5390d29d72020df9e4909f4563a138a70627f7da9f9fd44912780"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0a.json",
+      "sha256": "3b10fa18f0cbe84b6f946f41c0537965f8101d56de7b3fb145a9d59b008e99be"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0b.json",
+      "sha256": "744e16201478b009245b3a5b355ffc981e97a15ed7ce0f13aed0809cedd653b6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0c.json",
+      "sha256": "2e7198aafa4e4cf1faac0f520f18273603e18c2b4d2cc09ed9403d3472159c1e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0d.json",
+      "sha256": "59d4f591f26c657a0585d2a329a81bc280c6375c4dc65d1e4316ce33252cd079"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0e.json",
+      "sha256": "6a2d57d814179ef13f079e984238ca433aa738800b8b08c2476f55bd4071f739"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\0f.json",
+      "sha256": "ce82354ff1688979d142b4a8b9b875d6f88704f2265483a9f00134716c082733"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1a.json",
+      "sha256": "56bf2a22f92ff3d830cbb2a76440da01b7b099a126a104e37ce6a284dc60e0b9"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1b.json",
+      "sha256": "d3c34bcf29db43b22716835ec422ee5ebe66b12d68737b2268ee31e65554c860"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1c.json",
+      "sha256": "d159ab47ce3e21d9770ee30eddb6ec1a84634255073f3ba420fbedf15fbe8171"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1d.json",
+      "sha256": "c116e8521b1ea47aca266a9300a3018bf6eebfd53e91f8cdef21ab50a8b25ce1"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1e.json",
+      "sha256": "666cc25f0d96d9905f0d431df590d8519555f30d080a891fe1b655b97c867a7e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\1f.json",
+      "sha256": "90a58f077a507a947dceff0113109c9836188a680acc4bb77e3e541c1b5ad96c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2a.json",
+      "sha256": "52cf3b6ba2e2bac88c2987e34fccf0f9daddf290f320ae7209fa713a7b58bada"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2b.json",
+      "sha256": "9e776cc0f1dae05e7ae8052fe40abf4ea50f61f684adbcdcd0edad5ff9487c23"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2c.json",
+      "sha256": "53ad42a6f20952ff5703b1904c5d20dc644d4ca30cd139047fc1171715c8132d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2d.json",
+      "sha256": "a2a16515e018b84ebc7e3e0e57a9a477889dcd6cd73f12e0df538b18c246dfa6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2e.json",
+      "sha256": "00506d935959d91bc1133a173e2dc30cc6600d52a237ac174b8879f1613dd82b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\2f.json",
+      "sha256": "8f3c6598394db0fb9ffbc0102cf4a982054feb24d4d9caf9615e94685a0ac47e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3a.json",
+      "sha256": "7b2286039ac30ee207f17db0d82ef1fd8a143dcc5fe337ce576cf3f66c02f675"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3b.json",
+      "sha256": "a1f1c2916d14529d784eeba7a8365c59e714ae37d2e18087a89f60921fdb7932"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3c.json",
+      "sha256": "adb1f8760323e80f6537b553a3a61c66398addbd67f122b7d63b8dee07777b80"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3d.json",
+      "sha256": "8b9d61ef1a794c8e1c00f45b3c53a0aa07f8eb02aa365a35c527fb759e6d67bc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3e.json",
+      "sha256": "38e19459bd47e37a279184c38ce49d50b9ec57f3c51d9e603e0b7c2d0268fe18"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\3f.json",
+      "sha256": "f0c5c3fcbd43a9ef44f4e2932a1b4e76d113fef9374ff7c7c9376e1cf132a9ee"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4a.json",
+      "sha256": "562b124378dbdecebc2a629ccac8698bb83944a6002b5674cfd85d774e771441"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4b.json",
+      "sha256": "921c0ba3c1880df04936d856da90a81de051489c980e96d79676e32ebf674a7e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4c.json",
+      "sha256": "d674ea702758b30e0a83c97afed6d6adb28a8a1998c4c5dafe568b7d3f346beb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4d.json",
+      "sha256": "f011431e0e4674618891d1d3907cf2bdd8bd3155a46d5a28d9b2c6dd5a18ae61"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4e.json",
+      "sha256": "a2a0de88e2ca9096b6dcf49b80e865687fd01929e2dfd2013c217167b4ea9671"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\4f.json",
+      "sha256": "5e2f8c925a512d3ccf93221d9decf90cc56cf1417345d9ee6f91059d34145a48"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5a.json",
+      "sha256": "578e3064bc0c2bb1343044bfee607e53f1332d160784a1619ae7977b151caaa5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5b.json",
+      "sha256": "45705c21b2f286c891d7e1445ad229892b8f9d70a078cd90306af86e9cdb58a0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5c.json",
+      "sha256": "b833e2221913a4e5df96df1ca0f26ef3dad2608cba4db1c00288381e82ab298a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5d.json",
+      "sha256": "11b03bed6b6582ca6b7ea6714539bf6f909a23a815f26282289dc598de322d1a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5e.json",
+      "sha256": "c25016467d3f11ab93b314787e03a098f6238d68ed9f3bb5a54d2bf2453391fa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\5f.json",
+      "sha256": "6afe09c02237d631f7581494ace574ec829784dc97980e56f48e21945a6d48cf"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6a.json",
+      "sha256": "35eb1927f663581861dabe931ebb6eef7d16765d856559ba4c8eeb2218ca4157"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6b.json",
+      "sha256": "ee640622250ec3072c86c9b1a1f88a32bfb4ec6892979e1975592142401c04a7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6c.json",
+      "sha256": "8980af973338506d2c76eb9ae21661be880b698231a744bfdad71ebd2572d8a2"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6d.json",
+      "sha256": "5fc29be02037dbd2e507f743d0a38a19543ff405f500a4dc0dd5fac5c7d1e7e7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6e.json",
+      "sha256": "7ef2fa9cd7761e865f927bd3ddcaaed64508ac9a2989668fe8cc07214f2f3ac7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\6f.json",
+      "sha256": "0067b05f29e386f026094c37b28c024feba3ebaca0a385662709f3b1014f26ad"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7a.json",
+      "sha256": "8dbddab1db98b024787dfeda7c1c2e6496b8c3053c563d8e71069e50b3584dab"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7b.json",
+      "sha256": "13c51b9218ccf7224ed6f0e0243e3c5f658e6d473005475c9bd54a8df49bba6d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7c.json",
+      "sha256": "a2a06bae0513cdd5aa658e5fca1986e42accb63b2bd83ff86226eab8142df142"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7d.json",
+      "sha256": "fb38a8102074ef234124050425212b4b3c94958f5f7c52ad64f90a039660a567"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7e.json",
+      "sha256": "8999638644a64fc09f1cf9d55c907cff519121447fc3c21ccf3fe1c5ff9c56ab"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\7f.json",
+      "sha256": "ac9ba99e1eefe411f974455bb5187c55f0aff30d38d4e43f196f325b2c62c750"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8a.json",
+      "sha256": "735ef046da5b5ebcf8483fd267f0d7ba1928383e6b86b106dd29eae84ea0d5b0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8b.json",
+      "sha256": "eb0b11cfea209b9078c1dea99ace521d40cb9386bc78b1b05d657751bdefa8e6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8c.json",
+      "sha256": "82b49c1f3820f7b1f91b57521816a8d25d5a1e3d8425f50662935b4b1206a5af"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8d.json",
+      "sha256": "04c7949b40c60760ca044ab068ef410827078f13a65ff190ff1f465daf136503"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8e.json",
+      "sha256": "0107d8547757866f57bcacc6a535cfff5be436f7f24587e17f0baa2b6912acee"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\8f.json",
+      "sha256": "131f87c0c07396f4b921af90721a414ed2eddb9ec8c7da3facf87dd6d4744e66"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9a.json",
+      "sha256": "64cc3fb9f7e04a5578f59833d8db773035611abf446d328bb82bef7073d34194"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9b.json",
+      "sha256": "563f66819bd5474e845bdfb367141e82e939cb26ee2a0e2b316051c1f0a15c47"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9c.json",
+      "sha256": "377fe4cdcdcbdc3a8c569d372b67d3a9afda3b980981fbcb31ccda3782c2c2fd"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9d.json",
+      "sha256": "91368509d2ab7d3248c76195f6b3d9321c7b82aeceb3f0c7da4182ca54723d4a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9e.json",
+      "sha256": "91103251b3e33ec95e3c73428169e6b752ef62d2434503b2276b26c9cf5dda7d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\9f.json",
+      "sha256": "69dd1ebb63580638a006609d5b19e8687c5b1a77ab93bb32c2357d090ecca758"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a0.json",
+      "sha256": "da47986ffd9a7c8187292d66ad51b09f3dc0a4cb870a62a2a37b7db09bbd4a8a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a1.json",
+      "sha256": "e3d8c1e74697c713f8a1cb74cf7c32232f8b38b2a20607588c58839aab6a746f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a2.json",
+      "sha256": "5b05ce7767254892a93c05f92db5eb9c7b1c6debf8c12b580117dcf79c2e96f4"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a3.json",
+      "sha256": "2cfb166708b75ca907b8e2cc791419863d748544cb28673e64f4532b3dc91a44"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a4.json",
+      "sha256": "81aedb1684d6d1dec35ff1b1f55877472fdd5f7a4bbebc88fcd4ed396c8f2ff7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a5.json",
+      "sha256": "1da5e61b73590c619b1c6f4dd47bc606e8818f1311f12e7ec6a4453be33da43e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a6.json",
+      "sha256": "844da07d1bf0ae423443e6ea3219c20ad34c7d30c05a0ab3e374be3f540a7e53"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a7.json",
+      "sha256": "dcc53a1563361e324aa82ca99a047d187789a0f0f93c2eefdd1faf0fdb54663f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a8.json",
+      "sha256": "f3ef56ea41b9eb53a4d394cf9c3138651d8764f317be20306ac44829d45944c8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\a9.json",
+      "sha256": "f002cc952d09f13e32a24859c39702b52fd3a74848c5bc805e352fff427bbca3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\aa.json",
+      "sha256": "071a02a5edd549da0be4d8f778ee47ffbc71d6efe5b726acea25ec6c25e78034"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ab.json",
+      "sha256": "81e782bf05fe18cd9b8bb907b410b8e5ecaf511f82f751e6e4161c656cf0b5e0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ac.json",
+      "sha256": "226eb4cbee88ce24b82433558dda6d56617326652ccd44fb463251cdb63430eb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ad.json",
+      "sha256": "07908352036ef4146cebe9cd6d9d5de4ed4533def5602aba67ee8cee4df2b848"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ae.json",
+      "sha256": "4277564f3f9250fc33b5f84e828f2530fac8c40ac17497afc8e62181ef1aea89"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\af.json",
+      "sha256": "9bed85fe78dd4c9b6fb0a7cb849ab7e6109aed8d6908b0c7ef6b2c80c1338e3b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b0.json",
+      "sha256": "c5c8daf547322144bbcaf047f1908bd1954c4dafb9f55f69e223f9fe2b7ff076"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b1.json",
+      "sha256": "6c0fadfe2b40c4f475cb610e6a5b36f95dcf3bc4358ffcfa350560216c7108b1"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b2.json",
+      "sha256": "e99d56bfbd9e5fcfcff42af47b8d989a9f40cb21cb16a9782f0a3f0c4f0883c5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b3.json",
+      "sha256": "df10bde5073a1406da964f4d86165c61bf60ede0201ed291b77189ad61121cfe"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b4.json",
+      "sha256": "d7b147c5f35024894c95d2e105c96f333eb8f10323e2f918f080c71fc9604cbd"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b5.json",
+      "sha256": "c9801f460138247888087e68fc712ce5ecd701d8e95069da2efed351bfbe00ce"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b6.json",
+      "sha256": "6825ea85b4b021e7ed1cc35df0809e0514a06ace1dc4c2410247e38cc9a15495"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b7.json",
+      "sha256": "e9b5df28dd20f92b1c7a08d62dea2d750a6b0f381be3f5a1e1c001379f9dd802"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b8.json",
+      "sha256": "979ac6586afc2d7ce463cc45b210424ea005f34faaf79480232c6852229b08ba"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\b9.json",
+      "sha256": "b827756124da7bf9bca3a247a3b3b1a589bc7fb31ff3ee569adfd23c5d4cec47"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ba.json",
+      "sha256": "5db557c08826a8495bd9cea218db47f349b4a914da22a1dc9e599222fb49992d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\bb.json",
+      "sha256": "b6d019976c68ccda2f4bad57a588ed7afd6aa062ac75a8543055401e447f80e0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\bc.json",
+      "sha256": "c9b4ae33ace41a63e79f8316ba661efcd92260a6431ca21fc76bcf6867ceda4f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\bd.json",
+      "sha256": "9bdd28a9abd758bd00e676e181c3471f1230a89c2289cac4735ebbf7c558d354"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\be.json",
+      "sha256": "6a6ce434d5674c065f55480b1725d67f2ba8e4aaa9605244746857e4f358637d"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\bf.json",
+      "sha256": "a12e9d69e0a7ccd55c8e9e9d73c3c632d9ff35044fecb608f8c99fbe55c9527e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c0.json",
+      "sha256": "2cd8917289ece459f33cb4129e5a8d18a59fb2a83e9bf0aaa32272a7131c26bc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c1.json",
+      "sha256": "62f7739cbe97f5ee60cddd25233fba989d10089c27d5a979b353453b8a3abc40"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c2.json",
+      "sha256": "c66ef381ac97a311f939148c0c132231807c45976ef4544ae6b00f325f7d7101"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c3.json",
+      "sha256": "a5002280011d570551314b0b7c98584eaf19567678f54d8c7ac1fcb172ee3030"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c4.json",
+      "sha256": "5e8234197479ec15fd31921bbf592c43c7f1e1fbf4ca89273d79ce483ccbef08"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c5.json",
+      "sha256": "b6d8fc0297714e1744dbe3ec663d52c3a83953ff2f10d8bf090e1ab9113af740"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c6.json",
+      "sha256": "bed57c942349d103cd6ce5da4d5ac564c68b22155187070f9d4bb7fc3cf0544b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c7.json",
+      "sha256": "9e5847119ea059d53074ccab06306aa9fa2ba57f82c2a46fa00f9f50e024997e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c8.json",
+      "sha256": "f874c5b799d66cfe56480b12990b139c5c8135e5d3fba00daf26eeef74478c41"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\c9.json",
+      "sha256": "f298d218fc589374d273d045e4c03cab1c15fdd56d0c6b123e37f2f69a523830"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ca.json",
+      "sha256": "c6501b65b23ee1103e8522d49c92bbeda0a681a298abc7975dff3487ac030fd5"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\cb.json",
+      "sha256": "2af3f998f7f5daabc700507d22ae00afa6d460a394627de23009952671b59bf4"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\cc.json",
+      "sha256": "efa86041fe9777cd5fbad8076da2da1a9cf8c25e0563e4c948dc6db6d5c06825"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\cd.json",
+      "sha256": "0b989bd6fc3214a508a133ce6e7727d0cbd6a12f3cae7022b1b288f34d620a52"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ce.json",
+      "sha256": "7634b1f20d96b97bc1be8cb85a56f20edc3a6ccf42af62d10c740a96ef310e61"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\cf.json",
+      "sha256": "980e342248273118d35700a4b735a6c8bff93e501450ca056d7c93a7877ffbbd"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d0.json",
+      "sha256": "c4dfed07c5f7ceda47bfaf7598f341914be85999520933b3d08dce76990cf33c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d1.json",
+      "sha256": "f7940721d1252722eaa7fa3417a486fb43cfdf1fa7a13ca94a984a505b600b91"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d2.json",
+      "sha256": "a742bfdc77a41e033935e00fbeb7097ecc7b9e79fe2b56c32437980ee58b4b0e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d3.json",
+      "sha256": "c8d58660e34b8c6c9ff6c0301eb52bbb897afdf169e144294d38190502d406b3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d4.json",
+      "sha256": "77561673481f24e3611d293f3f5ff9928dece27bba123e283f8e434d4980d7e6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d5.json",
+      "sha256": "b221b55cb1e92dd12eb35cd32ae4b1d1bb84a3b8c32e8d35f33da92920238dfa"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d6.json",
+      "sha256": "845a66a77ddf5b68f31aabdf97c9740128acddcc93298a6298284284de402305"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d7.json",
+      "sha256": "14d507284636d458661c7ed47296f7ded7a30dfc1071a768b9e50de8db6eefeb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d8.json",
+      "sha256": "720e76a515497ede582c7062ee689458f01a36ca51cf3d364c45751d687c31ed"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\d9.json",
+      "sha256": "80e2d40615234b5d420a58baa0e33358ff7d3fddf91df90d5ba2503880eeb798"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\da.json",
+      "sha256": "01d41b2cd43e26be2d2c9d6e9058e8dfa96433d1ec8506cc9da408792e152aad"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\db.json",
+      "sha256": "dc2bd413a3316ccfc06e6c49c7104d6ff7e589ef26c2fd1c30697da49bd597dc"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\dc.json",
+      "sha256": "d83fb021c692a7b07e9a5602a32a759be1f0c4271f814b6ea9fa7e70bd70a973"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\dd.json",
+      "sha256": "558e1fffb7df55c645ed31fd36c4522f94d5613b69de914b9df4314cfa801b0f"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\de.json",
+      "sha256": "8b14bd3520a89bdd445714953e213c5856e259d0c62fedbff4f8682f22664b89"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\df.json",
+      "sha256": "a78090051c1e28f70ad2bf828e5b94526f1fb7d26e0b2c1ef80ff24c449bc050"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e0.json",
+      "sha256": "85e1ce405f0c08860e1c3075161565bcee31d38cfb8339e9e8ba0f4c6d4c3298"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e1.json",
+      "sha256": "58b5c83426927e435eb9001e01398b040dac85f78c6b63ea015d6e531d56cccb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e2.json",
+      "sha256": "4f15f5394e3b4db9eaccb7e3b53fb9e5ee50a0e2f91fe30a9bfa6048e49efbf3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e3.json",
+      "sha256": "de2781b0a654c1e909b5fea395d4fc99b7e96445a6af6f493c6f00def26beaa8"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e4.json",
+      "sha256": "c0b1e5784ab7ca570b44206e793620b55da345ffcb3f109cec8b31651997b9c7"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e5.json",
+      "sha256": "e193c4657f460913b6b15ad726b6b63dfa53f8abe68ba290ce2d3fddf1eb3918"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e6.json",
+      "sha256": "f8d68c32e7aec42dd39061382c4d42ff45e5fde93c3fcc7cc83f24559a670697"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e7.json",
+      "sha256": "9d0a2bcf0dd351db1bc437c6daff2f83c894925d7d8fbf4f8e432bef6292327e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e8.json",
+      "sha256": "1adb47bc76c403be8f45a8599046417c5a15d801c09472867f486bb5dfbd5bef"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\e9.json",
+      "sha256": "2513cded6e86755feb4398b8be4cddba5aedf98bbc31409abd4bcd24b581b7bb"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ea.json",
+      "sha256": "12c2a5b227dde904cea88539fc47de67cf9019a297acfb79c511a3f11773f344"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\eb.json",
+      "sha256": "cc727a3d059b530e24b7410a26d6b16897ac02cb120a799e2e2b0c1b4e38b020"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ec.json",
+      "sha256": "4d0055421e356cbbabc4328d11eaa0a6378a96a9e85ffd77c5cc5e5bc986bce6"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ed.json",
+      "sha256": "37541da55978587cabef3a72f4f93b20be5c2af1a8f56f9df968b342d880a40a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ee.json",
+      "sha256": "085a6cfd0a3fbeaf654efede9ad2f0526d2164cdf1a687817a5305c9da2dc01e"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ef.json",
+      "sha256": "b7e11471f8cdf25d0a2d2033064e0561d71cc9f5983a740112dad8e98435f707"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f0.json",
+      "sha256": "b0dd73cb156931187a2513966f0d6ce670a3980cf6f6c049696aa26ea24d391b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f1.json",
+      "sha256": "e95c128981e47e45ce55b601ae85fffb5ce768807b05607fce37fffe326abac3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f2.json",
+      "sha256": "5e4d6084133b0bc911f4295f7a3641c4308a713e98ec25d37222552b65d905c4"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f3.json",
+      "sha256": "f1ee955b60f437267a6cc0a303beedcd160d53bd801f6dcfec45df56b924dc5b"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f4.json",
+      "sha256": "1f9352be881b4e21f3b2121a3f3f35b2d61872ed32d3a88b2b4d7bac07543945"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f5.json",
+      "sha256": "7e7f8f28b7b01f7ace09aa70a052dc790bbcf1304c3dee95bf6afd59cc6c75e0"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f6.json",
+      "sha256": "d74db3a6880bc17be29f1976f5ff99e356d86e54c9a94a65b0ea997d9a7e4f0a"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f7.json",
+      "sha256": "756faf42a03b90e9a57a70a5ed9fe4ce3cea9a59a6db86b5674ebf8847df90a1"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f8.json",
+      "sha256": "f4055579c4363dcc758eb998e90952b7187e18de37281c5c4298af3cae0288ca"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\f9.json",
+      "sha256": "4828fcfe9330901798111d86569beccee94b31587a929bfffac85ab08e4d7c86"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\fa.json",
+      "sha256": "2ed255e418ffc68019169d0b354e19591f6638949ceac154094a6095e1545cb3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\fb.json",
+      "sha256": "182c44b94fd397dd95fc2ea0318bfa5596fb4b92ca49dc2f77b9067cf874c9be"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\fc.json",
+      "sha256": "a32cf2c2e2f9b48912aeffb5ce1836832ec1b59f77cb3794d44d084d04d19467"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\fd.json",
+      "sha256": "3836604454501c2d0e270f9be565ada990868015d56e767a588186c17fe6b6f3"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\fe.json",
+      "sha256": "02dcb217e56187781f03bbfe7b143e26ff6575649e3762f63569c260d52f410c"
+    },
+    {
+      "path": "20260913-galpedia-static-v2\\runtime-data\\work-static-details-v1\\details\\routes\\ff.json",
+      "sha256": "ffc5f52e397f1eadba7ff88222466de3f0fc378d7f1a1e86d64aa2b4a427046c"
+    }
+  ],
+  "detailsSha256": "7d13563c218b8aed2145ab8a2385e1c34c9fc05f360084dc0a21151112a223ab",
+  "rejectedCharacterFacts": {
+    "bloodType": 929,
+    "height": 558,
+    "birthdayMonth": 1690,
+    "weight": 316,
+    "age": 17,
+    "bust": 43,
+    "waist": 38,
+    "hip": 37,
+    "cupSize": 14
+  },
+  "characterColumns": [
+    "id",
+    "role",
+    "sex",
+    "height",
+    "weight",
+    "bust",
+    "waist",
+    "hip",
+    "age",
+    "birthdayMonth",
+    "bloodType",
+    "cupSize",
+    "invalid",
+    "scoped"
+  ],
+  "catalogSha256": "9c4c6200c3e6aab09c4b95caaa1230e2f881032b1899b7d256c2d61f4d8c7da2"
+}
