@@ -25,5 +25,35 @@
 </div>
 <footer class="page-footer">少女箱庭 · 数据工作台 <span>以公开数据自由探索</span></footer>
 <dialog id="source-dialog"><div class="dialog-top"><h2>这张表用了哪些数据？</h2><button id="close-source" aria-label="关闭数据说明">×</button></div><p>使用 v1.0.10-beta 全量公开快照：30,612 部主作品、34,941 个发行版本。字段缺失不填零，详细统计口径随分析显示。</p><div class="source-links"><a href="full-data/manifest.json">查看字段与来源核对记录 ↗</a><a href="../../../">返回首页</a></div><p class="method">分析方案保存在当前浏览器，不会上传研究条件。导出内容来自公开字段。</p></dialog>
-<div id="toast" role="status" hidden></div><script type="module" src="app.mjs"></script>
+<div id="toast" role="status" hidden></div><!-- workbench-startup -->
+<style>
+body:not([data-ready="true"]) .workspace-top,body:not([data-ready="true"]) .app-grid{display:none}
+#startup-status{max-width:640px;margin:64px auto;padding:28px;border:1px solid #e7dfef;border-radius:12px;background:white;color:#373045}
+#startup-status[hidden]{display:none}#startup-status p{line-height:1.7}#startup-detail{font-size:13px;overflow-wrap:anywhere;color:#746780}
+</style>
+<section id="startup-status" role="status" aria-live="polite"><h1 id="startup-title">正在打开数据工作台</h1><p id="startup-description">正在加载字段与作品数据，完成后即可开始分析。</p><p id="startup-detail"></p><button id="startup-retry" hidden>重新加载</button></section>
+<script>
+(()=>{
+  const byId=id=>document.getElementById(id),panel=byId('startup-status');
+  const showFailure=message=>{
+    byId('startup-title').textContent='工作台未能启动';
+    byId('startup-description').textContent='页面程序或数据没有加载完成。请重新加载；已保存的方案会保留。';
+    byId('startup-detail').textContent=message;
+    byId('startup-retry').hidden=false;
+  };
+  byId('startup-retry').addEventListener('click',()=>location.reload());
+  const timer=setTimeout(()=>{
+    byId('startup-title').textContent='加载时间较长';
+    byId('startup-description').textContent='仍在等待程序或数据响应，可以重新加载后重试。';
+    byId('startup-retry').hidden=false;
+  },45000);
+  const observer=new MutationObserver(()=>{
+    if(document.body.dataset.ready==='true'){panel.hidden=true;clearTimeout(timer);observer.disconnect();}
+    else if(document.body.dataset.error==='true'){clearTimeout(timer);showFailure(byId('result-summary').textContent);observer.disconnect();}
+  });
+  observer.observe(document.body,{attributes:true,attributeFilter:['data-ready','data-error']});
+  import('./app.mjs').catch(error=>{clearTimeout(timer);showFailure('程序加载失败：'+error.message);});
+})();
+</script>
+<!-- /workbench-startup -->
 </body></html>

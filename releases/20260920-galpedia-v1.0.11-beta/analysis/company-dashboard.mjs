@@ -1,4 +1,4 @@
-import {describe,groupField,chartRows} from './model.mjs';
+import {describe,groupField,chartRows,analysisGrain,unitLabel} from './model.mjs';
 import {seriesColor} from './chart-theme.mjs';
 import {format} from './chart.mjs';
 const $=id=>document.getElementById(id);
@@ -16,7 +16,7 @@ export function companySummaries(result,threshold=result.state.cdfThreshold){
       recent:[...rows].sort((a,b)=>String(b.date).localeCompare(String(a.date))||Number(b.id)-Number(a.id)).slice(0,6)};
   });
 }
-const eligible=r=>r.state.groupMode==='manual'&&groupField(r.state)==='company'&&(
+const eligible=r=>(r.groups?.length??0)<=2&&['work','edition'].includes(analysisGrain(r.state))&&r.state.groupMode==='manual'&&groupField(r.state)==='company'&&(
   r.state.chart==='line'&&r.state.x==='year'&&r.state.y==='median'||
   r.state.chart==='ecdf'&&r.state.x==='median'||
   ['density','box'].includes(r.state.chart)&&r.state.y==='median');
@@ -53,9 +53,9 @@ export class CompanyDashboard{
     shortcuts.append(button('字段',()=>this.openEditor('fields')),button('筛选',()=>this.openEditor('filters')));
     this.quick.querySelector('.company-quick-options').append(shortcuts);
 
-    const brushLabel=el('label'),brush=el('input');brush.type='checkbox';brush.id='company-brush';brushLabel.append(brush,document.createTextNode('框选作品'));this.quick.querySelector('.company-quick-options').append(brushLabel);
+    const brushLabel=el('label'),brush=el('input');brush.type='checkbox';brush.id='company-brush';brushLabel.append(brush,document.createTextNode('拖动框选'));this.quick.querySelector('.company-quick-options').append(brushLabel);
     brush.addEventListener('change',()=>this.onChange({brushEnabled:brush.checked},{preserveSelection:true}));
-    for(const axis of ['x','y'])$('axis-drop-'+axis).addEventListener('click',()=>{this.openEditor('main');$(axis+'-field').scrollIntoView({behavior:'instant',block:'center'});},{capture:true});
+    for(const axis of ['x','y'])$('axis-drop-'+axis).addEventListener('click',()=>{this.openEditor('fields');$(axis+'-field').scrollIntoView({behavior:'instant',block:'center'});},{capture:true});
     this.recent=el('details','company-recent');this.recent.id='company-recent';this.recent.hidden=true;
     this.recent.innerHTML='<summary>最近作品 <span>每家最近 6 个版本</span></summary><div class="recent-heading"><div><h2>沿着发行时间，看看最近的作品</h2><p>每家最近 6 个入选 EGS 版本 · 新 → 旧 · 点击评分查看明细</p></div><div class="rating-scale"><span>评分 0</span><i></i><span>100</span></div></div><div id="company-recent-groups" class="company-recent-groups"></div>';
     sheet.after(this.recent);
@@ -66,7 +66,7 @@ export class CompanyDashboard{
     this.dialog=el('dialog','company-dialog');this.dialog.id='company-dialog';this.dialog.setAttribute('aria-labelledby','company-dialog-title');
     this.dialog.innerHTML='<div class="dialog-top"><h2 id="company-dialog-title">更换对比会社</h2><button id="company-dialog-close" aria-label="关闭会社选择">×</button></div><input id="company-search" type="search" aria-label="搜索会社" placeholder="输入会社名称"><p id="company-search-note"></p><div id="company-results"></div>';
     document.body.append(this.dialog);
-    $('company-edit').addEventListener('click',()=>{if(this.editor.open)this.editor.open=false;else this.openEditor('main');});
+    $('company-edit').addEventListener('click',()=>{if(this.editor.open)this.editor.open=false;else this.openEditor('fields');});
     this.editor.addEventListener('toggle',()=>{$('company-edit').setAttribute('aria-expanded',String(this.editor.open));document.body.classList.toggle('company-editing',this.editor.open);});
     this.editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.editor.open=false;(this.editorReturnFocus??$('company-edit')).focus({preventScroll:true});}});
     $('company-explore').addEventListener('click',()=>{this.exploring=true;this.editor.open=false;this.render();this.hero.scrollIntoView({behavior:'smooth',block:'start'});});
@@ -89,13 +89,13 @@ export class CompanyDashboard{
     for(const name of ['fields','main','filters'])$('company-editor-'+name).hidden=name!==tab;
     this.editor.querySelectorAll('[data-editor-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.editorTab===tab)));
   }
-  openEditor(tab='main'){
+  openEditor(tab='fields'){
     if(!this.editor.contains(document.activeElement))this.editorReturnFocus=document.activeElement;
     this.setEditorTab(tab);this.editor.open=true;document.body.classList.add('company-editing');
     this.editor.querySelector('[data-editor-tab="'+tab+'"]').focus({preventScroll:true});
   }
   syncSelection(count,reveal=false){
-    $('company-detail-count').textContent=(count?`已选 ${count}`:`${chartRows(this.getResult()).length}`)+' 个版本';
+    $('company-detail-count').textContent=(count?`已选 ${count}`:`${chartRows(this.getResult()).length}`)+' 个'+unitLabel(this.getResult().state);
     if(count&&reveal)this.tableDetails.open=true;
   }
   changeView(chart){
@@ -110,8 +110,9 @@ export class CompanyDashboard{
         $(target).append(document.querySelector(selector));
       }
       const notes=document.querySelector('.chart-method-details');
-      notes.querySelector('summary').textContent='统计摘要与读图说明';
-      notes.append($('overview'),$('overlay-summary'));
+      notes.querySelector('summary').textContent='读图说明与计算方式';
+      notes.before($('overview'));
+      notes.append($('overlay-summary'));
       document.querySelector('.chart-footer').append($('layer-legend'));
       this.mounted=true;document.body.classList.add('workbench-compact');
     }
@@ -146,7 +147,7 @@ export class CompanyDashboard{
       const change=button('更换 ▾',()=>this.openChoices(i,change));change.setAttribute('aria-label','更换会社 '+g.key);identity.append(change);
       card.append(identity,el('p','company-meta',`${g.n.toLocaleString()} 个有效版本 · ${g.period}`));return card;
     }));
-    if(!groups.length)$('company-cards').append(button('选择要比较的会社',()=>{this.openEditor('main');$('comparison-picker').open=true;$('group-search').focus();}));
+    if(!groups.length)$('company-cards').append(button('选择要比较的会社',()=>{this.openEditor('fields');$('comparison-picker').open=true;$('group-search').focus();}));
     const metrics=[
       {label:'典型评分',value:g=>format(g.median),note:'各版本评分中位数的中位数',view:'line',delta:groups.length===2&&groups.every(g=>g.n)?`相差 ${format(Math.abs(groups[0].median-groups[1].median))} 分`:''},
       {label:'中间 50% 的评分',value:g=>g.n?`${format(g.q1)}–${format(g.q3)}`:'—',note:'范围越窄，中间一半版本越集中',view:'density'},

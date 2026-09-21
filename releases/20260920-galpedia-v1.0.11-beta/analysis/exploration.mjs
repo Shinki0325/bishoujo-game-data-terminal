@@ -1,3 +1,4 @@
+import {minValue,maxValue} from './numeric-extents.mjs';
 import {empiricalCdf} from './statistical-tools.mjs';
 
 export function ranks(values){
@@ -34,7 +35,7 @@ export function lowess(rows,xKey,yKey,{logX=false,fraction=.5}={}){
 export function marginalBins(rows,key,log=false){
   const values=rows.filter(r=>Number.isFinite(r[key])&&(!log||r[key]>0)).map(r=>({id:r.id,value:log?Math.log10(r[key]):r[key]}));
   if(!values.length)return [];
-  let lo=Math.min(...values.map(p=>p.value)),hi=Math.max(...values.map(p=>p.value));if(lo===hi){lo-=.5;hi+=.5;}
+  let lo=minValue(values.map(p=>p.value)),hi=maxValue(values.map(p=>p.value));if(lo===hi){lo-=.5;hi+=.5;}
   const count=24,width=(hi-lo)/count,bins=Array.from({length:count},(_,i)=>({start:lo+i*width,end:lo+(i+1)*width,count:0,ids:[]}));
   for(const p of values){const bin=bins[Math.min(count-1,Math.max(0,Math.floor((p.value-lo)/width)))];bin.count++;bin.ids.push(p.id);}
   return bins.map(b=>({...b,start:log?10**b.start:b.start,end:log?10**b.end:b.end}));
@@ -52,6 +53,11 @@ export function comparisonSeries(groups,rows,state,describe){
     const buckets=new Map();for(const r of valid){const x=r[state.x];if(!buckets.has(x))buckets.set(x,[]);buckets.get(x).push(r);}
     return {...g,points:[...buckets].sort((a,b)=>a[0]-b[0]).map(([x,list])=>({x,y:describe(list.map(r=>r[state.y]))[state.aggregation==='mean'?'mean':'median'],n:list.length,ids:list.map(r=>r.id),label:String(x)}))};
   });
+}
+// Rendering edges only: a missing calendar bucket never becomes an observation.
+export function lineSegments(points,state){
+  const calendar=state.lineUnit==='year'&&['year','month'].includes(state.x);
+  return points.slice(1).map((point,i)=>({from:points[i],to:point,gap:calendar&&point.x-points[i].x>1}));
 }
 export function mergeSelection(current,incoming,mode='replace'){
   if(mode==='replace')return new Set(incoming);

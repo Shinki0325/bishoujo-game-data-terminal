@@ -1,11 +1,13 @@
-import {analyze,configureFields,sanitize,FIELDS} from './model.mjs';
+import {analyze,configureFields,sanitize,FIELDS,analysisGrain} from './model.mjs';
+import {characterRows} from './character-rows.mjs';
 
 export const usedFields=s=>[...(s.chart==='matrix'?s.matrixFields:
   s.chart==='scatter'?[s.x,s.y,s.color]:s.chart==='line'?[s.x,s.y,s.seriesField]:
   s.chart==='ecdf'?[s.x,s.seriesField]:s.chart==='histogram'?[s.x]:
   s.chart==='bar'&&s.aggregation==='count'?[s.x]:[s.x,s.y]),...(s.tag?['tags']:[])];
-export function requiredPacks(s){return [...new Set(['core',...usedFields(s).map(id=>FIELDS.find(f=>f.id===id)?.pack).filter(Boolean)])];}
+export function requiredPacks(s){return [...new Set(['core',...usedFields(s).map(id=>FIELDS.find(f=>f.id===id)?.pack).filter(Boolean),...(['character','appearance'].includes(analysisGrain(s))?['characters','characterEntities']:[])])];}
 export function projectRows(core,packs,s,manifest){
+  if(['character','appearance'].includes(analysisGrain(s)))return characterRows(core,packs,s,manifest);
   const active=usedFields(s),charFields=manifest.fields.filter(f=>f.character&&active.includes(f.id));
   let rows=s.grain==='edition'?core:core.filter(r=>r.primary);
   let characterCount=0,excludedFacts=0,scopedFacts=0;
@@ -33,7 +35,7 @@ export function projectRows(core,packs,s,manifest){
     }
     return r;
   });
-  return {rows,summary:{grain:s.grain,characterCount,excludedFacts,scopedFacts,charFields:charFields.map(f=>f.id)}};
+  return {rows,summary:{grain:analysisGrain(s),characterCount,excludedFacts,scopedFacts,charFields:charFields.map(f=>f.id)}};
 }
 export async function fetchPack(manifest,name,base=import.meta.url){
   const d=manifest.packs[name];if(!d)throw Error('数据包不存在：'+name);
@@ -60,10 +62,10 @@ export class FullEngine{
     const projected=projectRows(this.packs.core,this.packs,s,this.manifest),result=analyze(projected.rows,s);
     // Coverage shown beside the chart follows the current filters, not the entire catalog.
     const charFields=projected.summary.charFields;
-    result.dataSummary={...projected.summary,characterCount:result.rows.reduce((n,r)=>n+(r.characterCount??0),0),
+    result.dataSummary={...projected.summary,characterCount:['character','appearance'].includes(analysisGrain(s))?new Set(result.rows.map(r=>r.characterId)).size:result.rows.reduce((n,r)=>n+(r.characterCount??0),0),
       excludedFacts:result.rows.reduce((n,r)=>n+charFields.reduce((m,k)=>m+(r.characterExcluded?.[k]??0),0),0),
       validCharacters:Object.fromEntries(charFields.map(k=>[k,result.rows.reduce((n,r)=>n+(r.characterValid?.[k]??0),0)]))};
-    this.cache.set(key,result);if(this.cache.size>3)this.cache.delete(this.cache.keys().next().value);
+    this.cache.set(key,result);const limit=['character','appearance'].includes(analysisGrain(s))?1:3;while(this.cache.size>limit)this.cache.delete(this.cache.keys().next().value);
     return {...result,engine:{cached:false,ms:performance.now()-start,packs:Object.keys(this.packs)}};
   }
 }
@@ -71,8 +73,10 @@ export class AnalysisClient{
   constructor(manifest){
     this.worker=new Worker(new URL('./full-worker.mjs',import.meta.url),{type:'module'});this.sequence=0;this.calls=new Map();
     this.worker.onmessage=({data})=>{const call=this.calls.get(data.id);if(!call)return;this.calls.delete(data.id);data.error?call.reject(Error(data.error)):call.resolve(data.value);};
-    this.worker.onerror=()=>{for(const call of this.calls.values())call.reject(Error('后台计算中断，请刷新重试。'));this.calls.clear();};
-    this.ready=this.call('init',manifest);
+    const fail=()=>{for(const call of this.calls.values())call.reject(Error('后台计算中断，请刷新重试。'));this.calls.clear();};
+    this.worker.onerror=fail;this.worker.onmessageerror=fail;
+    const timeout=setTimeout(()=>{for(const call of this.calls.values())call.reject(Error('数据初始化超时，请重新加载。'));this.calls.clear();this.worker.terminate();},35000);
+    this.ready=this.call('init',manifest).finally(()=>clearTimeout(timeout));
   }
   call(type,value){return new Promise((resolve,reject)=>{const id=++this.sequence;this.calls.set(id,{resolve,reject});this.worker.postMessage({id,type,value});});}
   async run(s){await this.ready;return this.call('analyze',s);}

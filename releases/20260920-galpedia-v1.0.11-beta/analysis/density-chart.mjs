@@ -37,7 +37,7 @@ export function drawDensityCurves(chart){
     ctx.font='10px "Segoe UI", "Microsoft YaHei", sans-serif';ctx.textAlign='right';ctx.fillStyle=color;ctx.fillText(shortLabel(ctx,g.label??g.key,p.l-8),p.l-7,rugY+4);
     const byValue=new Map();for(const row of members){const value=row[s.y];if(r.view.active&&!inScoreView(row.median,r.view))continue;if(!byValue.has(value))byValue.set(value,[]);byValue.get(value).push(row.id);}
     for(const [value,ids] of byValue){const x=chart.x(value);if(x<p.l||x>p.r)continue;const selected=ids.some(id=>chart.selected.has(id));ctx.globalAlpha=faded?.12:chart.selected.size&&!selected?.18:.65;ctx.strokeStyle=color;ctx.lineWidth=selected?2.5:1.5;ctx.beginPath();ctx.moveTo(x,rugY-3);ctx.lineTo(x,rugY+4);ctx.stroke();
-      const hit={kind:'point',x,y:rugY,ids,groupKey:String(g.key),text:`${g.label??g.key}\n${field(s.y).short}：${value}\n此分数 ${ids.length} / ${g.n} 个有效版本\n点击查看这些版本；轮廓为平滑估计`};chart.hits.push(hit);chart.brushPoints.push(hit);
+      const hit={kind:'point',x,y:rugY,ids,groupKey:String(g.key),text:`${g.label??g.key}\n${field(s.y).short}：${value}\n此分数 ${ids.length} / ${g.n} 个有效记录\n点击查看这些记录；轮廓为平滑估计`};chart.hits.push(hit);chart.brushPoints.push(hit);
     }ctx.globalAlpha=1;
   }
   ctx.textAlign='left';ctx.fillStyle=THEME.muted;ctx.font='11px "Microsoft YaHei",sans-serif';

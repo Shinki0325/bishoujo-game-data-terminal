@@ -1,5 +1,6 @@
+import {minValue,maxValue} from './numeric-extents.mjs';
 // Shared drawing language; object colors do not depend on sort order or chart type.
-export const THEME=Object.freeze({ink:'#30323c',muted:'#676c76',grid:'#e8e9ed',axis:'#d8dbe1',purple:'#7550a7',teal:'#137e85',background:'#ffffff',context:'#87909e',selection:'#493066',fit:'#a75e2c',cdf:'#a83c70',font:'12px "Segoe UI", "Microsoft YaHei", sans-serif'});
+export const THEME=Object.freeze({ink:'#252b39',muted:'#656477',grid:'#edeaf1',axis:'#d9d6e1',purple:'#6b4a8d',teal:'#137e85',background:'#ffffff',context:'#87909e',selection:'#573a73',fit:'#a75e2c',cdf:'#a83c70',font:'12px Inter, "Segoe UI", "Noto Sans SC", "Noto Sans JP", sans-serif'});
 export const SERIES_COLORS=Object.freeze(['#7550a7','#137e85','#b16a30','#3c71aa','#ab4276','#667d35','#8b5945','#5c61a9','#32745b','#a35b91','#69707c','#9a791f']);
 export function seriesColor(key){
   if(String(key)==='Key')return SERIES_COLORS[0];if(String(key)==='AUGUST')return SERIES_COLORS[1];
@@ -26,4 +27,11 @@ export function axisTicks(min,max,target=5){
   const raw=(max-min)/target;if(!(raw>0))return [min];
   const power=10**Math.floor(Math.log10(raw)),step=[1,2,2.5,5,10].find(v=>v*power>=raw)*power;
   const ticks=[];for(let i=Math.ceil(min/step);i<=Math.floor(max/step+1e-9);i++)ticks.push(Number((i*step).toPrecision(12)));return ticks;
+}
+export function logDomain(values){
+  const positive=values.filter(v=>Number.isFinite(v)&&v>0);
+  if(!positive.length)return [1,10];
+  const min=minValue(positive),max=maxValue(positive);
+  // Only identical values need expansion; a narrow real range must stay narrow.
+  return min<max?[min,max]:[min/Math.sqrt(1.1),max*Math.sqrt(1.1)];
 }

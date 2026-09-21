@@ -1,3 +1,4 @@
+import {cdfCanvasPath,traceCdfPath} from './cdf-presentation.mjs';
 import {THEME,seriesColor} from './chart-theme.mjs';
 export function drawOverlay(chart){
   const overlay=chart.result.overlay;if(!overlay)return;
@@ -45,17 +46,13 @@ export function drawOverlay(chart){
 
 export function drawCdf(chart,curve,secondary=false){
   if(!curve.n)return;
-  const ctx=chart.ctx,{l,r,t,b}=chart.plot,y=v=>b-v*(b-t),points=[{x:l,y:y(0)}];
-  let previous=0;
-  for(const p of curve.points){const x=chart.x(p.value);points.push({x,y:y(previous)},{x,y:y(p.proportion)});previous=p.proportion;}
-  points.push({x:Math.max(r,points.at(-1).x),y:y(1)});
-  // The left endpoint must precede the first sample even when that sample is outside the viewport.
-  points[0].x=Math.min(l,points[1].x);
+  const estimate=chart.result.cdfEstimates?.[secondary?'overlay':'single'];
+  const ctx=chart.ctx,{l,r,t,b}=chart.plot,y=v=>b-v*(b-t),points=cdfCanvasPath(estimate?.available?estimate:curve,estimate?.available?'smooth':'step',chart.x,y,l,r);
   chart.overlayPaths.push({kind:'ecdf',points,color:'#b13a73'});
   ctx.save();ctx.beginPath();ctx.rect(l,t,r-l,b-t);ctx.clip();
-  if(!secondary){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineTo(points.at(-1).x,b);ctx.lineTo(points[0].x,b);ctx.closePath();ctx.fillStyle=THEME.cdf+'0b';ctx.fill();}
+  if(!secondary){ctx.beginPath();traceCdfPath(ctx,points);ctx.lineTo(points.at(-1).x,b);ctx.lineTo(points[0].x,b);ctx.closePath();ctx.fillStyle=THEME.cdf+'0b';ctx.fill();}
   for(const [color,width] of [['#ffffff',4.4],['#b13a73',2.2]]){
-    ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+    ctx.beginPath();traceCdfPath(ctx,points);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
   }ctx.restore();
   if(secondary){
     ctx.save();ctx.strokeStyle='#dcb6c9';ctx.beginPath();ctx.moveTo(r,t);ctx.lineTo(r,b);ctx.stroke();ctx.fillStyle='#a13068';ctx.textAlign='left';ctx.font='11px "Segoe UI",sans-serif';

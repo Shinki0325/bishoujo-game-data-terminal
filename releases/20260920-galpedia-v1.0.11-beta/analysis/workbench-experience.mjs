@@ -11,7 +11,7 @@ export class WorkbenchExperience{
     const main=$('company-editor-main'),options=$('chart-options');
     document.querySelector('.chart-tabs').hidden=true;
     this.sections=[
-      section('inspector-layers','叠加曲线与分布',['overlay-control','scatter-density-control','cumulative-control','lowess-control','marginals-control','smoothing-control'],options),
+      section('inspector-layers','叠加曲线与分布',['overlay-control','smoothing-control','scatter-density-control','lowess-control','marginals-control','cumulative-control','cdf-style-control','cdf-smoothing-control','cdf-style-note'],options),
       section('inspector-groups','分组与排列',['facet-control','top-control','group-mode-control','group-sort-control','min-group-control'],options),
       section('inspector-range','坐标范围',['score-view-control','log-control'],main),
       section('inspector-selection','框选方式',['selection-toolbar'],main)

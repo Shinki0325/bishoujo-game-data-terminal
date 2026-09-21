@@ -1,3 +1,4 @@
+import {minValue,maxValue} from './numeric-extents.mjs';
 import {lowess} from './exploration.mjs';
 import {empiricalCdf,jointDensity} from './statistical-tools.mjs';
 // Dependency-free OLS and univariate Gaussian KDE; method references are in the report.
@@ -8,7 +9,7 @@ export function linearFit(rows,xKey,yKey,logX=false){
   const meanX=points.reduce((sum,p)=>sum+p.x,0)/n,meanY=points.reduce((sum,p)=>sum+p.y,0)/n;
   let xx=0,xy=0,yy=0;for(const p of points){const x=p.x-meanX,y=p.y-meanY;xx+=x*x;xy+=x*y;yy+=y*y;}
   if(!(xx>0))return {available:false,n,reason:'横轴数值完全相同，无法拟合斜率。'};
-  const slope=xy/xx,intercept=meanY-slope*meanX,min=Math.min(...points.map(p=>p.x)),max=Math.max(...points.map(p=>p.x));
+  const slope=xy/xx,intercept=meanY-slope*meanX,min=minValue(points.map(p=>p.x)),max=maxValue(points.map(p=>p.x));
   return {available:true,n,logX,slope,intercept,meanX,meanY,rSquared:yy>0?Math.max(0,Math.min(1,xy*xy/(xx*yy))):null,
     points:[min,max].map(x=>({x:logX?10**x:x,y:meanY+slope*(x-meanX)}))};
 }
@@ -32,9 +33,10 @@ export function gaussianKde(values,{bounds,scale=1,minPoints=129}={}){
     for(const [sample,weight] of entries){const z=(value-sample)/bandwidth;sum+=weight*Math.exp(-.5*z*z);}
     return {value,pdf:sum/(n*bandwidth*Math.sqrt(2*Math.PI))};
   });
-  return {available:true,n,bandwidth,bounds:[lo,hi],points,maxPdf:Math.max(...points.map(p=>p.pdf))};
+  return {available:true,n,bandwidth,bounds:[lo,hi],points,maxPdf:maxValue(points.map(p=>p.pdf))};
 }
 export function buildOverlays(result,metricRange){
+  if(result.categoryDistribution)return null;
   const s=result.state;
   const fit=()=>s.trendMethod==='lowess'?lowess(result.points,s.x,s.y,{logX:s.logX,fraction:s.lowessFraction}):linearFit(result.points,s.x,s.y,s.logX);
   if(s.chart==='scatter'&&s.scatterDensity)return {kind:'scatter-layers',

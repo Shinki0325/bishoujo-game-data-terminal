@@ -1,8 +1,10 @@
-import {field,inScoreView,niceWidth} from './model.mjs';
+import {cdfDisplayAt} from './cdf-presentation.mjs';
+import {minValue,maxValue} from './numeric-extents.mjs';
+import {field,inScoreView,niceWidth,unitLabel} from './model.mjs';
 import {drawOverlay,drawCdf} from './overlay-chart.mjs';
 import {cdfAt} from './statistical-tools.mjs';
 import {drawSeries,drawMatrix,drawMarginals,brushIds,seriesHit,SERIES_COLORS} from './exploration-chart.mjs';
-import {THEME,seriesColor,shortLabel,chartLabel,axisTicks} from './chart-theme.mjs';
+import {THEME,seriesColor,shortLabel,chartLabel,axisTicks,logDomain} from './chart-theme.mjs';
 import {drawDensityCurves} from './density-chart.mjs';
 const COLORS=SERIES_COLORS;
 const integerFormatter=new Intl.NumberFormat('zh-CN');
@@ -40,22 +42,24 @@ export class Chart {
       if(p.x<l||p.x>r||p.y<t||p.y>b)return null;
       const value=this.invertX(p.x),key=this.result.state.x;
       const ids=this.result.rows.filter(row=>Number.isFinite(row[key])&&row[key]<=value).map(row=>row.id);
-      return {kind:'cdf',ids,text:`${field(key).short} ≤ ${value.toLocaleString('zh-CN',{maximumFractionDigits:2})}\n累计 ${ids.length.toLocaleString()} / ${this.result.cdf.n.toLocaleString()} 个版本（${(cdfAt(this.result.cdf,value)*100).toFixed(1)}%）\n点击查看小于等于此值的版本`};
+      return {kind:'cdf',ids,text:`${field(key).short} ≤ ${value.toLocaleString('zh-CN',{maximumFractionDigits:2})}\n实际累计 ${ids.length.toLocaleString()} / ${this.result.cdf.n.toLocaleString()} 个版本（${(cdfAt(this.result.cdf,value)*100).toFixed(1)}%）\n点击查看小于等于此值的版本`};
     }
     let best=null,d=Infinity;for(const h of this.hits){if(this.result.state.brushGroup&&h.groupKey&&h.groupKey!==this.result.state.brushGroup)continue;if(h.kind==='point'){const n=(p.x-h.x)**2+(p.y-h.y)**2;if(n<64&&n<d){best=h;d=n;}}
     else if(p.x>=h.left&&p.x<=h.right&&p.y>=h.top&&p.y<=h.bottom)best=h;}return best;}
-  hover(p){const h=this.hit(p);if(!h){this.tooltip.hidden=true;return;}this.tooltip.textContent=h.text;this.tooltip.hidden=false;
+  hover(p){const h=this.hit(p);if(!h){this.tooltip.hidden=true;return;}this.tooltip.textContent=h.text.replaceAll('版本',unitLabel(this.result.state));this.tooltip.hidden=false;
     const width=this.tooltip.offsetWidth,height=this.tooltip.offsetHeight;
     const wrap=this.canvas.parentElement;
-    this.tooltip.style.left=Math.max(wrap.scrollLeft+4,Math.min(p.x+14,wrap.scrollLeft+wrap.clientWidth-width-4))+'px';this.tooltip.style.top=Math.max(4,Math.min(p.y+14,this.h-height-4))+'px';}
+    const left=p.x+14+width<=wrap.scrollLeft+wrap.clientWidth-4?p.x+14:p.x-width-14;
+    const top=p.y+14+height<=this.h-4?p.y+14:p.y-height-14;
+    this.tooltip.style.left=Math.max(wrap.scrollLeft+4,left)+'px';this.tooltip.style.top=Math.max(4,top)+'px';}
   draw(){
     if(!this.result)return;
     this.onBeforeDraw?.(this);
-    const s=this.result.state,curveView=!!this.result.densityCurves,grouped=!curveView&&['box','bar','density'].includes(s.chart),wrap=this.canvas.parentElement;
+    const s=this.result.state,curveView=!!this.result.densityCurves,grouped=!curveView&&(this.result.categoryDistribution||['box','bar','density'].includes(s.chart)),wrap=this.canvas.parentElement;
     wrap.style.height=curveView?Math.max(wrap.clientWidth<500?310:360,this.result.groups.length*12+270)+'px':s.chart==='matrix'?Math.min(600,Math.max(360,wrap.clientWidth*.72))+'px':this.result.series&&s.facet?Math.max(250,Math.ceil(this.result.series.length/(wrap.clientWidth>=640?2:1))*250)+'px':'';
     this.canvas.dataset.select=String(s.brushEnabled);wrap.classList.toggle('is-grouped',grouped);wrap.classList.toggle('is-density',s.chart==='density'&&!curveView);wrap.classList.toggle('is-density-curve',curveView);
     this.displayGroups=this.groupWindow?this.result.groups.slice(this.groupWindow.start,this.groupWindow.end+1):this.result.groups;
-    this.canvas.style.width=(grouped&&!this.groupWindow?Math.max(wrap.clientWidth,this.result.groups.length*74+92):wrap.clientWidth)+'px';
+    this.canvas.style.width=(grouped&&!this.groupWindow&&!(s.x==='birthdayMonth'&&(this.result.categoryDistribution||(s.chart==='bar'&&s.aggregation==='count'||this.result.categoryDistribution)))?Math.max(wrap.clientWidth,this.result.groups.length*74+92):wrap.clientWidth)+'px';
     const rect=this.canvas.getBoundingClientRect();if(rect.width<10)return;
     this.w=rect.width;this.h=rect.height;const ratio=Math.min(devicePixelRatio||1,2);
     this.canvas.width=Math.round(this.w*ratio);this.canvas.height=Math.round(this.h*ratio);
@@ -69,24 +73,25 @@ export class Chart {
     if(s.chart==='scatter'){
       const xs=this.result.points.map(r=>r[s.x]),ys=this.result.points.map(r=>r[s.y]);
       [xmin,xmax]=this.domain(xs,s.x);[ymin,ymax]=this.domain(ys,s.y);
-      if(s.logX){xmin=Math.max(.1,Math.min(...xs));xmax=Math.max(xmin*1.1,Math.max(...xs));}
+      if(s.logX)[xmin,xmax]=logDomain(xs);
     }else if(s.chart==='ecdf'){
       [xmin,xmax]=this.domain(this.result.cdf.points.map(p=>p.value),s.x);ymax=1;
-    }else if(s.chart==='histogram'){
+    }else if(s.chart==='histogram'&&!this.result.categoryDistribution){
       xmin=field(s.x).range?.[0]??this.result.bins[0]?.start??0;xmax=Math.max(field(s.x).range?.[1]??1,this.result.bins.at(-1)?.end??1);ymax=Math.max(1,this.result.overlay?.maxCount??0,...this.result.bins.map(b=>b.count))*1.12;
     }else{
       xmax=this.displayGroups.length;
-      if(s.chart==='bar'&&s.aggregation==='count')ymax=Math.max(1,...this.result.groups.map(g=>g.count))*1.15;
+      if((s.chart==='bar'&&s.aggregation==='count'||this.result.categoryDistribution))ymax=Math.max(1,...this.result.groups.map(g=>g.count))*1.15;
       else [ymin,ymax]=this.domain(this.result.groups.flatMap(g=>[g.min,g.max]).filter(Number.isFinite),s.y);
       if(s.chart==='density')[ymin,ymax]=this.result.density.bounds;
     }
-    const countAxis=s.chart==='histogram'||s.chart==='bar'&&s.aggregation==='count';
+    if(this.result.histogramView?.active)[xmin,xmax]=[this.result.histogramView.min,this.result.histogramView.max];
+    const countAxis=s.chart==='histogram'&&!this.result.categoryDistribution||(s.chart==='bar'&&s.aggregation==='count'||this.result.categoryDistribution);
     const countStep=countAxis?niceWidth(ymax,5):null;if(countAxis)ymax=Math.ceil(ymax/countStep)*countStep;
     const view=this.result.view;
     if(view.active){
       let end=view.max;
       if(end===100&&s.chart==='density')end=Math.max(end,this.result.density.bounds[1]);
-      if(end===100&&s.chart==='histogram')end=Math.max(end,this.result.bins.at(-1)?.end??end);
+      if(end===100&&s.chart==='histogram'&&!this.result.categoryDistribution)end=Math.max(end,this.result.bins.at(-1)?.end??end);
       if(view.axis==='y')[ymin,ymax]=[view.min,end];else [xmin,xmax]=[view.min,end];
     }
     const {l,r,t,b}=this.plot,log=s.chart==='scatter'&&s.logX;
@@ -101,25 +106,26 @@ export class Chart {
       let ticks=[];if(s.x==='median'&&!log&&!view.active){ticks=[0,20,40,60,80,100];}
       else if(s.x==='month'&&!log){ticks=Array.from({length:12},(_,i)=>i+1).filter(v=>v>=xmin&&v<=xmax);}
       else if(log){for(let e=Math.ceil(Math.log10(xmin));e<=Math.floor(Math.log10(xmax));e++)ticks.push(10**e);if(!ticks.length)ticks=[xmin,xmax];}
+      else if(s.chart==='histogram'){ticks=axisTicks(xmin,xmax);if(ticks.length<2)ticks=[xmin,xmax];}
       else{for(let i=0;i<=5;i++)ticks.push(xmin+(xmax-xmin)*i/5);}
       ctx.textAlign='center';ctx.fillStyle=THEME.muted;for(const v of ticks){ctx.fillText(s.x==='year'?String(Math.round(v)):format(v),this.x(v),b+18);}
     }
-    ctx.fillStyle=THEME.muted;ctx.font='11px "Microsoft YaHei", sans-serif';ctx.textAlign='center';ctx.fillText(field(s.x).label+(s.chart==='histogram'?' / 每箱 '+format(this.result.actualBinWidth):''),(l+r)/2,this.h-8);
-    if(s.chart==='histogram'||s.chart==='bar'&&s.aggregation==='count'||s.chart==='ecdf'){ctx.save();ctx.textAlign='left';ctx.fillText(s.chart==='ecdf'?'累计比例':'版本数量',l,t-14);ctx.restore();}
-    if(s.chart==='scatter')this.scatter();else if(s.chart==='histogram')this.hist();else if(s.chart==='ecdf'){
+    ctx.fillStyle=THEME.muted;ctx.font='11px "Microsoft YaHei", sans-serif';ctx.textAlign='center';ctx.fillText(field(s.x).label+(s.chart==='histogram'&&!this.result.categoryDistribution?' / 每箱 '+format(this.result.actualBinWidth):''),(l+r)/2,this.h-8);
+    if(s.chart==='histogram'&&!this.result.categoryDistribution||(s.chart==='bar'&&s.aggregation==='count'||this.result.categoryDistribution)||s.chart==='ecdf'){ctx.save();ctx.textAlign='left';ctx.fillText(s.chart==='ecdf'?'累计比例':unitLabel(s)+'数量',l,t-14);ctx.restore();}
+    if(s.chart==='scatter')this.scatter();else if(s.chart==='histogram'&&!this.result.categoryDistribution)this.hist();else if(s.chart==='ecdf'){
       drawCdf(this,this.result.cdf);
-      this.brushPoints=this.result.rows.filter(row=>Number.isFinite(row[s.x])).map(row=>({x:this.x(row[s.x]),y:this.y(cdfAt(this.result.cdf,row[s.x])),ids:[row.id]})).filter(p=>p.x>=l&&p.x<=r);
+      this.brushPoints=this.result.rows.filter(row=>Number.isFinite(row[s.x])).map(row=>({x:this.x(row[s.x]),y:this.y(this.result.cdfEstimates?.single?.available?cdfDisplayAt(this.result.cdfEstimates.single,row[s.x],'smooth'):cdfAt(this.result.cdf,row[s.x])),ids:[row.id]})).filter(p=>p.x>=l&&p.x<=r);
       const x=this.x(s.cdfThreshold),y=this.y(cdfAt(this.result.cdf,s.cdfThreshold));
-      if(x>=l&&x<=r){ctx.save();ctx.strokeStyle='#c86a97';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(x,y);ctx.lineTo(x,b);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#b13a73';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.restore();chartLabel(ctx,`≤ ${format(s.cdfThreshold)}：${(cdfAt(this.result.cdf,s.cdfThreshold)*100).toFixed(1)}%`,Math.min(r-4,Math.max(l+4,x)),Math.max(t+14,y-12),{color:THEME.cdf,align:x>(l+r)/2?'right':'left',maxWidth:Math.min(180,r-l-8)});}
+      if(x>=l&&x<=r){ctx.save();ctx.strokeStyle='#c86a97';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(x,y);ctx.lineTo(x,b);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#b13a73';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();ctx.restore();chartLabel(ctx,`实际 ≤ ${format(s.cdfThreshold)}：${(cdfAt(this.result.cdf,s.cdfThreshold)*100).toFixed(1)}%`,Math.min(r-4,Math.max(l+4,x)),Math.max(t+14,y-12),{color:THEME.cdf,align:x>(l+r)/2?'right':'left',maxWidth:Math.min(180,r-l-8)});}
     }else if(s.chart==='density')this.density();else this.groups();
     drawMarginals(this);drawOverlay(this);
     this.drawBrush();this.onDraw?.(this);
   }
   drawBrush(){if(!this.brush)return;const ctx=this.ctx,{a,b}=this.brush;ctx.fillStyle='#73519b26';ctx.strokeStyle='#73519b';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.setLineDash([]);}
-  domain(values,key){if(!values.length)return[0,1];if(field(key)?.range)return [...field(key).range];let min=Math.min(...values),max=Math.max(...values);if(key==='votes')min=0;
+  domain(values,key){if(!values.length)return[0,1];if(field(key)?.range)return [...field(key).range];let min=minValue(values),max=maxValue(values);if(key==='votes')min=0;
     if(min===max)return[min-1,max+1];const pad=(max-min)*.025;return [key==='year'?min:min===0?0:min-pad,max+pad];}
   colorLegend(){
-    const {state:s,points=[]}=this.result;if(this.result.series||this.result.densityCurves)return (this.result.series??this.result.groups).map(g=>({label:g.label+(this.result.densityCurves?' · '+g.n+' 个版本':''),color:seriesColor(g.key),groupKey:String(g.key)}));if(s.chart!=='scatter'||s.color==='none')return[];
+    const {state:s,points=[]}=this.result;if(this.result.series||this.result.densityCurves)return (this.result.series??this.result.groups).map(g=>({label:g.label+(this.result.densityCurves?' · '+g.n+' 个'+unitLabel(this.result.state):''),color:seriesColor(g.key),groupKey:String(g.key)}));if(s.chart!=='scatter'||s.color==='none')return[];
     return [...new Set(points.map(r=>r[s.color]??'未标注'))].sort().map((v,i)=>({label:v,color:seriesColor(v),groupKey:String(v)}));
   }
   scatter(){const ctx=this.ctx,{state:s,points}=this.result;
@@ -132,13 +138,13 @@ export class Chart {
       const focused=s.brushGroup&&String(r[s.color])===s.brushGroup;
       ctx.globalAlpha=s.brushGroup&&!focused?.08:active?(selected?1:.12):focused?.85:s.color==='none'?.23:.3;ctx.fillStyle=(active&&!selected||s.brushGroup&&!focused)?THEME.context:map.get(r[s.color])??THEME.purple;ctx.beginPath();ctx.arc(x,y,selected?4:focused?2.8:1.9,0,Math.PI*2);ctx.fill();
       if(selected){ctx.globalAlpha=.9;ctx.strokeStyle='#ffffff';ctx.lineWidth=1.3;ctx.stroke();}
-      this.hits.push({kind:'point',x,y,ids:[r.id],groupKey:String(r[s.color]??''),text:r.title+'\n'+field(s.x).label+'：'+format(r[s.x])+'  ·  '+field(s.y).label+'：'+format(r[s.y])+'\n'+r.company+' · EGS '+r.id});
+      this.hits.push({kind:'point',x,y,ids:[r.id],groupKey:String(r[s.color]??''),text:r.title+'\n'+field(s.x).label+'：'+format(r[s.x])+'  ·  '+field(s.y).label+'：'+format(r[s.y])+'\n'+(r.characterId?'角色来源 ID：'+r.characterId+(r.workTitle?'\n关联作品：'+r.workTitle+' · EGS '+r.workId:'\n关联 '+r.workIds.length+' 部主作品'):r.company+' · EGS '+r.id)});
     }ctx.restore();ctx.globalAlpha=1;
   }
   hist(){const ctx=this.ctx,{bins,overlay}=this.result,{b,t,l,r}=this.plot;
     const nonempty=bins.filter(bin=>bin.count),showValues=nonempty.length<=12&&!overlay;
     ctx.save();ctx.font=THEME.font;
-    for(const bin of bins){const left=Math.max(l,this.x(bin.start)+.8),right=Math.min(r,this.x(bin.end)-.8),top=this.y(bin.count);
+    for(const bin of bins){const gap=Math.min(.8,(this.x(bin.end)-this.x(bin.start))*.08),left=Math.max(l,this.x(bin.start)+gap),right=Math.min(r,this.x(bin.end)-gap),top=this.y(bin.count);
       if(right<=left)continue;
       const selected=bin.ids.some(id=>this.selected.has(id));ctx.globalAlpha=this.selected.size&&!selected?.18:overlay?.48:.76;ctx.fillStyle=THEME.purple;
       ctx.fillRect(left,top,Math.max(1,right-left),b-top);
@@ -147,16 +153,17 @@ export class Chart {
       this.hits.push({kind:'rect',left,right,top,bottom:b,ids:bin.ids,text:`[${format(bin.start)}, ${format(bin.end)})\n${bin.count.toLocaleString()} 个版本 · 占 ${(bin.count/this.result.plottedCount*100).toFixed(1)}%\n点选使用完整分箱`});
     }ctx.restore();
   }
+  countText(g){const {state:s,plottedCount,categoryDistribution}=this.result;return categoryDistribution||s.chart==='bar'&&s.aggregation==='count'?`${g.label??g.key}\n${g.count.toLocaleString()} 个${unitLabel(s)} · 占已知资料 ${plottedCount?(g.count/plottedCount*100).toFixed(1):'0.0'}%\n点击查看明细`:null;}
   groupHeader(g,center,step){
     const ctx=this.ctx,{b,t}=this.plot;
     const compact=!!this.groupWindow&&step<74,index=this.displayGroups?.indexOf(g)??0,last=(this.displayGroups?.length??1)-1,stride=Math.max(1,Math.ceil(64/step));
     const labelVisible=!compact||index===last||index%stride===0&&index<=last-stride;
-    ctx.save();ctx.globalAlpha=1;ctx.textAlign='center';ctx.fillStyle=THEME.muted;ctx.font='11px "Microsoft YaHei", sans-serif';if(labelVisible&&!(this.result.state.chart==='bar'&&this.result.state.aggregation==='count')){const n=this.result.state.chart==='bar'?g.count:g.n;ctx.fillStyle=n>0&&n<5?'#98632e':THEME.muted;ctx.fillText(compact?'n='+n:n+' 个版本',center,23);}
-    const name=g.label??String(g.key);ctx.fillStyle=THEME.ink;
+    ctx.save();ctx.globalAlpha=1;ctx.textAlign='center';ctx.fillStyle=THEME.muted;ctx.font='11px "Microsoft YaHei", sans-serif';if(labelVisible&&!((this.result.state.chart==='bar'&&this.result.state.aggregation==='count'||this.result.categoryDistribution))){const n=this.result.state.chart==='bar'?g.count:g.n;ctx.fillStyle=n>0&&n<5?'#98632e':THEME.muted;ctx.fillText(compact?'n='+n:n+' 个'+unitLabel(this.result.state),center,23);}
+    const name=this.result.state.x==='birthdayMonth'&&step<36?String(parseInt(g.key)):g.label??String(g.key);ctx.fillStyle=THEME.ink;
     if(labelVisible){if(this.groupWindow||ctx.measureText(name).width<=step*.88)ctx.fillText(name,center,b+23);
     else{const chars=[...name];let first='';while(chars.length&&ctx.measureText(first+chars[0]).width<=step*.88)first+=chars.shift();ctx.fillText(first,center,b+21);ctx.fillText(shortLabel(ctx,chars.join(''),step*.88),center,b+37);}}
     const shared={kind:'rect',left:center-step*.46,right:center+step*.46,ids:g.ids,groupKey:String(g.key),
-      text:name+`\n${g.count} 个版本 · 有效数值 ${g.n}\n中位数 ${format(g.median)} · 平均值 ${format(g.mean)}\n点击选择整组`};
+      text:this.countText(g)??name+`\n${g.count} 个版本 · 有效数值 ${g.n}\n中位数 ${format(g.median)} · 平均值 ${format(g.mean)}\n点击选择整组`};
     this.hits.push({...shared,top:0,bottom:t-4},{...shared,top:b+3,bottom:b+52});ctx.restore();
   }
   density(){
@@ -180,7 +187,7 @@ export class Chart {
   }
   groups(){const ctx=this.ctx,{state:s}=this.result,groups=this.displayGroups,{b,t}=this.plot;
     const step=(this.plot.r-this.plot.l)/groups.length;
-    groups.forEach((g,i)=>{const center=this.x(i+.5),width=Math.min(s.chart==='bar'?86:64,step*.56),selected=g.ids.some(id=>this.selected.has(id));
+    groups.forEach((g,i)=>{const center=this.x(i+.5),width=Math.min(s.chart==='bar'||this.result.categoryDistribution?86:64,step*.56),selected=g.ids.some(id=>this.selected.has(id));
       ctx.save();ctx.beginPath();ctx.rect(this.plot.l,t,this.plot.r-this.plot.l,b-t);ctx.clip();
       ctx.globalAlpha=s.brushGroup&&String(g.key)!==s.brushGroup?.18:this.selected.size&&!selected?.2:1;ctx.strokeStyle=seriesColor(g.key);ctx.fillStyle=seriesColor(g.key)+(selected?'50':'20');ctx.lineWidth=1.2;
       if(selected){ctx.fillStyle=seriesColor(g.key)+'0c';ctx.fillRect(center-step*.42,t,step*.84,b-t);ctx.fillStyle=seriesColor(g.key)+'30';}
@@ -188,11 +195,11 @@ export class Chart {
         ctx.strokeStyle=THEME.context;ctx.beginPath();ctx.moveTo(center,this.y(g.min));ctx.lineTo(center,this.y(g.max));ctx.moveTo(center-width*.2,this.y(g.min));ctx.lineTo(center+width*.2,this.y(g.min));ctx.moveTo(center-width*.2,this.y(g.max));ctx.lineTo(center+width*.2,this.y(g.max));ctx.stroke();
         ctx.strokeStyle=seriesColor(g.key);ctx.fillRect(center-width/2,this.y(g.q3),width,Math.max(2,this.y(g.q1)-this.y(g.q3)));ctx.strokeRect(center-width/2,this.y(g.q3),width,Math.max(2,this.y(g.q1)-this.y(g.q3)));
         ctx.strokeStyle=seriesColor(g.key);ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(center-width/2,this.y(g.median));ctx.lineTo(center+width/2,this.y(g.median));ctx.stroke();
-      }else if(s.chart==='bar'){const val=s.aggregation==='count'?g.count:g[s.aggregation];if(Number.isFinite(val)){const baseline=this.y(0);ctx.fillStyle=seriesColor(g.key);ctx.fillRect(center-width/2,this.y(val),width,Math.max(1,Math.min(b,baseline)-this.y(val)));}}
+      }else if(s.chart==='bar'||this.result.categoryDistribution){const val=s.aggregation==='count'||this.result.categoryDistribution?g.count:g[s.aggregation];if(Number.isFinite(val)){const baseline=this.y(0);ctx.fillStyle=seriesColor(g.key);ctx.fillRect(center-width/2,this.y(val),width,Math.max(1,Math.min(b,baseline)-this.y(val)));}}
       ctx.restore();this.groupHeader(g,center,step);
-      const value=s.chart==='box'?g.median:s.aggregation==='count'?g.count:g[s.aggregation];
-      if(Number.isFinite(value)&&this.y(value)>=t&&this.y(value)<=b){const beside=s.chart==='box'&&step>=210;chartLabel(ctx,(s.chart==='box'&&step>=90?'中位 ':'')+format(value),beside?center+width/2+8:center,beside?this.y(value)+4:Math.max(t+13,this.y(s.chart==='box'?g.q3:value)-9),{color:seriesColor(g.key),align:beside?'left':'center',maxWidth:beside?(step-width)/2-16:step*.88});}
-      this.hits.push({kind:'rect',left:center-step*.46,right:center+step*.46,top:t,bottom:b+55,ids:g.ids,groupKey:String(g.key),text:String(g.key)+`\n${g.count} 个版本 · 有效数值 ${g.n}\n中位数 ${format(g.median)} · 平均值 ${format(g.mean)}\n范围 ${format(g.min)} – ${format(g.max)}`});
+      const value=s.chart==='box'?g.median:s.aggregation==='count'||this.result.categoryDistribution?g.count:g[s.aggregation];
+      if(!(s.x==='birthdayMonth'&&step<48)&&Number.isFinite(value)&&this.y(value)>=t&&this.y(value)<=b){const beside=s.chart==='box'&&step>=210;chartLabel(ctx,(s.chart==='box'&&step>=90?'中位 ':'')+format(value),beside?center+width/2+8:center,beside?this.y(value)+4:Math.max(t+13,this.y(s.chart==='box'?g.q3:value)-9),{color:seriesColor(g.key),align:beside?'left':'center',maxWidth:beside?(step-width)/2-16:step*.88});}
+      this.hits.push({kind:'rect',left:center-step*.46,right:center+step*.46,top:t,bottom:b+55,ids:g.ids,groupKey:String(g.key),text:this.countText(g)??String(g.key)+`\n${g.count} 个版本 · 有效数值 ${g.n}\n中位数 ${format(g.median)} · 平均值 ${format(g.mean)}\n范围 ${format(g.min)} – ${format(g.max)}`});
     });
   }
 }

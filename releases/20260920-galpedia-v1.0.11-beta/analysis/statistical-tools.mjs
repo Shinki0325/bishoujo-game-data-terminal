@@ -1,3 +1,4 @@
+import {minValue,maxValue} from './numeric-extents.mjs';
 // Statistical transforms are independent of selection, viewport and Canvas geometry.
 export function empiricalCdf(values){
   const frequency=new Map();
@@ -40,7 +41,7 @@ export function jointDensity(rows,xKey,yKey,{logX=false,scale=1}={}){
   });
   if(bandwidth.some(h=>!(h>0)||!Number.isFinite(h)))return {available:false,n,reason:'一个坐标轴数值完全相同，无法估计二维密度。'};
   const size=129,axes=[0,1].map(axis=>{
-    const values=points.map(p=>p[axis]),lo=Math.min(...values)-3*bandwidth[axis],hi=Math.max(...values)+3*bandwidth[axis];
+    const values=points.map(p=>p[axis]),lo=minValue(values)-3*bandwidth[axis],hi=maxValue(values)+3*bandwidth[axis];
     return Array.from({length:size},(_,i)=>lo+(hi-lo)*i/(size-1));
   });
   // Product Gaussian kernels with Scott's 2D factor; repeated pairs retain their full weight.
@@ -50,7 +51,7 @@ export function jointDensity(rows,xKey,yKey,{logX=false,scale=1}={}){
     const kernels=axes.map((axis,k)=>axis.map(v=>Math.exp(-.5*((v-p[k])/bandwidth[k])**2)));
     for(let j=0;j<size;j++){const yw=kernels[1][j]*weight*factor;for(let i=0;i<size;i++)grid[j*size+i]+=kernels[0][i]*yw;}
   }
-  const maxDensity=Math.max(...grid),ratios=[.1,.25,.5,.75];
+  const maxDensity=maxValue(grid),ratios=[.1,.25,.5,.75];
   // Extract in transformed coordinates, then map to original X units for the renderer.
   const contours=ratios.map(ratio=>({ratio,level:ratio*maxDensity,segments:contourSegments(axes[0],axes[1],grid,ratio*maxDensity)
     .map(segment=>segment.map(p=>({x:logX?10**p.x:p.x,y:p.y})))}));

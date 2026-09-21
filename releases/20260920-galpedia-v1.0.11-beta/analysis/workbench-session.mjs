@@ -1,4 +1,4 @@
-import {restoreState} from './model.mjs';
+import {restoreState,analysisGrain} from './model.mjs';
 
 export const DRAFT_KEY='galpedia-workbench-draft-v1';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -11,10 +11,11 @@ export class Timeline{
 export function readDraft(raw,data){
   try{
     const draft=JSON.parse(raw);
-    if(draft?.schemaVersion!==DRAFT_KEY||draft.releaseId!==data.releaseId||draft.catalogSha256!==data.catalogSha256||!draft.state||typeof draft.state!=='object'||Array.isArray(draft.state))return null;
+    if(draft?.schemaVersion!==DRAFT_KEY||draft.releaseId!==data.releaseId||!([data.catalogSha256,...(data.compatibleCatalogSha256??[])].includes(draft.catalogSha256))||!draft.state||typeof draft.state!=='object'||Array.isArray(draft.state))return null;
     const ids=new Set(data.rows.map(r=>r.id));
-    return {...draft,state:restoreState(draft.state),name:typeof draft.name==='string'?draft.name.slice(0,80):'',
-      selection:Array.isArray(draft.selection)?[...new Set(draft.selection.filter(id=>ids.has(id)))]:[],
+    const state=restoreState(draft.state),individual=['character','appearance'].includes(analysisGrain(state));
+    return {...draft,state,name:typeof draft.name==='string'?draft.name.slice(0,80):'',
+      selection:Array.isArray(draft.selection)?[...new Set(draft.selection.filter(id=>individual?draft.state.grainPolicyVersion===2&&typeof id==='string'&&id.length<=500:ids.has(id)))]:[],
       ui:draft.ui&&typeof draft.ui==='object'?draft.ui:{}};
   }catch{return null;}
 }

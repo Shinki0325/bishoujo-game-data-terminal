@@ -414,6 +414,12 @@
       "bytes": 1324207,
       "rawBytes": 16402040,
       "sha256": "fd81166433c83db74b7b0683cb449f0a8c0fb19c438be9500ba36573edfa82e5"
+    },
+    "characterEntities": {
+      "path": "full-data/character-entities.json.gz",
+      "bytes": 2330681,
+      "rawBytes": 25747625,
+      "sha256": "a9a361fbc0ac7f316abd0f24a3fe3346c6389978551dd2a65ecc50b848ad7d1a"
     }
   },
   "tagVocabulary": [
@@ -1541,5 +1547,20 @@
     "invalid",
     "scoped"
   ],
-  "catalogSha256": "9c4c6200c3e6aab09c4b95caaa1230e2f881032b1899b7d256c2d61f4d8c7da2"
+  "catalogSha256": "641f828828bf00640625d92e69bb5959200e6ae37baed45de268cffaf1556abf",
+  "characterEntitySourceSha256": "4a34fb9fb45aabc3f60f2a109256c68714e2b67747b043eb820db49d8dfbbb6c",
+  "characterEntityCoverage": {
+    "height": 29318,
+    "weight": 10596,
+    "bust": 19014,
+    "waist": 18532,
+    "hip": 18521,
+    "age": 10785,
+    "birthdayMonth": 14909,
+    "bloodType": 12311,
+    "cupSize": 7322
+  },
+  "compatibleCatalogSha256": [
+    "9c4c6200c3e6aab09c4b95caaa1230e2f881032b1899b7d256c2d61f4d8c7da2"
+  ]
 }
