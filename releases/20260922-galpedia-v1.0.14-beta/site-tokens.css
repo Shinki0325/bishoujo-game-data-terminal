@@ -1,0 +1,89 @@
+/*
+ * GALPEDIA shared visual skin
+ *
+ * This file is intentionally loaded after the legacy terminal stylesheet. It
+ * owns the paper/indigo surfaces, restrained controls, work cards, filters,
+ * dialogs, and work-detail surfaces. The shell/homepage and tier colour
+ * variables remain outside this file so their interaction contracts stay
+ * untouched.
+ */
+
+:root {
+  --gp-font-ui: Inter, "Segoe UI", "Noto Sans SC", "Noto Sans JP", sans-serif;
+  --gp-font-heading: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --radius: 4px;
+}
+
+:root:not([data-theme]),
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1f2431;
+  --surface: #252b39;
+  --panel: #252b39;
+  --surface-muted: #2d3c58;
+  --surface-raised: #33425f;
+  --surface-strong: #1b2030;
+  --text: #f3f0f6;
+  --text-muted: #b8b6c1;
+  --muted: #b8b6c1;
+  --text-on-strong: #ffffff;
+  --border: #3f485c;
+  --border-strong: #5a667e;
+  --focus: #c8a9e3;
+  /* Light wisteria is for labels, links, and state text on indigo. */
+  --accent: #c6a8df;
+  --accent-hover: #dfc5f2;
+  /* Darker violet keeps white primary actions comfortably contrasted. */
+  --gp-primary-bg: #5d3c79;
+  --gp-primary-bg-hover: #70498f;
+  --accent-soft: #423356;
+  --danger: #b64d4a;
+  --danger-soft: #553038;
+  --warning: #c39a5b;
+  --line: #3f485c;
+  /* Boundary handles are controls, not data columns: cool cyan and warm
+     amber keep the two draggable edges legible against the violet histogram. */
+  --year-start-handle: #79c8d2;
+  --year-end-handle: #e2a06d;
+  /* Informational role chips stay distinct from the violet interaction
+     accent. These are deliberately quiet so they do not compete with Tier
+     colours or artwork. */
+  --gp-role-main: #b9c9df;
+  --gp-role-main-bg: #2e3c53;
+  --gp-role-side: #ddb5a9;
+  --gp-role-side-bg: #49393c;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #faf9fb;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --surface-muted: #f0edf4;
+  --surface-raised: #ffffff;
+  --surface-strong: #252b39;
+  --text: #252b39;
+  --text-muted: #656477;
+  --muted: #656477;
+  --text-on-strong: #ffffff;
+  --border: #d9d6e1;
+  --border-strong: #b8b4c5;
+  --focus: #6b4a8d;
+  --accent: #6b4a8d;
+  --accent-hover: #573a73;
+  --gp-primary-bg: #68458a;
+  --gp-primary-bg-hover: #563875;
+  --accent-soft: #eee7f5;
+  --danger: #a43e3d;
+  --danger-soft: #f5dddd;
+  --warning: #9a7338;
+  --line: #d9d6e1;
+  /* Keep the control colors distinct from the purple in-range bars. */
+  --year-start-handle: #356b7c;
+  --year-end-handle: #a45d3c;
+  --gp-role-main: #4d6582;
+  --gp-role-main-bg: #edf2f8;
+  --gp-role-side: #885b4c;
+  --gp-role-side-bg: #faefeb;
+}
+
