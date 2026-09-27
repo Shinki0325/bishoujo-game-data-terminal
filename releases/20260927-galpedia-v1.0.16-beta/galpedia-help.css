@@ -1,0 +1,119 @@
+/* One handbook surface. No ranking geometry or user colour overrides. */
+.galpedia-header #site-info-button { width: auto; min-width: max-content; display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 7px 10px; white-space: nowrap; flex-shrink: 0; }
+.galpedia-header #site-info-button svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; }
+html.galpedia .galpedia-header .header-actions { align-items: center; }
+html.galpedia .galpedia-header .header-actions > .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  line-height: 1;
+}
+html.galpedia .galpedia-header .header-actions > #site-info-button { width: auto; }
+html.galpedia .galpedia-header .header-actions > .icon-button > svg {
+  display: block;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.75;
+}
+.galpedia-help { position: fixed; inset: 0 0 0 auto; margin: 0; width: 520px; max-width: 100vw; height: 100dvh; max-height: 100dvh; border: 0; border-left: 1px solid var(--border); border-radius: 0; padding: 0; background: var(--bg); color: var(--text); box-shadow: -12px 0 40px rgb(20 18 35 / 10%); z-index: 10000; overflow: hidden; font-family: var(--gp-font-ui); }
+.galpedia-help[open] { display: flex; flex-direction: column; animation: help-enter 180ms ease-out; }
+.galpedia-help.is-closing { animation: help-exit 130ms ease-in forwards; }
+.galpedia-help::backdrop { background: rgb(16 15 25 / 6%); }
+.help-head { flex: none; padding: 26px 28px 0; border-bottom: 1px solid var(--border); background: var(--surface); }
+.help-heading, .help-identity { display: flex; align-items: center; gap: 12px; }
+.help-heading { justify-content: space-between; margin-bottom: 22px; }
+.help-heading h2 { margin: 0; font: 600 24px/1.5 var(--gp-font-heading); letter-spacing: .06em; }
+.help-eyebrow { margin: 3px 0 0; color: var(--text-muted); font-size: 10px; letter-spacing: .16em; }
+.help-flower { width: 28px; height: 28px; object-fit: contain; flex: none; }
+.help-head input { width: 100%; min-height: 44px; padding: 10px 13px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 14px; }
+.help-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 18px 0 0; padding-bottom: 10px; }
+.help-tabs button { position: relative; border: 0; box-shadow: none; background: transparent; color: var(--text-muted); border-radius: 0; padding: 13px 5px; font-size: 13px; white-space: nowrap; }
+.help-tabs button[aria-selected="true"] { color: var(--text); background: var(--gp-state-hover); }
+.help-tabs button[aria-selected="true"]::before, .help-tabs button[aria-selected="true"]::after { content: ''; position: absolute; width: 7px; height: 7px; border-color: var(--accent); border-style: solid; }
+.help-tabs button[aria-selected="true"]::before { top: 2px; left: 2px; border-width: 2px 0 0 2px; }
+.help-tabs button[aria-selected="true"]::after { bottom: 2px; right: 2px; border-width: 0 2px 2px 0; }
+.help-content { flex: 1; min-height: 0; padding: 25px 28px 40px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; font-size: 14px; line-height: 1.85; }
+.help-content h3 { font: 600 28px/1.45 var(--gp-font-heading); margin: 8px 0; }
+.help-content h4 { margin: 26px 0 12px; font-size: 15px; }
+.help-content p { margin: 10px 0; overflow-wrap: anywhere; }
+.help-breadcrumb, .help-result-count { color: var(--text-muted); font-size: 12px; }
+.help-summary { color: var(--text-muted); margin: 20px 0 !important; }
+.help-back { background: transparent; border: 0; color: var(--accent); padding: 4px 0 12px; }
+.help-steps { list-style: none; counter-reset: help-step; padding: 0; }
+.help-steps li { position: relative; padding: 14px 0 14px 44px; border-bottom: 1px solid var(--border); }
+.help-steps li::before { counter-increment: help-step; content: counter(help-step, decimal-leading-zero); position: absolute; left: 0; top: 14px; font-size: 12px; letter-spacing: .05em; color: var(--accent); }
+.help-notes { padding-left: 20px; }
+.help-notes li + li { margin-top: 8px; }
+.help-article-link { display: flex; flex-direction: column; text-align: left; width: 100%; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 15px 8px; gap: 3px; background: transparent; color: var(--text); line-height: 1.65; }
+.help-article-link small { color: var(--accent); font-size: 11px; }
+.help-article-link strong { font-size: 14px; font-weight: 600; }
+.help-article-link span { color: var(--text-muted); font-size: 12px; }
+.help-article-link:hover, .help-article-link:focus-visible { background: var(--gp-state-hover); }
+.help-about-intro { margin: 18px 0 24px; }
+.help-about-brand { margin: 0 0 5px !important; color: var(--text); font: 600 16px/1.5 var(--gp-font-heading); letter-spacing: .04em; }
+.help-about-copy { margin: 0 !important; color: var(--text-muted); }
+.help-about-note { margin: 13px 0 0 !important; color: var(--accent); font-size: 12px; }
+.help-release-card { margin: 22px 0 28px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 17px 0 9px; }
+.help-release-kicker { margin: 0 0 8px !important; color: var(--text-muted); font-size: 11px; letter-spacing: .12em; }
+.help-release-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.help-release-version { color: var(--text); font-size: 15px; }
+.help-release-date { color: var(--text-muted); font-size: 12px; }
+.help-release-summary { margin: 12px 0 10px; padding-left: 20px; }
+.help-release-summary li + li { margin-top: 7px; }
+.help-release-card h4 { margin-top: 17px; }
+.help-release-log-link { margin: 8px 0 6px; border: 0; background: transparent; color: var(--accent); padding: 10px 0; font-size: 13px; }
+.help-release-list { margin-top: 18px; }
+.help-release-entry { border-top: 1px solid var(--border); }
+.help-release-entry:last-child { border-bottom: 1px solid var(--border); }
+.help-release-entry summary { cursor: pointer; list-style: none; padding: 15px 0; color: var(--text); font-weight: 600; }
+.help-release-entry summary::-webkit-details-marker { display: none; }
+.help-release-entry summary::after { content: '+'; float: right; color: var(--text-muted); font-weight: 400; }
+.help-release-entry[open] summary::after { content: '−'; }
+.help-release-entry h4 { margin-top: 18px; }
+.help-release-log { margin: 0 0 20px; padding: 0; list-style: none; }
+.help-release-log li { display: grid; gap: 3px; padding: 12px 0; border-top: 1px solid var(--border); }
+.help-release-log li:last-child { border-bottom: 1px solid var(--border); }
+.help-release-log span { color: var(--text-muted); }
+.help-keeper-tip { margin: 26px 0; background: color-mix(in srgb, #ec9cbb 12%, var(--surface)); border-radius: 6px; padding: 18px; font-size: 13px; }
+.help-keeper-tip > div { display: flex; align-items: center; gap: 8px; }
+.help-keeper-tip p { margin-bottom: 0; }
+.help-preferences { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 14px; }
+.help-preferences summary { cursor: pointer; color: var(--text); font-weight: 600; }
+.help-preferences-intro { color: var(--text-muted); font-size: 12px; }
+.help-preference-row { display: flex; align-items: center; gap: 9px; margin: 10px 0; font-size: 13px; }
+.help-preference-row input { width: 16px; height: 16px; margin: 0; }
+.help-preferences-restore { margin-top: 4px; }
+.keeper-guide-card-handbook { margin-block: 18px 24px; }
+.help-shiori { display: block; width: 120px; height: 160px; object-fit: cover; object-position: center top; margin: 18px 0; }
+.global-search-shortcuts { font-size: 11px; color: var(--text-muted); margin: 12px 0 0; }
+html.galpedia #global-search-input:focus-visible { outline: none; }
+.global-search-results a.search-active {
+  background-color: var(--gp-state-hover);
+  background-image: var(--gp-corner-paint), var(--gp-corner-paint), var(--gp-corner-paint), var(--gp-corner-paint);
+  background-position: left top, left top, right bottom, right bottom;
+  background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px;
+  background-repeat: no-repeat;
+}
+.global-search-results .search-match { display: block; color: var(--accent); font-size: 11px; margin-top: 3px; }
+@keyframes help-enter { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes help-exit { to { transform: translateX(100%); } }
+@media (max-width: 1100px) { .handbook-label { display: none; } }
+@media (max-width: 760px) {
+  .galpedia-help { width: 100vw; border: 0; }
+  .help-head { padding: max(20px, env(safe-area-inset-top)) 20px 0; }
+  .help-heading { margin-bottom: 18px; }
+  .help-head input { font-size: 16px; }
+  .help-content { padding: 20px 22px max(28px, env(safe-area-inset-bottom)); }
+  .help-tabs { gap: 4px; }
+  .help-tabs button { padding: 12px 3px; }
+  .help-shiori { width: 80px; height: 80px; border-radius: 50%; }
+  .global-search-shortcuts { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .galpedia-help[open], .galpedia-help.is-closing { animation: none; } }

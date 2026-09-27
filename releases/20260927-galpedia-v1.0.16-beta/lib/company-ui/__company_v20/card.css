@@ -1,0 +1,24 @@
+.company-card-v20{display:grid;gap:14px;min-width:0;margin:16px 0;color-scheme:light}
+html[data-theme=dark] .company-card-v20{color-scheme:dark}
+.company-card-v20 [hidden]{display:none!important}
+.company-card-v20 #company-honors-v19,.company-card-v20 #company-monthly-v18{padding:14px;border-radius:12px;font-family:inherit}
+.company-card-v20 #company-honors-v19 .ha-top,.company-card-v20 #company-monthly-v18 .cm-kicker{display:none}
+.company-card-v20 #company-monthly-v18 .cm-name{font-size:18px}
+.company-card-v20 #company-honors-v19 .ha-badges{grid-template-columns:repeat(auto-fit,minmax(115px,1fr))}
+.company-card-v20 #company-honors-v19 .ha-badge{padding:10px 6px;min-width:0}
+.company-card-v20 #company-honors-v19 .ha-controls{margin:0 0 10px;justify-content:flex-end}
+.company-card-v20 #company-honors-v19 .ha-controls label{max-width:180px}
+.company-card-v20 #company-honors-v19 .ha-medal{width:66px;height:74px}
+.company-card-v20 #company-honors-v19 .ha-foot{margin-top:10px}
+.company-card-v20 #company-honors-v19 .ha-badge-title{overflow-wrap:anywhere}
+.company-card-v20 #company-honors-v19 .ha-medal i::before{content:'✦';font-style:normal;font-size:18px}
+.company-card-v20 #company-monthly-v18 .cm-body{grid-template-columns:1fr}
+.company-card-v20 #company-monthly-v18 .cm-breakdown{grid-template-columns:1fr}
+.company-card-v20 #company-monthly-v18 .cm-breakdown>div{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px}
+.company-card-v20 #company-monthly-v18 .cm-value{text-align:right;margin:0}
+.company-card-v20 #company-monthly-v18 .cm-breakdown .cm-caption{grid-column:1/-1}
+.company-card-v20 :focus-visible{outline:2px solid #0089a4;outline-offset:3px}
+.company-card-message{font-size:13px;padding:12px 0}
+.company-card-retry{padding:8px 16px;justify-self:start}
+@media(min-width:1200px){.company-directory-layout:has(.company-card-v20[data-ready-company]){grid-template-columns:minmax(320px,1fr) minmax(580px,1.1fr)}.company-directory-detail:has(.company-card-v20){width:100%;min-width:0}.company-card-v20 #company-monthly-v18 .cm-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.company-card-v20 #company-honors-v19 .ha-badges{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:420px){.company-card-v20 #company-honors-v19,.company-card-v20 #company-monthly-v18{padding:10px}.company-card-v20 #company-honors-v19 .ha-badges{grid-template-columns:repeat(2,minmax(0,1fr))}}

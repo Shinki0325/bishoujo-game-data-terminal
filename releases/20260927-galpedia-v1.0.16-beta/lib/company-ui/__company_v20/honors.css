@@ -1,0 +1,81 @@
+#company-work-honors{--hw-bg:light-dark(#f7f9fb,#192431);--hw-panel:light-dark(#fff,#21303e);--hw-fg:light-dark(#233447,#edf3f8);--hw-muted:light-dark(#65758a,#b3c1ce);--hw-border:light-dark(#dce3eb,#3a4d60);--hw-link:light-dark(#246e85,#85d6e3);--hw-gold:light-dark(#8e671b,#d9bc78);--hw-silver:light-dark(#5c7085,#b3c9dc);--hw-bronze:light-dark(#965e3e,#d6aa8c);font:inherit;font-size:14px;line-height:1.5;color:var(--hw-fg);background:var(--hw-bg);padding:16px;border:1px solid var(--hw-border);border-radius:12px;min-width:0}
+#company-work-honors *{box-sizing:border-box}
+#company-work-honors [hidden]{display:none!important}
+#company-work-honors button,#company-work-honors select{font-family:inherit;color:inherit}
+#company-work-honors button{cursor:pointer;box-shadow:none}
+#company-work-honors .hw-header,#company-work-honors .hw-heading,#company-work-honors .hw-tools{display:flex;align-items:center;gap:8px}
+#company-work-honors .hw-header{justify-content:space-between;flex-wrap:wrap;gap:10px}
+#company-work-honors h2{font-size:17px;font-weight:600;margin:0;color:var(--hw-fg)}
+#company-work-honors .hw-mode{font-size:10px;letter-spacing:.04em;color:var(--hw-muted);padding:1px 6px;border:1px solid var(--hw-border);border-radius:3px;white-space:nowrap}
+#company-work-honors .hw-mode[data-custom=true]{color:var(--hw-link);border-color:var(--hw-link)}
+#company-work-honors select{background:var(--hw-panel);border:1px solid var(--hw-border);border-radius:4px;padding:6px 8px;font-size:12px;min-height:32px;max-width:100%}
+#company-work-honors .hw-year select{width:118px}
+#company-work-honors .hw-info-button,#company-work-honors .hw-reset{background:none;border:0;color:var(--hw-link);padding:5px 2px;font-size:12px}
+#company-work-honors .hw-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;margin:8px 0 12px;color:var(--hw-muted);font-size:11px}
+#company-work-honors .hw-works{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#company-work-honors .hw-work{display:grid;grid-template-columns:52px minmax(0,1fr);gap:11px;min-height:112px;padding:12px;background:var(--hw-panel);border:1px solid var(--hw-border);border-radius:6px;align-items:start}
+#company-work-honors .hw-cover{display:block;width:52px;line-height:0;color:var(--hw-muted);text-decoration:none}
+#company-work-honors .hw-cover img{display:block;width:52px;height:auto;max-height:84px;object-fit:contain;object-position:top center;border-radius:2px}
+#company-work-honors .hw-cover-fallback{display:flex;align-items:center;justify-content:center;text-align:center;width:52px;height:74px;background:var(--hw-bg);border:1px solid var(--hw-border);font-size:10px;line-height:1.5}
+#company-work-honors .hw-work-body{min-width:0}
+#company-work-honors .hw-work-title{font-size:14px;font-weight:600;line-height:1.4;color:var(--hw-fg);text-decoration:none;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+#company-work-honors .hw-work-title:hover{color:var(--hw-link);text-decoration:underline;text-underline-offset:3px}
+#company-work-honors .hw-work-meta{font-size:10px;color:var(--hw-muted);margin-top:3px;line-height:1.4;overflow-wrap:anywhere}
+#company-work-honors .hw-awards{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:8px}
+#company-work-honors .hw-award{display:inline-flex;align-items:center;gap:4px;min-height:36px;max-width:100%;padding:1px 3px 1px 0;border:1px solid transparent;border-radius:4px;background:transparent;text-align:left;line-height:1.2}
+#company-work-honors .hw-award:hover{background:var(--hw-bg);border-color:var(--hw-border)}
+#company-work-honors .hw-award strong{display:block;font-size:10px;font-weight:500;color:var(--hw-muted)}
+#company-work-honors .hw-rank{display:block;font-size:11px;margin-top:3px;color:var(--hw-fg);white-space:nowrap}
+#company-work-honors .hw-medal{width:28px;height:32px;flex:none;color:var(--hw-silver);overflow:visible}
+#company-work-honors .hw-medal text{fill:currentColor;font:600 13px Georgia,serif}
+#company-work-honors .hw-medal text.hw-top-ten{font:5px sans-serif;letter-spacing:.3px}
+#company-work-honors [data-tone="1"] .hw-medal{color:var(--hw-gold)}
+#company-work-honors [data-tone="3"] .hw-medal{color:var(--hw-bronze)}
+#company-work-honors [data-tone="rest"] .hw-medal{color:var(--hw-silver)}
+#company-work-honors .hw-more{display:block;width:100%;border:0;background:transparent;color:var(--hw-link);padding:11px 4px 4px;font-size:12px}
+#company-work-honors .hw-foot{color:var(--hw-muted);font-size:11px;line-height:1.6;margin:12px 0 0}
+#company-work-honors .hw-info{margin-top:12px;padding-top:12px;border-top:1px solid var(--hw-border);font-size:12px;color:var(--hw-muted)}
+#company-work-honors .hw-info h3{font-size:13px;font-weight:500;margin:0}
+#company-work-honors .hw-info p{margin:8px 0}
+#company-work-honors .hw-custom{margin-top:12px}
+#company-work-honors .hw-custom summary{cursor:pointer;color:var(--hw-link);min-height:32px;padding:5px 0}
+#company-work-honors .hw-custom label{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+#company-work-honors .hw-empty{font-size:12px;color:var(--hw-muted);padding:16px 0}
+#company-work-honors .hw-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+#company-work-honors .hw-dialog{width:min(480px,calc(100vw - 24px));max-height:82dvh;padding:20px;margin:auto;border:1px solid var(--hw-border);border-radius:10px;background:var(--hw-panel);color:var(--hw-fg);box-shadow:0 14px 50px #0003;overflow:auto;overscroll-behavior:contain;font-family:inherit}
+#company-work-honors .hw-dialog::backdrop{background:#13223366}
+#company-work-honors .hw-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#company-work-honors .hw-dialog h3{font-size:14px;font-weight:500;margin:0}
+#company-work-honors .hw-close{font-size:23px;line-height:1;width:36px;height:36px;border:0;background:transparent;border-radius:4px}
+#company-work-honors .hw-detail-eyebrow{font-size:12px;color:var(--hw-muted);margin:16px 0 5px}
+#company-work-honors .hw-detail-rank{font-size:23px;font-weight:500}
+#company-work-honors .hw-detail-work{font-size:14px;margin:8px 0;overflow-wrap:anywhere}
+#company-work-honors .hw-detail-status{font-size:11px;color:var(--hw-muted)}
+#company-work-honors .hw-detail dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+#company-work-honors .hw-detail dt{font-size:11px;color:var(--hw-muted)}
+#company-work-honors .hw-detail dd{font-size:14px;margin:3px 0 0}
+#company-work-honors .hw-detail-note,#company-work-honors #hw-board p{font-size:11px;line-height:1.6;color:var(--hw-muted)}
+#company-work-honors .hw-source{color:var(--hw-link);font-size:12px}
+#company-work-honors .hw-board-toggle{margin:16px 0 0;border:1px solid var(--hw-border);border-radius:4px;background:var(--hw-bg);padding:8px 12px;font-size:12px}
+#company-work-honors #hw-board h4{font-size:13px;font-weight:500;margin:18px 0 6px}
+#company-work-honors table{border-collapse:collapse;table-layout:fixed;width:100%;font-size:11px}
+#company-work-honors td,#company-work-honors th{padding:8px 4px;border-bottom:1px solid var(--hw-border);text-align:right;overflow-wrap:anywhere}
+#company-work-honors th{font-weight:500;color:var(--hw-muted)}
+#company-work-honors td:nth-child(2),#company-work-honors th:nth-child(2){text-align:left;width:49%}
+#company-work-honors tr[data-selected=true]{background:var(--hw-bg)}
+#company-work-honors :focus-visible{outline:2px solid var(--hw-link);outline-offset:3px}
+@media(max-width:600px){#company-work-honors{padding:12px}#company-work-honors .hw-works{grid-template-columns:minmax(0,1fr)}#company-work-honors .hw-work{min-height:108px}#company-work-honors .hw-award{min-height:44px}#company-work-honors .hw-header{gap:7px}#company-work-honors .hw-year select{width:112px}#company-work-honors select{font-size:16px}#company-work-honors .hw-info-button,#company-work-honors .hw-close{min-height:44px;min-width:44px}#company-work-honors .hw-dialog{padding:16px}}
+@media(max-width:359px){#company-work-honors .hw-tools{width:100%;justify-content:space-between}#company-work-honors .hw-heading{gap:6px}}
+
+#company-work-honors .hw-scope{display:flex;gap:4px;margin-top:12px}
+#company-work-honors .hw-scope button{font-size:11px;padding:4px 12px;min-height:30px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--hw-muted)}
+#company-work-honors .hw-scope button[aria-pressed=true]{background:var(--hw-panel);border-color:var(--hw-border);color:var(--hw-fg)}
+#company-work-honors .hw-awards{display:block;margin-top:7px}
+#company-work-honors .hw-award-row{display:flex;align-items:center;gap:6px}
+#company-work-honors .hw-award-row+.hw-award-row{margin-top:4px}
+#company-work-honors .hw-award-scope{font-size:10px;flex:none;color:var(--hw-muted);writing-mode:vertical-rl;letter-spacing:2px}
+#company-work-honors .hw-award-items{display:flex;flex-wrap:wrap;gap:3px 6px;min-width:0}
+#company-work-honors .hw-board-more{display:block;margin:10px auto;border:1px solid var(--hw-border);background:var(--hw-bg);padding:8px 12px;border-radius:4px;font-size:12px}
+@media(max-width:600px){#company-work-honors .hw-scope button{min-height:40px}}
+
+#company-work-honors .hw-medal text.hw-rank-three{font-size:10px}
