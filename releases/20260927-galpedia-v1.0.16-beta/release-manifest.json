@@ -1,5 +1,5 @@
 {
-  "closureSha256": "c8bdd150afde5f09572e555edaea068be6d01915ccad7a428968296116e1ba2d",
+  "closureSha256": "e52de58339e694642f345c6a299420e82233e504f85c484aa7770d69154faa2d",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -472301,9 +472301,9 @@
       "sha256": "de2a274a73f10161bde59b0a32097032bc52bb2637d17b003dd72d2297860c80"
     },
     {
-      "bytes": 9413,
+      "bytes": 11459,
       "path": "lib/image-safety.js",
-      "sha256": "d609e2b03f1aa194ed675e4d99928e98ada2a54f264c5417c97291f6ec33c831"
+      "sha256": "cdc0504f9ce4054e2d709f72e3d0c583591372364249103f51677d970d1a4723"
     },
     {
       "bytes": 4590,
@@ -473581,9 +473581,9 @@
       "sha256": "be3d798c52db550dabaf4f2ca51ea37b3264bba277d8abbcded9d1e94cfb2082"
     },
     {
-      "bytes": 4250,
+      "bytes": 5436,
       "path": "lib/image-safety.css",
-      "sha256": "648c196135b1857b0e9ee2b485290555184eedea488cfc83f0acf4c9325a6fde"
+      "sha256": "b762c3a1cac1846dc8915c559584866daec49f7e30bc7075df3f3fa6a7f1a4fe"
     },
     {
       "bytes": 991249,

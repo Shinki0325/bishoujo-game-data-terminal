@@ -8,8 +8,8 @@
 /* One compact settings menu, in the active toolbar instead of over content. */
 .nsfw-preference{position:relative;inset:auto;z-index:60;flex:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;font-size:12px}
 .nsfw-preference>summary{list-style:none;cursor:pointer;min-height:32px;padding:5px 7px;border:1px solid var(--border,#d8d2e5);border-radius:6px;display:flex;align-items:center;justify-content:center}
-.nsfw-preference>label{position:absolute;right:0;top:calc(100% + 6px);min-width:174px;padding:12px;border:1px solid var(--border,#d8d2e5);border-radius:8px;background:var(--surface,#fff);box-shadow:0 4px 16px #0002;white-space:nowrap}
-.nsfw-preference:not([open])>label{display:none}
+.nsfw-preference-panel{position:absolute;right:0;top:calc(100% + 6px);box-sizing:border-box;width:260px;max-width:calc(100vw - 24px);margin:0;padding:12px;border:1px solid var(--border,#d8d2e5);border-radius:8px;background:var(--surface,#fff);box-shadow:0 4px 16px #0002;color:var(--text)}
+.nsfw-preference:not([open])>.nsfw-preference-panel{display:none}
 .nsfw-preference>summary:focus-visible{outline:2px solid var(--accent,#69508b);outline-offset:2px}
 @media(max-width:899px){
  html.galpedia[data-theme] .galpedia-header.tool-header{padding-inline:8px;column-gap:4px}
@@ -30,3 +30,16 @@
 .header-actions .nsfw-preference>summary{box-sizing:border-box;width:34px;height:44px;border-color:transparent;color:var(--text-muted);padding:6px}
 .header-actions .nsfw-preference>summary:hover{border-color:var(--border);background:var(--surface-muted)}
 .header-actions .nsfw-preference>summary>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* Blur only classified sensitive images; unresolved images keep their placeholder. */
+.nsfw-image-host.nsfw-is-blurred{overflow:hidden!important}
+.nsfw-image-host img[data-safety-blurred]{filter:blur(18px)!important;transform:scale(1.08)!important;pointer-events:none}
+.nsfw-image-control.is-blurred{background:rgb(25 22 34 / 24%);color:#fff;text-shadow:0 1px 4px #000;font-weight:600}
+.nsfw-preference-panel legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.nsfw-preference .nsfw-mode-option{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:6px;white-space:normal}
+.nsfw-mode-option:hover,.nsfw-mode-option:has(input:checked){background:var(--accent-soft,var(--surface-muted))}
+.nsfw-mode-option:focus-within{outline:2px solid var(--focus,var(--accent));outline-offset:1px}
+.nsfw-mode-option strong,.nsfw-mode-option small{display:block}
+.nsfw-mode-option strong{font-size:13px;font-weight:600}
+.nsfw-mode-option small{font-size:11px;line-height:1.5;color:var(--text-muted);margin-top:3px}
+.nsfw-preference[data-mode="show"]>summary{color:var(--accent)}
