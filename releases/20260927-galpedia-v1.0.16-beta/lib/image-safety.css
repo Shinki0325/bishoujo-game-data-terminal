@@ -24,3 +24,9 @@
  html.galpedia[data-theme] .galpedia-header.tool-header{height:auto;min-height:62px;flex-wrap:wrap;padding-block:4px;row-gap:0}
  html.galpedia[data-theme] .galpedia-header .header-actions{margin-left:auto}
 }
+
+.nsfw-preference>summary{gap:6px}
+.nsfw-preference>summary>svg{flex:none}
+.header-actions .nsfw-preference>summary{box-sizing:border-box;width:34px;height:44px;border-color:transparent;color:var(--text-muted);padding:6px}
+.header-actions .nsfw-preference>summary:hover{border-color:var(--border);background:var(--surface-muted)}
+.header-actions .nsfw-preference>summary>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}

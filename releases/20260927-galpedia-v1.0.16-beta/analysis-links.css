@@ -10,3 +10,16 @@
 .analysis-tools-menu:not([open])>.analysis-tools-body{display:none}
 .analysis-tools-body [hidden]{display:none!important}
 .analysis-tools-body [role=status]:empty{display:none}
+
+/* Keep result tools in one group; a details element must own its grid cell. */
+html.galpedia[data-theme] #selection-view #catalog-results .gh-header{grid-template-rows:44px 36px!important;grid-auto-rows:auto}
+html.galpedia[data-theme] #selection-view #catalog-results .gh-header .gh-tool-menu{display:block;grid-area:2/2!important;min-width:0}
+html.galpedia[data-theme] #selection-view #catalog-results .gh-header:has(#filter-applied-count[hidden]) .gh-status{display:none!important}
+html.galpedia[data-theme] #selection-view #catalog-results .gh-header .analysis-tools-menu{flex:none}
+html.galpedia[data-theme] #selection-view #catalog-results .gh-header .analysis-tools-menu>summary{box-sizing:border-box;height:36px;min-height:36px;padding:6px 10px;white-space:nowrap;font:500 13px/20px var(--gp-font-ui);border-color:var(--border-strong);border-radius:var(--gp-control-radius);color:var(--text)}
+@media(max-width:899px){
+ html.galpedia[data-theme] #selection-view #catalog-results .gh-header{grid-template-rows:36px 44px 44px!important}
+ html.galpedia[data-theme] #selection-view #catalog-results .gh-header .analysis-tools-menu>summary{height:44px;min-height:44px}
+ html.galpedia[data-theme] #selection-view #catalog-results .gh-header .analysis-tools-menu{position:static}
+ html.galpedia[data-theme] #selection-view #catalog-results .gh-header .analysis-tools-body{top:calc(100% + 4px);right:0;box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+}

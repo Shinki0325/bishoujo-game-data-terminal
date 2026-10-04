@@ -94,7 +94,7 @@ function syncControl(){if(toolbar){
   scheduleControlPosition();
 }}
 function installControl(){
-  if(toolbar)return;toolbar=document.createElement('details');toolbar.className='nsfw-preference';const summary=document.createElement('summary');summary.textContent='图片';summary.setAttribute('aria-label','图片显示设置');toolbar.append(summary);
+  if(toolbar)return;toolbar=document.createElement('details');toolbar.className='nsfw-preference';const summary=document.createElement('summary');summary.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>图片设置</span>';summary.setAttribute('aria-label','图片显示设置');summary.title='图片显示设置';toolbar.append(summary);
   for(const type of ['click','pointerdown','pointerup','keydown','wheel'])toolbar.addEventListener(type,event=>{if(type==='keydown'&&['Escape','Tab'].includes(event.key)){if(event.key==='Escape'&&toolbar.open){toolbar.open=false;event.preventDefault();event.stopPropagation();toolbar.querySelector('summary').focus();}return;}event.stopPropagation();});
   const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=obscure;input.addEventListener('change',()=>setImageSafetyHidden(input.checked));
   label.append(input,document.createTextNode('遮挡敏感图片'));toolbar.append(label);document.body.append(toolbar);syncControl();
