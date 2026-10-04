@@ -4,3 +4,23 @@
 .managed-work-thumbnail{display:inline-flex;flex-shrink:0;line-height:0;vertical-align:middle;position:relative}.managed-work-thumbnail .nsfw-image-control{font-size:0;padding:0;min-width:0}.managed-work-thumbnail .nsfw-image-control::after{content:'显示';font-size:9px;line-height:1.2}.managed-work-thumbnail .nsfw-image-control.is-revealed::after{content:'遮挡'}.managed-work-thumbnail .nsfw-image-control.is-loading::after{content:'…'}.managed-work-thumbnail .nsfw-image-control.is-missing::after{content:'无图'}
 
 .work-compare-header-cover>.managed-work-thumbnail{width:100%;height:100%}
+
+/* One compact settings menu, in the active toolbar instead of over content. */
+.nsfw-preference{position:relative;inset:auto;z-index:60;flex:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;font-size:12px}
+.nsfw-preference>summary{list-style:none;cursor:pointer;min-height:32px;padding:5px 7px;border:1px solid var(--border,#d8d2e5);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nsfw-preference>label{position:absolute;right:0;top:calc(100% + 6px);min-width:174px;padding:12px;border:1px solid var(--border,#d8d2e5);border-radius:8px;background:var(--surface,#fff);box-shadow:0 4px 16px #0002;white-space:nowrap}
+.nsfw-preference:not([open])>label{display:none}
+.nsfw-preference>summary:focus-visible{outline:2px solid var(--accent,#69508b);outline-offset:2px}
+@media(max-width:899px){
+ html.galpedia[data-theme] .galpedia-header.tool-header{padding-inline:8px;column-gap:4px}
+ html.galpedia[data-theme] .galpedia-header .tool-heading{flex:0 0 128px;width:128px;min-width:128px}
+ html.galpedia[data-theme] .galpedia-header .galpedia-logo{width:128px;max-width:none;height:48px}
+ html.galpedia[data-theme] .galpedia-header .galpedia-logo img{width:153px;height:76.5px;left:-12px;top:-16px}
+ html.galpedia[data-theme] .galpedia-header .header-actions{flex-shrink:0;gap:2px}
+ .nsfw-preference{font-size:11px}
+ #work-details .nsfw-preference{grid-column:2;grid-row:2}
+}
+@media(max-width:340px){
+ html.galpedia[data-theme] .galpedia-header.tool-header{height:auto;min-height:62px;flex-wrap:wrap;padding-block:4px;row-gap:0}
+ html.galpedia[data-theme] .galpedia-header .header-actions{margin-left:auto}
+}

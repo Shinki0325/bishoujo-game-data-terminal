@@ -83,26 +83,21 @@ export function bindImageSafety(image,{urls,show,hide=()=>{},getImage=()=>image}
   return binding;
 }
 let toolbar,openDialogs=[],positionFrame=null;
-function scheduleControlPosition(){
-  if(positionFrame!==null)return;
-  positionFrame=requestAnimationFrame(()=>{
-    positionFrame=null;if(!toolbar)return;
-    if(toolbar.parentElement!==document.body||!matchMedia('(max-width:899px)').matches){toolbar.style.removeProperty('bottom');return;}
-    let edge=window.innerHeight;
-    for(const node of document.querySelectorAll('#workspace-mode,#mobile-ranking-dock,#ranking-candidates')){
-      const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
-      if(style.position==='fixed'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0&&rect.bottom>0&&rect.top<window.innerHeight)edge=Math.min(edge,rect.top);
-    }
-    const bottom=Math.max(10,Math.ceil(window.innerHeight-edge+10))+'px';
-    if(toolbar.style.bottom!==bottom)toolbar.style.bottom=bottom;
-  });
-}
-function syncControl(){if(toolbar){toolbar.querySelector('input').checked=obscure;openDialogs=openDialogs.filter(x=>x.isConnected&&x.open);const dialog=openDialogs.at(-1)??document.body;const parent=dialog.querySelector('.pp-explorer')??dialog;toolbar.inert=false;if(toolbar.parentElement!==parent)parent.append(toolbar);scheduleControlPosition();}}
+function scheduleControlPosition(){if(toolbar)toolbar.style.removeProperty('bottom');}
+function syncControl(){if(toolbar){
+  toolbar.querySelector('input').checked=obscure;
+  openDialogs=openDialogs.filter(x=>x.isConnected&&x.open);
+  const dialog=openDialogs.at(-1);
+  const parent=dialog ? (dialog.querySelector('.details-heading-actions')??dialog.querySelector('.dialog-heading,.company-detail-heading,.pp-explorer')??dialog) : (document.querySelector('.header-actions')??document.body);
+  toolbar.inert=false;
+  if(toolbar.parentElement!==parent){toolbar.open=false;const close=parent.querySelector(':scope > form,:scope > #company-detail-close');if(close)parent.insertBefore(toolbar,close);else parent.append(toolbar);}
+  scheduleControlPosition();
+}}
 function installControl(){
-  if(toolbar)return;toolbar=document.createElement('div');toolbar.className='nsfw-preference';
-  for(const type of ['click','pointerdown','pointerup','keydown','wheel'])toolbar.addEventListener(type,event=>{if(type==='keydown'&&['Escape','Tab'].includes(event.key)&&toolbar.closest('.pp-explorer'))return;event.stopPropagation();});
+  if(toolbar)return;toolbar=document.createElement('details');toolbar.className='nsfw-preference';const summary=document.createElement('summary');summary.textContent='图片';summary.setAttribute('aria-label','图片显示设置');toolbar.append(summary);
+  for(const type of ['click','pointerdown','pointerup','keydown','wheel'])toolbar.addEventListener(type,event=>{if(type==='keydown'&&['Escape','Tab'].includes(event.key)){if(event.key==='Escape'&&toolbar.open){toolbar.open=false;event.preventDefault();event.stopPropagation();toolbar.querySelector('summary').focus();}return;}event.stopPropagation();});
   const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=obscure;input.addEventListener('change',()=>setImageSafetyHidden(input.checked));
-  label.append(input,document.createTextNode('遮挡敏感图片'));toolbar.append(label);document.body.append(toolbar);
+  label.append(input,document.createTextNode('遮挡敏感图片'));toolbar.append(label);document.body.append(toolbar);syncControl();
   const resize=new ResizeObserver(scheduleControlPosition);
   for(const node of document.querySelectorAll('#workspace-mode,#mobile-ranking-dock,#ranking-candidates'))resize.observe(node);
   new MutationObserver(scheduleControlPosition).observe(document.body,{attributes:true,attributeFilter:['class']});

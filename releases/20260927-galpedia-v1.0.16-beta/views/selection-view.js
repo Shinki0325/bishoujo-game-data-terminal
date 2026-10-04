@@ -247,6 +247,9 @@ export function createSelectionView({
   let pageIndex = 0;
   let appliedPageIndex = 0;
   let latestModel = null;
+  const clearQuery = documentRef.createElement('button');
+  clearQuery.type='button';clearQuery.id='catalog-clear-empty-query';clearQuery.className='toolbar-button toolbar-button-neutral';clearQuery.textContent='清空关键词';
+  clearQuery.addEventListener('click',()=>{elements.title.value='';onFilterChange({titleQuery:''});elements.title.focus();});
   const searchAll = typeof onSearchAll==='function' ? documentRef.createElement('button') : null;
   if(searchAll){
     searchAll.id='catalog-search-all';searchAll.type='button';searchAll.className='toolbar-button toolbar-button-neutral';
@@ -476,6 +479,7 @@ export function createSelectionView({
         .filter(key=>!['titleQuery','sortKey','sortDirection'].includes(key))
         .some(key=>JSON.stringify(model.filterState[key])!==JSON.stringify(DEFAULT_FILTER_STATE[key]));
       if(searchAll&&!keepPending&&!searchAll.hidden)elements.listState.append(searchAll);
+      if(!keepPending&&model.works.length===0&&model.filterState?.titleQuery)elements.listState.append(clearQuery);
       const nextCardCache = new Map();
       const cardSize = documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
         .getPropertyValue('--selection-card-size')?.trim() || '180px';

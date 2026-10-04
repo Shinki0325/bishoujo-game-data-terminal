@@ -696,3 +696,25 @@ html.galpedia[data-theme] :is(button, a)[data-ui]:not(#gp-controls-specificity-b
     box-shadow: none;
   }
 }
+
+/* 2026-10 review: reading order and compact empty states. Original titles stay unchanged. */
+#catalog-results:has(#catalog-list-state[data-state="empty"]) #catalog-grid{min-height:0;height:auto;padding:0}
+#catalog-list-state[data-state="empty"]{margin:16px 0;padding:24px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+#catalog-results:has(#catalog-list-state[data-state="empty"]) #selection-pagination{display:none}
+#details-views-row{font-size:11px;padding-block:6px}
+#details-views-row dt,#details-views-row dd{display:inline;margin:0}
+#details-views-row dd{margin-left:8px}
+@media(max-width:899px){
+ #work-details .details-compare-button{display:inline-flex!important;grid-column:1;grid-row:2;width:max-content;min-height:32px;padding:5px 10px;font-size:12px}
+ #work-details .details-metadata-release{display:none}
+ #work-details .details-metadata div{min-height:0;padding-block:6px}
+ #work-details .details-metadata dd{font-size:12px}
+ #work-details .details-rating-source-label{font-size:10px}
+ #work-details .details-work-alias-disclosure{margin-top:6px}
+ #work-details .dialog-heading{padding-block:10px}
+}
+
+#ranking-view[data-empty="true"] .ranking-toolbar .edit-actions:not(:has(button:enabled)){display:none}
+#ranking-view[data-empty="true"] #display-menu-button,#ranking-view[data-empty="true"] .ranking-export-split:has(#export-png:disabled){display:none}
+#ranking-view[data-empty="true"] .tier-row{min-height:64px}
+@media(min-width:900px){#ranking-view[data-empty="true"] .tier-dropzone{min-height:64px}}

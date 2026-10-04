@@ -364,7 +364,8 @@ async function start(){
     if(draft)experience.restoreUI(draft.ui);
     await refresh({reuse:true});sessionReady=true;queueDraft();
     if(draft){builder.compact();toast('已恢复上次的图表、筛选和选择。');}
-    if(innerWidth>900)dashboard.openEditor('fields');
+    // Start with the chart; editor controls remain available on demand.
+    dashboard.editor.open=false;
     // Entry dialogs are user initiated. Loading the workspace must never make it inert.
     document.body.dataset.ready='true';
   }catch(error){$('chart-title').textContent='工作台未能打开';$('chart-subtitle').textContent='已保存的方案会保留。';$('result-summary').textContent=String(error.message);const back=document.createElement('a');back.href='/analysis/';back.textContent='打开普通工作台';($('startup-status')??$('result-summary')).append(back);document.body.dataset.error='true';}

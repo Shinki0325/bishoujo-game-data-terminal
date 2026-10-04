@@ -1,6 +1,6 @@
 import {companyName} from '../lib/company-ui/__company_v30/presentation.js';
 import { formatReleaseDate } from '../lib/work-release-date.js';
-import {cleanDisplayAliases,splitDisplayAliases} from '../lib/work-display-aliases.js';
+import {cleanDisplayAliases} from '../lib/work-display-aliases.js';
 import { applyAdaptiveImageSource } from '../lib/adaptive-image-source.js';
 
 function formatSnapshotDate(value) {
@@ -27,7 +27,8 @@ function render(work, { workAliasesById = null, onOpenCompany = null, projectEnt
   brandButton.addEventListener('click', () => onOpenCompany?.(work.brandId));
   elements.detailsBrand.append(brandButton);
   const aliases = cleanDisplayAliases(work.fullWikiDisplayAliases ?? workAliasesById?.get?.(work.workId) ?? [], work.title);
-  const {visible: visibleAliases, more: moreAliases} = splitDisplayAliases(aliases);
+  const visibleAliases = [];
+  const moreAliases = aliases;
   if (!aliasDisclosure) {
     aliasPreview = documentRef.createElement('p');
     aliasPreview.className = 'details-work-alias-preview';
@@ -48,7 +49,7 @@ function render(work, { workAliasesById = null, onOpenCompany = null, projectEnt
     aliasDisclosure.open = false;
     aliasWorkId = String(work.workId);
   }
-  aliasDisclosure.querySelector('summary').textContent = `更多别名（${moreAliases.length}）`;
+  aliasDisclosure.querySelector('summary').textContent = `别名（${moreAliases.length}）`;
 
   const coverToken = String(++coverSequence);
   elements.detailsCover.dataset.coverToken = coverToken;
@@ -87,7 +88,7 @@ function render(work, { workAliasesById = null, onOpenCompany = null, projectEnt
     }
     const sourceLabel = documentRef.createElement('span');
     sourceLabel.className = 'details-rating-source-label';
-    sourceLabel.textContent = label;
+    sourceLabel.textContent = `${label} · ${label === 'Bangumi' ? '10' : '100'}分制`;
     const score = documentRef.createElement('strong');
     score.className = 'details-rating-value';
     score.dataset.hasRating = String(/^\d/u.test(value));

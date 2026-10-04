@@ -21,6 +21,7 @@ function positivePage(value) {
 }
 
 function safeCompanyId(value) {
+  if (typeof value !== 'string' || !value || value === 'null' || value === 'undefined') return null;
   try { value=decodeURIComponent(value); } catch { return null; }
   return safeId(value) ?? (typeof value === 'string' && /^(?:vndb:p[1-9][0-9]*|egs:brand:[1-9][0-9]*)$/u.test(value) ? value : null);
 }

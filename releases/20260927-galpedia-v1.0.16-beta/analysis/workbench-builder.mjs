@@ -13,7 +13,7 @@ export class WorkbenchBuilder{
     for(const name of ['workbench-builder.css','site-theme.css'])if(!document.querySelector(`link[rel="stylesheet"][href$="${name}"]`)){const css=node('link');css.rel='stylesheet';css.href=new URL('./'+name,import.meta.url).href;document.head.append(css);}
     document.body.classList.add('guided-workbench');
     const title=document.querySelector('.comparison-title');title.append(button('新建分析',()=>this.launch('templates'),'new-analysis'),button('我的方案',()=>this.launch('saved'),'my-analyses'));
-    const actions=document.querySelector('.comparison-actions');actions.prepend($('save-button'),choices('export-scope','导出范围',[['chart','整张图'],['selected','已选记录']],()=>this.syncExport()),$('export-button'));
+    const actions=document.querySelector('.comparison-actions');const outputMenu=node('details',null,'builder-output-menu');outputMenu.append(node('summary','保存与导出'));const outputBody=node('div',null,'builder-output-body');outputBody.append($('save-button'),choices('export-scope','导出范围',[['chart','整张图'],['selected','已选记录']],()=>this.syncExport()),$('export-button'));outputMenu.append(outputBody);actions.prepend(outputMenu);
     $('save-button').textContent='保存当前方案';$('company-edit').textContent='编辑图表';
     const context=node('div',null,'builder-context');context.id='builder-context';context.append(
       choices('analysis-object','分析对象',OBJECTS,value=>api.apply(purposePatch(api.result().state,purposeFor(api.result().state),value))),
@@ -45,7 +45,7 @@ export class WorkbenchBuilder{
     $('jump-details').after(button('仅看这些',()=>{const ids=[...api.selection()];if(ids.length)api.apply({recordFilter:{grain:analysisGrain(api.result().state),ids}});},'filter-selection'));
     const fieldDialog=node('dialog');fieldDialog.id='builder-field-dialog';fieldDialog.setAttribute('aria-labelledby','builder-field-title');fieldDialog.innerHTML='<div class="dialog-top"><h2 id="builder-field-title"></h2></div><p id="builder-field-note"></p><div id="builder-field-actions"></div>';fieldDialog.querySelector('.dialog-top').append(button('关闭',()=>fieldDialog.close()));document.body.append(fieldDialog);
     this.makeLauncher();
-    const layerButton=$('builder-curves');layerButton.title='打开趋势线、密度曲线和累计占比设置';
+    const layerButton=$('builder-curves');$('company-editor-main').prepend(layerButton);layerButton.title='打开趋势线、密度曲线和累计占比设置';
     for(const shelf of document.querySelectorAll('.shelf')){
       shelf.addEventListener('dragover',e=>{const id=e.dataTransfer.getData('text/plain');if(id&&field(id))shelf.title='放到这里：'+field(id).label;});
     }

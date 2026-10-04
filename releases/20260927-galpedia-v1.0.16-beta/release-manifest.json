@@ -1,5 +1,5 @@
 {
-  "closureSha256": "26848cf1c2b974aa7a9cc87463919163ec4bcb1cfa68a370df3d1d362f1204cc",
+  "closureSha256": "d7f559c18a2c0a15d699b611fc9d3cabcd10bde1a19b72052a6c230043871592",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -471866,9 +471866,9 @@
       "sha256": "2caa17e1f7aeaf7f9472f04421193130eeb1a032c2778cccfe9c3b3c1b474d0d"
     },
     {
-      "bytes": 5648,
+      "bytes": 5941,
       "path": "lib/analysis-site-bridge.js",
-      "sha256": "628391147b30547c16dbf7c737441a07039d6e3acbc457d84a2ade6d1790bb41"
+      "sha256": "77736e3fde54b42344dd8d693873b4c78673b4e8b56f7a58648d4cad4812188a"
     },
     {
       "bytes": 25106,
@@ -472301,9 +472301,9 @@
       "sha256": "de2a274a73f10161bde59b0a32097032bc52bb2637d17b003dd72d2297860c80"
     },
     {
-      "bytes": 9262,
+      "bytes": 9128,
       "path": "lib/image-safety.js",
-      "sha256": "206a5287add1694b716f43585e5eb21e51bda30a23d03e63daeceb2a3a0ebcaf"
+      "sha256": "c86512a3e5b7a40a322e6e548206cc186d3e0cb304742357009fab4ddfd0bb95"
     },
     {
       "bytes": 4590,
@@ -472756,9 +472756,9 @@
       "sha256": "f0cf98f0f9601927f8653b7157084496d2f6c0643545203d0f8a2f37fc4a8eaa"
     },
     {
-      "bytes": 5641,
+      "bytes": 5742,
       "path": "lib/ui-location-state.js",
-      "sha256": "d2b24f544aeaedc1960ea8cb8ebfd1ced9802659e76594e724b3ab506e05fe8c"
+      "sha256": "a11352b1b23db0d3b7c2426b8ef97365a1b5d2475957de9c69570f22219317b6"
     },
     {
       "bytes": 618,
@@ -473001,9 +473001,9 @@
       "sha256": "01fed70ca12955c7354dc7ce68c8a6b04d56d577447646ef798b3e1be6dbe5aa"
     },
     {
-      "bytes": 171011,
+      "bytes": 171199,
       "path": "main.js",
-      "sha256": "5086d44f1e0d38496e28d822f35a8243a860e268cbc3c75939bc76bed8e12bf9"
+      "sha256": "5c489da37692c22ee5832168c362e157e00f3ab29e4587dca177166264ac5df6"
     },
     {
       "bytes": 44552,
@@ -473076,9 +473076,9 @@
       "sha256": "c45c52a2d8aeafa4a7dbead9427954647b281d8f94ef348a11274b8d1cff3374"
     },
     {
-      "bytes": 35791,
+      "bytes": 36263,
       "path": "views/selection-view.js",
-      "sha256": "f488cca3239d6c3c89d75edaad1aae13c4a0a81b70922b342ab5aab18657fc6e"
+      "sha256": "ed3c3599796ac191ad40818d011a3c4cbf9f201f31991ceb5d9f80d41febb273"
     },
     {
       "bytes": 542,
@@ -473106,9 +473106,9 @@
       "sha256": "02a6ec2dd13d91549bfca43fd90dce6d41fc6d191adc94b0e71065406983126f"
     },
     {
-      "bytes": 11271,
+      "bytes": 11272,
       "path": "views/work-detail-view.js",
-      "sha256": "ad80653868157ffec6df200c4a0b0c23a4bb27f6cfd8852c70de6ec526bd0403"
+      "sha256": "b62414e3ccdb68c2518e28b53d30b5b811d873b97dbce638ca26d673f1584add"
     },
     {
       "bytes": 6647,
@@ -473166,14 +473166,14 @@
   },
   "staticFiles": [
     {
-      "bytes": 1606,
+      "bytes": 2507,
       "path": "analysis-links.css",
-      "sha256": "513ceebb7f7b383154dab4d4a7c094af5d67376de8cd4a2b0971ca524e2b48eb"
+      "sha256": "ad7125d8259d4115f2450a1ad2910a565a6e90d7a63b2bd38185ed28176f1df8"
     },
     {
-      "bytes": 51084,
+      "bytes": 51136,
       "path": "analysis/app.mjs",
-      "sha256": "63784b3b7935e45626e940a48ad65075326adb93c6cb2762f2a86cf8c3af85b1"
+      "sha256": "498cac898ba534b540d0cddeff8a20b656f3042489f4a76212338e58d70ac9a6"
     },
     {
       "bytes": 1306,
@@ -473391,14 +473391,14 @@
       "sha256": "fb6694b2ff73d077bd7a11d38f481e59cfd1e90cbb6880bb5dc1a5b787da92bb"
     },
     {
-      "bytes": 12301,
+      "bytes": 13268,
       "path": "analysis/workbench-builder.css",
-      "sha256": "ccb455639cf8418c49dfc30b4b51c9063d49975c9f23b9d5a458978419fbe09f"
+      "sha256": "7a5ebcaa5a4417ac842b8e25c117c03946608507219102edc4fcefccb8e7f5ab"
     },
     {
-      "bytes": 18916,
+      "bytes": 19191,
       "path": "analysis/workbench-builder.mjs",
-      "sha256": "1a75bcd05d7badf16eb158223ed30483a818388e724760e696b3b6474fd5cb40"
+      "sha256": "36ba018ef7b3ffb40c1304f7eac16692048fb8cdf0b8068ff443cdc2187159b4"
     },
     {
       "bytes": 9651,
@@ -473501,9 +473501,9 @@
       "sha256": "91770adcbb4c21cc149c2d3dd8a6729bc7932be96c75dee8ebf9afc7e129a8de"
     },
     {
-      "bytes": 27282,
+      "bytes": 28836,
       "path": "galpedia-controls.css",
-      "sha256": "2b3571e59713471dfe3a7909597dde4665201a12d5d52bd2b51fa8bf9f989dda"
+      "sha256": "d86bc5d4e6dc39446ba6e0ed71c250a875015b11c188cb8a752748459e48ccc4"
     },
     {
       "bytes": 9200,
@@ -473581,9 +473581,9 @@
       "sha256": "be3d798c52db550dabaf4f2ca51ea37b3264bba277d8abbcded9d1e94cfb2082"
     },
     {
-      "bytes": 2137,
+      "bytes": 3797,
       "path": "lib/image-safety.css",
-      "sha256": "3f22bbc1df458c66b63ec8b692cf70be8c34a2cb61b8f267d9e866c27958cdb8"
+      "sha256": "bb661e4b418d2e34cb769ac1f7178edba0fd035e2ba040a2703b331b48e98e82"
     },
     {
       "bytes": 991249,

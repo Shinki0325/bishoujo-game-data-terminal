@@ -1284,6 +1284,7 @@ async function initialize() {
 
     const model = lastRenderedModel;
     const isWorkRanking = model?.state?.workspaceMode === 'ranking' && rankingSubject === 'work';
+    elements.rankingView.dataset.empty = String(isWorkRanking && model.rankedCount === 0 && model.unrankedCount === 0);
     const rankingGuide = isWorkRanking ? resolveKeeperScene({
       ...base,
       id: model.rankedCount > 0 ? null : model.unrankedCount > 0 ? 'tier.firstDrag' : 'tier.start',
@@ -3407,7 +3408,10 @@ async function initialize() {
   return { search: query => {
     globalSearch ??= createGalpediaSearch({
       works: preparedWorkbench.workerOwned ? [] : ratedDisplayWorks,
-      searchWorks: preparedWorkbench.workerOwned ? query => filterWorkerClient.searchWorks(query) : null,
+      searchWorks: preparedWorkbench.workerOwned ? async query => {
+        await ensureFilterWorker();
+        return filterWorkerClient.searchWorks(query);
+      } : null,
       companyDirectory,
       enrichment: { workAliasesById: workerWorkAliasesById, workPinyinById: workerWorkPinyinById, workDisplayTitlesById },
       loadPersons: async () => {
