@@ -1,5 +1,5 @@
 {
-  "closureSha256": "e52de58339e694642f345c6a299420e82233e504f85c484aa7770d69154faa2d",
+  "closureSha256": "5cac70487f85cad0c71d69883ea6785de1aaa969d0ef27fd3748e9e3de163b0a",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -472301,9 +472301,9 @@
       "sha256": "de2a274a73f10161bde59b0a32097032bc52bb2637d17b003dd72d2297860c80"
     },
     {
-      "bytes": 11459,
+      "bytes": 8924,
       "path": "lib/image-safety.js",
-      "sha256": "cdc0504f9ce4054e2d709f72e3d0c583591372364249103f51677d970d1a4723"
+      "sha256": "1f78c3ec31f9693361d80dcb924c984a5361288853caa66d10f69af45530ee64"
     },
     {
       "bytes": 4590,
@@ -473536,9 +473536,9 @@
       "sha256": "09999a7b67d54c4d0a967e6400faad9d79279c30128cd0c275e6094c78afc05e"
     },
     {
-      "bytes": 1174,
+      "bytes": 748,
       "path": "lib/company-ui/__combined/company-image-safety.css",
-      "sha256": "57cb55c8e82d9afcbd7c6ae4621aeeaa8fdb8e66397e2467971a298587240bbc"
+      "sha256": "25e416a7db5955ac353f9f9b83432702857ed69ce687c2da5c50d943fef2bee5"
     },
     {
       "bytes": 2420,
@@ -473581,9 +473581,9 @@
       "sha256": "be3d798c52db550dabaf4f2ca51ea37b3264bba277d8abbcded9d1e94cfb2082"
     },
     {
-      "bytes": 5436,
+      "bytes": 4631,
       "path": "lib/image-safety.css",
-      "sha256": "b762c3a1cac1846dc8915c559584866daec49f7e30bc7075df3f3fa6a7f1a4fe"
+      "sha256": "dfc9fb6365da3e63c81badafda16cdca69629f8957cb3096e9a9d8713be0c641"
     },
     {
       "bytes": 991249,

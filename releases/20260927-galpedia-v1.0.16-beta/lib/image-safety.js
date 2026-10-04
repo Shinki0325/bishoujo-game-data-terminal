@@ -1,7 +1,7 @@
 import {resolvePublicImageSafety} from './public-data-client.js';
 const STORAGE='galpedia-image-safety-v1';
-const revealed=new Set(), bindings=new Set(), byImage=new WeakMap(), cache=new Map(), waiting=new Map();
-const MODES=[['hide','隐藏敏感图片','点击单张图片后查看'],['blur','模糊显示','遮挡细节，点击后查看'],['show','直接显示','敏感图片也直接展示']];
+const bindings=new Set(), byImage=new WeakMap(), cache=new Map(), waiting=new Map();
+const MODES=[['hide','隐藏敏感图片','以占位显示敏感图片'],['blur','模糊显示','统一模糊敏感图片'],['show','直接显示','敏感图片也直接展示']];
 const normalizeMode=value=>MODES.some(([mode])=>mode===value)?value:'hide';
 let flushTimer=null,mode='hide';
 try { mode=normalizeMode(localStorage.getItem(STORAGE)); } catch {}
@@ -35,7 +35,7 @@ async function flush() {
   if(waiting.size&&!flushTimer)flushTimer=setTimeout(flush,0);
 }
 function notify(){for(const item of [...bindings])item.update();syncControl();}
-export function setImageSafetyMode(value){mode=normalizeMode(value);revealed.clear();try{localStorage.setItem(STORAGE,mode);}catch{}notify();}
+export function setImageSafetyMode(value){mode=normalizeMode(value);try{localStorage.setItem(STORAGE,mode);}catch{}notify();}
 export function getImageSafetyMode(){return mode;}
 export function setImageSafetyHidden(value){setImageSafetyMode(value?'hide':'show');}
 export function isImageSafetyHidden(){return mode!=='show';}
@@ -50,17 +50,10 @@ export function bindImageSafety(image,{urls,show,hide=()=>{},getImage=()=>image}
     const current=getImage();if(!current?.isConnected)return;
     mounted=true;
     if(!host){host=current.parentElement;if(!host)return;host.classList.add('nsfw-image-host');
-      // span role=button avoids nesting native buttons in existing cover buttons.
-      badge=document.createElement('span');badge.className='nsfw-image-control';badge.tabIndex=0;badge.setAttribute('role','button');
-      badge.addEventListener('click',toggle);badge.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();toggle(event);}});
+      // A passive placeholder never competes with the cover's own action.
+      badge=document.createElement('span');badge.className='nsfw-image-status';badge.setAttribute('role','img');
       host.append(badge);
     }
-  }
-  function toggle(event){
-    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();if(!infos||infos.every(x=>x.status==='missing'))return;
-    const risky=infos.filter(x=>!safeStates.has(x.status)&&!['local','missing'].includes(x.status));
-    if(risky.every(info=>revealed.has(info.family)))for(const info of risky)revealed.delete(info.family);else for(const info of risky)revealed.add(info.family);
-    notify();
   }
   function update(){
     if(disposed)return;const current=getImage();
@@ -68,18 +61,16 @@ export function bindImageSafety(image,{urls,show,hide=()=>{},getImage=()=>image}
     const missing=!!infos&&infos.every(x=>x.status==='missing');
     const risky=infos?.filter(x=>!safeStates.has(x.status)&&!['local','missing'].includes(x.status))??[];
     const unavailable=infos?.some(x=>x.status==='unavailable');
-    const individuallyRevealed=risky.length>0&&risky.every(x=>revealed.has(x.family));
-    const blurred=!!infos&&!unavailable&&mode==='blur'&&risky.length>0&&risky.every(x=>x.status==='nsfw')&&!individuallyRevealed;
-    const allowed=!!infos&&!missing&&!unavailable&&(mode==='show'||risky.length===0||individuallyRevealed||blurred);
+    const blurred=!!infos&&!unavailable&&mode==='blur'&&risky.length>0&&risky.every(x=>x.status==='nsfw');
+    const allowed=!!infos&&!missing&&!unavailable&&(mode==='show'||risky.length===0||blurred);
     current?.toggleAttribute('data-safety-blurred',blurred);
     if(!allowed){revisionId++;if(active){hide();active=false;}clear();}
     if(badge){
-      badge.hidden=!!infos&&!missing&&!unavailable&&(risky.length===0||mode==='show');
-      badge.classList.toggle('is-revealed',allowed&&!blurred);badge.classList.toggle('is-blurred',blurred);badge.classList.toggle('is-loading',!infos||unavailable);
-      badge.classList.toggle('is-missing',missing);badge.setAttribute('role',missing?'img':'button');badge.tabIndex=missing?-1:0;
-      const message=!infos?'正在检查图片…':missing?'暂无图片':unavailable?'图片暂不可用':blurred?'敏感图片已模糊\n点击查看':allowed?(mode==='blur'&&risky.every(x=>x.status==='nsfw')?'重新模糊':'重新遮挡'):risky.some(x=>x.status==='nsfw')?'敏感图片\n点击显示':'图片未分级\n点击显示';
+      badge.hidden=allowed;
+      badge.classList.toggle('is-loading',!infos);badge.classList.toggle('is-missing',missing);
+      const message=!infos?'正在检查图片…':missing?'暂无图片':unavailable?'图片暂不可用':risky.some(x=>x.status==='nsfw')?'敏感图片已隐藏':'图片未分级';
       if(badge.textContent!==message)badge.textContent=message;
-      badge.setAttribute('aria-label',badge.textContent.replace('\n','，'));badge.setAttribute('aria-disabled',String(!infos||missing||!!unavailable));
+      badge.setAttribute('aria-label',message);
       host?.classList.toggle('nsfw-is-blocked',!allowed);host?.classList.toggle('nsfw-is-blurred',blurred);
     }
     if(allowed){getImage().removeAttribute('data-safety-blocked');if(!active){active=true;const token=++revisionId;show(infos.map(x=>x.url??infos.find(x=>x.url)?.url),()=>!disposed&&active&&revisionId===token);}}
@@ -89,8 +80,7 @@ export function bindImageSafety(image,{urls,show,hide=()=>{},getImage=()=>image}
   Promise.all(urls.filter(Boolean).map(resolveSafety)).then(data=>{if(!disposed){infos=data;update();}});
   return binding;
 }
-let toolbar,openDialogs=[];
-function scheduleControlPosition(){if(toolbar)toolbar.style.removeProperty('bottom');}
+let toolbar;
 function syncControl(){if(toolbar){
   for(const input of toolbar.querySelectorAll('input'))input.checked=input.value===mode;
   if(toolbar.dataset.mode!==mode){
@@ -99,12 +89,9 @@ function syncControl(){if(toolbar){
     summary.querySelector('span').textContent=label;
     summary.querySelector('svg').innerHTML='<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'+(mode==='hide'?'<path d="m3 3 18 18"/>':'');
   }
-  openDialogs=openDialogs.filter(x=>x.isConnected&&x.open);
-  const dialog=openDialogs.at(-1);
-  const parent=dialog ? (dialog.querySelector('.details-heading-actions')??dialog.querySelector('.dialog-heading,.company-detail-heading,.pp-explorer')??dialog) : (document.querySelector('.header-actions')??document.body);
-  toolbar.inert=false;
-  if(toolbar.parentElement!==parent){toolbar.open=false;const close=parent.querySelector(':scope > form,:scope > #company-detail-close');if(close)parent.insertBefore(toolbar,close);else parent.append(toolbar);}
-  scheduleControlPosition();
+  const parent=document.querySelector('.header-actions');
+  if(parent&&toolbar.parentElement!==parent)parent.append(toolbar);
+  if(document.querySelector('dialog[open]'))toolbar.open=false;
 }}
 function installControl(){
   if(toolbar)return;toolbar=document.createElement('details');toolbar.className='nsfw-preference';const summary=document.createElement('summary');summary.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>图片设置</span>';summary.setAttribute('aria-label','图片显示设置');summary.title='图片显示设置';toolbar.append(summary);
@@ -117,13 +104,10 @@ function installControl(){
     name.textContent=title;hint.textContent=description;copy.append(name,hint);label.append(input,copy);panel.append(label);
   }
   toolbar.append(panel);document.body.append(toolbar);syncControl();
-  const resize=new ResizeObserver(scheduleControlPosition);
-  for(const node of document.querySelectorAll('#workspace-mode,#mobile-ranking-dock,#ranking-candidates'))resize.observe(node);
-  new MutationObserver(scheduleControlPosition).observe(document.body,{attributes:true,attributeFilter:['class']});
-  window.addEventListener('resize',scheduleControlPosition);document.addEventListener('transitionend',scheduleControlPosition);scheduleControlPosition();
+
 }
 if(typeof document!=='undefined'){
-  window.addEventListener('storage',event=>{if(event.key===STORAGE||event.key===null){mode=normalizeMode(event.newValue);revealed.clear();notify();}});
+  window.addEventListener('storage',event=>{if(event.key===STORAGE||event.key===null){mode=normalizeMode(event.newValue);notify();}});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installControl,{once:true});else installControl();
-  new MutationObserver(records=>{for(const record of records){if(record.type==='attributes'&&record.target.tagName==='DIALOG'){openDialogs=openDialogs.filter(x=>x!==record.target);if(record.target.open)openDialogs.push(record.target);}}for(const item of [...bindings])item.update();syncControl();}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
+  new MutationObserver(()=>{for(const item of [...bindings])item.update();syncControl();}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
 }

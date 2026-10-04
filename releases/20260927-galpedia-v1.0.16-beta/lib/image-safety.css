@@ -1,11 +1,22 @@
-.nsfw-image-host{position:relative!important}.nsfw-image-host.nsfw-is-blocked{background:var(--surface-muted,#eef0f2)!important}.nsfw-image-host img[data-safety-blocked]{visibility:hidden!important;opacity:0!important}.nsfw-image-control{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;white-space:pre-line;text-align:center;line-height:1.7;font:500 13px/1.7 system-ui,sans-serif;color:var(--text-secondary,#596773);background:var(--surface-muted,#eef0f2);cursor:pointer;border-radius:inherit;padding:8px}.nsfw-image-control[hidden]{display:none!important}.nsfw-image-control:focus-visible{outline:3px solid #388581;outline-offset:-4px}.nsfw-image-control.is-loading{cursor:wait}.nsfw-image-control.is-revealed{inset:auto 5px 5px auto;padding:3px 8px;border-radius:5px;background:#182528db;color:white;font-size:11px}.nsfw-preference{position:fixed;right:18px;bottom:18px;z-index:10000;background:var(--surface,#fff);color:var(--text,#263b41);border:1px solid #88999955;box-shadow:0 3px 14px #0001;border-radius:22px;padding:9px 14px;font:13px/1.4 system-ui,sans-serif}.nsfw-preference label{display:flex;gap:7px;align-items:center;cursor:pointer}.nsfw-preference input{accent-color:#337d75;width:16px;height:16px;margin:0}@media(max-width:600px){.nsfw-preference{right:10px;bottom:calc(10px + env(safe-area-inset-bottom));font-size:12px;padding:8px 11px}.nsfw-image-control{font-size:11px;padding:4px}}
-.nsfw-image-control.is-missing{cursor:default;pointer-events:none}
-
-.managed-work-thumbnail{display:inline-flex;flex-shrink:0;line-height:0;vertical-align:middle;position:relative}.managed-work-thumbnail .nsfw-image-control{font-size:0;padding:0;min-width:0}.managed-work-thumbnail .nsfw-image-control::after{content:'显示';font-size:9px;line-height:1.2}.managed-work-thumbnail .nsfw-image-control.is-revealed::after{content:'遮挡'}.managed-work-thumbnail .nsfw-image-control.is-loading::after{content:'…'}.managed-work-thumbnail .nsfw-image-control.is-missing::after{content:'无图'}
+.nsfw-image-host{position:relative!important}
+.nsfw-image-host.nsfw-is-blocked{background:var(--surface-muted,#eef0f2)!important}
+.nsfw-image-host img[data-safety-blocked]{visibility:hidden!important;opacity:0!important}
+.nsfw-image-status{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;text-align:center;font:500 13px/1.7 system-ui,sans-serif;color:var(--text-secondary,#596773);background:var(--surface-muted,#eef0f2);border-radius:inherit;padding:8px;pointer-events:none}
+.nsfw-image-status[hidden]{display:none!important}
+.nsfw-preference label{display:flex;gap:7px;align-items:center;cursor:pointer}
+.nsfw-preference input{accent-color:#337d75;width:16px;height:16px;margin:0}
+@media(max-width:600px){.nsfw-image-status{font-size:11px;padding:4px}}
+.managed-work-thumbnail{display:inline-flex;flex-shrink:0;line-height:0;vertical-align:middle;position:relative}
+.managed-work-thumbnail .nsfw-image-status{font-size:0;padding:0;min-width:0}
+.managed-work-thumbnail .nsfw-image-status::after{content:'已隐藏';font-size:9px;line-height:1.2}
+.managed-work-thumbnail .nsfw-image-status[aria-label='图片未分级']::after{content:'未分级'}
+.managed-work-thumbnail .nsfw-image-status[aria-label='图片暂不可用']::after{content:'不可用'}
+.managed-work-thumbnail .nsfw-image-status.is-loading::after{content:'…'}
+.managed-work-thumbnail .nsfw-image-status.is-missing::after{content:'无图'}
 
 .work-compare-header-cover>.managed-work-thumbnail{width:100%;height:100%}
 
-/* One compact settings menu, in the active toolbar instead of over content. */
+/* One global settings menu, anchored in the page header. */
 .nsfw-preference{position:relative;inset:auto;z-index:60;flex:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;font-size:12px}
 .nsfw-preference>summary{list-style:none;cursor:pointer;min-height:32px;padding:5px 7px;border:1px solid var(--border,#d8d2e5);border-radius:6px;display:flex;align-items:center;justify-content:center}
 .nsfw-preference-panel{position:absolute;right:0;top:calc(100% + 6px);box-sizing:border-box;width:260px;max-width:calc(100vw - 24px);margin:0;padding:12px;border:1px solid var(--border,#d8d2e5);border-radius:8px;background:var(--surface,#fff);box-shadow:0 4px 16px #0002;color:var(--text)}
@@ -18,7 +29,6 @@
  html.galpedia[data-theme] .galpedia-header .galpedia-logo img{width:153px;height:76.5px;left:-12px;top:-16px}
  html.galpedia[data-theme] .galpedia-header .header-actions{flex-shrink:0;gap:2px}
  .nsfw-preference{font-size:11px}
- #work-details .nsfw-preference{grid-column:2;grid-row:2}
 }
 @media(max-width:340px){
  html.galpedia[data-theme] .galpedia-header.tool-header{height:auto;min-height:62px;flex-wrap:wrap;padding-block:4px;row-gap:0}
@@ -34,7 +44,6 @@
 /* Blur only classified sensitive images; unresolved images keep their placeholder. */
 .nsfw-image-host.nsfw-is-blurred{overflow:hidden!important}
 .nsfw-image-host img[data-safety-blurred]{filter:blur(18px)!important;transform:scale(1.08)!important;pointer-events:none}
-.nsfw-image-control.is-blurred{background:rgb(25 22 34 / 24%);color:#fff;text-shadow:0 1px 4px #000;font-weight:600}
 .nsfw-preference-panel legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .nsfw-preference .nsfw-mode-option{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:6px;white-space:normal}
 .nsfw-mode-option:hover,.nsfw-mode-option:has(input:checked){background:var(--accent-soft,var(--surface-muted))}
