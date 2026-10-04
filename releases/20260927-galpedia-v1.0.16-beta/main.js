@@ -3215,7 +3215,9 @@ async function initialize() {
     companyDirectoryOpen = false;
     setWorkSelectionMode(false);
     rankingSubject = 'work';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
   });
   elements.clearSelectedCompanies.addEventListener('click', () => {
     if (companyRanking.inspect().selectedCompanyIds.length === 0) return;
@@ -3226,7 +3228,9 @@ async function initialize() {
     companyDirectoryOpen = false;
     companySelectionMode = false;
     rankingSubject = 'company';
-    return runStateChange(() => controller.setWorkspaceMode('ranking'));
+    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
+    pushUiLocation();
+    return result;
   });
   elements.companyRankingClose.addEventListener('click', () => {
     companyDirectoryOpen = true;

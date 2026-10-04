@@ -228,7 +228,10 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     elements.mobileRankingCandidatesLabel.textContent = open ? '收起候选' : '显示候选';
     const candidateLabel = subject() === 'company' ? '候选会社' : '候选作品';
     elements.mobileRankingCandidates.setAttribute('aria-label', `${open ? '收起' : '显示'}${candidateLabel}`);
-    for (const button of trayButtons) button.setAttribute('aria-pressed', String(button.dataset.candidateTray === trayMode));
+    for (const button of trayButtons) {
+      button.setAttribute('aria-pressed', String(button.dataset.candidateTray === trayMode));
+      if (button.dataset.candidateTray === 'expanded') button.textContent = mobile && !live && trayMode === 'expanded' ? '单行显示' : '展开';
+    }
     // Collapsed candidates cannot remain in the keyboard focus order on mobile.
     if (tray) tray.inert = !open && mobile;
     scheduleLayout();
@@ -254,7 +257,10 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     scheduleLayout();
     return true;
   }
-  for (const button of trayButtons) lifetime.listen(button, 'click', () => setTrayMode(button.dataset.candidateTray));
+  for (const button of trayButtons) lifetime.listen(button, 'click', () => {
+    const toggleExpanded = !live && windowRef.matchMedia?.('(max-width: 899px)').matches && button.dataset.candidateTray === 'expanded' && trayMode === 'expanded';
+    setTrayMode(toggleExpanded ? 'row' : button.dataset.candidateTray);
+  });
   lifetime.listen(pinButton, 'click', () => setPinned(!pinned));
   lifetime.listen(documentRef.getElementById?.('ranking-live-candidates'), 'click', () => {
     setTrayMode(trayMode === 'expanded' ? 'row' : 'expanded');
@@ -312,6 +318,38 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
   lifetime.listen(elements.mobileRankingMore, 'click', () => openMobileRankingMenu());
   const quickExport = documentRef.getElementById?.('mobile-ranking-export-quick');
   if (quickExport) lifetime.listen(quickExport, 'click', () => elements.exportPng.click());
+  const syncQuickExport = () => {
+    if (!quickExport) return;
+    const busy = elements.exportPng.getAttribute('aria-busy') === 'true';
+    quickExport.disabled = elements.exportPng.disabled;
+    quickExport.hidden = elements.exportPng.disabled && !busy;
+    quickExport.setAttribute('aria-busy', String(busy));
+    quickExport.textContent = busy ? '正在导出…' : '导出图片';
+  };
+  if (typeof windowRef.MutationObserver === 'function') {
+    const observer = new windowRef.MutationObserver(syncQuickExport);
+    observer.observe(elements.exportPng, {attributes:true,attributeFilter:['disabled','aria-busy']});
+    lifetime.add(() => observer.disconnect());
+  }
+  syncQuickExport();
+  const candidateCount = documentRef.getElementById?.('mobile-ranking-candidate-count');
+  let previousCandidateCount = Number(candidateCount?.textContent);
+  if (candidateCount && typeof windowRef.MutationObserver === 'function') {
+    const observer = new windowRef.MutationObserver(() => {
+      const count = Number(candidateCount.textContent);
+      if (previousCandidateCount > 0 && count === 0 && !live && windowRef.matchMedia?.('(max-width: 899px)').matches) setTrayMode('collapsed');
+      previousCandidateCount = count;
+    });
+    observer.observe(candidateCount, {childList:true,characterData:true,subtree:true});
+    lifetime.add(() => observer.disconnect());
+  }
+
+  for (const button of documentRef.querySelectorAll?.('[data-ranking-empty-upload]') ?? []) lifetime.listen(button, 'click', () => {
+    const menu = documentRef.getElementById?.('cleanup-menu');
+    if (menu) menu.hidden = true;
+    documentRef.getElementById?.('cleanup-menu-button')?.setAttribute('aria-expanded', 'false');
+    documentRef.querySelector?.('#ranking-candidate-grid .ranking-upload-tile')?.click();
+  });
   const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
   if (mobileScale) lifetime.listen(mobileScale, 'input', () => {
     elements.rankingScaleCard.value = mobileScale.value;
