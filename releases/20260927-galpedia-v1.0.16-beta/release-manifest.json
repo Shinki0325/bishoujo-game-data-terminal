@@ -1,5 +1,5 @@
 {
-  "closureSha256": "f98f7cd36fd1fd52c71a5144e75997c7183e410a0545cd2ce6a14ace429fc329",
+  "closureSha256": "7a020d17750aac02ded5e3796ca67ede963a3c5cc7e2178112ec74eaa064b66b",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -473001,9 +473001,9 @@
       "sha256": "01fed70ca12955c7354dc7ce68c8a6b04d56d577447646ef798b3e1be6dbe5aa"
     },
     {
-      "bytes": 171297,
+      "bytes": 171328,
       "path": "main.js",
-      "sha256": "c43dea73cdc5060c97ea0988a6516204f686ffe9fdfb7e958de55613fe1a5b25"
+      "sha256": "e33e0f548a49647e86124f8192c9ecff3f33afc52dad9bead6e0623da51262f0"
     },
     {
       "bytes": 44552,
@@ -473046,9 +473046,9 @@
       "sha256": "363ed2475e9815be1e894c55aa17be2dedd674cdb972ba94dbc640443af31778"
     },
     {
-      "bytes": 23693,
+      "bytes": 23270,
       "path": "views/ranking-controls-view.js",
-      "sha256": "6efff35e8d6f6b83af4b0ca67dc55b4c2a95d42e8657a1ca7404bbbd339f01ca"
+      "sha256": "20bcaff35c2d139f03fad89e6ae8120a229763975e05948f2a43c54d791c58f3"
     },
     {
       "bytes": 4372,
@@ -473501,9 +473501,9 @@
       "sha256": "91770adcbb4c21cc149c2d3dd8a6729bc7932be96c75dee8ebf9afc7e129a8de"
     },
     {
-      "bytes": 30944,
+      "bytes": 30853,
       "path": "galpedia-controls.css",
-      "sha256": "8ac8d892ba32633cf52d9df6fe1234c3214fcc9b816a370b317d1af99308b1e0"
+      "sha256": "3cd99886cb495675c67644409dd1916746f29e554984bc4e9794146bcb5d9d59"
     },
     {
       "bytes": 9200,
@@ -473531,9 +473531,9 @@
       "sha256": "45cac49de3e3085e0f60611a897ce310b08250b8675aa50ea1d3a1e4d08270e1"
     },
     {
-      "bytes": 77299,
+      "bytes": 77117,
       "path": "index.html",
-      "sha256": "2079ec5f09b037a140102efb96daa6b175b863c6f9916947a12fe7f720e8c059"
+      "sha256": "a5bdec056846fb4a38b40ceee0f967f695a223d49427b47deb48ad2e32c6c543"
     },
     {
       "bytes": 748,

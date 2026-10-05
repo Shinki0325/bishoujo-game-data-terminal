@@ -721,7 +721,6 @@ html.galpedia[data-theme] :is(button, a)[data-ui]:not(#gp-controls-specificity-b
 
 /* Ranking starts with one next step; tools appear when there is a board to edit. */
 body:not(.is-ranking-immersive) #ranking-view[data-empty="true"] :is(#tier-board,#ranking-candidates,#mobile-ranking-candidates,#ranking-candidates-pin,#ranking-immersive){display:none!important}
-#ranking-view:not([data-empty="true"]) [data-ranking-empty-upload]{display:none!important}
 #mobile-ranking-menu label[hidden],#mobile-ranking-dock [hidden]{display:none!important}
 #ranking-view[data-empty="true"] #ranking-coachmark{max-width:720px;margin:24px auto}
 #ranking-view[data-empty="true"] #ranking-heading-count{display:none}

@@ -344,12 +344,6 @@ export function createRankingControlsView({ elements, scalePresentation, activeP
     lifetime.add(() => observer.disconnect());
   }
 
-  for (const button of documentRef.querySelectorAll?.('[data-ranking-empty-upload]') ?? []) lifetime.listen(button, 'click', () => {
-    const menu = documentRef.getElementById?.('cleanup-menu');
-    if (menu) menu.hidden = true;
-    documentRef.getElementById?.('cleanup-menu-button')?.setAttribute('aria-expanded', 'false');
-    documentRef.querySelector?.('#ranking-candidate-grid .ranking-upload-tile')?.click();
-  });
   const mobileScale = documentRef.querySelector?.('[data-ranking-mobile-scale]');
   if (mobileScale) lifetime.listen(mobileScale, 'input', () => {
     elements.rankingScaleCard.value = mobileScale.value;
