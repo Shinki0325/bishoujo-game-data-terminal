@@ -263,9 +263,11 @@ export function createSelectionView({
     syncSortDirectionControl({button:elements.sortDirectionToggle,icon:elements.sortDirectionIcon,label:elements.sortDirectionLabel,direction:state.sortDirection,documentRef});
 
   }
-  // Overlay feedback below the existing toolbar; keep its compact controls and geometry.
-  const controls=elements.sortKey.closest?.('.catalog-controls');
-  controls?.append(elements.listState);
+  // Keep feedback inside the existing result area without adding a layout row.
+  const contentRegion = documentRef.createElement('div');
+  contentRegion.className = 'catalog-content-region';
+  elements.grid.before(contentRegion);
+  contentRegion.append(elements.grid, elements.listState);
   elements.listState.classList.add('catalog-update-state');
   let remotePagePending = false;
   let latestCoverUrls = null;

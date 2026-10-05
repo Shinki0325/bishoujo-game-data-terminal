@@ -20,6 +20,8 @@ function cancelControl(status, action, layout) {
 export function setListState({ status, state, message = '', retry = null, retryAt = 0, cancel = null, slowLabel = '', detail = '', layout = 'inline' }) {
   if (!status || typeof status.classList?.toggle !== 'function') throw new TypeError('status must be an element');
   if (!STATES.has(state)) throw new RangeError('unknown list state');
+  // Refresh feedback stays small; empty and error states keep their full actions.
+  if (state === 'loading' && ['catalog-list-state','person-directory-loading'].includes(status.id)) { layout = 'inline'; detail = ''; slowLabel = '请稍候…'; }
   clearTimeout(retryTimers.get(status));
   retryTimers.delete(status);
   const current = pending.get(status);

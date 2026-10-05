@@ -65,12 +65,12 @@ function prepareLoadingRegion() {
 function placeLoadingStatus() {
   const route = '#' + location.hash.slice(1).split(/[/?]/)[0];
   const target = route === '#persons'
-    ? document.querySelector('#person-directory-panel')
+    ? document.querySelector('#person-directory-list')
     : route === '#companies'
-      ? document.querySelector('#company-directory-layout, .company-directory-layout')
+      ? document.querySelector('#company-list')
       : route === '#ranking'
         ? document.querySelector('#ranking-view')
-        : document.querySelector('#catalog-results');
+        : document.querySelector('#catalog-grid');
   if (target && status.parentElement !== target) {
     const toolbar=target.querySelector(':scope > .results-toolbar');
     if(toolbar)toolbar.after(status);else target.prepend(status);
@@ -78,23 +78,32 @@ function placeLoadingStatus() {
   status.dataset.loadRegion = route.slice(1) || 'works';
 }
 function createRuntimeLoading() {
+  const compact = !location.hash.startsWith('#ranking');
+  const layout = compact ? 'inline' : 'panel';
+  if (runtimeLoading && loadIndicator.dataset.layout !== layout) {
+    runtimeTicket?.cancel(); runtimeTicket = null;
+    runtimeLoading.dispose(); runtimeLoading = null;
+  }
   if (!runtimeLoading && globalThis.GalpediaDial && loadIndicator) {
     setListState({status:loadIndicator,state:'ready'});
-    loadIndicator.classList.add('gp-guide-state','gp-loading-view--panel');
-    loadIndicator.dataset.layout='panel';
+    loadIndicator.classList.toggle('gp-guide-state', !compact);
+    loadIndicator.classList.toggle('gp-loading-view--panel', !compact);
+    loadIndicator.classList.toggle('gp-loading-view--stack', !compact);
+    loadIndicator.classList.toggle('gp-loading-view--inline', compact);
+    loadIndicator.dataset.layout=layout;
     loadIndicator.removeAttribute('role');loadIndicator.setAttribute('aria-hidden','true');
     runtimeLoading = globalThis.GalpediaDial.createLoadingController({
       host: loadIndicator,
       region: workspace,
       announcer: statusText,
-      variant: 'standard',
-      size: 104,
+      variant: compact ? 'inline' : 'standard',
+      size: compact ? 24 : 104,
       theme: 'inherit',
       delay: 160,
       slowAfter: 8000,
-      stacked: true,
-      eyebrow: '庭守提示',
-      detail: '资料正在加载，完成后会自动显示。',
+      stacked: !compact,
+      eyebrow: compact ? '' : '庭守提示',
+      detail: compact ? '' : '资料正在加载，完成后会自动显示。',
       slowLabel: '资料仍在加载，请再等一会儿。'
     });
   }
@@ -107,6 +116,7 @@ function pageLoadingTitle() {
   return '正在加载作品库';
 }
 function showLoadingError(message, error) {
+  placeLoadingStatus();
   runtimeTicket?.fail(message);runtimeTicket=null;runtimeLoading=null;
   statusText.textContent='';statusText.classList.add('visually-hidden');
   loadIndicator.removeAttribute('aria-hidden');loadIndicator.setAttribute('role','status');
@@ -248,7 +258,14 @@ async function ensureRuntime() {
 async function ensureRoute() {
   if (isHome()) return;
   prepareLoadingRegion(); placeLoadingStatus();
-  if (runtimePromise) { runtimeTicket?.update(pageLoadingTitle()); return ensureRuntime(); }
+  if (runtimePromise) {
+    if (!runtimeReady && !runtimeFailed && createRuntimeLoading() && !runtimeTicket) {
+      runtimeTicket = runtimeLoading.begin(pageLoadingTitle());
+      status.hidden = false;
+    }
+    runtimeTicket?.update(pageLoadingTitle());
+    return ensureRuntime();
+  }
   const hash = location.hash;
   if(/^#(?:companies|persons)(?:[/?]|$)/u.test(hash))return ensureRuntime();
   // The full catalog's person identities and relation projection live in the

@@ -713,3 +713,29 @@ html.galpedia[data-theme] :is(button, a)[data-ui]:not(#gp-controls-specificity-b
  #work-details .details-work-alias-disclosure{margin-top:6px}
  #work-details .dialog-heading{padding-block:10px}
 }
+
+/* Local loading feedback occupies the result surface, never an extra guide card. */
+html.galpedia #galpedia-load-status:not([data-load-region="ranking"]){position:relative;inset:auto;display:flex;visibility:visible;grid-column:1/-1;min-height:220px;margin:0;padding:16px;pointer-events:none}
+html.galpedia #galpedia-load-status:not([data-load-region="ranking"])[hidden]{display:none}
+html.galpedia #galpedia-load-status:not([data-load-region="ranking"]) #galpedia-load-indicator:not([data-state="error"]){width:auto;max-width:100%;margin:0;padding:0;border:0;background:transparent;box-shadow:none}
+html.galpedia #galpedia-load-status .list-state-retry{pointer-events:auto}
+.catalog-content-region{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;flex:0 0 auto}
+html.galpedia .catalog-content-region>#catalog-list-state[data-state="loading"]{position:absolute;inset:auto;top:-14px;right:12px;z-index:20;display:flex;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 24px);margin:0;padding:2px 8px;border:0;border-radius:4px;box-shadow:none;background:var(--surface);font-size:12px;line-height:1.4}
+html.galpedia .catalog-content-region>#catalog-list-state[hidden]{display:none}
+html.galpedia #person-directory-panel{position:relative}
+html.galpedia #person-directory-list:empty{min-height:220px}
+html.galpedia #person-directory-loading[data-state="loading"]{position:absolute;inset:auto;bottom:100%;right:0;z-index:5;width:max-content;max-width:calc(100% - 24px);margin:0;padding:2px 8px;border:0;border-radius:4px;box-shadow:none;background:var(--surface);font-size:12px}
+html.galpedia .workbench-landing-note{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap}
+
+html.galpedia .catalog-content-region>#catalog-list-state[data-state="loading"]{min-height:0;height:auto}
+html.galpedia :is(#catalog-list-state,#person-directory-loading)[data-state="loading"] .gp-loading-view--inline{min-width:0;max-width:100%;text-align:left}
+html.galpedia :is(#catalog-list-state,#person-directory-loading)[data-state="loading"] .gp-loading-view__label{min-width:0;overflow-wrap:anywhere}
+html.galpedia :is(#catalog-list-state,#person-directory-loading)[data-state="loading"] .gp-dial{flex-shrink:0}
+html.galpedia #catalog-results:has(.galpedia-load-status:not([hidden])) #catalog-list-state[data-state="loading"],
+html.galpedia #person-directory-panel:has(.galpedia-load-status:not([hidden])) #person-directory-loading[data-state="loading"]{visibility:hidden}
+
+html.galpedia #catalog-list-state[data-state="loading"] .list-state-cancel{width:auto;min-width:0;min-height:24px;padding:2px 8px;white-space:nowrap}
+html.galpedia #person-directory-panel:has(#person-directory-loading[data-state="loading"]:not([hidden])){overflow:visible}
+html.galpedia #person-directory-loading[data-state="loading"]{margin-bottom:4px}
+
+html.galpedia #galpedia-load-status:not([data-load-region="ranking"]) #galpedia-load-indicator[data-state="error"]{flex-direction:column;gap:12px}
