@@ -1,5 +1,5 @@
 {
-  "closureSha256": "059a054c6ddb3ed25e1ceeaa1ff837a638c7592036942b0fa5ac00b59f26b580",
+  "closureSha256": "98041cffec8bd2efe959434003070f54f2d08303cd68e2b50b4189dab814cba5",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -472276,9 +472276,9 @@
       "sha256": "4c8807162b0b1b99be1b37b6c2f9f39c96e80a1c24ba506dc552fb3e3f677907"
     },
     {
-      "bytes": 19922,
+      "bytes": 20037,
       "path": "lib/galpedia-help.js",
-      "sha256": "1f02de068f5a31f49b347063124aee68a2a921f502964c9741715dba00653f5e"
+      "sha256": "11228e38d2df78076242282509936880260bd09e6f9a9a3516bfba8c0e142a61"
     },
     {
       "bytes": 19021,
@@ -472706,9 +472706,9 @@
       "sha256": "9688ca32fa7953d9f84b7023e70c0e2768012f5eee41176b319e54514cd1e6d9"
     },
     {
-      "bytes": 2025,
+      "bytes": 4042,
       "path": "lib/site-shell.js",
-      "sha256": "5508d810efe141cbb79b88f8f4d49916f46c53c2d599088b34f1facbfd9247b5"
+      "sha256": "c048beab5045da618182392d2375b79fc67e3a6a87ed9ab59a7781eee99434d0"
     },
     {
       "bytes": 1681,
@@ -473591,9 +473591,9 @@
       "sha256": "954796fa2f581429a3b066ac4ecf34e385c6626a2ea931cc021ef9434c82d32f"
     },
     {
-      "bytes": 6140,
+      "bytes": 10463,
       "path": "site-shell.css",
-      "sha256": "4661bc67df224521620259f80073f97fceabbc0d77eede1784ea3f44d1643926"
+      "sha256": "d77c954ab19b4975d0ebd0e9ef0bf9f8ab99943900b815d7a9e87666f0b84387"
     },
     {
       "bytes": 2723,

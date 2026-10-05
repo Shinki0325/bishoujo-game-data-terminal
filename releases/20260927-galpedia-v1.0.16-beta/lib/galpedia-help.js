@@ -306,8 +306,9 @@ export function createHelpDrawer() {
   search.addEventListener('compositionend', () => { composing = false; searchChanged(); });
   search.addEventListener('input', () => { if (!composing) searchChanged(); });
   function restoreFocus() {
-    const target = trigger?.isConnected && trigger.getClientRects().length && !trigger.closest('[hidden], [inert]')
-      ? trigger : document.querySelector('#workspace-mode [aria-selected="true"], .galpedia-logo');
+    const disclosure = trigger?.closest('details:not([open])');
+    const target = disclosure?.querySelector(':scope > summary') ?? (trigger?.isConnected && trigger.getClientRects().length && !trigger.closest('[hidden], [inert]')
+      ? trigger : document.querySelector('#workspace-mode [aria-selected="true"], .galpedia-logo'));
     target?.focus({ preventScroll: true });
   }
   function unlock() {
