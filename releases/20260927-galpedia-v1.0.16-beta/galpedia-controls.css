@@ -719,10 +719,12 @@ html.galpedia[data-theme] :is(button, a)[data-ui]:not(#gp-controls-specificity-b
 #ranking-view[data-empty="true"] .tier-row{min-height:64px}
 @media(min-width:900px){#ranking-view[data-empty="true"] .tier-dropzone{min-height:64px}}
 
-/* Ranking starts with one next step; tools appear when there is a board to edit. */
-body:not(.is-ranking-immersive) #ranking-view[data-empty="true"] :is(#tier-board,#ranking-candidates,#mobile-ranking-candidates,#ranking-candidates-pin,#ranking-immersive){display:none!important}
+/* The empty board remains the workspace; only irrelevant controls are hidden. */
+body:not(.is-ranking-immersive) #ranking-view[data-empty="true"] :is(#ranking-candidates,#mobile-ranking-candidates,#ranking-candidates-pin,#ranking-immersive){display:none!important}
 #mobile-ranking-menu label[hidden],#mobile-ranking-dock [hidden]{display:none!important}
-#ranking-view[data-empty="true"] #ranking-coachmark{max-width:720px;margin:24px auto}
+#ranking-view[data-empty="true"] #ranking-coachmark{margin:8px 12px}
+#ranking-view[data-empty="true"] #ranking-coachmark .keeper-guide-card{padding:10px 12px}
+#ranking-view[data-empty="true"] #ranking-coachmark .keeper-guide-card-actions{margin-top:6px}
 #ranking-view[data-empty="true"] #ranking-heading-count{display:none}
 @media(max-width:899px){
  body:not(.is-ranking-immersive) #ranking-view .ranking-page-heading{grid-template-columns:minmax(0,1fr)}

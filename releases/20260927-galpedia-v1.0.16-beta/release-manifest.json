@@ -1,5 +1,5 @@
 {
-  "closureSha256": "7a020d17750aac02ded5e3796ca67ede963a3c5cc7e2178112ec74eaa064b66b",
+  "closureSha256": "068ce320d96422c7b6b2223abb20a8e408c8180eade19689302928d5f7e768f9",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -473001,9 +473001,9 @@
       "sha256": "01fed70ca12955c7354dc7ce68c8a6b04d56d577447646ef798b3e1be6dbe5aa"
     },
     {
-      "bytes": 171328,
+      "bytes": 171287,
       "path": "main.js",
-      "sha256": "e33e0f548a49647e86124f8192c9ecff3f33afc52dad9bead6e0623da51262f0"
+      "sha256": "42f24b263b24c0394571c9050438cc813371aa7895471c2674ab0d8c8e66b98d"
     },
     {
       "bytes": 44552,
@@ -473501,9 +473501,9 @@
       "sha256": "91770adcbb4c21cc149c2d3dd8a6729bc7932be96c75dee8ebf9afc7e129a8de"
     },
     {
-      "bytes": 30853,
+      "bytes": 31006,
       "path": "galpedia-controls.css",
-      "sha256": "3cd99886cb495675c67644409dd1916746f29e554984bc4e9794146bcb5d9d59"
+      "sha256": "ad6cfff6e35666e9a53ead30cd21abb0157b804fbfe9ba7fa835ff0dda099a80"
     },
     {
       "bytes": 9200,

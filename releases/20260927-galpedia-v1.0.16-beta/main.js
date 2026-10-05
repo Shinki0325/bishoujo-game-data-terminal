@@ -1297,16 +1297,16 @@ async function initialize() {
     elements.rankingCoachmark.replaceChildren();
     if (rankingGuide && (rankingGuide.id !== 'tier.firstDrag' || (rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide)))) {
       const firstDrag = rankingGuide.id === 'tier.firstDrag';
-      const enhanced = rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
+      const enhanced = firstDrag && rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
       const card = createKeeperGuideCard({
         documentRef: document,
         guideId: rankingGuide.id,
         domGuideId: firstDrag ? 'tier.first-drag' : 'tier.start',
         title: firstDrag ? '' : '开始你的排榜',
         eyebrow: firstDrag ? '' : '庭守提示',
-        body: firstDrag ? rankingGuide.summary : '导入自己的图片，或从作品库选择作品，放入等级即可开始排榜。',
+        body: firstDrag ? rankingGuide.summary : '导入图片或选择作品，拖到下方等级开始排榜。',
         actionLabel: firstDrag ? '' : '导入图片',
-        helpArticleId: firstDrag ? '' : 'tier.overview',
+        helpArticleId: '',
         helpLabel: '查看排榜说明',
         onAction: firstDrag ? undefined : () => elements.mediaFiles.click(),
         secondaryActionLabel: firstDrag ? '' : '从作品库选择',
