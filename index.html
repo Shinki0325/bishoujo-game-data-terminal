@@ -473,6 +473,7 @@
 
       <section id="ranking-view" class="ranking-view" role="tabpanel" aria-labelledby="mode-ranking" hidden>
         <header class="ranking-page-heading">
+          <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-label="展开候选作品" aria-controls="ranking-candidates" aria-expanded="false"><span id="mobile-ranking-candidates-label">展开候选</span><output id="mobile-ranking-candidate-count">0</output><span class="mobile-ranking-candidates-chevron" aria-hidden="true"></span></button>
           <div class="ranking-page-title gp-page-heading">
             <h2>排榜</h2>
             <span id="ranking-heading-count" class="gp-page-total">加载中…</span>
@@ -611,7 +612,7 @@
         <div id="mobile-ranking-dock" class="mobile-ranking-dock" aria-label="移动端排榜操作">
           <button id="mobile-ranking-undo" type="button" aria-label="撤销">↶</button>
           <button id="mobile-ranking-redo" type="button" aria-label="重做">↷</button>
-          <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-label="展开候选作品" aria-controls="ranking-candidates" aria-expanded="false"><span id="mobile-ranking-candidates-label">展开候选</span><output id="mobile-ranking-candidate-count">0</output><span class="mobile-ranking-candidates-chevron" aria-hidden="true"></span></button>
+          <button class="mobile-ranking-candidates-legacy" type="button" tabindex="-1" aria-hidden="true">候选</button>
           <button id="mobile-ranking-more" type="button" aria-haspopup="dialog">更多操作</button>
           <button id="mobile-ranking-export-quick" type="button" aria-label="导出当前排榜图片">导出图片</button>
         </div>
@@ -623,10 +624,10 @@
           <div class="mobile-ranking-menu-body">
             <section>
               <h3>显示</h3>
-              <button id="mobile-ranking-display" type="button">显示设置</button>
-              <label hidden><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
-              <label hidden><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
-              <label hidden>卡片大小 <input data-ranking-mobile-scale type="range" min="80" max="160" step="5" value="100"></label>
+              <button id="mobile-ranking-display" type="button">打开显示面板 · 边调边看</button>
+              <label><input id="mobile-ranking-show-counts" type="checkbox"> 显示数量</label>
+              <label><input id="mobile-ranking-show-titles" type="checkbox"> 显示标题</label>
+              <label>卡片大小 <input data-ranking-mobile-scale type="range" min="80" max="160" step="5" value="100"></label>
             </section>
             <section>
               <h3>数据</h3>

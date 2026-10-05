@@ -713,33 +713,3 @@ html.galpedia[data-theme] :is(button, a)[data-ui]:not(#gp-controls-specificity-b
  #work-details .details-work-alias-disclosure{margin-top:6px}
  #work-details .dialog-heading{padding-block:10px}
 }
-
-#ranking-view[data-empty="true"] .ranking-toolbar .edit-actions:not(:has(button:enabled)){display:none}
-#ranking-view[data-empty="true"] #display-menu-button,#ranking-view[data-empty="true"] .ranking-export-split:has(#export-png:disabled){display:none}
-#ranking-view[data-empty="true"] .tier-row{min-height:64px}
-@media(min-width:900px){#ranking-view[data-empty="true"] .tier-dropzone{min-height:64px}}
-
-/* The empty board remains the workspace; only irrelevant controls are hidden. */
-body:not(.is-ranking-immersive) #ranking-view[data-empty="true"] :is(#ranking-candidates,#mobile-ranking-candidates,#ranking-candidates-pin,#ranking-immersive){display:none!important}
-#mobile-ranking-menu label[hidden],#mobile-ranking-dock [hidden]{display:none!important}
-#ranking-view[data-empty="true"] #ranking-coachmark{margin:8px 12px}
-#ranking-view[data-empty="true"] #ranking-coachmark .keeper-guide-card{padding:10px 12px}
-#ranking-view[data-empty="true"] #ranking-coachmark .keeper-guide-card-actions{margin-top:6px}
-#ranking-view[data-empty="true"] #ranking-heading-count{display:none}
-@media(max-width:899px){
- body:not(.is-ranking-immersive) #ranking-view .ranking-page-heading{grid-template-columns:minmax(0,1fr)}
- body:not(.is-ranking-immersive) #ranking-view .ranking-page-title{justify-content:space-between;width:100%}
- body:not(.is-ranking-immersive) #ranking-view .ranking-page-title h2{display:block}
- #ranking-view #mobile-ranking-dock{display:flex;align-items:center;gap:5px}
- #ranking-view #mobile-ranking-dock>button{flex:1;white-space:nowrap}
- #ranking-view #mobile-ranking-dock :is(#mobile-ranking-undo,#mobile-ranking-redo){flex:0 0 32px}
- #ranking-view #mobile-ranking-candidates{justify-content:center;padding-inline:5px}
- #ranking-view #mobile-ranking-candidates-label{font-size:0}
- #ranking-view #mobile-ranking-candidates-label::after{content:'候选';font-size:12px}
- body:not(.is-ranking-immersive) #ranking-view .candidate-tray-controls :is([data-candidate-tray="collapsed"],[data-candidate-tray="row"]){display:none}
- body:not(.is-ranking-immersive) #ranking-view[data-empty="true"]{padding-bottom:16px}
- body:not(.is-ranking-immersive) #ranking-view[data-empty="true"] #mobile-ranking-dock{position:static;min-height:0;justify-content:center;border:0;background:transparent;padding:0 12px}
- #ranking-view[data-empty="true"] #mobile-ranking-dock>button{flex:0 1 auto}
- #ranking-view[data-empty="true"] :is(#mobile-ranking-undo,#mobile-ranking-redo):disabled{display:none}
- body.is-ranking-immersive #ranking-view #mobile-ranking-dock{display:none}
-}

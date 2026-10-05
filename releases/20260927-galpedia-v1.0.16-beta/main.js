@@ -1284,7 +1284,6 @@ async function initialize() {
 
     const model = lastRenderedModel;
     const isWorkRanking = model?.state?.workspaceMode === 'ranking' && rankingSubject === 'work';
-    elements.rankingView.dataset.empty = String(isWorkRanking && model.rankedCount === 0 && model.unrankedCount === 0);
     const rankingGuide = isWorkRanking ? resolveKeeperScene({
       ...base,
       id: model.rankedCount > 0 ? null : model.unrankedCount > 0 ? 'tier.firstDrag' : 'tier.start',
@@ -1297,21 +1296,21 @@ async function initialize() {
     elements.rankingCoachmark.replaceChildren();
     if (rankingGuide && (rankingGuide.id !== 'tier.firstDrag' || (rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide)))) {
       const firstDrag = rankingGuide.id === 'tier.firstDrag';
-      const enhanced = firstDrag && rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
+      const enhanced = rankingGuide.showEnhancement && !isGuideCompleted(rankingGuide);
       const card = createKeeperGuideCard({
         documentRef: document,
         guideId: rankingGuide.id,
         domGuideId: firstDrag ? 'tier.first-drag' : 'tier.start',
-        title: firstDrag ? '' : '开始你的排榜',
+        title: firstDrag ? '' : rankingGuide.title,
         eyebrow: firstDrag ? '' : '庭守提示',
-        body: firstDrag ? rankingGuide.summary : '导入图片或选择作品，拖到下方等级开始排榜。',
-        actionLabel: firstDrag ? '' : '导入图片',
-        helpArticleId: '',
+        body: rankingGuide.summary,
+        actionLabel: firstDrag ? '' : '前往作品库选择',
+        helpArticleId: firstDrag ? '' : 'tier.overview',
         helpLabel: '查看排榜说明',
-        onAction: firstDrag ? undefined : () => elements.mediaFiles.click(),
-        secondaryActionLabel: firstDrag ? '' : '从作品库选择',
-        onSecondaryAction: firstDrag ? undefined : returnToWorkSelection,
-        secondaryActionDisabled: importBusy,
+        onAction: firstDrag ? undefined : returnToWorkSelection,
+        secondaryActionLabel: firstDrag ? '' : '从 Bangumi 导入',
+        onSecondaryAction: firstDrag ? undefined : () => openBangumiPublicImportDialog({ fromEmpty: true }),
+        secondaryActionDisabled: importBusy || confirmedBangumiImportBindings === null,
         dismissLabel: enhanced ? (firstDrag ? '×' : '隐藏提示') : '',
         onDismiss: enhanced ? () => {
           keeperPreferencesStore.dismiss(rankingGuide.id, rankingGuide.contentVersion);
@@ -3215,9 +3214,7 @@ async function initialize() {
     companyDirectoryOpen = false;
     setWorkSelectionMode(false);
     rankingSubject = 'work';
-    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
-    pushUiLocation();
-    return result;
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.clearSelectedCompanies.addEventListener('click', () => {
     if (companyRanking.inspect().selectedCompanyIds.length === 0) return;
@@ -3228,9 +3225,7 @@ async function initialize() {
     companyDirectoryOpen = false;
     companySelectionMode = false;
     rankingSubject = 'company';
-    const result = runStateChange(() => controller.setWorkspaceMode('ranking'));
-    pushUiLocation();
-    return result;
+    return runStateChange(() => controller.setWorkspaceMode('ranking'));
   });
   elements.companyRankingClose.addEventListener('click', () => {
     companyDirectoryOpen = true;
