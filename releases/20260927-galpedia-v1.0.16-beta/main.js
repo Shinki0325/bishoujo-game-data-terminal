@@ -2978,7 +2978,7 @@ async function initialize() {
         controller.setWorkspaceMode('selection');
         // A plain library entry resumes the saved conditions. Explicit search
         // links describe a fresh all-library query and keep their URL semantics.
-        if(!/^#works\/?$/u.test(window.location.hash)){
+        if(route.workId === null && !/^#works\/?$/u.test(window.location.hash)){
           controller.clearFilters();
           controller.setFilterState({ titleQuery: route.query, sortKey, sortDirection });
         }
@@ -3045,6 +3045,9 @@ async function initialize() {
         replaceUiLocation();
       });
     }
+    // A cold preview/deep link can open details before a result list exists.
+    // Populate that first list on return; keep already-rendered lists and filters.
+    if (lastRenderedModel === null && !personDirectoryOpen && !companyDirectoryOpen) void render();
     pushUiLocation();
     if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
   });
