@@ -1,4 +1,6 @@
 import {installSiteShell} from './lib/site-shell.js';
+import {installEntityDetailLinks} from './lib/entity-detail-links.js';
+import {ownsDetailHistory} from './lib/detail-stack.js';
 import {isBirthdayRoute,showBirthdayRoute,hideBirthdayRoute} from './lib/birthday-route.js';
 import { createWorkspaceSession } from './lib/workspace-session.js';
 // Small home shell: the data workspace is loaded only for a route or a search.
@@ -342,7 +344,7 @@ window.addEventListener('hashchange', () => {
   syncHome();
   if (!isHome()) void ensureRoute().catch(() => {});
 });
-window.addEventListener('popstate', () => { syncHome(); if (!isHome()) void ensureRoute().catch(() => {}); });
+window.addEventListener('popstate', event => { if(ownsDetailHistory(event.state))return;syncHome(); if (!isHome()) void ensureRoute().catch(() => {}); });
 
 let handbook;
 let handbookLoad;
@@ -410,10 +412,11 @@ function focusDestination(route) {
   ticket.scope.add(() => { focusObserver.disconnect(); clearTimeout(focusTimeout); });
   focusTimeout = setTimeout(() => { focusObserver.disconnect(); }, 15000);
 }
+const entityDetailLinks=installEntityDetailLinks({ensureRuntime,beforeOpen:()=>dialog.close()});
 createCommandSearch({
   ensureRuntime,
   beforeOpen: () => { helpSession.suspend(); handbook?.close({ restore: false, immediate: true }); },
-  navigate: route => { navigate(route); void ensureRuntime().then(() => focusDestination(route)).catch(() => {}); }
+  navigate: route => { if(entityDetailLinks.accepts(route)){void entityDetailLinks.open(route);return;}navigate(route); void ensureRuntime().then(() => focusDestination(route)).catch(() => {}); }
 });
 fetch(new URL('./brand/snapshot.json', import.meta.url)).then(response => { if (!response.ok) throw new Error('snapshot'); return response.json(); }).then(snapshot => {
   if (!['works','companies','persons'].every(key => Number.isSafeInteger(snapshot[key]) && snapshot[key] >= 0) || !/^\d{4}-\d{2}-\d{2}$/.test(snapshot.date)) throw new Error('invalid snapshot');

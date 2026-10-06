@@ -89,3 +89,6 @@ html .galpedia-header .site-birthday-link{display:flex;align-items:center;width:
 html .galpedia-header .site-birthday-link:hover,html .galpedia-header .site-birthday-link[aria-current=page]{background:var(--accent-soft);color:var(--accent)}
 html .galpedia-header .site-explore.is-current>summary{color:var(--accent)}
 .details-birthday-link{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+#entity-detail-link-status{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:1000;max-width:calc(100vw - 32px);margin:0;padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);box-shadow:0 4px 20px #0002;font:13px/1.6 var(--gp-font-ui)}
+#entity-detail-link-status[hidden]{display:none}
+a[aria-busy=true]{cursor:progress}

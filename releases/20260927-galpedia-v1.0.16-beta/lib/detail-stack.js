@@ -1,7 +1,10 @@
 // Entity details share one runtime. History records contain only an opaque key;
 // the live frame cache retains UI state and focus for this page session.
+let historyOwner=()=>false;
+export const ownsDetailHistory=state=>historyOwner(state);
 export function createDetailStack({adapters,readContext,restoreContext,onError}){
- const session=crypto.randomUUID(),records=new Map();let frames=[],serial=0,sequence=0,restoring=false,pending=null,closing=false,activeKey=null;
+ const session=crypto.randomUUID(),records=new Map();let frames=[],serial=0,sequence=0,restoring=false,pending=null,closing=false,activeKey=null,origin=null;
+ historyOwner=state=>state?.galpediaDetailStack?.session===session&&records.has(state.galpediaDetailStack.key);
  const current=()=>frames.at(-1),dialog=kind=>adapters[kind].dialog();
  function captureFocus(){const e=document.activeElement;return {element:e,id:e?.id,token:e?.dataset.detailFocusToken,href:e?.getAttribute('href'),work:e?.closest('[data-work-id]')?.dataset.workId};}
  function restoreFocus(focus){
@@ -13,21 +16,26 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
   e?.focus({preventScroll:true});
  }
  function capture(frame){if(!frame)return;const a=adapters[frame.kind];if(a.dialog()?.open&&a.id())frame.id=String(a.id());frame.context=readContext();frame.view=adapters[frame.kind].capture?.();frame.activeFocus=captureFocus();}
- function remember(){const key=++serial;activeKey=key;records.set(key,frames.map(f=>({...f})));return {session,key};}
- function save(){if(activeKey&&records.has(activeKey))records.set(activeKey,frames.map(f=>({...f})));}
+ function snapshot(){return {frames:frames.map(f=>({...f})),origin};}
+ function remember(){const key=++serial;activeKey=key;records.set(key,snapshot());return {session,key};}
+ function save(){if(activeKey&&records.has(activeKey))records.set(activeKey,snapshot());}
  function historyState(){return {...history.state,galpediaDetailStack:remember()};}
  function seed(){
   if(frames.length===1&&!dialog(current().kind)?.open)frames=[];
   if(frames.length)return;
   const open=Object.entries(adapters).find(([kind,a])=>a.dialog()?.matches(':modal')&&a.id());
-  if(open){const [kind,a]=open;frames=[{kind,id:String(a.id()),base:true,focus:captureFocus()}];capture(current());history.replaceState(historyState(),'');}
+  if(open){origin=null;const [kind,a]=open;frames=[{kind,id:String(a.id()),base:true,focus:captureFocus()}];capture(current());history.replaceState(historyState(),'');}
+  else {origin={context:readContext(),focus:captureFocus(),x:scrollX,y:scrollY};history.replaceState(historyState(),'');}
  }
  async function reconcile(target){
   const token=++sequence;restoring=true;pending=null;document.documentElement.dataset.detailRestoring='true';
   try{
    const kinds=new Set(target.map(f=>f.kind));
    for(const kind of Object.keys(adapters))if(!kinds.has(kind)){adapters[kind].cancel?.();if(dialog(kind)?.open)dialog(kind).close();}
-   frames=target.map(f=>({...f}));if(!frames.length)return;
+   frames=target.map(f=>({...f}));if(!frames.length){
+    if(origin){restoreContext(origin.context);await frame();if(token!==sequence)return;window.scrollTo({left:origin.x,top:origin.y,behavior:'instant'});restoreFocus(origin.focus);}
+    return;
+   }
    restoreContext(current().context);
    const latest=new Map();frames.forEach(f=>latest.set(f.kind,f));
    for(const frame of [...latest.values()].sort((a,b)=>frames.indexOf(a)-frames.indexOf(b))){
@@ -72,7 +80,7 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
    const focus=current().focus;adapters[current().kind].cancel?.();
    void reconcile(frames.slice(0,-1)).then(()=>restoreFocus(focus));return true;
   }
-  if(current()?.kind!==kind||frames.length<2)return false;
+  if(current()?.kind!==kind||(frames.length<2&&!origin))return false;
   if(closing)return true;closing=true;
   if(pending){const focus=current().focus;adapters[kind].cancel?.();void reconcile(frames.slice(0,-1)).then(()=>restoreFocus(focus));}
   else history.back();return true;
@@ -80,12 +88,18 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
  window.addEventListener('popstate',event=>{
   const state=event.state?.galpediaDetailStack;
   if(state?.session===session&&records.has(state.key)){
-   event.stopImmediatePropagation();const target=records.get(state.key),focus=target.length<frames.length?current()?.focus:target.at(-1)?.activeFocus;capture(current());save();activeKey=state.key;
+   event.stopImmediatePropagation();const saved=records.get(state.key),target=saved.frames,focus=target.length<frames.length?current()?.focus:target.at(-1)?.activeFocus;capture(current());save();activeKey=state.key;origin=saved.origin;
    void reconcile(target).then(()=>restoreFocus(focus));
-  }else if(frames.length){void reconcile([]);}
+  }else if(frames.length){origin=null;void reconcile([]);}
  },true);
- return {open,close,get restoring(){return restoring;},get active(){return frames.length>1;},isLayer:kind=>frames.length>1&&current()?.kind===kind,
-  inspect:()=>frames.map(f=>({kind:f.kind,id:f.id})),reset(){if(frames.length>1)void reconcile([]);else frames=[];}};
+ window.addEventListener('hashchange',()=>{
+  // A genuine page navigation ends the live stack; stale entries then use
+  // their ordinary route instead of restoring a dialog over another page.
+  records.clear();activeKey=null;
+  if(frames.length||origin){origin=null;void reconcile([]);}
+ },true);
+ return {open,close,get restoring(){return restoring;},get active(){return frames.length>1||!!origin&&frames.length>0;},isLayer:kind=>(frames.length>1||!!origin)&&current()?.kind===kind,
+  inspect:()=>frames.map(f=>({kind:f.kind,id:f.id})),reset(){origin=null;if(frames.length)void reconcile([]);}};
 }
 
 // State keys survive rerendering; live element references are only a fast path.

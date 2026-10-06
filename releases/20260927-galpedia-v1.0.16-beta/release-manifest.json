@@ -1,5 +1,5 @@
 {
-  "closureSha256": "933eb84a52ab80c705d8f7689700a6402dbb12e6bfeb956a7b1804212e6fcb9f",
+  "closureSha256": "09c9e3d9b387afe7fc5cc452d76275953de3d376c2995e6c13b01fb8e6cc6a00",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -471916,9 +471916,9 @@
   "externalResources": [],
   "moduleFiles": [
     {
-      "bytes": 21323,
+      "bytes": 21672,
       "path": "galpedia-boot.js",
-      "sha256": "29bd776a3021799318cdfa01044b9eb7a28045a895a7f9b1037890eb07671efc"
+      "sha256": "df612a215850276ed09128688d81536b2db847dfbadb86f75d701ac4de88b585"
     },
     {
       "bytes": 5837,
@@ -472191,9 +472191,9 @@
       "sha256": "4cfaf905d82ade7c96cfa7613b3b0098fb01efb65085a998ccf49cd67894bb0b"
     },
     {
-      "bytes": 10371,
+      "bytes": 11347,
       "path": "lib/detail-stack.js",
-      "sha256": "6f7f4cbe28fc2ba6bca3a3b0c047659b10c6fd11a9ae53ba9b881dd7994e8921"
+      "sha256": "efaed236dcd9744c3f937126f0dc9dea7a1642840d89b37c89ec92d47042102d"
     },
     {
       "bytes": 617,
@@ -472219,6 +472219,11 @@
       "bytes": 6669,
       "path": "lib/enrichment-sidecar.js",
       "sha256": "7764d629cb9048dc719767f1a6bb5ad7945d098fda37b51c9ad981adcb6b5acc"
+    },
+    {
+      "bytes": 2685,
+      "path": "lib/entity-detail-links.js",
+      "sha256": "ceba680a99a636c2f152127bb912ee44c05eb193cab8b43ec66013391dd7dca9"
     },
     {
       "bytes": 1686,
@@ -473081,9 +473086,9 @@
       "sha256": "01fed70ca12955c7354dc7ce68c8a6b04d56d577447646ef798b3e1be6dbe5aa"
     },
     {
-      "bytes": 171474,
+      "bytes": 171532,
       "path": "main.js",
-      "sha256": "6beee2c80eb9cf705af1848c72238924c45c94e8d19a50040a1b97f5a67695f7"
+      "sha256": "57fb7933e371ed96a0593f4e27f327156a1ac7f3150cc214ad74b72152ced4d7"
     },
     {
       "bytes": 17023,
@@ -473676,9 +473681,9 @@
       "sha256": "954796fa2f581429a3b066ac4ecf34e385c6626a2ea931cc021ef9434c82d32f"
     },
     {
-      "bytes": 11071,
+      "bytes": 11468,
       "path": "site-shell.css",
-      "sha256": "2b02f00a5304e73b17224967e37dc5bf180502bc38a89dd0011dc6ecbb0c191e"
+      "sha256": "f07aae5afe9f1ecd75756570f5738958cfcf05bc8ca7fba446752977bc00a536"
     },
     {
       "bytes": 2723,

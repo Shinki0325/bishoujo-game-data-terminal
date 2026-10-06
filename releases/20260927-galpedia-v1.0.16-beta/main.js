@@ -3407,7 +3407,7 @@ async function initialize() {
     for(const event of ['change','blur'])sortControl?.addEventListener(event,()=>clearTimeout(sortWarmTimer));
   }
   let globalSearch = null;
-  return { search: query => {
+  return { openEntityDetail: (kind,id) => detailStack.open(kind,id), search: query => {
     globalSearch ??= createGalpediaSearch({
       works: preparedWorkbench.workerOwned ? [] : ratedDisplayWorks,
       searchWorks: preparedWorkbench.workerOwned ? async query => {
