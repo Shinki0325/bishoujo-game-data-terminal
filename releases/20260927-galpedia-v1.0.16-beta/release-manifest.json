@@ -1,5 +1,5 @@
 {
-  "closureSha256": "7d21a9d6f441a21c06bc0fa34869c9e878d7632b00ecc370dd85854357f1ee0e",
+  "closureSha256": "2e0d0025f721b4b50fc2a8e7f5f78209ab6639ad4465cffb1a21ddba428f309b",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -1362,14 +1362,14 @@
       "sha256": "0ad504b99d1103e57cbe42dd572e52ccc6fc6f21fcf07a9b52055e0d304dfdcf"
     },
     {
-      "bytes": 5957,
+      "bytes": 5958,
       "path": "runtime-data/birthday-calendar-v1/manifest.json",
-      "sha256": "30652a7c435607a76b57484b9afdd242430df9cfd6b5abd256b8af33a55887f1"
+      "sha256": "36792dd849a7932bea68df6ed4969cd3eddfe169850398891a7a8f2c695c33fb"
     },
     {
-      "bytes": 52922,
+      "bytes": 54664,
       "path": "runtime-data/birthday-calendar-v1/work-votes.json",
-      "sha256": "1bd6b734d3eb830b283bffdc22a50af89e1d2c86abed2c4382bc8ee49721f1cf"
+      "sha256": "2127c1657ee44a03aecfa313b520ecfe576d496dfbaf7944f6e1495cfd9bd6a5"
     },
     {
       "bytes": 72521,
@@ -473091,9 +473091,9 @@
       "sha256": "57fb7933e371ed96a0593f4e27f327156a1ac7f3150cc214ad74b72152ced4d7"
     },
     {
-      "bytes": 17651,
+      "bytes": 17669,
       "path": "views/birthday-calendar.js",
-      "sha256": "4b1159e1bf670188e830be5da27e93f3e7c4b8663afe2136799c72661733b413"
+      "sha256": "c801330302c691a20446976db60efee8281bfc10e3346c4fe69945d45620b65f"
     },
     {
       "bytes": 44552,
