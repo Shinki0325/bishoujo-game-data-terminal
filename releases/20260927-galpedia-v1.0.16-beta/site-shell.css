@@ -92,3 +92,7 @@ html .galpedia-header .site-explore.is-current>summary{color:var(--accent)}
 #entity-detail-link-status{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:1000;max-width:calc(100vw - 32px);margin:0;padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);box-shadow:0 4px 20px #0002;font:13px/1.6 var(--gp-font-ui)}
 #entity-detail-link-status[hidden]{display:none}
 a[aria-busy=true]{cursor:progress}
+#birthday-view .birthday-route-loading{max-width:740px;min-height:220px;margin:32px auto;padding:28px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text)}
+#birthday-view .birthday-route-loading h1{font:500 26px var(--gp-font-heading);margin:0 0 16px}
+#birthday-view .birthday-route-loading p{font:14px/1.7 var(--gp-font-ui);color:var(--text-muted)}
+#birthday-view .birthday-route-loading button{min-height:44px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface-muted);color:var(--text)}

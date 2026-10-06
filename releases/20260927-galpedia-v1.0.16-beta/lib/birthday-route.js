@@ -17,11 +17,13 @@ export function hideBirthdayRoute(){version++;if(host){host.hidden=true;host.ine
 export async function showBirthdayRoute(){
   const epoch=++version,hash=location.hash,el=container();el.hidden=false;el.inert=false;
   if(!view){
-    el.textContent='正在打开生日历…';el.setAttribute('aria-busy','true');
-    try{pending??=import('../views/birthday-calendar.js').catch(e=>{pending=null;throw e;});const module=await pending;
+    el.innerHTML='<section class="birthday-route-loading" role="status"><h1>角色生日历</h1><p>正在准备日历和生日名单…</p></section>';el.setAttribute('aria-busy','true');
+    let timer;
+    try{pending??=import('../views/birthday-calendar.js').catch(e=>{pending=null;throw e;});const module=await Promise.race([pending,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('birthday view timeout')),12000);})]);
       if(epoch!==version||!isBirthdayRoute())return;
       view=module.createBirthdayCalendar(el);
-    }catch{if(epoch!==version)return;el.replaceChildren(document.createTextNode('生日历暂时无法打开。'));const b=document.createElement('button');b.textContent='重试';b.onclick=()=>location.reload();el.append(b);el.removeAttribute('aria-busy');return;}
+    }catch{if(epoch!==version)return;el.innerHTML='<section class="birthday-route-loading" role="status"><h1>角色生日历</h1><p>页面暂时没有加载完成，请重新载入。</p></section>';const b=document.createElement('button');b.textContent='重新载入';b.onclick=()=>location.reload();el.firstElementChild.append(b);el.removeAttribute('aria-busy');return;}
+    finally {clearTimeout(timer);}
   }
   if(epoch===version){el.removeAttribute('aria-busy');await view.show(hash);}
 }

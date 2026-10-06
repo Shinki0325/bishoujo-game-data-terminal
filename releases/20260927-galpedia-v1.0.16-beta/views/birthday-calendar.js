@@ -6,7 +6,7 @@ export function createBirthdayCalendar(host){
 let active=false,startup=0;
 const css=document.createElement('link');css.rel='stylesheet';css.href=new URL('./birthday-calendar.css',import.meta.url);document.head.append(css);
 host.innerHTML=`
-<div class="intro"><div><p class="eyebrow">探索 · BIRTHDAY CALENDAR</p><h1>角色生日历</h1><p>翻翻日历，看看今天是谁的生日，也寻找与你同一天生日的角色。</p></div><div class="today-stamp"><span id="bc-today-month"></span><strong id="bc-today-day"></strong><span id="bc-today-count">正在读取生日资料</span></div></div>
+<div class="intro"><div><p class="eyebrow">探索 · BIRTHDAY CALENDAR</p><h1>角色生日历</h1><p>寻找与你同一天生日的角色。</p></div><button class="today-stamp" id="bc-today-stamp" aria-label="查看今天的生日角色"><span id="bc-today-month"></span><strong id="bc-today-day"></strong><span id="bc-today-count">正在读取生日资料</span></button></div>
 <div class="birthday-layout"><section class="calendar-section" aria-label="角色生日月历">
 <div class="calendar-toolbar"><div class="month-tools"><button id="bc-previous" aria-label="上个月">‹</button><label class="month-label"><span class="sr-only">选择年月</span><input type="month" id="bc-month" min="2000-01" max="2100-12"></label><button id="bc-next" aria-label="下个月">›</button><button id="bc-today">今天</button></div></div>
 <div class="calendar-summary"><p id="bc-month-summary" class="muted" aria-live="polite">正在读取日历…</p><button id="bc-calendar-toggle" aria-expanded="true" aria-controls="bc-calendar-panel">收起月历</button></div>
@@ -46,9 +46,16 @@ function link(label, href, cls) {const el = text('a',label,cls);el.href=href;if(
 function updateDateStamp() {today=new Date();$('today-month').textContent=`${today.getMonth()+1} 月 · 今天`;$('today-day').textContent=String(today.getDate()).padStart(2,'0');if(manifest)$('today-count').textContent=`${manifest.days[keyOf(today.getMonth()+1,today.getDate())]||0} 位角色生日`;}
 function setStatus(message, retry=false) {
   const el=$('status');el.replaceChildren();el.hidden=!message;
+  el.classList.toggle('is-loading',!!message&&!retry&&(loading||!manifest));
   if(message)el.append(text('span',message));
   if(retry){const b=text('button','重试');b.onclick=()=>manifest?loadMonth():start();el.append(b);}
 }
+async function request(url) {
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+  try {const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);return await response.arrayBuffer();}
+  finally {clearTimeout(timer);}
+}
+function setStartupControls(disabled){for(const id of ['previous','next','month','today','today-stamp','search','all-month'])$(id).disabled=disabled;}
 function filtered() {return (pack?.characters || []).filter(c=>matches(c,state.query,pack.works));}
 function renderCalendar(rows) {
   const groups=new Map();for(const c of rows){if(!groups.has(c.birthday))groups.set(c.birthday,[]);groups.get(c.birthday).push(c);}
@@ -88,7 +95,7 @@ function characterCard(c) {
     img.onerror=()=>{img.removeAttribute('src');portrait.append(text('small','图片暂不可用'));};
   }else portrait.append(text('small','暂无图片'));
   const copy=text('div','','character-copy');copy.append(text('span',`${Number(c.birthday.slice(0,2))} 月 ${Number(c.birthday.slice(3))} 日`,'birth-date'),text('h3',c.name));
-  const workLink=id=>link(pack.works[id]?.title||id,`#work/${encodeURIComponent(id)}`,'work-link');
+  const workLink=id=>{const a=link(pack.works[id]?.title||id,`#work/${encodeURIComponent(id)}`,'work-link');a.title='在当前页面查看作品详情';return a;};
   if(c.workIds.length)copy.append(workLink(c.workIds[0]));
   const details=text('details','');details.append(text('summary','资料与关联作品'));
   for(const s of c.sources){const u=safeURL(s.url);if(u)details.append(link(sourceName(s.name)+' ↗',u,'source-link'));else if(s.sourceId)details.append(text('span',`${sourceName(s.name)} · ${s.sourceId}`,'source-link'));}
@@ -104,6 +111,7 @@ function render() {
   history.replaceState(history.state,'',location.pathname+location.search+'#birthdays?'+params);
   clearImages();
   const rows=filtered();renderCalendar(rows);
+  $('characters').setAttribute('aria-busy',String(loading));
   host.dataset.wholeMonth=String(state.day===null);
   $('clear-search').hidden=!state.query;
   const selected=state.day===null?rows:rows.filter(c=>c.birthday===keyOf(state.month,state.day));
@@ -114,14 +122,14 @@ function render() {
   $('characters').replaceChildren(...selected.slice(0,state.limit).map(characterCard));
   $('more').hidden=selected.length<=state.limit||loading||!!failure;
   $('more').textContent=`再看 ${Math.min(30,selected.length-state.limit)} 位 · 已显示 ${Math.min(state.limit,selected.length)} / ${selected.length}`;
-  setStatus(loading?'正在读取本月生日资料…':failure||(!selected.length?(state.query?'本月没有匹配的角色，试试其他名字或作品。':'当前资料中没有这一天的生日记录，可以看看整月。'):''),!!failure);
+  setStatus(loading?'正在读取本月生日资料…':failure||(!selected.length?(state.query?'当前范围没有匹配的角色，试试其他名字或查看整月。':'当前资料中没有这一天的生日记录，可以看看整月。'):''),!!failure);
 }
 async function loadMonth() {
   const current=++ticket, month=state.month;loading=true;failure='';pack=null;render();
   try {
     let data=cache.get(month);
-    if(!data){const desc=manifest.packs[String(month)];const response=await fetch(new URL(desc.path,dataRoot));if(!response.ok)throw Error('HTTP '+response.status);
-      const bytes=await response.arrayBuffer();const sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(bytes.byteLength!==desc.bytes||sha!==desc.sha256)throw Error('版本校验失败');data=JSON.parse(new TextDecoder().decode(bytes));cache.set(month,data);}
+    if(!data){const desc=manifest.packs[String(month)];const bytes=await request(new URL(desc.path,dataRoot));
+      const sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(bytes.byteLength!==desc.bytes||sha!==desc.sha256)throw Error('版本校验失败');data=JSON.parse(new TextDecoder().decode(bytes));cache.set(month,data);}
     if(current!==ticket||!active)return;pack={...data,characters:sortCharactersByVotes(data.characters,votes)};loading=false;render();
   }catch(e){if(current!==ticket||!active)return;loading=false;failure='本月生日资料暂时无法读取，请重试。';render();}
 }
@@ -130,6 +138,7 @@ $('previous').onclick=()=>{const next=adjacent(state.year,state.month,-1);change
 $('next').onclick=()=>{const next=adjacent(state.year,state.month,1);changeMonth(next.year,next.month);};
 $('month').onchange=e=>{const m=/^(\d{4})-(\d{2})$/.exec(e.target.value);if(m&&Number(m[1])>=2000&&Number(m[1])<=2100)changeMonth(Number(m[1]),Number(m[2]));else e.target.value=`${state.year}-${String(state.month).padStart(2,'0')}`;};
 $('today').onclick=()=>{updateDateStamp();if(!manifest)return;state={year:today.getFullYear(),month:today.getMonth()+1,day:today.getDate(),query:'',limit:30};$('search').value='';setCalendarCollapsed(compactViewport.matches);loadMonth();};
+$('today-stamp').onclick=()=>$('today').click();
 $('search').oninput=e=>{state.query=e.target.value;state.day=null;state.limit=30;render();};
 $('clear-search').onclick=()=>{state.query='';state.day=null;state.limit=30;$('search').value='';render();$('search').focus();};
 $('calendar-toggle').onclick=()=>setCalendarCollapsed(!calendarCollapsed);
@@ -144,7 +153,7 @@ $('more').onclick=e=>{
   $('announcement').textContent=`已增加 ${cards.length} 位角色，共显示 ${Math.min(state.limit,selected.length)} 位。`;
   if(e.detail===0)cards[0]?.querySelector('a,summary')?.focus();
 };
-async function start(){const attempt=++startup;setStatus('正在读取生日资料…');try {const response=await fetch(new URL('manifest.json',dataRoot));if(!response.ok)throw Error();const index=await response.json();const desc=index.sortVotes;const res=await fetch(new URL(desc.path,dataRoot));if(!res.ok)throw Error();const bytes=await res.arrayBuffer();const sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(bytes.byteLength!==desc.bytes||sha!==desc.sha256)throw Error();const data=JSON.parse(new TextDecoder().decode(bytes));if(data.source!=='EGS')throw Error();if(!active||attempt!==startup)return;votes=data.works;manifest=index;updateDateStamp();$('coverage').textContent=`已收录完整生日 ${number(manifest.counts.datedCharacters)} / ${number(manifest.counts.totalCharacters)} 位角色`;await loadMonth();}catch {if(!active||attempt!==startup)return;manifest=null;setStatus('生日资料暂时无法读取。',true);}}
+async function start(){const attempt=++startup;setStartupControls(true);setStatus('正在读取生日资料…');try {const index=JSON.parse(new TextDecoder().decode(await request(new URL('manifest.json',dataRoot))));const desc=index.sortVotes;const bytes=await request(new URL(desc.path,dataRoot));const sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(bytes.byteLength!==desc.bytes||sha!==desc.sha256)throw Error();const data=JSON.parse(new TextDecoder().decode(bytes));if(data.source!=='EGS')throw Error();if(!active||attempt!==startup)return;votes=data.works;manifest=index;setStartupControls(false);updateDateStamp();$('coverage').textContent=`已收录完整生日 ${number(manifest.counts.datedCharacters)} / ${number(manifest.counts.totalCharacters)} 位角色`;await loadMonth();}catch {if(!active||attempt!==startup)return;manifest=null;setStatus('生日资料暂时无法读取，请重试。',true);}}
 return {
   async show(hash){active=true;state=parseBirthdayRoute(hash);setCalendarCollapsed(compactViewport.matches&&state.day!==null);$('search').value=state.query;updateDateStamp();if(manifest){$('coverage').textContent=`已收录完整生日 ${number(manifest.counts.datedCharacters)} / ${number(manifest.counts.totalCharacters)} 位角色`;await loadMonth();}else await start();},
   suspend(){active=false;ticket++;startup++;clearImages();}
