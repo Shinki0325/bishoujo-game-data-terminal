@@ -63,7 +63,7 @@ function characterCard(c) {
   const workLink=id=>link(pack.works[id]?.title||id,`#work/${encodeURIComponent(id)}`,'work-link');
   if(c.workIds.length)copy.append(workLink(c.workIds[0]));
   const details=text('details','');details.append(text('summary',`资料来源${c.workIds.length>1?` · ${c.workIds.length} 条关联作品记录`:''}`));
-  for(const s of c.sources){const u=safeURL(s.url);if(u)details.append(link(sourceName(s.name)+' ↗',u,'source-link'));}
+  for(const s of c.sources){const u=safeURL(s.url);if(u)details.append(link(sourceName(s.name)+' ↗',u,'source-link'));else if(s.sourceId)details.append(text('span',`${sourceName(s.name)} · ${s.sourceId}`,'source-link'));}
   if(!c.sources.length)details.append(text('p','生日来自当前公开角色详情。','source-note'));
   const count=workVotes(c.workIds[0],votes);
   details.append(text('p',count>=0?`排序依据：关联作品中最多 ${number(count)} 人在 EGS 评分，不累加多部作品或版本。`:'关联作品暂无 EGS 评分人数，排在有评分人数的角色之后。','source-note'));
