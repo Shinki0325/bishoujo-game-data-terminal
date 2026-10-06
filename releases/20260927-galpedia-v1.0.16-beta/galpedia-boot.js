@@ -1,4 +1,5 @@
 import {installSiteShell} from './lib/site-shell.js';
+import {isBirthdayRoute,showBirthdayRoute,hideBirthdayRoute} from './lib/birthday-route.js';
 import { createWorkspaceSession } from './lib/workspace-session.js';
 // Small home shell: the data workspace is loaded only for a route or a search.
 import { createActionIcon } from './lib/action-icons.js';
@@ -142,6 +143,9 @@ function syncHome() {
   if (focusSession.inspect().key !== location.hash) focusSession.suspend();
   helpSession.suspend();
   const active = isHome();
+  const birthday = isBirthdayRoute();
+  root.dataset.birthday=String(birthday);
+  if(!birthday)hideBirthdayRoute();
   root.dataset.home = String(active);
   home.hidden = !active;
   if (active) {
@@ -150,15 +154,15 @@ function syncHome() {
       delete image.dataset.homeSrc;
     }
   }
-  document.querySelector('#workspace').inert = active;
-  if (active) {
+  document.querySelector('#workspace').inert = active || birthday;
+  if (active || birthday) {
     routeSession.suspend();
     directoryController?.suspend();
     runtimeTicket?.finish(); runtimeTicket = null;
     clearTimeout(statusRevealTimer); status.hidden = true;
     for (const button of nav.querySelectorAll('button')) { button.setAttribute('aria-selected', 'false'); button.tabIndex = 0; }
   }
-  document.title = active ? '少女箱庭 GALPEDIA · 美少女游戏资料库' : 'GALPEDIA · 作品、会社与人物';
+  document.title = birthday ? '角色生日历 · GALPEDIA' : active ? '少女箱庭 GALPEDIA · 美少女游戏资料库' : 'GALPEDIA · 作品、会社与人物';
 }
 function paintTheme() {
   const light = root.dataset.theme !== 'dark';
@@ -257,6 +261,7 @@ async function ensureRuntime() {
 
 async function ensureRoute() {
   if (isHome()) return;
+  if(isBirthdayRoute())return showBirthdayRoute();
   prepareLoadingRegion(); placeLoadingStatus();
   if (runtimePromise) {
     if (!runtimeReady && !runtimeFailed && createRuntimeLoading() && !runtimeTicket) {
@@ -309,7 +314,7 @@ nav.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button || !routes[button.id]) return;
   // Home links use the same hash contract as existing deep links.
-  if (isHome() || !runtimeReady) {
+  if (isHome() || isBirthdayRoute() || !runtimeReady) {
     event.stopImmediatePropagation();
     navigate(button.id === 'mode-selection' && lastWorkspaceRoute.startsWith('#works') ? lastWorkspaceRoute : routes[button.id]);
   }

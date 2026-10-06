@@ -1,5 +1,5 @@
 {
-  "closureSha256": "6214ad7ca01918c3dcbb7d059fca982dc8f1887f0b6bd80b5674fc0a07a90ed0",
+  "closureSha256": "45b4c816069186c7aa30c0246623740d00fbe0e27b347f1e41b30294fb7b0de0",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -1300,6 +1300,76 @@
       "bytes": 57756,
       "path": "data/terminal-wiki-person-cast-v1/shards/ff.json",
       "sha256": "66944538d37fce21e0b9eb04644211f47d87f897ba9a8b0c947f1c33af17fc93"
+    },
+    {
+      "bytes": 499530,
+      "path": "runtime-data/birthday-calendar-v1/01.json",
+      "sha256": "19941c192c983f9fd41898092e437ec527b85d803fa03821a85fea30755a61da"
+    },
+    {
+      "bytes": 571101,
+      "path": "runtime-data/birthday-calendar-v1/02.json",
+      "sha256": "3d206e69f0f8c9622a8259f17282384f7d38b40c6e8f00ed4c82e0c50eb490c8"
+    },
+    {
+      "bytes": 567430,
+      "path": "runtime-data/birthday-calendar-v1/03.json",
+      "sha256": "8e8dce9794a5136fd1df73f1595efbd11a154f5a25e8a689dd74e9ef04efa13d"
+    },
+    {
+      "bytes": 615947,
+      "path": "runtime-data/birthday-calendar-v1/04.json",
+      "sha256": "7502a89b231a1e1d6134068c2ef39fdaf1960669f8176f44224ffa29a67f9cd0"
+    },
+    {
+      "bytes": 570940,
+      "path": "runtime-data/birthday-calendar-v1/05.json",
+      "sha256": "7b58baff70d28f77bdb61ef6ffb567618b2a187c21c83a329c8b362fd72897f3"
+    },
+    {
+      "bytes": 589598,
+      "path": "runtime-data/birthday-calendar-v1/06.json",
+      "sha256": "5c14ec748d7f04da26ac6d24234384ee19a3fd18fc46b598b7f8e164bee6dd0c"
+    },
+    {
+      "bytes": 572384,
+      "path": "runtime-data/birthday-calendar-v1/07.json",
+      "sha256": "dcb8ab3219efff829ad4a81414049a16f3b6fb5a5b860bfb66655bcc9903ef02"
+    },
+    {
+      "bytes": 632790,
+      "path": "runtime-data/birthday-calendar-v1/08.json",
+      "sha256": "be0391b59d5eb05ae4ed33f7c2d11bfd380e2d7080f52de26c0fcfbdd5c63e53"
+    },
+    {
+      "bytes": 591878,
+      "path": "runtime-data/birthday-calendar-v1/09.json",
+      "sha256": "c0b3af21aae2bbcaa6873284129e41f85202e34e4c19dd6b9c5b7c17844a04dd"
+    },
+    {
+      "bytes": 579948,
+      "path": "runtime-data/birthday-calendar-v1/10.json",
+      "sha256": "597b01e7f52136ad131b0f778a9122cf94d3dd96012cef059ffeaaa35777b875"
+    },
+    {
+      "bytes": 542405,
+      "path": "runtime-data/birthday-calendar-v1/11.json",
+      "sha256": "532fcc2835ea36bf66c2a5b4ee37c7c3c9d09ac24d2974af256c2384d6ed0576"
+    },
+    {
+      "bytes": 653709,
+      "path": "runtime-data/birthday-calendar-v1/12.json",
+      "sha256": "f5b1ea76c8ecddd60b6af377e6a25cb31b756b57a8f652705afa89875a151ed8"
+    },
+    {
+      "bytes": 5957,
+      "path": "runtime-data/birthday-calendar-v1/manifest.json",
+      "sha256": "cbe2c0a532a61c2bb9a641308a3edf339a787efaf7c03ebf93f6e86d388a0eb2"
+    },
+    {
+      "bytes": 53030,
+      "path": "runtime-data/birthday-calendar-v1/work-votes.json",
+      "sha256": "cfc16b68ef532a024e22f53af6726e61dd91fced16525d383404a065c6338531"
     },
     {
       "bytes": 72521,
@@ -471846,9 +471916,9 @@
   "externalResources": [],
   "moduleFiles": [
     {
-      "bytes": 20975,
+      "bytes": 21323,
       "path": "galpedia-boot.js",
-      "sha256": "acef794ccf1deb37b285d5f5c5e7d21d4e8327374ebf7dc3abe62b5e5c65264a"
+      "sha256": "29bd776a3021799318cdfa01044b9eb7a28045a895a7f9b1037890eb07671efc"
     },
     {
       "bytes": 5837,
@@ -471929,6 +471999,16 @@
       "bytes": 7309,
       "path": "lib/bangumi-ratings.js",
       "sha256": "558c8e8f7441803315fc33d60ddab7db299c727de7fe9b30338cb36b591b7e9d"
+    },
+    {
+      "bytes": 2114,
+      "path": "lib/birthday-calendar.js",
+      "sha256": "26bbc0543fcc86a7136a15fb3c752e89fd19859b59463c510ee2f79827f8c563"
+    },
+    {
+      "bytes": 2176,
+      "path": "lib/birthday-route.js",
+      "sha256": "f2713a66201f821891a3464cec26b4598a73ad5746fcb9fc4ab2580b0f65a89f"
     },
     {
       "bytes": 822,
@@ -472706,9 +472786,9 @@
       "sha256": "9688ca32fa7953d9f84b7023e70c0e2768012f5eee41176b319e54514cd1e6d9"
     },
     {
-      "bytes": 4042,
+      "bytes": 4626,
       "path": "lib/site-shell.js",
-      "sha256": "c048beab5045da618182392d2375b79fc67e3a6a87ed9ab59a7781eee99434d0"
+      "sha256": "85484d68e7b25ffe854ff42e77717856bca4204825c5466071dc3338a5898d90"
     },
     {
       "bytes": 1681,
@@ -473001,9 +473081,14 @@
       "sha256": "01fed70ca12955c7354dc7ce68c8a6b04d56d577447646ef798b3e1be6dbe5aa"
     },
     {
-      "bytes": 171366,
+      "bytes": 171474,
       "path": "main.js",
-      "sha256": "e530cef00b2e6795c7df0d9ddb79c68fa01f2bf1270639341df08449e5d25ea4"
+      "sha256": "6beee2c80eb9cf705af1848c72238924c45c94e8d19a50040a1b97f5a67695f7"
+    },
+    {
+      "bytes": 13636,
+      "path": "views/birthday-calendar.js",
+      "sha256": "f31e537b2abd9fdb8578f164aa700519f3f58121b1cdc7a3f18011fbdda9ab5d"
     },
     {
       "bytes": 44552,
@@ -473101,9 +473186,9 @@
       "sha256": "c0f948f8f9d9c5678ae224d96b8dd6f4e1cfc8ce0248b9f5765e66ec656fdd6f"
     },
     {
-      "bytes": 22160,
+      "bytes": 22616,
       "path": "views/work-detail-credits-view.js",
-      "sha256": "02a6ec2dd13d91549bfca43fd90dce6d41fc6d191adc94b0e71065406983126f"
+      "sha256": "a5be77430fa29b6b2dd03264d43e607eb23d8ba9f94302c5912b50b3af3fdbbe"
     },
     {
       "bytes": 11272,
@@ -473591,9 +473676,9 @@
       "sha256": "954796fa2f581429a3b066ac4ecf34e385c6626a2ea931cc021ef9434c82d32f"
     },
     {
-      "bytes": 10463,
+      "bytes": 11071,
       "path": "site-shell.css",
-      "sha256": "d77c954ab19b4975d0ebd0e9ef0bf9f8ab99943900b815d7a9e87666f0b84387"
+      "sha256": "2b02f00a5304e73b17224967e37dc5bf180502bc38a89dd0011dc6ecbb0c191e"
     },
     {
       "bytes": 2723,
@@ -473604,6 +473689,11 @@
       "bytes": 291015,
       "path": "styles.css",
       "sha256": "42a2f7c11a834b3c1f88578a2718be8dc455291de19586cb48a189d559642d9a"
+    },
+    {
+      "bytes": 12222,
+      "path": "views/birthday-calendar.css",
+      "sha256": "7696052b6f1bca44e7692300e6ff78c36cbd13dc56d3eaf0afb8e7364d2ee77e"
     }
   ]
 }

@@ -2914,8 +2914,8 @@ async function initialize() {
       person: { open: personDirectoryOpen, id: selectedPersonId, query: personQuery, role: personRole, page: personDirectoryView?.getPageNumber?.() ?? 1 },
       company: { open: companyDirectoryOpen, id: selectedCompanyId, query: companyQuery, sort: companySort, hasImage: companyHasImage, page: companyDirectoryView?.getPageNumber?.() ?? 1 }
     }),
-    isHome: () => document.documentElement.dataset.home === 'true',
-    isHomeRoute: () => document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home'),
+    isHome: () => document.documentElement.dataset.home === 'true' || document.documentElement.dataset.birthday === 'true',
+    isHomeRoute: () => document.documentElement.classList.contains('galpedia') && (!window.location.hash || window.location.hash === '#home' || /^#birthdays(?:\?|$)/.test(window.location.hash)),
     invalidate() {
       captureWorkspaceScroll();
       closeWorkPersonOverlay();

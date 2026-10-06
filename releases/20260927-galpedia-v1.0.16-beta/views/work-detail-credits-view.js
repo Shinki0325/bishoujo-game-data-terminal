@@ -41,6 +41,7 @@ const STAFF_ROLE_LABELS = Object.freeze({
   translator: '翻译',
   vocalist: '歌手'
 });
+import {birthdayKey} from '../lib/birthday-route.js';
 const CHARACTER_METADATA_FIELDS = Object.freeze([
   { key: 'birthday', label: '生日' },
   { key: 'age', label: '年龄', unit: '岁' },
@@ -131,6 +132,10 @@ function characterMetadata(documentRef, metadata) {
     const value = documentRef.createElement('span');
     value.className = 'details-cast-metadata-value';
     value.textContent = measurementLabels[field.key] ? raw.value : formatMetadataValue(field, raw);
+    if(field.key==='birthday'&&raw.reviewState!=='pending-conflict'){
+      const key=birthdayKey(raw.value);
+      if(key){const a=documentRef.createElement('a');a.className='details-birthday-link';a.href=`#birthdays?month=${new Date().getFullYear()}-${key.slice(0,2)}&day=${Number(key.slice(3))}`;a.textContent=value.textContent;a.title='在角色生日历中查看';value.replaceChildren(a);}
+    }
     if (measurementLabels[field.key]) row.setAttribute('aria-label', `${field.label} ${raw.value} 厘米`);
     row.append(label, value);
     if (measurementLabels[field.key]) {

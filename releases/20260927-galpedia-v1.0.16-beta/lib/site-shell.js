@@ -12,6 +12,9 @@ function installPrimaryNavigation(){
  const summary=document.createElement('summary');summary.textContent='探索';
  const panel=document.createElement('div');panel.className='site-explore-panel';
  explore.append(summary,panel);extras.append(explore);panel.append(handbook);
+ const birthday=document.createElement('a');birthday.className='site-birthday-link';birthday.href=location.pathname.includes('/analysis/')?'/#birthdays':'#birthdays';birthday.textContent='角色生日历';panel.prepend(birthday);
+ const syncBirthday=()=>{const active=/^#birthdays(?:\?|$)/.test(location.hash);birthday.toggleAttribute('aria-current',active);if(active)birthday.setAttribute('aria-current','page');explore.classList.toggle('is-current',active);};
+ birthday.addEventListener('click',()=>{explore.open=false;});addEventListener('hashchange',syncBirthday);syncBirthday();
  const room=document.createElement('div');room.className='site-explore-upcoming';
  const title=document.createElement('span');title.textContent='收藏室';
  const status=document.createElement('small');status.textContent='开发中';room.append(title,status);panel.append(room);
