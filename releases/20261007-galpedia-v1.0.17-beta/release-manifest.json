@@ -1,5 +1,5 @@
 {
-  "closureSha256": "9e45eae4f5d7e7fedbf156bb51ac94fa4bd69ccb39ac71fbbd362b0e2f4a1748",
+  "closureSha256": "16142aa4d6237768b9106ae2f517860323cb9b63e49b6dfc1b0d16db4a5b8694",
   "dataFiles": [
     {
       "bytes": 2941450,
@@ -476041,9 +476041,9 @@
   "externalResources": [],
   "moduleFiles": [
     {
-      "bytes": 22317,
+      "bytes": 22716,
       "path": "galpedia-boot.js",
-      "sha256": "41cb3a3518fa9fb8d6663b6fd9bc8ada6de2100ba18706dab3c964b3c842ad17"
+      "sha256": "231c37bc0c9f7f5b895b330f0dc9e80280c1958ac37fcfa5f2b7b47ffe64977b"
     },
     {
       "bytes": 5837,
@@ -476514,6 +476514,81 @@
       "bytes": 15409,
       "path": "lib/history.js",
       "sha256": "a9abf42c36ed3961ad46cb8e0f422aebae329c954ea9c7dc437d8f89eab59094"
+    },
+    {
+      "bytes": 10975,
+      "path": "lib/home-discovery.js",
+      "sha256": "a27f82b83c904d2c873d3cd13c88b5e17a9c662855474bd2f5c97e95d4957e10"
+    },
+    {
+      "bytes": 26483,
+      "path": "lib/home-main-roles/01.js",
+      "sha256": "91f7d3d91ff61b5587f15ee2c02ee300f12374df94b599a174e3aa79d9e95558"
+    },
+    {
+      "bytes": 32879,
+      "path": "lib/home-main-roles/02.js",
+      "sha256": "4fbb906f5a601d84c49d15bc72050cef649c5bf6a6799e5e2be800bd3cbc582b"
+    },
+    {
+      "bytes": 33168,
+      "path": "lib/home-main-roles/03.js",
+      "sha256": "51ed01d5fdc8cfb48b08d97762e483c9b6936b571f0de8eddcbf5c3b914b17b3"
+    },
+    {
+      "bytes": 34887,
+      "path": "lib/home-main-roles/04.js",
+      "sha256": "f88dd3867b91224c199768d4834911b5ff06663065de60e07fc860728c1d591a"
+    },
+    {
+      "bytes": 31345,
+      "path": "lib/home-main-roles/05.js",
+      "sha256": "938f4acdb235f92203f7bf8b155fe4f6f8d815adde2c707c83d99c8bb64479c2"
+    },
+    {
+      "bytes": 32895,
+      "path": "lib/home-main-roles/06.js",
+      "sha256": "4ca35d6fcb6e630259feeeea8b0bdb43ef84a7bd233f58f95fa7f359901ae517"
+    },
+    {
+      "bytes": 33928,
+      "path": "lib/home-main-roles/07.js",
+      "sha256": "e4202876194c507b9eefea2f59dcdf9b37b2038c8b74b9e08c9ad2750879424b"
+    },
+    {
+      "bytes": 37299,
+      "path": "lib/home-main-roles/08.js",
+      "sha256": "73254a5e715b5ccaacfad08de2abd3e20fc30ad0d178bebbd017df62126e44f6"
+    },
+    {
+      "bytes": 33812,
+      "path": "lib/home-main-roles/09.js",
+      "sha256": "1f38fb6cbd82738d35e149a38752f461084cbf78064eeed4b9e4f2ed8f460312"
+    },
+    {
+      "bytes": 33704,
+      "path": "lib/home-main-roles/10.js",
+      "sha256": "a768c9993443000d2a56f681a58a546a38dd375445ad40a07c6078425080552a"
+    },
+    {
+      "bytes": 29843,
+      "path": "lib/home-main-roles/11.js",
+      "sha256": "2e24aacd066175b7158b8807eb2ece66bef9d9c0c1cc78ebd6b4baed59c5eb7d"
+    },
+    {
+      "bytes": 38728,
+      "path": "lib/home-main-roles/12.js",
+      "sha256": "78edfa39f73ffa386029b753fa9db143ca83ca61d74720f26e52aeddaf9000b1"
+    },
+    {
+      "bytes": 94885,
+      "path": "lib/home-trivia-data.js",
+      "sha256": "0fb55f83289aa59fcf74690bd27ffb4ec5d5fe69e4fafd867f73047e04bca209"
+    },
+    {
+      "bytes": 2859,
+      "path": "lib/home-trivia.js",
+      "sha256": "dacdfe509b7b7c60f72ccac7d480788e06c3a2e00159a327acdf01a5cded1634"
     },
     {
       "bytes": 3545,
@@ -477796,9 +477871,9 @@
       "sha256": "3d8c6465bf4201a36bab88604145c0515ccc375a5c46373079488962d340035b"
     },
     {
-      "bytes": 81542,
+      "bytes": 84679,
       "path": "index.html",
-      "sha256": "f9ded3e194dd4a1475a546689b3cd29a0757d3b2ba8a77c99d8c98afa7287591"
+      "sha256": "c09a1b492c18a267f912ed3a0b820e5f0483e648f254217992e29b98a0a71ac9"
     },
     {
       "bytes": 748,
@@ -477874,6 +477949,11 @@
       "bytes": 26850,
       "path": "views/birthday-calendar.css",
       "sha256": "0482e67df9a89aeb1b963cd15e53972e8ae6a28c785a32c32b09055c4e931632"
+    },
+    {
+      "bytes": 48224,
+      "path": "views/home-discovery.css",
+      "sha256": "8672c95b997c3e0ffcbf3d598f3fafef2952ec03916e2de00b7de4e8f670765b"
     }
   ]
 }

@@ -140,6 +140,12 @@ for (const [id, iconName] of [['mode-selection', 'library'], ['mode-company', 'b
   button.replaceChildren(icon, label);
 }
 
+let homeDiscovery, homeDiscoveryPending;
+function syncDiscovery(active) {
+  if (!active) { homeDiscovery?.suspend(); return; }
+  homeDiscoveryPending ??= import("./lib/home-discovery.js").then(m => homeDiscovery = m.createHomeDiscovery(home)).catch(() => { homeDiscoveryPending = null; });
+  void homeDiscoveryPending.then(() => { if (isHome()) homeDiscovery?.show(); });
+}
 function isHome() { return !location.hash || location.hash === '#home'; }
 function syncHome() {
   if (focusSession.inspect().key !== location.hash) focusSession.suspend();
@@ -150,6 +156,7 @@ function syncHome() {
   if(!birthday)hideBirthdayRoute();
   root.dataset.home = String(active);
   home.hidden = !active;
+  syncDiscovery(active);
   if (active) {
     for (const image of home.querySelectorAll('img[data-home-src]')) {
       image.src = image.dataset.homeSrc;
