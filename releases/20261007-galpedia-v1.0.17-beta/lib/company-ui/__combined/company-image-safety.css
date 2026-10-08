@@ -1,0 +1,7 @@
+/* Compact passive placeholders preserve cover navigation and accessible labels. */
+:is(.pp-cover,.company-directory-work) .nsfw-image-status{padding:1px;font-size:0;line-height:0;overflow:hidden}
+:is(.pp-cover,.company-directory-work) .nsfw-image-status::after{content:'已隐藏';font:500 10px/1.4 system-ui,sans-serif}
+:is(.pp-cover,.company-directory-work) .nsfw-image-status[aria-label='图片未分级']::after{content:'未分级'}
+:is(.pp-cover,.company-directory-work) .nsfw-image-status.is-loading::after{content:'检查中'}
+:is(.pp-cover,.company-directory-work) .nsfw-image-status[aria-label='图片暂不可用']::after{content:'不可用'}
+:is(.pp-cover,.company-directory-work) .nsfw-image-status.is-missing::after{content:'无图'}

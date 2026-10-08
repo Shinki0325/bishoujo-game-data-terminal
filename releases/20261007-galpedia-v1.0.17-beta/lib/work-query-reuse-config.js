@@ -1,0 +1,1 @@
+export const WORK_QUERY_REUSE = Object.freeze({"bytes":2031,"path":"../runtime-data/work-query-reuse-v1/reuse.3e0ff288c9cb5d8463135145abfd400afa5af3dea14223194216f12361f7dd0c.json.gz","rawBytes":10741,"sha256":"3e0ff288c9cb5d8463135145abfd400afa5af3dea14223194216f12361f7dd0c"});
