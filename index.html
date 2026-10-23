@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20261007-galpedia-v1.0.17-beta" data-person-directory="full-wiki">
+<html lang="zh-CN" data-app-revision="20261023-galpedia-v1.0.19-rc9" data-person-directory="full-wiki">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,12 +8,23 @@
     <link rel="preconnect" href="https://wiki-assets.bishojo.date" crossorigin>
     <title>少女箱庭 GALPEDIA · 美少女游戏资料库</title>
     <meta name="description" content="少女箱庭 GALPEDIA：探索美少女游戏作品、会社与人物资料，搜索、比较并制作自己的作品排榜。">
-    <link rel="icon" type="image/png" sizes="32x32" href="./releases/20261007-galpedia-v1.0.17-beta/brand/favicon-32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./releases/20261007-galpedia-v1.0.17-beta/brand/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./releases/20261023-galpedia-v1.0.19-rc9/brand/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./releases/20261023-galpedia-v1.0.19-rc9/brand/apple-touch-icon.png">
     <script>
       document.documentElement.classList.add('galpedia');
       document.documentElement.dataset.home = String(!location.hash || location.hash === '#home');
       document.documentElement.dataset.theme = 'light';
+      // Fetch/compile the requested entry graph early; modulepreload does not
+      // execute it or initialize hidden workspaces. Unsupported browsers ignore it.
+      const entryBase = document.querySelector('base') || /\/releases\/[^/]+\//.test(location.pathname) ? './' : './releases/' + document.documentElement.dataset.appRevision + '/';
+      const entryHints = ['galpedia-boot.js'];
+      if ((!matchMedia('(max-width: 899px)').matches || !/^#works(?:[?]|$)/.test(location.hash) || /[?&]tools=/.test(location.hash)) && /^#(?:works(?:[?]|$)|companies(?:[?]|$)|ranking(?:[/?]|$))/.test(location.hash)) {
+        entryHints.push('main.js?v=20260911b', 'lib/work-static-client.js');
+      }
+      for (const entry of entryHints) {
+        const hint = document.createElement('link'); hint.rel = 'modulepreload'; hint.href = entryBase + entry;
+        document.head.append(hint);
+      }
       try {
         const theme = localStorage.getItem('egs-tier-terminal:theme-v1') || 'light';
         document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
@@ -22,19 +33,19 @@
         // The home shell keeps a usable session-only light theme without storage.
       }
     </script>
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/styles.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-theme.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-home.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-states.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-help.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-controls.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-keeper.css">
-    <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/galpedia-chronicle-dial.css">
-  <link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/analysis-links.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/site-tokens.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/site-shell.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/lib/image-safety.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/lib/company-ui/__player_v51/directory-header.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/lib/company-ui/__combined/company-image-safety.css"><link rel="stylesheet" href="./releases/20261007-galpedia-v1.0.17-beta/views/home-discovery.css"></head>
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/styles.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-theme.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-home.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-states.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-help.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-controls.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-keeper.css">
+    <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-chronicle-dial.css">
+  <link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/analysis-links.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/site-tokens.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/site-shell.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/lib/image-safety.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/lib/company-ui/__player_v51/directory-header.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/lib/company-ui/__combined/company-image-safety.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/views/home-discovery.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/views/company-detail-shell.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/views/detail-experience.css"><link rel="stylesheet" href="./releases/20261023-galpedia-v1.0.19-rc9/views/mobile-library.css"></head>
   <body>
     <header class="tool-header galpedia-header">
       <div class="tool-heading">
-        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./releases/20261007-galpedia-v1.0.17-beta/brand/logo-header.webp" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
+        <a class="galpedia-logo" href="#home" aria-label="少女箱庭 GALPEDIA 首页"><img src="./releases/20261023-galpedia-v1.0.19-rc9/brand/logo-header.webp" alt="少女箱庭 GALPEDIA" width="1774" height="887"></a>
       </div>
 
       <div id="workspace-mode" class="mode-switch" role="tablist" aria-label="工作模式">
@@ -106,9 +117,9 @@
           </form>
           <p class="home-search-hint">支持日文、简体中文、别名与拼音检索</p>
           <div class="home-actions"><a class="home-primary" href="#works">浏览作品库 <span aria-hidden="true">→</span></a><a class="home-secondary" href="#ranking">开始排榜 <span aria-hidden="true">↗</span></a></div>
-          <dl class="home-stats" title="作品按合并版本后的条目统计；会社与人物按当前收录条目统计。"><div><dt>作品</dt><dd data-home-count="works">30,612</dd></div><div><dt>会社</dt><dd data-home-count="companies">12,068</dd></div><div><dt>人物</dt><dd data-home-count="persons">53,075</dd></div></dl>
+          <dl class="home-stats" title="作品按合并版本后的条目统计；会社与人物按当前收录条目统计。"><div><dt>作品</dt><dd data-home-count="works">30,612</dd></div><div><dt>会社</dt><dd data-home-count="companies">12,068</dd></div><div><dt>人物</dt><dd data-home-count="persons">55,524</dd></div></dl>
         </div>
-        <div class="home-portrait"><div class="hero-orbit" aria-hidden="true"></div><span class="hero-small-star" aria-hidden="true">✦</span><img width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async" data-home-src="./releases/20261007-galpedia-v1.0.17-beta/brand/shiori.png"><span class="home-portrait-caption">庭守 · 綴木 栞</span></div>
+        <div class="home-portrait"><div class="hero-orbit" aria-hidden="true"></div><span class="hero-small-star" aria-hidden="true">✦</span><img width="1024" height="1536" alt="庭守 綴木栞" fetchpriority="high" decoding="async" data-home-src="./releases/20261023-galpedia-v1.0.19-rc9/brand/shiori.png"><span class="home-portrait-caption">庭守 · 綴木 栞</span></div>
       </div>
       <nav class="home-portals" aria-label="探索资料库">
         <a href="#works"><span class="portal-number">WORKS</span><h2>作品库 <span aria-hidden="true">↗</span></h2><p>寻找下一段故事</p></a>
@@ -196,7 +207,7 @@
           aria-hidden="true"
         >
           <div class="panel-heading">
-            <h2>筛选</h2>
+            <h2>筛选作品</h2>
             <div class="filter-mode-switch" role="group" aria-label="标签筛选模式">
               <button data-ui="mode" id="mode-basic" type="button" aria-pressed="true">基础</button>
               <button data-ui="mode" id="mode-advanced" type="button" aria-pressed="false">公式</button>
@@ -208,6 +219,7 @@
           </div>
 
           <div class="filter-scroll">
+            <p class="filter-context-hint">选择条件，再查看符合条件的作品。关闭可保留原来的结果。</p>
             <div id="filter-draft-summary" class="filter-draft-summary" aria-live="polite">
               <output id="filter-draft-summary-text">当前范围</output>
               <button id="filter-clear-all" class="filter-clear-all" type="button" hidden>清除全部</button>
@@ -476,6 +488,7 @@
           <button id="mobile-ranking-candidates" class="mobile-ranking-candidates-trigger" type="button" aria-label="展开候选作品" aria-controls="ranking-candidates" aria-expanded="false"><span id="mobile-ranking-candidates-label">展开候选</span><output id="mobile-ranking-candidate-count">0</output><span class="mobile-ranking-candidates-chevron" aria-hidden="true"></span></button>
           <div class="ranking-page-title gp-page-heading">
             <h2>排榜</h2>
+            <button id="ranking-add-works" class="toolbar-button" type="button">添加作品</button>
             <span id="ranking-heading-count" class="gp-page-total">加载中…</span>
             <div class="ranking-subject-tabs" role="group" aria-label="排榜对象">
               <button data-ui="mode" id="ranking-subject-work" type="button" aria-pressed="true">作品</button>
@@ -774,6 +787,7 @@
               <button data-ui="mode" id="person-role-voice-actor" type="button" role="tab" data-person-role="voice-actor" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">声优</button>
               <button data-ui="mode" id="person-role-scenario" type="button" role="tab" data-person-role="scenario" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">剧本</button>
               <button data-ui="mode" id="person-role-artwork" type="button" role="tab" data-person-role="artwork" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">原画</button>
+              <button data-ui="mode" id="person-role-vocalist" type="button" role="tab" data-person-role="vocalist" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">歌手</button>
               <button data-ui="mode" id="person-role-music" type="button" role="tab" data-person-role="music" aria-selected="false" aria-pressed="false" aria-controls="person-directory-panel" tabindex="-1">音乐</button>
             </div>
           </div>
@@ -1006,8 +1020,8 @@
           <button id="sticker-option-black-bar" type="button" data-sticker-kind="black-bar" aria-label="添加黑色遮挡条"><span class="sticker-swatch sticker-swatch-black" aria-hidden="true"></span></button>
           <button id="sticker-option-pixelate" type="button" data-sticker-kind="pixelate" aria-label="添加马赛克"><span class="sticker-swatch sticker-swatch-pixelate" aria-hidden="true"></span></button>
           <button id="sticker-option-blur" type="button" data-sticker-kind="blur" aria-label="添加模糊"><span class="sticker-swatch sticker-swatch-blur" aria-hidden="true"></span></button>
-          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img loading="lazy" src="./releases/20261007-galpedia-v1.0.17-beta/assets/stickers/please-wait-character.webp" alt=""></button>
-          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img loading="lazy" src="./releases/20261007-galpedia-v1.0.17-beta/assets/stickers/paper-bag-character.png" alt=""></button>
+          <button id="sticker-option-please-wait-character" type="button" data-sticker-kind="please-wait-character" aria-label="添加请稍候贴纸"><img loading="lazy" src="./releases/20261023-galpedia-v1.0.19-rc9/assets/stickers/please-wait-character.webp" alt=""></button>
+          <button id="sticker-option-paper-bag-character" type="button" data-sticker-kind="paper-bag-character" aria-label="添加纸袋角色贴纸"><img loading="lazy" src="./releases/20261023-galpedia-v1.0.19-rc9/assets/stickers/paper-bag-character.png" alt=""></button>
         </div>
       </div>
           <div class="dialog-actions gp-dialog-footer sticker-editor-actions">
@@ -1087,7 +1101,8 @@
       <div id="work-compare-content" class="work-compare-content"></div>
     </dialog>
 
-    <script src="./releases/20261007-galpedia-v1.0.17-beta/lib/chronicle-dial.js"></script>
-    <script type="module" src="./releases/20261007-galpedia-v1.0.17-beta/galpedia-boot.js"></script>
+    <script src="./releases/20261023-galpedia-v1.0.19-rc9/lib/chronicle-dial.js"></script>
+    <script src="./releases/20261023-galpedia-v1.0.19-rc9/lib/search-service-config.js"></script>
+    <script type="module" src="./releases/20261023-galpedia-v1.0.19-rc9/galpedia-boot.js"></script>
   </body>
 </html>

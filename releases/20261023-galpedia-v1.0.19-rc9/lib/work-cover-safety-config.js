@@ -1,0 +1,1 @@
+export const WORK_COVER_SAFETY = Object.freeze({"schema":"galpedia-cover-safety-transport-v1","basePath":"../runtime-data/work-cover-safety-v1/","path":"manifest.21f5f7f3aa8f1728400ecab2641f9bfca63ae09e6ca1266084086d735fc5f404.json.gz","bytes":84962,"rawBytes":146154,"sha256":"21f5f7f3aa8f1728400ecab2641f9bfca63ae09e6ca1266084086d735fc5f404"});

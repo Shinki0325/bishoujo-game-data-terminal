@@ -1,0 +1,274 @@
+#birthday-view{--line:var(--border);--muted:var(--text-muted);--soft:var(--surface-muted);color:var(--text);max-width:1320px;margin:auto;padding:0 28px 32px;min-height:60vh}
+#birthday-view *{box-sizing:border-box}
+#birthday-view [hidden]{display:none!important}
+#birthday-view a{color:inherit;text-decoration:none}
+#birthday-view a:hover{text-decoration:underline}
+#birthday-view button,#birthday-view input,#birthday-view select{font:inherit;color:inherit;border:1px solid var(--line);background:var(--surface);border-radius:6px}
+#birthday-view button{cursor:pointer;padding:8px 12px;min-height:40px;box-shadow:none;white-space:nowrap}
+#birthday-view button:hover{border-color:var(--accent);background:var(--accent-soft)}
+#birthday-view button:disabled,#birthday-view select:disabled{opacity:.4;cursor:default}
+#birthday-view :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#birthday-view .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#birthday-view .muted{color:var(--muted);font-size:12px;line-height:1.6}
+#birthday-view .intro{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:24px 0}
+#birthday-view .eyebrow{font-size:10px;letter-spacing:1.6px;color:var(--accent);font-weight:600;margin:0 0 10px}
+#birthday-view h1,#birthday-view h2{font-family:var(--gp-font-heading);font-weight:500}
+#birthday-view h1{font-size:28px;letter-spacing:1px;margin:0 0 10px}
+#birthday-view .intro p:not(.eyebrow){font-size:13px;color:var(--muted);line-height:1.7;margin:0}
+#birthday-view .today-stamp{width:136px;flex:none;text-align:center;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;color:var(--muted);background:linear-gradient(145deg,var(--surface),var(--accent-soft));font-size:11px;white-space:normal;position:relative;overflow:hidden}
+#birthday-view .today-stamp::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.55}
+#birthday-view .today-stamp strong{font-family:Georgia,serif;color:var(--accent);font-size:44px;line-height:1}
+#birthday-view .birthday-layout{display:grid;grid-template-columns:minmax(330px,.72fr) minmax(0,1.45fr);gap:28px;align-items:start}
+#birthday-view .calendar-section{position:sticky;top:calc(var(--header-height,76px) + 18px);border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:18px;box-shadow:0 6px 24px color-mix(in srgb,var(--accent) 4%,transparent)}
+#birthday-view .month-tools{display:flex;align-items:center;gap:6px}
+#birthday-view .month-label{flex:1;min-width:0}
+#birthday-view #bc-month{font-size:18px;font-weight:600;width:100%;min-height:40px;padding:5px 8px;min-width:0;border-color:transparent;cursor:pointer}
+#birthday-view #bc-month:hover{background:var(--soft)}
+#birthday-view .calendar-year{display:flex;align-items:center;gap:3px;margin-left:auto;color:var(--muted);font-size:10px}
+#birthday-view #bc-year{width:66px;min-height:28px;border-color:transparent;background:transparent;font-size:11px;color:var(--muted);padding:3px}
+#birthday-view #bc-year:hover,#birthday-view #bc-year:focus{border-color:var(--line)}
+#birthday-view .month-tools button{padding:6px 11px}
+#birthday-view #bc-previous,#birthday-view #bc-next{font-size:20px;line-height:1;width:40px;flex:none}
+#birthday-view #bc-today{font-size:12px}
+#birthday-view .calendar-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}
+#birthday-view .calendar-summary p{margin:0}
+#birthday-view #bc-calendar-toggle{display:none;font-size:12px;color:var(--accent);padding:4px 3px;border:0;background:transparent;min-height:40px}
+#birthday-view .weekdays,#birthday-view .calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+#birthday-view .weekdays{padding:4px 0 8px;text-align:center;font-size:11px;color:var(--muted)}
+#birthday-view .calendar>button,#birthday-view .calendar>.blank{border:1px solid transparent;border-radius:10px;min-width:0;min-height:58px;padding:5px 0;text-align:center;background:transparent}
+#birthday-view .calendar>button:hover{background:var(--soft);border-color:var(--line)}
+#birthday-view .calendar>button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 -3px var(--accent)}
+#birthday-view .calendar>button[aria-pressed=true] .day-number{color:var(--accent);font-weight:700}
+#birthday-view .calendar>button.is-today[aria-pressed=true] .day-number{color:var(--surface)}
+#birthday-view .day-number{font-size:15px;display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+#birthday-view .is-today .day-number{background:var(--accent);color:var(--surface);border-radius:50%}
+#birthday-view .day-count{display:block;font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+#birthday-view .calendar-legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+#birthday-view .today-dot,#birthday-view .selected-dot{display:inline-block;width:8px;height:8px;flex:none;background:var(--accent);border-radius:50%}
+#birthday-view .selected-dot{border:1px solid var(--accent);border-radius:2px;background:var(--accent-soft);margin-left:8px}
+#birthday-view #bc-leap{margin-top:10px;width:100%;white-space:normal;border-style:dashed;font-size:12px;color:var(--accent)}
+#birthday-view #bc-leap[aria-pressed=true]{border-style:solid;background:var(--accent-soft)}
+#birthday-view .birthday-section{min-width:0}
+#birthday-view .list-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+#birthday-view .list-heading h2{font-size:26px;margin:0}
+#birthday-view .list-heading .eyebrow{margin-bottom:6px}
+#birthday-view .list-heading p.muted{margin:6px 0 0;overflow-wrap:anywhere}
+#birthday-view .list-heading>button{font-size:12px;flex:none}
+#birthday-view .list-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px;margin-bottom:24px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+#birthday-view .search-row{display:flex;align-items:center;width:100%;position:relative}
+#birthday-view .search{flex:1;min-width:0;position:relative}
+#birthday-view .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;fill:none;stroke:var(--muted);stroke-width:1.6;pointer-events:none}
+#birthday-view .search input{width:100%;padding:10px 62px 10px 38px;font-size:13px;min-height:44px;min-width:0;border-color:transparent;border-radius:9px;background:var(--soft)}
+#birthday-view #bc-clear-search{position:absolute;right:6px;font-size:12px;color:var(--accent);min-height:32px;padding:4px 8px;border-color:transparent;background:transparent}
+#birthday-view #bc-clear-search:hover{background:var(--surface)}
+#birthday-view #bc-search::-webkit-search-cancel-button{display:none}
+#birthday-view .filter-row{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%}
+#birthday-view .sort-label{font-size:11px;color:var(--muted);white-space:nowrap;flex:none}
+#birthday-view .sort-label span{color:var(--accent);margin-left:2px}
+#birthday-view .female-filter{display:inline-flex;align-items:center;gap:8px;min-height:44px;position:relative;cursor:pointer;font-size:12px;white-space:nowrap}
+#birthday-view .female-filter input{position:absolute;width:100%;height:100%;inset:0;opacity:0;margin:0;cursor:pointer}
+#birthday-view .switch-track{width:32px;height:19px;flex:none;border:1px solid var(--line);border-radius:20px;background:var(--soft);position:relative;transition:background .15s}
+#birthday-view .switch-track::after{content:'';position:absolute;top:3px;left:3px;width:11px;height:11px;border-radius:50%;background:var(--muted);transition:transform .15s}
+#birthday-view .female-filter input:checked+.switch-track{border-color:var(--accent);background:var(--accent)}
+#birthday-view .female-filter input:checked+.switch-track::after{transform:translateX(13px);background:var(--surface)}
+#birthday-view .female-filter input:checked~span:last-child{color:var(--accent)}
+#birthday-view .female-filter input:focus-visible+.switch-track{outline:2px solid var(--accent);outline-offset:3px}
+#birthday-view .female-filter:has(input:disabled){opacity:.45;cursor:default}
+#birthday-view .characters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+#birthday-view .character{display:flex;align-items:flex-start;gap:14px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);transition:border-color .15s,box-shadow .15s}
+#birthday-view .character:hover,#birthday-view .character:focus-within{border-color:color-mix(in srgb,var(--accent) 40%,var(--line));box-shadow:0 4px 18px color-mix(in srgb,var(--accent) 6%,transparent)}
+#birthday-view .portrait,#birthday-view .portrait.nsfw-image-host{width:68px;height:90px;flex:none;background:linear-gradient(145deg,var(--soft),var(--accent-soft));border:1px solid color-mix(in srgb,var(--accent) 9%,transparent);border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+#birthday-view .portrait>span{font-family:"SimSun",serif;color:var(--muted);font-size:24px}
+#birthday-view .portrait>small{position:absolute;bottom:4px;font-size:9px;color:var(--muted)}
+#birthday-view .portrait img{position:absolute;width:100%;height:100%;object-fit:cover;object-position:top}
+#birthday-view .portrait .nsfw-image-status{font:10px/1.4 var(--gp-font-ui);padding:3px;white-space:normal;text-align:center;overflow-wrap:anywhere}
+#birthday-view .character-copy{min-width:0;flex:1;display:flex;flex-direction:column;align-self:stretch}
+#birthday-view .character .character-copy>details{margin-top:auto;padding-top:4px}
+#birthday-view .character-copy>.work-link{margin-bottom:4px}
+#birthday-view .character h3{font-size:17px;font-weight:600;margin:1px 0 6px;line-height:1.5;overflow-wrap:anywhere}
+#birthday-view .birth-date{font-size:11px;color:var(--accent);display:block;margin-bottom:4px}
+#birthday-view[data-whole-month=false] .birth-date{display:none}
+#birthday-view .work-link{font-size:13px;color:var(--accent);line-height:1.6;display:block;overflow-wrap:anywhere;min-height:32px;padding:4px 0}
+#birthday-view .work-link::after{content:' ›';white-space:nowrap}
+#birthday-view .work-link:hover{color:var(--accent)}
+#birthday-view .character details{margin-top:2px;font-size:11px;color:var(--muted)}
+#birthday-view .character summary{cursor:pointer;line-height:1.6;padding:4px 0;min-height:28px;width:fit-content;max-width:100%}
+#birthday-view .character-extra{margin-top:4px;padding-top:8px;border-top:1px solid var(--line)}
+#birthday-view .character-sources{display:flex;flex-wrap:wrap;gap:0 10px;margin-top:6px}
+#birthday-view .character-sources:first-child{margin-top:0}
+#birthday-view .character summary:hover,#birthday-view .character details[open] summary{color:var(--accent)}
+#birthday-view .source-link{display:inline-block;padding:4px 0;min-height:28px;color:var(--accent);font-size:11px;overflow-wrap:anywhere}
+#birthday-view .character details .work-link{margin:0;font-size:12px}
+#birthday-view #bc-more{display:block;margin:24px auto;min-width:220px;font-size:13px;border-radius:30px;padding:10px 22px}
+#birthday-view #bc-status{padding:28px 16px;text-align:center;background:var(--surface);border:1px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px;line-height:1.8}
+#birthday-view #bc-status button{margin-left:12px;font-size:12px}
+#birthday-view #bc-status.is-loading{display:flex;align-items:center;justify-content:center;gap:10px;min-height:120px;border-style:solid}
+#birthday-view #bc-status.is-loading::before{content:'';width:18px;height:18px;flex:none;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:birthday-loading 1s linear infinite}
+@keyframes birthday-loading{to{transform:rotate(360deg)}}
+@media(max-width:1099px) and (min-width:761px){#birthday-view .birthday-layout{grid-template-columns:300px minmax(0,1fr);gap:20px}#birthday-view .calendar-section{padding:12px}#birthday-view .characters{grid-template-columns:1fr}}
+@media(max-width:760px){
+#birthday-view{padding:0 14px 24px}
+#birthday-view .intro{padding:16px 0;gap:16px}
+#birthday-view h1{font-size:24px;margin-bottom:8px}
+#birthday-view .intro .eyebrow{font-size:9px;letter-spacing:1px;margin-bottom:7px}
+#birthday-view .intro p:not(.eyebrow){font-size:12px;max-width:280px}
+#birthday-view .today-stamp{width:90px;font-size:10px;padding:10px 6px}
+#birthday-view .today-stamp strong{font-size:34px}
+#birthday-view .birthday-layout{grid-template-columns:1fr;gap:20px}
+#birthday-view .calendar-section{position:static;padding:10px 12px}
+#birthday-view .calendar-summary{margin:4px 0 0;min-height:32px}
+#birthday-view #bc-calendar-toggle{display:block}
+#birthday-view .weekdays{padding-top:8px}
+#birthday-view .calendar>button,#birthday-view .calendar>.blank{min-height:48px;padding:2px 0}
+#birthday-view .calendar-legend{margin-top:8px;padding-top:8px}
+#birthday-view .list-heading{margin-bottom:12px;gap:12px}
+#birthday-view .list-heading h2{font-size:23px}
+#birthday-view .list-heading .eyebrow{font-size:9px;letter-spacing:1px}
+#birthday-view .list-tools{grid-template-columns:minmax(0,1fr);gap:4px;margin-bottom:16px;padding:10px 12px 4px}
+#birthday-view .filter-row{gap:10px}
+#birthday-view #bc-today-count{min-height:28px;display:flex;align-items:center;justify-content:center}
+#birthday-view .sort-label{font-size:10px}
+#birthday-view .search input{font-size:16px}
+#birthday-view .characters{grid-template-columns:repeat(2,minmax(0,1fr))}
+#birthday-view .character{padding:14px;gap:14px}
+}
+@media(max-width:550px){#birthday-view .characters{grid-template-columns:1fr}#birthday-view .character{min-height:126px}#birthday-view #bc-month{font-size:17px}}
+@media(max-width:360px){#birthday-view{padding-left:10px;padding-right:10px}#birthday-view .calendar-section{padding:10px}#birthday-view .intro p:not(.eyebrow){max-width:200px}#birthday-view .today-stamp{width:65px}}
+@media(prefers-reduced-motion:reduce){#birthday-view *,#birthday-view *::after{scroll-behavior:auto!important;transition:none!important}#birthday-view #bc-status.is-loading::before{animation:none}}
+
+#birthday-view[data-searching=true] .birthday-layout{grid-template-columns:minmax(0,1fr)}
+#birthday-view a.birth-date{display:inline-flex;align-items:center;min-height:28px;color:var(--accent);border-radius:4px}
+#birthday-view[data-whole-month=false] a.birth-date{display:none}
+@media(min-width:1100px){#birthday-view[data-searching=true] .characters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:551px) and (max-width:1099px){#birthday-view[data-searching=true] .characters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+#birthday-view .birthday-modes{display:flex;gap:4px;margin:-8px 0 18px;align-items:center}
+#birthday-view .birthday-modes button{font-size:12px;border-color:transparent;background:transparent;border-radius:20px;padding:6px 16px}
+#birthday-view .birthday-modes button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--line);color:var(--accent)}
+#birthday-view .character-heading{display:flex;align-items:flex-start;gap:8px}
+#birthday-view .character-heading h3{flex:1;min-width:0}
+#birthday-view .birthday-favorite{display:inline-flex;align-items:center;justify-content:center;gap:3px;flex:none;padding:3px;min-height:28px;min-width:28px;border-color:transparent;background:transparent;color:var(--muted);border-radius:5px}
+#birthday-view .birthday-favorite svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5}
+#birthday-view .birthday-favorite span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#birthday-view .birthday-favorite[aria-pressed=true]{color:var(--accent)}
+#birthday-view .birthday-favorite[aria-pressed=true] svg{fill:var(--accent-soft)}
+#birthday-view #bc-personal-status{padding:10px 14px;font-size:12px;line-height:1.6;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)}
+
+/* 文本输入的 focus-visible 在鼠标点击时也可能匹配；不使用外扩聚焦框。 */
+#birthday-view #bc-search:focus{outline:none!important;box-shadow:none!important;border-color:transparent!important}
+#birthday-view[data-keyboard=true] #bc-search:focus{box-shadow:inset 0 -2px var(--accent)!important}
+#birthday-view #bc-characters.is-grouped{display:block}
+#birthday-view .birthday-day-group+.birthday-day-group{margin-top:26px}
+#birthday-view .birthday-day-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:500;margin:0 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+#birthday-view .birthday-day-heading>a{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:32px}
+#birthday-view .birthday-day-heading .birthday-day-total{font-size:11px;color:var(--muted)}
+#birthday-view .birthday-modes{flex-wrap:wrap}
+@media(max-width:360px){#birthday-view .birthday-modes button{padding-left:12px;padding-right:12px}}
+#birthday-view .birthday-favorite{width:72px;min-height:32px;padding:4px 6px;gap:4px;border-color:var(--line);font-size:11px}
+#birthday-view .birthday-favorite span{position:static;width:auto;height:auto;clip:auto;overflow:visible}
+#birthday-view .birthday-favorite[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+#birthday-view .birthday-favorite[aria-pressed=true] svg{fill:var(--accent)}
+#birthday-view #bc-favorite-feedback{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:1200;max-width:min(440px,calc(100vw - 32px));padding:12px 18px;border:1px solid var(--accent);border-radius:12px;background:var(--surface);color:var(--text);box-shadow:0 5px 24px #0002;font-size:13px;line-height:1.5;pointer-events:none}
+@media(max-width:760px){#birthday-view #bc-favorite-feedback{bottom:calc(86px + env(safe-area-inset-bottom,0px))}}
+
+/* 保持生日控件使用当前主题令牌，不继承全站按钮的浅色强调覆盖。 */
+#birthday-view .birthday-favorite{color:var(--muted)!important;background:var(--surface)!important;border-color:var(--line)!important}
+#birthday-view .birthday-favorite[aria-pressed=true]{color:var(--accent)!important;background:var(--accent-soft)!important;border-color:var(--accent)!important}
+#birthday-view .birthday-favorite svg path{fill:none!important}
+#birthday-view .birthday-favorite[aria-pressed=true] svg path{fill:currentColor!important}
+#birthday-view .birthday-modes button{color:var(--text)!important;background:transparent!important}
+#birthday-view .birthday-modes button[aria-pressed=true]{color:var(--accent)!important;background:var(--accent-soft)!important}
+#birthday-view #bc-clear-search{color:var(--accent)!important}
+
+/* 生日历紧凑布局：时间视图与角色筛选分组，日历为辅助导航。 */
+#birthday-view .intro{padding:22px 0 18px;gap:12px}
+#birthday-view h1{font-size:27px;margin:0;letter-spacing:.5px}
+#birthday-view .today-stamp{width:auto;flex-direction:row;gap:5px;padding:8px 0;border:0;border-radius:0;background:transparent;font-size:12px;overflow:visible;color:var(--muted)!important}
+#birthday-view .today-stamp::before{display:none}
+#birthday-view .today-stamp strong{font:inherit;color:var(--accent)}
+#birthday-view #bc-today-count{margin:0 8px;min-height:0;font-size:11px}
+#birthday-view .list-tools{display:block;padding:0;border:0;background:transparent;border-radius:0;margin:0 0 24px}
+#birthday-view .search input{background:var(--surface);border-color:var(--line);border-radius:10px;min-height:44px}
+#birthday-view .browse-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px}
+#birthday-view .birthday-modes{flex:none;flex-wrap:nowrap;gap:2px;margin:0;padding:3px;background:var(--soft);border-radius:9px}
+#birthday-view .birthday-modes button{min-height:34px;padding:5px 18px;border-radius:6px;border:0}
+#birthday-view .birthday-modes button[aria-pressed=true]{background:var(--surface)!important;box-shadow:0 1px 4px #0001;font-weight:600}
+#birthday-view .filter-row{justify-content:flex-end;width:auto;gap:18px}
+#birthday-view #bc-saved{font-size:12px;min-height:36px;padding:5px 10px;border-color:transparent;background:transparent!important;color:var(--muted)!important}
+#birthday-view #bc-saved[aria-pressed=true]{background:var(--accent-soft)!important;color:var(--accent)!important;border-color:var(--accent)}
+#birthday-view #bc-saved>span{font-size:17px;vertical-align:-1px}
+#birthday-view .female-filter{min-height:36px;gap:6px}
+#birthday-view .birthday-layout{grid-template-columns:290px minmax(0,1fr);gap:28px}
+#birthday-view .calendar-section{padding:14px;border-radius:12px;box-shadow:none}
+#birthday-view .calendar-summary{margin:10px 0}
+#birthday-view .calendar>button,#birthday-view .calendar>.blank{min-height:48px;border-radius:7px}
+#birthday-view .list-heading{margin-bottom:14px;gap:10px;align-items:center}
+#birthday-view .list-heading h2{font-size:25px}
+#birthday-view .list-heading .eyebrow{font-size:10px;letter-spacing:.8px;margin-bottom:5px}
+#birthday-view .list-actions{display:flex;align-items:flex-end;flex-direction:column;gap:5px;flex:none}
+#birthday-view .list-actions button{font-size:11px;padding:4px 8px;min-height:30px;background:transparent!important;color:var(--accent)!important;border-color:transparent}
+#birthday-view .characters{gap:10px}
+#birthday-view .character{position:relative;gap:13px;padding:14px;border-radius:10px;box-shadow:none;min-height:144px}
+#birthday-view .character:hover,#birthday-view .character:focus-within{box-shadow:none}
+#birthday-view .portrait,#birthday-view .portrait.nsfw-image-host{width:76px;height:104px;border-radius:7px}
+#birthday-view .character-copy{position:relative;padding-bottom:34px}
+#birthday-view .character-heading{display:block}
+#birthday-view .character h3{font-size:16px;line-height:1.5;margin:0 0 5px}
+#birthday-view .character .birthday-favorite{position:absolute;bottom:0;right:0;min-height:32px}
+#birthday-view .character-copy>.work-link{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:20px;height:40px;min-height:40px;padding:0;margin:0 0 4px;font-size:12px}
+#birthday-view .character-copy>details{margin-top:0!important;padding-top:0!important;position:static}
+#birthday-view .character-copy>details>summary{position:absolute;bottom:0;left:0;font-size:10px;min-height:32px;display:flex;align-items:center;padding:3px 0;max-width:calc(100% - 78px)}
+#birthday-view .character-copy>details>summary::before{content:'＋';margin-right:3px}
+#birthday-view .character-copy>details[open]>summary::before{content:'−'}
+#birthday-view .character-extra{padding:8px 0 4px;margin-top:6px}
+#birthday-view[data-upcoming=true] .birth-date{display:none}
+#birthday-view .birthday-day-group+.birthday-day-group{margin-top:24px}
+#birthday-view .birthday-day-heading{font-size:14px;margin-bottom:10px;padding-bottom:6px;border-color:var(--line)}
+#birthday-view .birthday-day-group.is-today .birthday-day-heading{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+#birthday-view .birthday-day-total{font-weight:400}
+#birthday-view #bc-date-strip{display:none}
+@media(min-width:761px) and (max-width:1150px){
+#birthday-view .birthday-layout{grid-template-columns:268px minmax(0,1fr);gap:20px}
+#birthday-view:not([data-searching=true]) .characters{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+#birthday-view .intro{padding:16px 0 12px;align-items:center}
+#birthday-view h1{font-size:23px}
+#birthday-view .today-stamp{font-size:11px;gap:3px;min-height:36px}
+#birthday-view #bc-today-count{display:none}
+#birthday-view .list-tools{margin-bottom:18px}
+#birthday-view .browse-controls{margin-top:8px;gap:8px;flex-wrap:wrap}
+#birthday-view .birthday-modes button{padding:5px 12px}
+#birthday-view .filter-row{gap:10px;margin-left:auto}
+#birthday-view #bc-saved{padding:5px 3px;font-size:11px}
+#birthday-view .female-filter{font-size:11px}
+#birthday-view .switch-track{width:28px;height:18px}
+#birthday-view .switch-track::after{width:10px;height:10px}
+#birthday-view .female-filter input:checked+.switch-track::after{transform:translateX(10px)}
+#birthday-view .birthday-layout{grid-template-columns:1fr;gap:18px}
+#birthday-view .calendar-section{padding:0 0 12px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+#birthday-view .calendar-toolbar{padding-right:72px}
+#birthday-view .calendar-summary{margin:0;position:relative;min-height:0;height:0}
+#birthday-view .calendar-summary>p{display:none}
+#birthday-view #bc-calendar-toggle{position:absolute;right:0;top:-40px;bottom:auto;min-height:40px}
+#birthday-view #bc-date-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
+#birthday-view .quick-date{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;min-width:0;min-height:53px;padding:5px 0;border:0;background:transparent!important;color:var(--text)!important}
+#birthday-view .quick-date>span{font-size:10px;color:var(--muted)}
+#birthday-view .quick-date>strong{font-size:14px;font-weight:500}
+#birthday-view .quick-date[aria-pressed=true]{background:var(--accent-soft)!important;color:var(--accent)!important;box-shadow:inset 0 -2px var(--accent)}
+#birthday-view .quick-date[aria-current=date]>strong{text-decoration:underline;text-underline-offset:4px}
+#birthday-view .list-heading{margin-bottom:10px}
+#birthday-view .list-heading h2{font-size:23px}
+#birthday-view .list-heading p.muted{margin-top:3px;font-size:11px}
+#birthday-view .character{min-height:138px;padding:12px;gap:12px}
+#birthday-view .portrait,#birthday-view .portrait.nsfw-image-host{width:76px;height:104px}
+#birthday-view .birthday-day-heading{font-size:13px}
+#birthday-view .birthday-day-heading .birthday-day-total{font-size:10px}
+#birthday-view .birthday-day-group+.birthday-day-group{margin-top:20px}
+}
+@media(max-width:360px){
+#birthday-view .birthday-modes button{padding-left:9px;padding-right:9px;font-size:11px}
+#birthday-view .filter-row{gap:6px}
+#birthday-view .character{gap:10px;padding:10px}
+#birthday-view .portrait,#birthday-view .portrait.nsfw-image-host{width:66px;height:96px}
+}
