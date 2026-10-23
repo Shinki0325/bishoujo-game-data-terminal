@@ -1,5 +1,5 @@
 import {createDetailStack,installDetailBackdropDismiss} from './detail-stack.js';
-import {installExternalCoverImageRecovery} from './asset-url.js';
+import {installExternalCoverImageRecovery} from './asset-url-core.js';
 import {initializeDirectoryHeaders} from './company-ui/__player_v51/directory-header.js';
 
 // A cold entity entry and the full workbench bind to the same live objects.

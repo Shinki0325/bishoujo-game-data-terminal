@@ -2,8 +2,8 @@ import {searchServiceConfig,querySearchService} from './search-service-client.js
 import { CREDIT_SCOPE } from './credit-scope-config.js';
 import { PERSON_DIRECTORY_PROJECTION } from './person-directory-projection-config.js';
 import { buildPersonDirectoryActivity } from './person-activity-timeline.js';
-import { creditScopeClient } from './credit-scope-client.js';
-import { scopedPersonSummary } from './version-scope-client.js';
+// Only the legacy/stale-data fallback needs the complete credit projection.
+const creditScopeClient={summaries:async(...args)=>(await import('./credit-scope-client.js')).creditScopeClient.summaries(...args)};
 import { PERSON_STATIC } from './person-static-config.js';
 import { createResourceRequest } from './resource-request.js';
 import { personDirectoryRoles, personDirectoryRoleCounts, personInDirectoryRole, personDirectoryVocalCount, orderPersonDirectoryRows } from './person-directory-roles.js';
@@ -71,7 +71,9 @@ export function createStaticPersonClient({ config = PERSON_STATIC, fetchImpl = g
   const summarize = async (rows, axis) => {
     if (summaryCurrent) return structuredClone(rows).map(p => ({ ...p,
       activity: buildPersonDirectoryActivity(p.activityYears.flatMap(y => Array(y.count).fill(y.year)), axis) }));
-    return scopeClient ? scopeClient.summaries(rows, axis) : rows.map(p => scopedPersonSummary(p, axis));
+    if(scopeClient)return scopeClient.summaries(rows,axis);
+    const {scopedPersonSummary}=await import('./version-scope-client.js');
+    return rows.map(p=>scopedPersonSummary(p,axis));
   };
   const roleCountsCurrent = config === PERSON_STATIC && summaryPins?.roleMembershipVersion === 6
     && summaryPins.sha256 === config.sha256 && summaryPins.revision === config.revision;
@@ -89,8 +91,8 @@ export function createStaticPersonClient({ config = PERSON_STATIC, fetchImpl = g
   const projection = () => projectionPromise ??= import('./person-directory-projection.js')
     .then(module => module.createPersonDirectoryProjection({ source: config, fetchImpl, cryptoRef }))
     .catch(error => { projectionPromise = null; throw error; });
-  return Object.freeze({
-    async getPage({ query = '', role = 'all', pageNumber = 1 } = {}) {
+  const pendingPages=new Map();
+  async function readPage({ query = '', role = 'all', pageNumber = 1 } = {}) {
       // Search, identity manifest and UI modules are independent reads. Validate
       // every authority before exposing rows, without serializing their network waits.
       const remoteResult=config===PERSON_STATIC&&String(query).trim()&&searchServiceConfig()
@@ -159,5 +161,15 @@ export function createStaticPersonClient({ config = PERSON_STATIC, fetchImpl = g
       return { persons, totalPersonCount: site.count, activityAxis: site.activityAxis,
         remotePage: { pageNumber: page, pageCount, totalCount: count, roleCounts, searchCount } };
     }
-  });
+  return Object.freeze({getPage(options={}){
+    const key=JSON.stringify([options.query??'',options.role??'all',Number(options.pageNumber??1)]);
+    if(!pendingPages.has(key)){
+      const pending=readPage(options).finally(()=>{if(pendingPages.get(key)===pending)pendingPages.delete(key);});
+      pendingPages.set(key,pending);
+    }
+    return pendingPages.get(key);
+  }});
 }
+
+let staticClient;
+export const getStaticPersonDirectoryClient=()=>staticClient??=createStaticPersonClient();

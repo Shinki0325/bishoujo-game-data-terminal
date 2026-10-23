@@ -1,18 +1,18 @@
 import {attachPersonDetailView,bindSharedDetailStack,openBoundDetail,installSharedDetailBehavior} from './shared-detail-runtime.js';
 import {captureDialogState,restoreDialogState} from './detail-stack.js';
 import {parseUiLocationHash,formatUiLocationHash} from './ui-location-state.js';
-import {createPersonFamilyLookup} from './person-family-lookup.js';
 import {configuredAssetBase,PRESENTATION_FAMILIES_SIDECAR_SHA256} from './runtime-config.js';
-import {resolveAssetUrl} from './asset-url.js';
 import {setListState} from './list-state.js';
 
 export function createPersonDetailEntry({activateFull,navigate}){
   const assetBase=configuredAssetBase();
   let directoryClient;
-  const loadDirectoryClient=()=>directoryClient??=import('./person-static-client.js').then(m=>m.createStaticPersonClient()).catch(e=>{directoryClient=null;throw e;});
+  const loadDirectoryClient=()=>directoryClient??=import('./person-static-client.js').then(m=>m.getStaticPersonDirectoryClient()).catch(e=>{directoryClient=null;throw e;});
   let personClient;
   const loadPersonClient=()=>personClient??=import('./person-sections-client.js').then(m=>m.getStaticPersonDetailClient()).catch(error=>{personClient=null;throw error;});
   let context,route,view,stack,sequence=0,families,suspended=false;
+  let mediaResolver;
+  const prepareMedia=()=>mediaResolver??=import('./asset-url.js').catch(error=>{mediaResolver=null;throw error;});
   const get=id=>document.getElementById(id);
   let contextPending;
   const prepare=()=>contextPending??=(async()=>{
@@ -26,6 +26,7 @@ export function createPersonDetailEntry({activateFull,navigate}){
     const source=data.presentationFamiliesSource;
     if(source){
       if(source.sha256!==(data.fullWiki?.familySha256??PRESENTATION_FAMILIES_SIDECAR_SHA256))throw Error('版本资料来源不符');
+      const {createPersonFamilyLookup}=await import('./person-family-lookup.js');
       families=createPersonFamilyLookup(source.value,{catalogSnapshotId:data.sampleSource.snapshot?.snapshotId,catalogSha256:data.catalogSource.sha256,workIds:data.populationContract.presentation.workIds,bangumiSubjectByWorkId:null});
     }
   })().catch(error=>{contextPending=null;throw error;});
@@ -53,13 +54,15 @@ export function createPersonDetailEntry({activateFull,navigate}){
   async function openIndependentCompany(id,options={}){
     const entry=await ensureCompanyEntry();if(options.isCurrent?.()===false)return;return entry?.open(id,options);
   }
-  let viewPending;
+  let viewPending,resolveAssetUrl;
   const ensurePersonView=()=>viewPending??=attachPersonDetailView({
     root:get('person-view'),
     familyForWork:id=>families?.familyForWork(String(id))??null,
-    imageUrlForWork:credit=>credit.workThumbnailPath?resolveAssetUrl(credit.workThumbnailPath,assetBase):null,
+    imageUrlForWork:credit=>credit.workThumbnailPath&&resolveAssetUrl?resolveAssetUrl(credit.workThumbnailPath,assetBase):null,
     onLoadPerson:async (id, summary, options)=>{
       const pending=loadPersonClient().then(client=>client.loadPerson(id, {...options,onFull:prepare}));
+      pending.catch(()=>{});
+      await prepareMedia().then(module=>{resolveAssetUrl=module.resolveAssetUrl;});
       if (!options?.section || options.section==='full') {
         const [person]=await Promise.all([pending,prepare()]);return person;
       }
