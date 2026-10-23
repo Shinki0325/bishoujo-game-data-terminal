@@ -1,0 +1,1029 @@
+/* Detail surfaces share one reading rhythm; entity data and source scopes stay intact. */
+html.galpedia[data-theme] :is(#work-details,.person-detail-dialog,.cp-root .cp-dialog) {
+  --detail-line: color-mix(in srgb, var(--border) 72%, transparent);
+  --detail-soft: color-mix(in srgb, var(--surface-muted) 48%, var(--surface));
+  border: 1px solid var(--detail-line);
+  border-radius: 16px !important;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 90px rgb(10 12 24 / 24%);
+}
+html.galpedia[data-theme] :is(#work-details,.person-detail-dialog,.cp-root .cp-dialog)::backdrop {
+  background: rgb(16 19 31 / 48%);
+  backdrop-filter: blur(5px);
+}
+html.galpedia[data-theme] #work-details {
+  width: min(1180px, calc(100vw - 64px));
+  height: min(860px, calc(100dvh - 64px));
+  max-width: none; max-height: none;
+  margin: auto; padding: 0; overflow: hidden;
+}
+html.galpedia[data-theme] #work-details[open] { display: flex; flex-direction: column; }
+html.galpedia[data-theme] #work-details .dialog-heading {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex: none; gap: 24px; padding: 24px 28px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--detail-line);
+}
+html.galpedia[data-theme] #work-details .details-title-block { min-width: 0; flex: 1; }
+html.galpedia[data-theme] #work-details #details-title {
+  margin: 0; font-size: clamp(22px, 2.1vw, 30px); line-height: 1.4;
+  letter-spacing: .025em; overflow-wrap: anywhere; text-wrap: pretty;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions {
+  display: flex; flex: none; align-items: center; flex-wrap: wrap; gap: 8px;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions form { margin: 0; }
+html.galpedia[data-theme] #work-details :is(.details-version-toggle,.details-compare-button) {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 42px; padding: 8px 14px; border-radius: 8px;
+  border: 1px solid var(--detail-line); background: var(--surface); color: var(--text-muted);
+  font: 500 13px/1.4 var(--gp-font-ui); box-shadow: none;
+}
+html.galpedia[data-theme] #work-details .details-version-toggle {
+  background: var(--accent-soft) !important; color: var(--accent) !important; border-color: transparent;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions button { background:var(--detail-soft)!important;color:var(--text-muted)!important; }
+html.galpedia[data-theme] #work-details .details-heading-actions .details-compare-button[aria-pressed=true] { background:var(--accent-soft)!important;color:var(--accent)!important; }
+html.galpedia[data-theme] #work-details .details-compare-button[aria-pressed=true] { color: var(--accent); background: var(--accent-soft); }
+html.galpedia[data-theme] :is(#work-details,.person-detail-dialog) .gp-close-icon-button {
+  min-width: 44px; min-height: 44px; border: 0; border-radius: 50%; background: var(--detail-soft);
+  color: var(--text-muted); box-shadow: none; flex: none;
+}
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure { margin: 8px 0 0; color: var(--text-muted); font-size: 12px; }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure summary { padding: 3px 0; cursor: pointer; }
+html.galpedia[data-theme] #work-details .details-aliases { max-height: 90px; overflow: auto; margin: 8px 0 0; line-height: 1.7; }
+html.galpedia[data-theme] #work-details .details-scroll {
+  flex: 1; min-height: 0; padding: 28px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-gutter: stable; overscroll-behavior: contain; scroll-padding-top: 64px;
+}
+html.galpedia[data-theme] #work-details .details-scroll > .details-hero {
+  display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 32px;
+  margin: 0; padding: 0 !important; border: 0; background: transparent; align-items: start;
+}
+html.galpedia[data-theme] #work-details .details-identity-rail {
+  display: flex; flex-direction: column; min-width: 0; gap: 20px;
+  position: sticky; top: 0; align-self: start; padding: 0; border: 0; background: transparent;
+}
+html.galpedia[data-theme] #work-details .details-identity-media {
+  width: 100%; height: auto; position: static; padding: 0; border: 0;
+  border-radius: 10px; overflow: hidden; background: var(--detail-soft);
+  box-shadow: 0 8px 24px rgb(15 18 30 / 9%);
+}
+html.galpedia[data-theme] #work-details .details-identity-media .details-cover {
+  width: 100%; height: auto; min-height: 0; aspect-ratio: 3 / 4; margin: 0; padding: 0;
+  border: 0; border-radius: 0; background: transparent; box-shadow: none;
+}
+html.galpedia[data-theme] #work-details .details-cover img { width: 100%; height: 100%; object-fit: contain; }
+html.galpedia[data-theme] #work-details .details-identity-meta {
+  position: static; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent;
+}
+html.galpedia[data-theme] #work-details .details-metadata { display: grid; gap: 0; margin: 0; }
+html.galpedia[data-theme] #work-details .details-metadata > div {
+  display: block; min-height: 0; padding: 14px 0; border: 0; border-bottom: 1px solid var(--detail-line); background: transparent;
+}
+html.galpedia[data-theme] #work-details .details-metadata > div:first-child { padding-top: 0; }
+html.galpedia[data-theme] #work-details .details-metadata dt {
+  margin: 0 0 7px; font: 400 12px/1.5 var(--gp-font-ui); color: var(--text-muted);
+}
+html.galpedia[data-theme] #work-details .details-metadata dd {
+  margin: 0; font: 500 14px/1.65 var(--gp-font-ui); color: var(--text); overflow-wrap: anywhere;
+}
+html.galpedia[data-theme] #work-details .details-company-link { color: var(--text); line-height: 1.65; }
+html.galpedia[data-theme] #work-details .details-playtime-value { display: block; font-size: 22px; font-weight: 600; letter-spacing: -.025em; font-variant-numeric: tabular-nums; }
+html.galpedia[data-theme] #work-details .details-playtime-source { margin-top: 5px; color: var(--text-muted); font: 400 11px/1.6 var(--gp-font-ui); }
+html.galpedia[data-theme] #work-details .details-playtime-source summary { cursor: pointer; padding: 3px 0; }
+html.galpedia[data-theme] #work-details .details-playtime-source p { margin: 8px 0 0; }
+html.galpedia[data-theme] #work-details .details-info-column { min-width: 0; min-height: 0; padding: 0; border: 0; background: transparent; }
+html.galpedia[data-theme] #work-details .details-score-panel { padding: 0; margin: 0 0 18px; border: 0; background: transparent; }
+html.galpedia[data-theme] #work-details .details-score-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+html.galpedia[data-theme] #work-details .details-score-source {
+  display: block; min-width: 0; padding: 16px; border: 1px solid var(--detail-line); border-radius: 10px;
+  background: var(--detail-soft); box-shadow: none; overflow: visible;
+}
+html.galpedia[data-theme] #work-details .details-score-source::after { content: none; }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-line {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; min-height: 0;
+  color: var(--text); background: transparent; white-space: normal; overflow: visible; text-decoration: none;
+}
+html.galpedia[data-theme] #work-details .details-rating-source-label {
+  flex-basis: 100%; margin-bottom: 6px; color: var(--text-muted); font: 500 11px/1.5 var(--gp-font-ui); letter-spacing: .02em;
+}
+html.galpedia[data-theme] #work-details .details-rating-scale { margin-left: 6px; font-size: 9px; font-weight: 400; white-space: nowrap; }
+html.galpedia[data-theme] #work-details .details-version-bar { padding: 12px 28px; border-bottom: 1px solid var(--detail-line); background: var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-version-current { font-size: 12px; }
+html.galpedia[data-theme] #work-details .details-rating-value {
+  color: var(--text); font: 650 30px/1.2 var(--gp-font-ui); letter-spacing: -.04em; font-variant-numeric: tabular-nums;
+}
+html.galpedia[data-theme] #work-details .details-rating-value[data-has-rating=false] { font-size: 14px; font-weight: 500; letter-spacing: 0; min-height: 36px; display: flex; align-items: center; }
+html.galpedia[data-theme] #work-details .details-rating-votes { color: var(--text-muted); font: 400 11px/1.5 var(--gp-font-ui); white-space: nowrap; }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-snapshot { display: block; margin-top: 8px; color: var(--text-muted); font: 400 10px/1.4 var(--gp-font-ui); opacity: .85; }
+html.galpedia[data-theme] #work-details .details-bangumi-matches { grid-column: 1 / -1; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-tags-section { display: flex; gap: 10px; padding: 0 0 22px; margin: 0; border: 0; }
+html.galpedia[data-theme] #work-details #details-tags-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+html.galpedia[data-theme] #work-details .details-tags { margin: 0; gap: 7px; }
+html.galpedia[data-theme] #work-details .details-tags li { border-radius: 5px; padding: 4px 9px; font-size: 11px; background: var(--detail-soft); border-color: transparent; color: var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-info-column > .details-credits { margin: 0; padding: 0; border: 0; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs {
+  position: sticky; top: -28px; z-index: 3; display: flex; gap: 24px;
+  margin: 0 0 8px; padding: 10px 0 0; border: 0; border-bottom: 1px solid var(--detail-line);
+  border-radius: 0; background: var(--surface); box-shadow: none;
+}
+html.galpedia[data-theme] #work-details .details-credits-tabs button {
+  flex: 0 1 auto; min-height: 48px; padding: 10px 2px; border: 0; border-bottom: 3px solid transparent;
+  border-radius: 0; background: transparent; color: var(--text-muted); box-shadow: none; font: 500 14px/1.5 var(--gp-font-ui);
+}
+html.galpedia[data-theme] #work-details .details-credits-tabs button[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); background: transparent; font-weight: 650; }
+html.galpedia[data-theme] #work-details .details-tab-count { margin-left:6px;padding:1px 5px;border-radius:4px;background:var(--detail-soft);color:var(--text-muted);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums; }
+html.galpedia[data-theme] #work-details .details-credits-pane { padding: 12px 0 24px; min-height: 220px; }
+html.galpedia[data-theme] #work-details .details-credit-list { margin: 0; }
+html.galpedia[data-theme] #work-details .details-credit-list > div { padding: 16px 0; grid-template-columns: 72px minmax(0,1fr); gap: 16px; border-color: var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-credit-list dt { color: var(--text-muted); font: 400 12px/1.8 var(--gp-font-ui); }
+html.galpedia[data-theme] #work-details .details-credit-list dd { font-size: 14px; line-height: 1.95; }
+html.galpedia[data-theme] #work-details .details-credit-person { text-decoration: none; border-bottom-color: color-mix(in srgb,var(--accent) 32%,transparent); }
+html.galpedia[data-theme] #work-details .details-credit-person:hover { color: var(--accent); border-bottom-color: var(--accent); }
+html.galpedia[data-theme] #work-details .details-cast-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items:start; gap: 14px; margin: 10px 0; padding: 0; background: transparent; border: 0; }
+html.galpedia[data-theme] #work-details .details-cast-list > li {
+  display: grid; grid-template-columns: 74px minmax(0,1fr); align-items: start; gap: 14px;
+  padding: 16px; border: 1px solid var(--detail-line); border-radius: 10px; background: var(--surface);
+}
+html.galpedia[data-theme] #work-details .details-cast-portrait { width: 74px; height: 104px; border: 0; border-radius: 6px; background: var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-cast-character strong { font-size: 15px; line-height: 1.6; }
+html.galpedia[data-theme] #work-details .details-cast-identity { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+html.galpedia[data-theme] #work-details .details-cast-original-name { font-size: 11px; line-height: 1.6; }
+html.galpedia[data-theme] #work-details .details-cast-actors { margin-top: 9px; font-size: 12px; line-height: 1.7; flex-wrap: wrap; }
+html.galpedia[data-theme] #work-details .details-cast-metadata { margin-top: 10px; font-size: 11px; line-height: 1.7; }
+html.galpedia[data-theme] #work-details .details-cast-character { min-width:0;overflow-wrap:anywhere; }
+html.galpedia[data-theme] #work-details .details-cast-description { grid-column:1 / -1;margin-top:0;border-color:var(--detail-line);font-size:13px;line-height:1.85; }
+html.galpedia[data-theme] #work-details .details-cast-description summary { min-height:32px;display:flex;align-items:center;gap:6px;cursor:pointer; }
+html.galpedia[data-theme] #work-details .details-cast-description summary::before { content:'▸';font-size:11px; }
+html.galpedia[data-theme] #work-details .details-cast-description[open] > summary::before { content:'▾'; }
+html.galpedia[data-theme] #work-details .details-cast-description summary::marker { content:''; }
+html.galpedia[data-theme] #work-details .details-cast-metadata-item { gap:4px; }
+html.galpedia[data-theme] #work-details .details-song-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items:start; gap: 16px; margin: 8px 0; padding: 0; }
+html.galpedia[data-theme] #work-details .details-song {
+  min-width: 0; padding: 20px; border: 1px solid var(--detail-line); border-radius: 10px; background: var(--surface);
+}
+html.galpedia[data-theme] #work-details .details-song-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 0 0 18px; font-size: 16px; line-height: 1.6; }
+html.galpedia[data-theme] #work-details .details-song-category { flex: none; padding: 2px 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font: 600 10px/1.5 var(--gp-font-ui); }
+html.galpedia[data-theme] #work-details .details-song-credits > div { padding: 9px 0; grid-template-columns: 36px minmax(0,1fr); gap: 12px; border-color: var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-song-credits dt { font-size: 11px; color: var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-song-credits dd { font-size: 13px; line-height: 1.7; }
+html.galpedia[data-theme] #work-details :is(.details-song-heading,.details-credit-list dd,.details-song-credits dd) { min-width:0;overflow-wrap:anywhere; }
+html.galpedia[data-theme] #work-details .details-version-shelf { margin: 0 0 24px; padding: 18px; border: 1px solid var(--detail-line); border-radius: 10px; background: var(--detail-soft); }
+html.galpedia[data-theme] #work-details :is(button,a,summary,[role=tabpanel]):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+html.galpedia[data-theme] #work-details [hidden] { display: none !important; }
+
+/* Related detail dialogs use the same surfaces, header spacing and touch targets. */
+html.galpedia[data-theme] .person-detail-dialog { width: min(1180px,calc(100vw - 64px)); height:min(860px,calc(100dvh - 64px)); max-height: calc(100dvh - 64px); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-heading { padding: 24px 28px; background: var(--surface); border-color: var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog :is(h2,.person-detail-title) { font-size: 26px; line-height: 1.45; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-detail-sidebar,.person-profile) { background: var(--detail-soft); border-color: var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-row { border-radius: 8px; padding-block: 14px; font-size:14px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-identity { background:var(--detail-soft);padding:24px;border-color:var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-title { font-size:14px;line-height:1.6;white-space:normal;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-character { white-space:normal;line-height:1.65; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-thumb { width:60px;height:44px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-content { padding:24px 28px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tabs { display:flex;gap:24px;top:-24px;border-bottom:1px solid var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tab { flex:0 1 auto;min-height:48px;padding:10px 2px;font-size:14px;background:transparent!important;border:0!important;border-bottom:3px solid transparent!important;border-radius:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tab[aria-selected=true] { color:var(--accent)!important;border-bottom-color:var(--accent)!important; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-block { border-color:var(--detail-line);border-radius:10px; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-representative-item,.person-representative-work) { border-radius:8px;background:var(--surface); }
+html.galpedia[data-theme] .cp-root { --cp-bg:var(--surface);--cp-panel:var(--surface);--cp-line:var(--border);--cp-text:var(--text);--cp-muted:var(--text-muted);--cp-accent:var(--accent); }
+html.galpedia[data-theme] .cp-root .cp-dialog { width:min(1100px,calc(100vw - 64px));height:min(820px,calc(100dvh - 64px)); }
+html.galpedia[data-theme] .cp-root .cp-compact .company-detail-heading { padding: 20px 24px !important; }
+html.galpedia[data-theme] .cp-root .cp-compact #company-detail-title { font-size: 25px !important; }
+html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs button[aria-selected=true] { color:var(--accent)!important;border-bottom-color:var(--accent)!important; }
+
+/* Legacy button tokens are light-only; keep detail controls readable in dark mode. */
+html.galpedia[data-theme="dark"] #work-details :is(.details-company-link,.details-credits-tabs button) { color:#c9c9d7!important; }
+html.galpedia[data-theme="dark"] #work-details .details-credits-tabs button { background:transparent!important; }
+html.galpedia[data-theme="dark"] #work-details .details-credits-tabs button[aria-selected=true] { color:#d0b6ef!important; }
+html.galpedia[data-theme="dark"] #work-details :is(.details-heading-actions button,.details-tags-toggle,.details-version-toggle) { color:#e4dcf0!important;background:#34384b!important; }
+html.galpedia[data-theme="dark"] #work-details .details-company-link:hover { color:#d0b6ef!important; }
+
+@media (max-width: 1000px) and (min-width: 701px) {
+  html.galpedia[data-theme] #work-details .details-scroll > .details-hero { grid-template-columns: 180px minmax(0,1fr); gap:24px; }
+  html.galpedia[data-theme] #work-details :is(.details-cast-list,.details-song-list) { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  html.galpedia[data-theme] :is(#work-details,.person-detail-dialog,.cp-root .cp-dialog) { inset:0;width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;border:0;border-radius:0!important;margin:0; }
+  html.galpedia[data-theme] #work-details .dialog-heading { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 12px;padding:18px 18px 12px;padding-top:max(18px,env(safe-area-inset-top)); }
+  html.galpedia[data-theme] #work-details #details-title { font-size:22px;line-height:1.45; }
+  html.galpedia[data-theme] #work-details .details-heading-actions { display:flex;gap:4px;flex-wrap:nowrap; }
+  html.galpedia[data-theme] #work-details .details-heading-actions form { grid-row:1;grid-column:2;align-self:start; }
+  html.galpedia[data-theme] #work-details .details-version-toggle { grid-row:2;grid-column:1;justify-self:start;min-height:36px;font-size:12px; }
+  html.galpedia[data-theme] #work-details .details-heading-actions .details-compare-button { width:44px;min-width:44px;min-height:44px;padding:0;font-size:0!important;border:0;background:var(--detail-soft);border-radius:50%; }
+  html.galpedia[data-theme] #work-details .details-compare-button::after { content:'＋';font:400 22px/1 var(--gp-font-ui); }
+  html.galpedia[data-theme] #work-details .details-compare-button[aria-pressed=true]::after { content:'✓'; }
+  html.galpedia[data-theme] #work-details .details-version-bar { padding:10px 18px;gap:8px; }
+  html.galpedia[data-theme] #work-details .details-rating-scale { display:block;margin:2px 0 0;font-size:9px; }
+  html.galpedia[data-theme] #work-details .details-version-toggle[hidden] + .details-compare-button { justify-self:start; }
+  html.galpedia[data-theme] #work-details .details-scroll { padding:20px 18px max(24px,env(safe-area-inset-bottom));scrollbar-gutter:stable; }
+  html.galpedia[data-theme] #work-details .details-scroll > .details-hero { display:flex;flex-direction:column;gap:24px; }
+  html.galpedia[data-theme] #work-details .details-identity-rail { display:grid;grid-template-columns:112px minmax(0,1fr);gap:20px;width:100%;position:static; }
+  html.galpedia[data-theme] #work-details .details-identity-media { align-self:start; }
+  html.galpedia[data-theme] #work-details .details-metadata > div { padding:9px 0; }
+  html.galpedia[data-theme] #work-details .details-metadata dt { font-size:11px;margin-bottom:3px; }
+  html.galpedia[data-theme] #work-details .details-metadata dd { font-size:13px;line-height:1.5; }
+  html.galpedia[data-theme] #work-details .details-playtime-value { font-size:20px; }
+  html.galpedia[data-theme] #work-details .details-info-column { width:100%; }
+  html.galpedia[data-theme] #work-details .details-score-grid { gap:8px; }
+  html.galpedia[data-theme] #work-details .details-score-source { padding:12px 10px; }
+  html.galpedia[data-theme] #work-details .details-rating-value { font-size:26px; }
+  html.galpedia[data-theme] #work-details .details-rating-source-label { font-size:10px;letter-spacing:0; }
+  html.galpedia[data-theme] #work-details .details-rating-votes { font-size:10px; }
+  html.galpedia[data-theme] #work-details .details-rating-value[data-has-rating=false] { font-size:12px; }
+  html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { top:-20px;gap:24px;margin:0 -2px 8px;padding:4px 2px 0; }
+  html.galpedia[data-theme] #work-details .details-credits-tabs button { min-height:48px;font-size:14px; }
+  html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { gap:18px; }
+  html.galpedia[data-theme] #work-details .details-credits-pane { min-height:320px; }
+  html.galpedia[data-theme] #work-details .details-credit-list > div { grid-template-columns:48px minmax(0,1fr);gap:12px;padding:14px 0; }
+  html.galpedia[data-theme] #work-details :is(.details-cast-list,.details-song-list) { grid-template-columns:1fr;gap:12px; }
+  html.galpedia[data-theme] #work-details .details-cast-list > li { grid-template-columns:76px minmax(0,1fr);padding:14px; }
+  html.galpedia[data-theme] #work-details .details-song { padding:18px; }
+  html.galpedia[data-theme] .person-detail-dialog .person-detail-heading { padding:18px; }
+  html.galpedia[data-theme] .person-detail-dialog :is(.person-detail-content,.person-detail-identity) { padding:18px; }
+  html.galpedia[data-theme] .person-detail-dialog .person-detail-identity { padding-block:8px; }
+  html.galpedia[data-theme] .person-detail-dialog .person-work-meta { white-space:normal;line-height:1.6; }
+  html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tabs { top:0; }
+  html.galpedia[data-theme] .person-detail-dialog :is(h2,.person-detail-title) { font-size:22px; }
+  html.galpedia[data-theme] .cp-root .cp-compact .company-detail-heading { padding:16px 18px!important; }
+  html.galpedia[data-theme] .cp-root .cp-compact #company-detail-title { font-size:22px!important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html.galpedia[data-theme] :is(#work-details,.person-detail-dialog,.cp-root .cp-dialog) * { scroll-behavior:auto;animation:none;transition:none; }
+}
+
+/* Entity profiles: common typography, controls and quiet source disclosures. */
+html.galpedia[data-theme] :is(.person-detail-dialog,.cp-root .cp-dialog) { font-family:var(--gp-font-ui); }
+html.galpedia[data-theme] :is(.person-detail-dialog,.cp-root .cp-dialog) :is(button,a,input,select,summary):focus-visible { outline:2px solid var(--focus);outline-offset:3px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-block-heading { flex-wrap:wrap;gap:12px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-sort { min-height:44px;padding:8px 12px;font-size:13px;border-radius:8px;max-width:200px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-sort-direction { min-width:44px;min-height:44px; }
+html.galpedia[data-theme] .person-timeline-searchbar { display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 16px; }
+html.galpedia[data-theme] .person-timeline-search { width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--detail-line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:14px; }
+html.galpedia[data-theme] .person-timeline-search-status { color:var(--text-muted);font-size:12px; }
+html.galpedia[data-theme] .person-timeline-search-status:empty { display:none; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-work-song,.person-credit-scope-notes) { font-size:12px;line-height:1.8;overflow-wrap:anywhere;color:var(--text-muted); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-thumb { display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1.4;word-break:normal;white-space:nowrap; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-row { gap:12px;box-shadow:none;border-color:var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-row:hover { background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-note { gap:8px 16px;flex-wrap:wrap;line-height:1.7; }
+html.galpedia[data-theme] #work-details .details-cast-identity strong { font-size:16px;line-height:1.5; }
+html.galpedia[data-theme] #work-details .details-cast-identity small { font-size:11px;color:var(--text-muted);padding:2px 6px;border-radius:4px;background:var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-cast-basic { display:flex;flex-wrap:wrap;gap:6px 14px; }
+html.galpedia[data-theme] #work-details .details-cast-metadata-item { display:inline-flex;align-items:baseline; }
+html.galpedia[data-theme] #work-details .details-cast-metadata-label { color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-cast-metadata-value { color:var(--text);font-variant-numeric:tabular-nums; }
+html.galpedia[data-theme] #work-details :is(.details-cast-description,.details-cast-profile-facts) { grid-column:1/-1;min-width:0;overflow-wrap:anywhere; }
+html.galpedia[data-theme] #work-details :is(.details-cast-description,.details-cast-profile-facts,.details-cast-attribute-sources) > summary { min-height:40px;align-content:center;cursor:pointer; }
+html.galpedia[data-theme] #work-details .details-cast-profile-facts { border-top:1px solid var(--detail-line);font-size:13px;line-height:1.8; }
+html.galpedia[data-theme] #work-details .details-cast-profile-fact { display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;padding:10px 0;border-color:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-cast-profile-fact :is(dt,dd) { margin:0;min-width:0; }
+html.galpedia[data-theme] #work-details .details-cast-profile-fact dt { color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-cast-profile-fact-provenance { margin-top:4px;font-size:11px;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-cast-profile-fact-provenance summary { min-height:32px;cursor:pointer; }
+html.galpedia[data-theme] .cp-root .cp-compact-body { grid-template-columns:208px minmax(0,1fr); }
+html.galpedia[data-theme] .cp-root .cp-identity { background:var(--detail-soft);border-color:var(--detail-line);padding:24px 18px; }
+html.galpedia[data-theme] .cp-root .cp-identity #company-detail-meta { color:var(--text-muted);font-size:12px;line-height:1.8;gap:4px; }
+html.galpedia[data-theme] .cp-root .cp-identity #company-reviewed-role { background:var(--surface)!important;color:var(--text)!important;border-color:var(--detail-line)!important;font-size:13px;border-radius:8px; }
+html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs { gap:24px;min-height:52px;padding:0 24px;border-color:var(--detail-line); }
+html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs button { min-height:52px;font-size:14px!important;color:var(--text-muted)!important; }
+html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs button[aria-selected=true] { color:var(--accent)!important; }
+html.galpedia[data-theme] .cp-root .cp-compact .cp-detail-scroll { padding:20px 24px!important; }
+html.galpedia[data-theme] .cp-root #company-detail-close { background:var(--detail-soft)!important;color:var(--text-muted);border-radius:50%; }
+html.galpedia[data-theme] .cp-root #company-work-honors { --hw-bg:var(--detail-soft);--hw-panel:var(--surface);--hw-fg:var(--text);--hw-muted:var(--text-muted);--hw-border:var(--detail-line);--hw-link:var(--accent);padding:0;border:0;background:transparent; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-mode:not([data-custom=true]) { display:none; }
+html.galpedia[data-theme] .cp-root #company-work-honors :is(select,.hw-info-button,.hw-tab,.hw-more) { min-height:44px;font-size:13px; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-work-title { font-size:15px;line-height:1.6;display:block;-webkit-line-clamp:unset; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-work-meta { font-size:12px;line-height:1.6; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-awards { gap:8px 12px; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-award { min-height:44px;gap:6px; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-award strong { font-size:11px; }
+html.galpedia[data-theme] .cp-root #company-work-honors .hw-rank { font-size:12px; }
+html.galpedia[data-theme] .cp-root .pp { --pp-ink:var(--text);--pp-muted:var(--text-muted);--pp-line:var(--detail-line);--pp-surface:var(--detail-soft);--pp-paper:var(--surface);--pp-accent:var(--accent);--pp-soft:var(--detail-soft); }
+@media(max-width:760px) {
+ html.galpedia[data-theme] .cp-root .cp-identity { padding:10px 16px; }
+ html.galpedia[data-theme] .cp-root .cp-identity #company-detail-meta { font-size:11px;line-height:1.6; }
+ html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs { gap:18px;padding:0 16px; }
+ html.galpedia[data-theme] .cp-root .cp-compact .cp-tabs button { font-size:13px!important; }
+ html.galpedia[data-theme] .cp-root .cp-compact .cp-detail-scroll { padding:16px!important; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-block-heading { gap:8px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-sort { max-width:170px;font-size:12px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-work-thumb { width:52px;height:42px; }
+}
+
+html.galpedia[data-theme="dark"] :is(#work-details,.person-detail-dialog,.cp-root .cp-dialog) { --accent:#d0b6ef;--text-muted:#b7bbcd;--focus:#d0b6ef; }
+
+html.galpedia[data-theme] .cp-root .cp-compact #company-detail-close { background:var(--detail-soft)!important; }
+html.galpedia[data-theme] .cp-root .cp-compact .company-directory-work-title { white-space:normal;overflow-wrap:anywhere;text-overflow:clip;display:block;-webkit-line-clamp:unset;font-size:14px;line-height:1.6; }
+
+html.galpedia[data-theme] .person-detail-dialog .person-work-song { display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:4px 8px;padding:9px 12px;margin-top:8px;border-left:2px solid var(--accent);border-radius:0 6px 6px 0;background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-song-usage { font-size:10px;line-height:1.7;font-weight:650;color:var(--accent); }
+html.galpedia[data-theme] .person-detail-dialog .person-song-title { font-size:13px;font-weight:550;color:var(--text);overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-song-duty { grid-column:2;font-size:11px;color:var(--text-muted); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-song:not(:has(.person-song-usage)) .person-song-title { grid-column:1/-1; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-song:not(:has(.person-song-usage)) .person-song-duty { grid-column:1/-1; }
+/* Compact detail typography: one UI family and a 4px spacing rhythm. */
+html.galpedia[data-theme] #work-details { font-family:var(--gp-font-ui);font-size:14px;line-height:1.6;letter-spacing:0; }
+html.galpedia[data-theme] #work-details :is(h2,h3,strong,dt,dd,summary,button,select,a,small) { font-family:var(--gp-font-ui);letter-spacing:0; }
+html.galpedia[data-theme] #work-details .dialog-heading { padding:16px 24px;gap:16px; }
+html.galpedia[data-theme] #work-details #details-title { font-size:24px;line-height:1.4;font-weight:600;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure { margin-top:4px;font-size:12px;line-height:1.6; }
+html.galpedia[data-theme] #work-details .details-version-bar { padding:8px 24px; }
+html.galpedia[data-theme] #work-details .details-version-current { font-size:12px;line-height:1.6; }
+html.galpedia[data-theme] #work-details .details-scroll { padding:24px; }
+html.galpedia[data-theme] #work-details .details-scroll > .details-hero { grid-template-columns:192px minmax(0,1fr);gap:24px; }
+html.galpedia[data-theme] #work-details .details-identity-rail { gap:16px; }
+html.galpedia[data-theme] #work-details .details-metadata > div { padding:10px 0; }
+html.galpedia[data-theme] #work-details .details-metadata dt { margin-bottom:4px;font-size:12px;line-height:1.6; }
+html.galpedia[data-theme] #work-details .details-metadata dd { font-size:14px;line-height:1.6;font-weight:400; }
+html.galpedia[data-theme] #work-details .details-playtime-value { font-size:20px;line-height:1.4;font-weight:600;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-score-panel { margin-bottom:12px; }
+html.galpedia[data-theme] #work-details .details-score-grid { gap:8px; }
+html.galpedia[data-theme] #work-details .details-score-source { padding:12px;border-radius:8px; }
+html.galpedia[data-theme] #work-details .details-rating-source-label { margin-bottom:4px;font-size:12px;line-height:1.5;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-rating-scale { font-size:10px; }
+html.galpedia[data-theme] #work-details .details-rating-value { font-size:26px;line-height:1.2;font-weight:600;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-tags-section { padding-bottom:12px;gap:8px; }
+html.galpedia[data-theme] #work-details .details-tags { gap:6px; }
+html.galpedia[data-theme] #work-details .details-tags li { padding:3px 8px;font-size:12px;line-height:1.5; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { top:-24px;gap:24px;padding:0;margin:0;border-bottom:1px solid var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-credits-tabs button { min-height:44px;padding:8px 0;border-bottom-width:2px;font-size:14px;line-height:1.5;font-weight:500; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button[aria-selected=true] { background:transparent!important;border-bottom-color:var(--accent)!important;color:var(--accent)!important;font-weight:600; }
+html.galpedia[data-theme] #work-details .details-credits-pane { padding:0 0 16px;min-height:0; }
+html.galpedia[data-theme] #work-details .details-credit-list > div { padding:12px 0;gap:16px; }
+html.galpedia[data-theme] #work-details .details-credit-list dt { font-size:12px;line-height:1.75; }
+html.galpedia[data-theme] #work-details .details-credit-list dd { font-size:14px;line-height:1.75; }
+html.galpedia[data-theme] #work-details .details-credit-person { font-weight:500; }
+/* Songs read as compact rows, with category badges instead of card chrome. */
+html.galpedia[data-theme] #work-details .details-song-list { display:block;margin:0; }
+html.galpedia[data-theme] #work-details .details-song {
+ --song-accent:var(--accent);display:grid;grid-template-columns:minmax(0,1fr);gap:8px;
+ padding:16px 0;border:0;border-bottom:1px solid var(--detail-line);border-radius:0;background:transparent;box-shadow:none;
+}
+html.galpedia[data-theme] #work-details .details-song:last-child { border-bottom:0; }
+html.galpedia[data-theme] #work-details .details-song[data-song-type=ed] { --song-accent:light-dark(#327b78,#87cec6); }
+html.galpedia[data-theme] #work-details .details-song[data-song-type=other] { --song-accent:light-dark(#966537,#ddbc8d); }
+html.galpedia[data-theme] #work-details .details-song-masthead { min-width:0;max-width:100%;margin:0; }
+html.galpedia[data-theme] #work-details .details-song-categories { display:flex;flex-wrap:wrap;gap:4px;min-width:0; }
+html.galpedia[data-theme] #work-details .details-song-number { display:none; }
+html.galpedia[data-theme] #work-details .details-song-category { box-sizing:border-box;max-width:100%;padding:3px 6px;border:0;border-radius:4px;background:color-mix(in srgb,var(--song-accent) 10%,var(--surface));color:var(--song-accent);font-size:11px;line-height:1.6;letter-spacing:0;white-space:normal;overflow-wrap:anywhere; }
+html.galpedia[data-theme] #work-details .details-song-heading { grid-column:1;margin:0;gap:6px 10px;font-size:16px;line-height:1.5; }
+html.galpedia[data-theme] #work-details .details-song-title { min-width:0;max-width:100%;font-weight:600;overflow-wrap:anywhere; }
+html.galpedia[data-theme] #work-details .details-song-credits { grid-column:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px;margin:0; }
+html.galpedia[data-theme] #work-details .details-song-credits > div { display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:0;border:0;min-width:0;align-items:baseline; }
+html.galpedia[data-theme] #work-details .details-song-credits dt { font-size:12px;line-height:1.6;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-song-credits dd { margin:0;font-size:13px;line-height:1.6; }
+html.galpedia[data-theme] #work-details .details-song-credits .details-credit-person { color:var(--text);font-weight:400;border:0; }
+html.galpedia[data-theme] #work-details .details-song-credits [data-song-credit=vocal] .details-credit-person { font-weight:500; }
+html.galpedia[data-theme] #work-details .details-song-credits a.details-credit-person { text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--song-accent) 28%,transparent);text-underline-offset:3px;text-decoration-thickness:1px; }
+html.galpedia[data-theme] #work-details .details-song-credits a.details-credit-person:hover { color:var(--song-accent);text-decoration-color:currentColor; }
+html.galpedia[data-theme] #work-details .details-song-versions { grid-column:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 12px;margin:0;padding:0;border:0;font-size:11px;line-height:1.6; }
+html.galpedia[data-theme] #work-details .details-song-versions-label { color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-song-versions .details-song-source { display:inline-block;margin:0;font-size:11px;line-height:1.6;min-height:28px;align-content:center;color:var(--text-muted);text-underline-offset:3px; }
+@media(max-width:1000px) and (min-width:701px) {
+ html.galpedia[data-theme] #work-details .details-scroll > .details-hero { grid-template-columns:160px minmax(0,1fr);gap:20px; }
+ html.galpedia[data-theme] #work-details .details-song-credits { grid-template-columns:1fr; }
+}
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .dialog-heading { padding:12px 16px;gap:8px; }
+ html.galpedia[data-theme] #work-details #details-title { font-size:20px; }
+ html.galpedia[data-theme] #work-details .details-version-bar { padding:8px 16px; }
+ html.galpedia[data-theme] #work-details .details-scroll { padding:16px 16px max(16px,env(safe-area-inset-bottom)); }
+ html.galpedia[data-theme] #work-details .details-scroll > .details-hero { gap:16px; }
+ html.galpedia[data-theme] #work-details .details-identity-rail { grid-template-columns:88px minmax(0,1fr);gap:16px; }
+ html.galpedia[data-theme] #work-details .details-metadata > div { padding:6px 0; }
+ html.galpedia[data-theme] #work-details .details-score-source { padding:10px; }
+ html.galpedia[data-theme] #work-details .details-rating-source-label { font-size:11px; }
+ html.galpedia[data-theme] #work-details .details-rating-value { font-size:24px; }
+ html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { top:-16px;gap:20px;padding:0;margin:0; }
+ html.galpedia[data-theme] #work-details .details-song { gap:6px;padding:14px 0; }
+ html.galpedia[data-theme] #work-details .details-song-credits { grid-template-columns:1fr;gap:4px; }
+}
+
+/* One rating strip: aligned sources, scores and supporting details. */
+html.galpedia[data-theme] #work-details .details-score-panel { margin-bottom:16px; }
+html.galpedia[data-theme] #work-details .details-score-grid { gap:0; padding:0 0 12px; border-bottom:1px solid var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-score-grid > .details-score-source { --rating-accent:var(--accent); position:relative;padding:8px 16px;border:0;border-radius:0;background:transparent;box-shadow:none;text-align:center; }
+html.galpedia[data-theme] #work-details .details-score-source-vndb { --rating-accent:light-dark(#527d90,#8ab6c7)!important; }
+html.galpedia[data-theme] #work-details .details-score-source-bangumi { --rating-accent:light-dark(#a46278,#d99aaf)!important; }
+html.galpedia[data-theme] #work-details .details-score-grid > .details-score-source + .details-score-source:not(.details-bangumi-matches)::before { content:'';position:absolute;left:0;top:12px;bottom:12px;width:1px;background:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-line { display:grid;width:100%;box-sizing:border-box;grid-template-columns:minmax(0,1fr);grid-template-rows:18px 36px 17px;justify-items:center;align-items:center;gap:4px; }
+html.galpedia[data-theme] #work-details .details-rating-source-label { display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:12px;line-height:18px;font-weight:500;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-rating-source-label::before { content:'';width:5px;height:5px;border-radius:50%;background:var(--rating-accent);flex:none; }
+html.galpedia[data-theme] #work-details .details-rating-value { font-size:30px;line-height:36px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:0; }
+html.galpedia[data-theme] #work-details .details-rating-value[data-has-rating=false] { font-size:13px;line-height:20px;min-height:0;height:36px;justify-content:center;color:var(--text-muted);font-weight:400; }
+html.galpedia[data-theme] #work-details .details-rating-votes { font-size:11px;line-height:17px;font-weight:400; }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-snapshot { margin-top:4px;font-size:10px;line-height:14px;opacity:.75; }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-link:hover .details-rating-source-label { color:var(--rating-accent); }
+html.galpedia[data-theme] #work-details .details-score-source .details-rating-link:focus-visible { outline:2px solid var(--accent);outline-offset:4px;border-radius:4px; }
+html.galpedia[data-theme] #work-details .details-score-grid > .details-bangumi-matches { padding-top:12px;border-top:1px solid var(--detail-line);text-align:left; }
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .details-score-panel { margin-bottom:12px; }
+ html.galpedia[data-theme] #work-details .details-score-grid { padding-bottom:8px; }
+ html.galpedia[data-theme] #work-details .details-score-grid > .details-score-source { padding:6px 4px; }
+ html.galpedia[data-theme] #work-details .details-rating-value { font-size:27px; }
+ html.galpedia[data-theme] #work-details .details-rating-source-label { font-size:11px;gap:5px; }
+ html.galpedia[data-theme] #work-details .details-rating-value[data-has-rating=false] { font-size:12px; }
+ html.galpedia[data-theme] #work-details .details-rating-votes { font-size:10px; }
+ html.galpedia[data-theme] #work-details .details-score-source .details-rating-snapshot { font-size:9px; }
+}
+
+/* Work detail finish: quieter controls and a consistent reading surface. */
+html.galpedia[data-theme] #work-details {
+ --detail-line:color-mix(in srgb,var(--border) 58%,transparent);
+ --work-control:color-mix(in srgb,var(--accent) 5%,var(--surface));
+ box-shadow:0 28px 88px rgb(10 12 24 / 22%),0 2px 8px rgb(10 12 24 / 6%);
+}
+html.galpedia[data-theme] #work-details .dialog-heading { padding:20px 24px 14px;border-bottom:0; }
+html.galpedia[data-theme] #work-details #details-title { font-size:26px;line-height:1.4; }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure { margin-top:5px;font-size:11px; }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure summary { width:fit-content;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-version-bar { background:var(--surface);padding:0 24px 14px;gap:12px; }
+html.galpedia[data-theme] #work-details .details-version-current { gap:8px;align-items:center;font-size:12px; }
+html.galpedia[data-theme] #work-details .details-version-current > span:first-child { color:var(--text-muted);font-size:11px; }
+html.galpedia[data-theme] #work-details .details-version-current strong { color:var(--text);font-weight:500; }
+html.galpedia[data-theme] #work-details .details-version-default { padding:1px 6px;border-radius:4px;background:var(--detail-soft);color:var(--text-muted);font-size:10px; }
+html.galpedia[data-theme] #work-details :is(.details-heading-actions button,.details-version-toggle) {
+ border:1px solid var(--detail-line)!important;background:var(--surface)!important;color:var(--text-muted)!important;box-shadow:none!important;border-radius:8px;min-height:36px;padding:7px 12px;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions .gp-close-icon-button { min-width:36px;width:36px;padding:0;border-color:transparent!important; }
+html.galpedia[data-theme] #work-details .details-version-toggle { color:var(--accent)!important;font-size:12px; }
+html.galpedia[data-theme] #work-details :is(.details-heading-actions button,.details-version-toggle):hover { background:var(--work-control)!important;color:var(--accent)!important; }
+html.galpedia[data-theme] #work-details .details-heading-actions .details-compare-button[aria-pressed=true] { background:var(--accent-soft)!important;color:var(--accent)!important; }
+html.galpedia[data-theme] #work-details .details-scroll > .details-hero { column-gap:28px; }
+html.galpedia[data-theme] #work-details .details-identity-media { padding:0!important;border-radius:7px;line-height:0;box-shadow:0 4px 16px rgb(15 18 30 / 10%); }
+html.galpedia[data-theme] #work-details .details-identity-media .details-cover { display:block; }
+html.galpedia[data-theme] #work-details .details-cover-hint { font-size:11px;line-height:1.5; }
+html.galpedia[data-theme] #work-details .details-metadata > div { border-bottom:0;padding:9px 0; }
+html.galpedia[data-theme] #work-details .details-metadata > div + div { border-top:1px solid var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-metadata dt { font-size:11px;margin-bottom:3px; }
+html.galpedia[data-theme] #work-details .details-company-link { color:var(--text)!important;text-decoration:underline;text-decoration-color:var(--detail-line);text-underline-offset:4px; }
+html.galpedia[data-theme] #work-details .details-company-link:hover { color:var(--accent)!important;text-decoration-color:currentColor; }
+html.galpedia[data-theme] #work-details .details-tags { gap:6px!important;align-items:center; }
+html.galpedia[data-theme] #work-details .details-tags > li {
+ min-height:26px;padding:3px 8px!important;border:0!important;border-radius:5px;background:var(--detail-soft)!important;color:var(--text-muted)!important;box-shadow:none!important;font-size:11px!important;line-height:20px;
+}
+html.galpedia[data-theme] #work-details .details-tags > :is(.details-tags-more,.details-sensitive-control) { padding:0!important;background:transparent!important; }
+html.galpedia[data-theme] #work-details .details-tags :is(.details-tags-more,.details-sensitive-control) > button {
+ min-height:30px;min-width:30px;padding:4px 8px;border:1px solid var(--detail-line)!important;border-radius:5px;background:var(--surface)!important;color:var(--text-muted)!important;box-shadow:none!important;font:400 11px/20px var(--gp-font-ui);
+}
+html.galpedia[data-theme] #work-details .details-tags .details-sensitive-toggle { font-size:16px; }
+html.galpedia[data-theme] #work-details .details-tags button:hover { color:var(--accent)!important;background:var(--work-control)!important; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button { position:relative;border-bottom:0!important;padding:10px 0; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button::after { content:'';position:absolute;inset:auto 0 -1px;height:2px;border-radius:2px;background:transparent; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button[aria-selected=true]::after { background:var(--accent); }
+html.galpedia[data-theme] #work-details .details-credits-tabs .details-tab-count { margin-left:4px;padding:1px 5px;background:var(--detail-soft);border-radius:4px;font-size:10px;font-weight:400;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-credit-list > div:not(.details-credit-other-section) { grid-template-columns:64px minmax(0,1fr);gap:16px;border-color:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-credit-other-section { margin-top:0;padding-top:14px;border-top:0; }
+html.galpedia[data-theme] #work-details .details-credit-other-section > dt { margin-bottom:8px;color:var(--text-muted);font-size:11px; }
+html.galpedia[data-theme] #work-details .details-credit-other-group { grid-template-columns:64px minmax(0,1fr);gap:16px;padding:10px 0;border-color:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-credit-role { color:var(--text-muted);font-size:12px; }
+html.galpedia[data-theme] #work-details .details-credit-other-group:last-child { border-bottom:0; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff .details-credit-people { display:grid;gap:8px; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff .details-credit-separator { display:none; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff .details-credit-person { display:block;width:fit-content;max-width:100%;text-decoration:none;border:0; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff .details-credit-responsibility { display:block;margin-top:2px;color:var(--text-muted);font-size:12px;line-height:1.65;font-weight:400; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff a .details-credit-name { text-decoration:underline;text-decoration-color:var(--detail-line);text-underline-offset:3px; }
+html.galpedia[data-theme] #work-details .details-credit-song-staff a.details-credit-person:hover { color:var(--accent); }
+html.galpedia[data-theme] #work-details .details-cast-list { gap:0 24px; }
+html.galpedia[data-theme] #work-details .details-cast-list > li { padding:16px 0;border:0;border-bottom:1px solid var(--detail-line);border-radius:0;background:transparent;box-shadow:none; }
+html.galpedia[data-theme] #work-details .details-cast-portrait { border-radius:5px; }
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .dialog-heading { padding:14px 16px 10px;padding-top:max(14px,env(safe-area-inset-top)); }
+ html.galpedia[data-theme] #work-details #details-title { font-size:20px; }
+ html.galpedia[data-theme] #work-details .details-version-bar { padding:0 16px 12px;gap:8px; }
+ html.galpedia[data-theme] #work-details .details-version-current { gap:4px 6px; }
+ html.galpedia[data-theme] #work-details .details-heading-actions :is(.gp-close-icon-button,.details-compare-button) { width:40px;min-width:40px;min-height:40px;padding:0; }
+ html.galpedia[data-theme] #work-details .details-version-toggle { min-height:36px;padding:6px 10px; }
+ html.galpedia[data-theme] #work-details .details-metadata > div { padding:7px 0; }
+ html.galpedia[data-theme] #work-details .details-credit-list > div:not(.details-credit-other-section),html.galpedia[data-theme] #work-details .details-credit-other-group { grid-template-columns:52px minmax(0,1fr);gap:12px; }
+ html.galpedia[data-theme] #work-details .details-cast-list > li { padding:14px 0; }
+}
+
+/* Restore hierarchy without returning to separate boxed panels. */
+html.galpedia[data-theme] #work-details .dialog-heading { background:var(--detail-soft); }
+html.galpedia[data-theme] #work-details #details-title { font-weight:650; }
+html.galpedia[data-theme] #work-details .details-version-bar { background:var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure { opacity:.85; }
+html.galpedia[data-theme] #work-details .details-version-current strong { font-weight:600; }
+html.galpedia[data-theme] #work-details .details-version-default { background:var(--surface); }
+html.galpedia[data-theme] #work-details .details-credits-tabs button { padding:10px 12px;border-bottom:2px solid transparent!important;border-radius:6px 6px 0 0; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button::after { content:none!important; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button[aria-selected=true] { background:var(--work-control)!important;border-bottom-color:var(--accent)!important;color:var(--accent)!important;font-weight:650; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { gap:10px; }
+html.galpedia[data-theme] #work-details .details-credits-tabs button[aria-selected=true] .details-tab-count { color:var(--accent);background:var(--surface); }
+html.galpedia[data-theme] #work-details .details-credit-list > div:not(.details-credit-other-section) > dt { font-weight:600;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-credit-other-section > dt { font-size:12px;font-weight:600;color:var(--text);padding:2px 0 10px; }
+html.galpedia[data-theme] #work-details .details-credit-role { font-weight:500; }
+html.galpedia[data-theme] #work-details .details-credit-person { font-weight:550;color:var(--text); }
+html.galpedia[data-theme] #work-details .details-credit-list .details-credit-notes { color:var(--text-muted);font-weight:400; }
+html.galpedia[data-theme] #work-details .details-cast-character strong { font-weight:650; }
+html.galpedia[data-theme] #work-details .details-song-title { font-weight:650; }
+html.galpedia[data-theme] #work-details .details-rating-link:hover .details-rating-value { color:var(--rating-accent); }
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .details-credits-tabs button { padding:10px 8px; }
+ html.galpedia[data-theme] #work-details .details-info-column > .details-credits .details-credits-tabs { gap:6px; }
+}
+
+/* Keep supporting character details with their identity, opening prose at full width. */
+html.galpedia[data-theme] #work-details .details-cast-list { margin-top:6px;row-gap:0;align-items:stretch; }
+html.galpedia[data-theme] #work-details .details-cast-list > li { row-gap:4px;align-content:start; }
+html.galpedia[data-theme] #work-details .details-cast-list > li > .details-cast-portrait { grid-column:1;grid-row:1 / span 4; }
+html.galpedia[data-theme] #work-details .details-cast-list > li > .details-cast-character { grid-column:2;grid-row:1; }
+html.galpedia[data-theme] #work-details .details-cast-list > li > :is(.details-cast-description,.details-cast-profile-facts) { grid-column:2;margin:0;padding:0;border:0; }
+html.galpedia[data-theme] #work-details .details-cast-list > li > :is(.details-cast-description,.details-cast-profile-facts) > summary { min-height:32px;padding:2px 0;font-size:12px;line-height:1.6;color:var(--text-muted); }
+html.galpedia[data-theme] #work-details .details-cast-description-heading strong { font-weight:500;color:inherit; }
+html.galpedia[data-theme] #work-details .details-cast-description-heading small { margin-left:2px;font-size:10px; }
+html.galpedia[data-theme] #work-details .details-cast-list > li:has(> details[open]) > .details-cast-portrait { grid-row:1; }
+html.galpedia[data-theme] #work-details .details-cast-list > li > details[open] { grid-column:1 / -1;margin-top:8px;padding:8px 12px 12px;border-radius:6px;background:var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-cast-list > li > details[open] > summary { color:var(--text);font-weight:550; }
+html.galpedia[data-theme] #work-details .details-cast-description-entry { margin-top:6px;color:var(--text); }
+html.galpedia[data-theme] #work-details .details-cast-attribute-sources { margin-top:4px; }
+html.galpedia[data-theme] #work-details .details-cast-attribute-sources > summary { min-height:32px;padding-block:2px; }
+/* Long credits expand as a continuation, with a clear and comfortable control. */
+html.galpedia[data-theme] #work-details .details-credit-more { margin-top:4px; }
+html.galpedia[data-theme] #work-details .details-credit-more > summary { min-height:32px;line-height:32px;border-radius:4px; }
+html.galpedia[data-theme] #work-details .details-credit-more[open] { padding:0 0 4px 12px;border-left:2px solid var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-credit-person small { font-weight:400; }
+html.galpedia[data-theme] #work-details .details-version-shelf { margin:0;padding:12px 24px!important;border:0;border-bottom:1px solid var(--detail-line);border-radius:0;background:var(--detail-soft); }
+html.galpedia[data-theme] #work-details .details-version-list { border-color:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-version-row { min-height:44px;padding:10px 12px; }
+html.galpedia[data-theme] #work-details .details-version-row[aria-current=true] { background:var(--work-control); }
+html.galpedia[data-theme] #work-details .details-version-row + .details-version-row { border-top:1px solid var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-version-search { font-family:var(--gp-font-ui);border-color:var(--detail-line); }
+html.galpedia[data-theme] #work-details .details-version-search:focus-visible { outline:2px solid var(--focus);outline-offset:2px; }
+html.galpedia[data-theme] #work-details .details-credits-tabs { box-shadow:0 4px 8px -8px rgb(20 20 35 / 40%); }
+@media(hover:hover) {
+ html.galpedia[data-theme] #work-details :is(.details-cast-description,.details-cast-profile-facts,.details-cast-attribute-sources,.details-credit-more) > summary:hover { color:var(--accent); }
+ html.galpedia[data-theme] #work-details .details-credits-tabs button:not([aria-selected=true]):hover { background:var(--detail-soft);color:var(--text); }
+ html.galpedia[data-theme] #work-details .details-version-row:not([aria-current=true]):hover { background:var(--detail-soft); }
+}
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .details-version-shelf { padding:10px 16px!important; }
+ html.galpedia[data-theme] #work-details .details-version-row { padding:10px 8px; }
+ html.galpedia[data-theme] #work-details .details-cast-list > li > :is(.details-cast-description,.details-cast-profile-facts) > summary,
+ html.galpedia[data-theme] #work-details .details-cast-attribute-sources > summary,
+ html.galpedia[data-theme] #work-details .details-credit-more > summary { min-height:40px;align-content:center; }
+}
+
+/* The cover and metadata form one compact identity block. */
+html.galpedia[data-theme] #work-details .details-metadata { row-gap:10px;align-content:start; }
+html.galpedia[data-theme] #work-details .details-metadata > div {
+ display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;align-items:baseline;padding:0;border:0;
+}
+html.galpedia[data-theme] #work-details .details-metadata > div + div { border:0; }
+html.galpedia[data-theme] #work-details .details-metadata dt { margin:0;font-size:11px;line-height:1.7; }
+html.galpedia[data-theme] #work-details .details-metadata dd { min-width:0;font-size:13px;line-height:1.7; }
+html.galpedia[data-theme] #work-details .details-playtime-value { font-size:15px;line-height:1.5;font-weight:550; }
+html.galpedia[data-theme] #work-details .details-playtime-source { margin-top:2px;font-size:10px; }
+html.galpedia[data-theme] #work-details .details-playtime-source summary { padding:3px 0; }
+html.galpedia[data-theme] #work-details .details-metadata-playtime:has(.details-playtime-source[open]) > dd { grid-column:1 / -1; }
+html.galpedia[data-theme] #work-details .details-playtime-source[open] p { margin-top:6px;padding:8px 10px;border-radius:5px;background:var(--detail-soft);font-size:11px;line-height:1.8; }
+/* Separate descriptive tags from the actions that reveal more of them. */
+html.galpedia[data-theme] #work-details .details-tags > .details-tag-actions {
+ display:flex;flex-basis:100%;flex-wrap:wrap;align-items:center;gap:4px 16px;min-height:0;margin:0;padding:0!important;background:transparent!important;
+}
+html.galpedia[data-theme] #work-details .details-tag-actions > span { display:inline-flex; }
+html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button {
+ width:auto!important;height:auto;min-width:0;min-height:32px;padding:2px 0;border:0!important;border-radius:3px;background:transparent!important;color:var(--text-muted)!important;font:400 11px/1.5 var(--gp-font-ui);white-space:nowrap;
+}
+html.galpedia[data-theme] #work-details .details-tag-actions button[aria-expanded=true] { color:var(--accent)!important; }
+html.galpedia[data-theme] #work-details .details-tag-actions button:hover { text-decoration:underline;text-underline-offset:4px;color:var(--accent)!important; }
+html.galpedia[data-theme] #work-details .details-info-column > .details-tags-section { padding-bottom:8px; }
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .details-scroll > .details-hero { gap:18px; }
+ html.galpedia[data-theme] #work-details .details-identity-rail { grid-template-columns:88px minmax(0,1fr);gap:16px;align-items:start; }
+ html.galpedia[data-theme] #work-details .details-metadata { row-gap:8px; }
+ html.galpedia[data-theme] #work-details .details-metadata > div { grid-template-columns:48px minmax(0,1fr);gap:8px;padding:0; }
+ html.galpedia[data-theme] #work-details .details-metadata dd { font-size:13px; }
+ html.galpedia[data-theme] #work-details .details-playtime-value { font-size:15px; }
+ html.galpedia[data-theme] #work-details .details-score-panel { margin-bottom:10px; }
+ html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button { min-height:40px; }
+}
+
+/* Light descriptive chips, with disclosure controls visually separate. */
+html.galpedia[data-theme] #work-details .details-tags { width:100%;gap:7px 6px!important;align-items:center; }
+html.galpedia[data-theme] #work-details .details-tags > li:not(.details-tag-actions) {
+ display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-height:28px;box-sizing:border-box;padding:3px 10px!important;
+ border:1px solid var(--tag-line,var(--detail-line))!important;border-radius:999px;background:var(--tag-bg,var(--surface))!important;color:var(--tag-ink,var(--text-muted))!important;
+ font-size:12px!important;line-height:20px;font-weight:400;letter-spacing:0;box-shadow:none!important;
+}
+html.galpedia[data-theme] #work-details .details-tags > li.details-tag-attribute {
+ --tag-ink:light-dark(#14645e,#a8e1d8);--tag-bg:light-dark(#dff3ef,color-mix(in srgb,#4c8a83 28%,var(--surface)));--tag-line:light-dark(#9bcfc7,#497971);font-weight:500;
+}
+html.galpedia[data-theme] #work-details .details-tags > li.details-tag-content {
+ --tag-ink:light-dark(#35434b,#d6dbe4);--tag-bg:light-dark(#edf1f3,color-mix(in srgb,#84929e 12%,var(--surface)));--tag-line:light-dark(#c6d1d5,#526071);
+}
+html.galpedia[data-theme] #work-details .details-tags > li.details-tag-character {
+ --tag-ink:light-dark(#1f557d,#b8d8f2);--tag-bg:light-dark(#e0edf8,color-mix(in srgb,#5f7f9d 28%,var(--surface)));--tag-line:light-dark(#a6c4dc,#536f91);
+}
+html.galpedia[data-theme] #work-details .details-tags > li.details-tag-adult {
+ --tag-ink:light-dark(#8d2f2b,#f0b8b3);--tag-bg:light-dark(#f9e3e1,color-mix(in srgb,#a94b46 28%,var(--surface)));--tag-line:light-dark(#dda8a3,#8e595e);
+}
+html.galpedia[data-theme] #work-details .details-tags > .details-tag-actions {
+ flex-basis:auto;flex-shrink:0;gap:4px;min-height:32px;margin-left:auto;padding-left:8px!important;border:0!important;border-radius:0;
+}
+html.galpedia[data-theme] #work-details .details-tag-actions > span + span { border-left:1px solid var(--detail-line);padding-left:4px; }
+html.galpedia[data-theme] #work-details .details-tag-actions > span { width:auto;min-width:0;flex:none; }
+html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button {
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:32px;padding:5px 8px;border-radius:5px;
+ font-size:11px;line-height:20px;text-decoration:none;transition:background-color .15s,color .15s;
+}
+html.galpedia[data-theme] #work-details .details-tag-actions button::after {
+ content:'';width:5px;height:5px;flex:none;border:solid currentColor;border-width:0 1px 1px 0;transform:translateY(-2px) rotate(45deg);opacity:.65;
+}
+html.galpedia[data-theme] #work-details .details-tag-actions button[aria-expanded=true]::after { transform:translateY(1px) rotate(225deg); }
+html.galpedia[data-theme] #work-details .details-tag-actions button[aria-expanded=true] { background:var(--detail-soft)!important;color:var(--accent)!important; }
+@media(hover:hover) {
+ html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button:hover { background:var(--detail-soft)!important;text-decoration:none; }
+}
+@media(max-width:700px) {
+ html.galpedia[data-theme] #work-details .details-tags > .details-tag-actions { flex-basis:100%;margin-left:0;padding-left:0!important;gap:4px; }
+ html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button { min-height:36px;padding:6px 8px;font-size:11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button { transition:none; }
+}
+
+/* Person detail: a readable identity rail and a compact, continuous work history. */
+html.galpedia[data-theme] .person-detail-dialog[open] { display:flex;flex-direction:column; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-heading { flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px 20px;align-items:center;padding:20px 24px;min-height:0;background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-heading form { margin:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-title-line { flex-wrap:wrap;gap:6px 12px; }
+html.galpedia[data-theme] .person-detail-dialog #person-detail-title { font:650 26px/1.4 var(--gp-font-ui);letter-spacing:0;white-space:normal;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-primary-role { font:500 11px/1.6 var(--gp-font-ui);padding:2px 7px;background:var(--accent-soft);border-radius:4px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-primary-role:empty { display:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-header-counts { margin:0;font:400 12px/1.6 var(--gp-font-ui);font-variant-numeric:tabular-nums; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-body { flex:1;min-height:0;height:auto; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-layout { grid-template-columns:272px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation { grid-column:1 / -1;display:grid;grid-template-columns:272px minmax(0,1fr);align-items:center;padding:12px 0 0;background:var(--surface); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation .person-detail-page-tabs { grid-column:2;margin:0 24px;position:static; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation .person-representative-tabs { margin:0 20px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-identity { padding:20px;background:var(--surface); }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-tabs { display:flex;gap:3px;padding:3px;margin-bottom:16px;border-radius:7px;background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-tabs button { flex:1;min-width:0;min-height:36px;padding:6px 8px;border:0;border-radius:5px;background:transparent;color:var(--text-muted);font:inherit;font-size:12px;cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-tabs button[aria-pressed="true"] { background:var(--surface);color:var(--accent);font-weight:650;box-shadow:0 1px 3px #00000012; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-representative[hidden] { display:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-representative { margin:0;padding:0;border:0;border-radius:0;background:transparent; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-representative + .person-detail-representative:not([hidden]) { margin-top:20px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-representative[hidden] + .person-detail-representative { margin-top:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-list + .person-detail-block-heading { margin-top:24px; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-edition { display:block;color:var(--text-muted);font-size:11px;line-height:1.6; }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-group { border-bottom:1px solid var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-group > .person-work-row { border-bottom:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-others { padding:0 4px 10px 70px; }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-others > summary { width:fit-content;min-height:32px;align-content:center;color:var(--accent);cursor:pointer;font-size:12px; }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-others[open] { padding-left:12px;border-left:2px solid var(--detail-line);margin-left:56px; }
+html.galpedia[data-theme] .person-detail-dialog .person-edition-others .person-work-row:last-child { border-bottom:0; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-detail-block-heading h3,.person-detail-section-title) { font:600 14px/1.6 var(--gp-font-ui);color:var(--text); }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-block-heading { margin-bottom:12px; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-works-list { gap:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work { grid-template-columns:48px minmax(0,1fr);gap:12px;padding:12px 0;border:0;border-bottom:1px solid var(--detail-line);border-radius:0;box-shadow:none;background:transparent; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work-image { width:48px;height:64px;aspect-ratio:auto;object-fit:contain;border:0;background:var(--detail-soft);border-radius:3px; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work-title { font-size:13px;line-height:1.6;font-weight:550; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work-meta { white-space:normal;font-size:10px;line-height:1.6; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work-copy { gap:4px; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work.is-image-missing { grid-template-columns:minmax(0,1fr); }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-song .person-representative-work-title { font-weight:650;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-song-usage { align-self:start;width:fit-content;max-width:100%;padding:1px 5px;border-radius:3px;background:var(--detail-soft);color:var(--accent);font-size:10px;font-weight:650;line-height:1.5;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-list { gap:12px 8px; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-item { padding:6px 2px;align-items:center;border:0;background:transparent;box-shadow:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-image { width:76px;height:76px;margin:0 0 4px;border:1px solid var(--detail-line); }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-item strong { font-size:13px;font-weight:550;max-width:100%; }
+html.galpedia[data-theme] .person-detail-dialog .person-representative-context { max-width:100%;font-size:11px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-section-title { margin:24px 0 10px; }
+html.galpedia[data-theme] .person-detail-dialog .person-alias-chip { padding:4px 9px;border:1px solid var(--detail-line);border-radius:999px;background:var(--detail-soft);font-size:12px;line-height:1.5; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-content { padding:16px 24px 24px;gap:20px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tabs { flex:none;gap:6px;top:-16px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tab { min-height:44px;padding:10px 14px;border-bottom-width:2px!important;font:500 14px/1.6 var(--gp-font-ui);border-radius:6px 6px 0 0; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tab::after { content:none!important; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tab[aria-selected=true] { background:var(--detail-soft)!important;font-weight:650; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-activity-block { margin:0 0 28px;padding-bottom:20px;border-bottom:1px solid var(--detail-line);border-radius:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency { height:80px;gap:3px; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column { display:flex;align-items:flex-end;justify-content:center;flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:3px;background:transparent;cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column:disabled { cursor:default; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column .person-frequency-bar { flex:none;width:100%;min-width:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column:hover:not(:disabled) .person-frequency-bar,
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column:focus-visible .person-frequency-bar { opacity:1; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-bar { border-radius:3px 3px 0 0;opacity:.65; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-year { font:400 10px/1.8 var(--gp-font-ui); }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-note { justify-content:flex-start;gap:4px 18px;margin-top:8px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-relation-summary { gap:28px; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-company-list,.person-co-list) { border-top:0; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-company-row,.person-co-row) { padding:12px 4px;min-height:44px;border-radius:0;box-shadow:none;border-bottom:1px solid var(--detail-line);background:transparent;font-size:13px; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-company-row,.person-co-row) strong { color:var(--accent);font-size:14px;font-weight:550;font-variant-numeric:tabular-nums; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-song-person { white-space:normal;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;cursor:default; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-name { min-width:0;border:0;padding:4px 0;background:transparent;color:var(--text);text-align:left;font:500 13px/1.6 var(--gp-font-ui);white-space:normal;overflow-wrap:anywhere;cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-name:hover { color:var(--accent); }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-expand { display:flex;align-items:center;gap:5px;align-self:start;min-height:36px;padding:4px 7px;border:0;border-radius:5px;background:transparent;color:var(--text-muted);font:400 11px/1.6 var(--gp-font-ui);cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-expand:hover,
+html.galpedia[data-theme] .person-detail-dialog .person-peer-expand[aria-expanded=true] { background:var(--accent-soft);color:var(--accent); }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-chevron { font-size:18px;line-height:1; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-expand[aria-expanded=true] .person-peer-chevron { transform:rotate(90deg); }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-detail { grid-column:1 / -1;margin-top:10px;padding:0 10px;border-left:2px solid var(--detail-line);font:400 12px/1.6 var(--gp-font-ui); }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-detail[hidden] { display:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-records { max-height:280px;overflow:auto;overscroll-behavior:contain; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-record { display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid var(--detail-line);overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-record:first-child { padding-top:2px; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-record strong { color:var(--text);font-size:13px;line-height:1.6; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-work { width:fit-content;max-width:100%;border:0;padding:2px 0;background:transparent;color:var(--text-muted);text-align:left;font:400 12px/1.6 var(--gp-font-ui);white-space:normal;overflow-wrap:anywhere; }
+html.galpedia[data-theme] .person-detail-dialog button.person-peer-work:hover { color:var(--accent);text-decoration:underline;cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog .person-peer-more { border:0;padding:8px 0;background:transparent;color:var(--accent);font:500 12px/1.6 var(--gp-font-ui);cursor:pointer; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-frequency-column,.person-co-name,.person-peer-expand,.person-peer-work,.person-peer-more) { box-shadow:none!important; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-column { background:transparent!important; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-row:hover { background:transparent; }
+html.galpedia[data-theme] .person-detail-dialog .person-co-song-duties { display:block;margin-top:3px;color:var(--text-muted);font-size:11px;line-height:1.6; }
+html.galpedia[data-theme] .person-detail-dialog :is(.person-company-row,.person-co-row,.person-representative-work,.person-representative-item):hover:not(:disabled) { background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-timeline-toolbar { display:flex;flex-wrap:nowrap;align-items:center;gap:12px;margin:0 0 16px; }
+html.galpedia[data-theme] .person-detail-dialog .person-timeline-searchbar { flex:1;min-width:0;margin:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-timeline-search { min-height:40px;padding:8px 12px;font-size:13px;background:var(--detail-soft);box-shadow:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-sort-tools { flex:none;margin:0;gap:4px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-sort { min-height:40px;width:144px;padding:6px 10px;font-size:12px;box-shadow:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-timeline-year { min-height:40px;width:100px;padding:6px 8px;font:400 12px/1.6 var(--gp-font-ui);border:1px solid var(--detail-line);border-radius:6px;background:var(--surface);color:var(--text);box-shadow:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-sort-direction { min-width:40px;min-height:40px; }
+html.galpedia[data-theme] .person-detail-dialog .person-timeline-search-status { margin:0 0 10px; }
+html.galpedia[data-theme] .person-detail-dialog .person-detail-works { border-top:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-row { display:grid;grid-template-columns:52px minmax(0,1fr) 100px;align-items:start;gap:4px 14px;padding:16px 4px;border-radius:0; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-thumb { grid-column:1;grid-row:1;width:52px;height:68px;border:0;border-radius:4px;background:var(--detail-soft); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-thumb img { object-fit:contain; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-copy { grid-column:2;grid-row:1;gap:5px; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-title { font:600 14px/1.6 var(--gp-font-ui);color:var(--text); }
+html.galpedia[data-theme] .person-detail-dialog .person-work-meta { grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:4px;margin:2px 0 0;white-space:normal;text-align:right;line-height:1.6; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-date { font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-duties { font-size:12px; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-duties:empty { display:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-work-song { display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;margin:2px 0 0;padding:0;border:0;border-radius:0;background:transparent; }
+html.galpedia[data-theme] .person-detail-dialog .person-song-usage { max-width:100%;padding:1px 5px;border-radius:3px;background:var(--accent-soft);font-size:10px; }
+html.galpedia[data-theme] .person-detail-dialog .person-song-title { color:var(--text);font:500 13px/1.6 var(--gp-font-ui); }
+html.galpedia[data-theme] .person-detail-dialog .person-song-duty { font:400 12px/1.6 var(--gp-font-ui); }
+html.galpedia[data-theme] .person-detail-dialog .person-credit-scope-notes { font:400 12px/1.6 var(--gp-font-ui); }
+html.galpedia[data-theme] .person-detail-dialog :is(button,a,input,select,summary):focus-visible { outline:2px solid var(--focus);outline-offset:3px; }
+@media(max-width:899px) {
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-layout { display:block;overflow-y:auto; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation { display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:0 20px 12px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--detail-line); }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation .person-detail-page-tabs { order:-1;margin:0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation .person-representative-tabs { margin:0;width:min(320px,100%); }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-layout[data-page="timeline"] .person-detail-identity { display:none; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-identity { padding:12px 20px;background:var(--detail-soft); }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-content { padding:16px 20px 24px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tabs { top:-16px;margin-bottom:20px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-works-list { grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work { grid-template-columns:1fr;align-content:start; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work-image { width:48px;height:64px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-frequency-year { flex:1;min-width:0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-relation-summary { display:grid; }
+}
+@media(max-width:600px) {
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-heading { grid-template-columns:minmax(0,1fr) 40px;gap:6px 12px;padding:16px 18px 12px; }
+ html.galpedia[data-theme] .person-detail-dialog #person-detail-title { font-size:22px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-heading form { grid-column:2;grid-row:1 / span 2;align-self:start; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-header-counts { grid-column:1;font-size:11px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-identity { padding:10px 18px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-content { padding:12px 18px 24px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-page-tabs { top:-12px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-timeline-toolbar { flex-wrap:wrap;gap:8px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-timeline-searchbar { flex-basis:100%; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-sort-tools { margin-left:auto; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-sort { width:144px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-work-row { grid-template-columns:44px minmax(0,1fr);column-gap:12px;padding:14px 0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-work-thumb { width:44px;height:58px;grid-row:1 / span 2; }
+ html.galpedia[data-theme] .person-detail-dialog .person-work-meta { grid-column:2;grid-row:2;flex-direction:row;flex-wrap:wrap;gap:4px 10px;text-align:left;margin:2px 0 0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-relation-summary { grid-template-columns:1fr;gap:24px; }
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-co-block { margin:0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-context { display:block; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-works-list { grid-template-columns:1fr;gap:0; }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work { grid-template-columns:48px minmax(0,1fr); }
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work-meta { font-size:11px; }
+}
+
+/* Sparse year ticks stay inside their chart without clipped digits. */
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-axis { position:relative;display:block; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-year { position:absolute;top:0;width:max-content;min-width:0;overflow:visible;transform:translateX(-50%); }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-year.is-empty { display:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-year:first-child { transform:none; }
+html.galpedia[data-theme] .person-detail-dialog .person-frequency-year:last-child { transform:translateX(-100%); }
+@media(max-width:600px) { html.galpedia[data-theme] :is(.person-detail-dialog,#work-details) { width:100%;max-width:100%; } }
+
+
+/* Compact work heading: aliases share the title row; edition context stays secondary. */
+html.galpedia[data-theme] #work-details .dialog-heading {
+  padding:12px 24px 4px;gap:16px;align-items:flex-start;
+}
+html.galpedia[data-theme] #work-details .details-title-block {
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;
+}
+html.galpedia[data-theme] #work-details #details-title {
+  max-width:100%;font-size:24px;line-height:1.35;
+}
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure {
+  margin:0;font-size:11px;line-height:1.5;
+}
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure[open] { flex-basis:100%; }
+html.galpedia[data-theme] #work-details .details-work-alias-disclosure summary {
+  min-height:28px;display:list-item;align-content:center;padding:0;white-space:nowrap;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions { padding-top:0;gap:6px; }
+html.galpedia[data-theme] #work-details .details-heading-actions button {
+  min-height:36px;height:36px;padding:6px 12px;font-size:12px;
+}
+html.galpedia[data-theme] #work-details .details-heading-actions .gp-close-icon-button {
+  width:36px;min-width:36px;padding:0;
+}
+html.galpedia[data-theme] #work-details .details-version-bar {
+  padding:0 24px 10px;gap:10px;
+}
+html.galpedia[data-theme] #work-details .details-version-bar .details-version-current {
+  margin:0;font-size:12px;line-height:1.5;gap:8px;
+}
+html.galpedia[data-theme] #work-details .details-version-bar .details-version-toggle {
+  min-height:32px;height:auto;padding:4px 10px;font-size:12px;
+}
+@media(max-width:700px) {
+  html.galpedia[data-theme] #work-details .dialog-heading {
+    padding:10px 16px 2px;padding-top:max(10px,env(safe-area-inset-top));gap:8px;
+  }
+  html.galpedia[data-theme] #work-details .details-title-block { display:block; }
+  html.galpedia[data-theme] #work-details #details-title { font-size:19px;line-height:1.35; }
+  html.galpedia[data-theme] #work-details .details-work-alias-disclosure summary { min-height:30px; }
+  html.galpedia[data-theme] #work-details .details-heading-actions button {
+    width:44px;min-width:44px;min-height:44px;height:44px;padding:0;
+  }
+  html.galpedia[data-theme] #work-details .details-heading-actions .gp-close-icon-button { width:44px;min-width:44px; }
+  html.galpedia[data-theme] #work-details .details-version-bar { padding:0 16px 8px;gap:8px; }
+  html.galpedia[data-theme] #work-details .details-version-bar .details-version-toggle { min-height:44px;padding:4px 8px; }
+}
+
+/* Mobile reading keeps the established colors, rating strip and role controls. */
+.detail-mobile-back{display:none}
+@media(max-width:700px){
+ html.galpedia[data-theme] :is(#work-details,.person-detail-dialog) .detail-mobile-back{display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1;align-self:start;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:var(--text);cursor:pointer}
+ html.galpedia[data-theme] :is(#work-details,.person-detail-dialog) .detail-mobile-back:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
+ html.galpedia[data-theme] #work-details .dialog-heading{grid-template-columns:44px minmax(0,1fr) 44px;gap:0 4px;padding:4px 12px 0;padding-top:max(4px,env(safe-area-inset-top))}
+ html.galpedia[data-theme] #work-details .details-title-block{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding:7px 0 0;min-width:0}
+ html.galpedia[data-theme] #work-details #details-title{font-size:17px;line-height:1.45}
+ html.galpedia[data-theme] #work-details .details-heading-actions{grid-column:3;grid-row:1}
+ html.galpedia[data-theme] #work-details .details-heading-actions form{display:none}
+ html.galpedia[data-theme] #work-details .details-work-alias-disclosure summary{min-height:28px;font-size:11px}
+ html.galpedia[data-theme] #work-details .details-version-bar{padding:0 16px 4px;gap:4px 8px}
+ html.galpedia[data-theme] #work-details .details-version-current{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:2px 6px!important}
+ html.galpedia[data-theme] #work-details .details-version-current>span:first-child{display:none}
+ html.galpedia[data-theme] #work-details .details-version-bar .details-version-toggle{min-height:44px;padding:4px 8px;white-space:nowrap}
+ html.galpedia[data-theme] #work-details .details-scroll{padding-top:12px}
+ html.galpedia[data-theme] #work-details .details-scroll>.details-hero{gap:12px}
+ html.galpedia[data-theme] #work-details .details-identity-rail{grid-template-columns:80px minmax(0,1fr);gap:16px}
+ html.galpedia[data-theme] #work-details .details-metadata>div{padding:4px 0}
+ html.galpedia[data-theme] #work-details .details-score-grid>.details-score-source{padding:4px}
+ html.galpedia[data-theme] #work-details .details-score-source .details-rating-line{grid-template-rows:16px 30px 17px;gap:2px}
+ html.galpedia[data-theme] #work-details .details-rating-value{font-size:25px;line-height:30px}
+ html.galpedia[data-theme] #work-details .details-score-panel{margin-bottom:8px}
+ html.galpedia[data-theme] #work-details .details-tags>.details-tag-actions{flex-basis:auto;margin-left:0;padding:0!important}
+ html.galpedia[data-theme] #work-details .details-tags .details-tag-actions button{min-height:44px;padding:6px;font-size:11px}
+ html.galpedia[data-theme] #work-details .details-info-column>.details-credits .details-credits-tabs{top:-12px}
+ html.galpedia[data-theme] #work-details .details-cast-actors a{display:inline-block;min-height:44px;align-content:center}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-heading{grid-template-columns:44px minmax(0,1fr);gap:0 4px;padding:4px 12px 8px;padding-top:max(4px,env(safe-area-inset-top))}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-heading form{display:none}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-title-line{grid-column:2;grid-row:1;min-height:44px;gap:4px 8px}
+ html.galpedia[data-theme] .person-detail-dialog #person-detail-title{font-size:19px;line-height:1.45}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-header-counts{grid-column:2;grid-row:2;font-size:11px}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation{padding:4px 16px 8px;gap:8px}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-tabs button{min-height:44px}
+}
+
+/* Playtime is a metadata value, with its sample size inline instead of a disclosure. */
+html.galpedia[data-theme] #work-details .details-metadata-playtime>dd{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
+html.galpedia[data-theme] #work-details .details-metadata-playtime .details-playtime-value{display:inline;font:inherit;font-weight:400;letter-spacing:normal;white-space:nowrap}
+html.galpedia[data-theme] #work-details .details-metadata-playtime .details-playtime-source{display:inline;margin:0;color:var(--text-muted);font:400 10px/1.7 var(--gp-font-ui);white-space:nowrap}
+
+/* Phone details retain the same tabs and records, with reachable navigation. */
+@media(max-width:700px){
+ html.galpedia .cp-root .cp-dialog{width:100%;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0}
+ html.galpedia .cp-root .cp-compact .company-detail-heading{padding:4px 12px!important;padding-top:max(4px,env(safe-area-inset-top))!important;gap:4px!important}
+ html.galpedia .cp-root .cp-compact .detail-mobile-back{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--cp-text);box-shadow:none}
+ html.galpedia .cp-root .cp-compact .detail-mobile-back:focus-visible{outline:2px solid var(--cp-accent);outline-offset:-3px}
+ html.galpedia .cp-root .cp-compact #company-detail-close{display:none!important}
+ html.galpedia .cp-root .cp-compact #company-detail-title{font-size:18px!important;line-height:1.45}
+ html.galpedia .cp-root .cp-compact .cp-tabs{gap:4px;padding:0 12px}
+ html.galpedia .cp-root .cp-compact .cp-tabs button{flex:1;min-width:0;text-align:center;font-size:13px!important}
+ html.galpedia .cp-root .cp-compact .cp-detail-scroll{padding-bottom:max(18px,env(safe-area-inset-bottom))!important}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-identity{padding-top:10px;padding-bottom:12px}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-works-list{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(86%,280px);gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding:0;padding:4px 0 10px;scrollbar-width:thin}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:12px;min-width:0;margin:0;padding:12px;border:1px solid var(--detail-line);border-radius:10px;background:var(--surface);scroll-snap-align:start}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work-image{width:64px;height:88px;min-height:0;object-fit:cover}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work-title{font-size:13px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+ html.galpedia[data-theme] .person-detail-dialog .person-representative-work-meta{font-size:11px;line-height:1.5}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-aliases{gap:6px}
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-navigation{padding-bottom:6px}
+}
+
+/* Reviewed tags reuse existing facet colors and hit areas. */
+.reviewed-tag-search{width:100%;min-height:40px;margin:8px 0 12px;padding:8px 12px;border:1px solid var(--line,#d9d7e4);border-radius:9px;background:var(--surface,#fff);color:inherit;font:inherit}
+[data-theme="dark"] .reviewed-tag-search{background:#20212b;border-color:#41414f}
+.filter-group[data-group-id="tag-common"]{margin-bottom:12px}
+
+/* Keep both identity items in the same row throughout the phone breakpoint. */
+@media(max-width:700px){
+ html.galpedia[data-theme] #work-details .details-identity-rail>.details-identity-media{grid-column:1;grid-row:1;width:100%;min-width:0}
+ html.galpedia[data-theme] #work-details .details-identity-rail>.details-identity-meta{grid-column:2;grid-row:1;width:100%;min-width:0}
+ html.galpedia[data-theme] #work-details #details-release{white-space:nowrap;overflow-wrap:normal}
+}
+
+/* Person controls: identity segments, page tabs and quiet utility actions. */
+html.galpedia[data-theme] #person-detail-dialog {
+  --person-control-line:color-mix(in srgb,var(--border) 78%,var(--surface));
+  --person-control-hover:color-mix(in srgb,var(--accent) 7%,var(--surface));
+  --person-control-selected:color-mix(in srgb,var(--accent) 11%,var(--surface));
+}
+html.galpedia[data-theme] #person-detail-dialog .person-representative-tabs {
+  gap:2px;padding:3px;border:1px solid var(--detail-line);border-radius:10px;background:var(--detail-soft);
+}
+html.galpedia[data-theme] #person-detail-dialog .person-representative-tabs button {
+  min-height:34px;padding:5px 10px;border:1px solid transparent;border-radius:7px;
+  background:transparent;color:var(--text-muted);font:500 12px/1.5 var(--gp-font-ui);
+  box-shadow:none;transition:background-color .15s,color .15s,border-color .15s;
+}
+html.galpedia[data-theme] #person-detail-dialog .person-representative-tabs button[aria-pressed=true] {
+  border-color:color-mix(in srgb,var(--accent) 20%,var(--surface));background:var(--person-control-selected);
+  color:var(--accent);font-weight:650;box-shadow:0 1px 2px rgb(0 0 0 / 4%);
+}
+html.galpedia[data-theme] #person-detail-dialog #person-detail-page-tabs { gap:8px; }
+html.galpedia[data-theme] #person-detail-dialog #person-detail-page-tabs > button {
+  min-height:44px;padding:9px 16px;border:1px solid transparent;border-radius:8px 8px 0 0;
+  font:500 13px/1.5 var(--gp-font-ui);color:var(--text-muted);background:transparent;box-shadow:none;
+}
+html.galpedia[data-theme] #person-detail-dialog #person-detail-page-tabs > button[aria-selected=true] {
+  color:var(--accent);font-weight:650;background:var(--detail-soft)!important;
+}
+html.galpedia[data-theme] #person-detail-dialog #person-detail-page-tabs > button::after {
+  inset:auto 14px -1px;height:2px;border-radius:2px;background:var(--accent);
+}
+html.galpedia[data-theme] #person-detail-dialog :is(.person-timeline-search,.person-timeline-year,.person-detail-sort,.person-detail-sort-direction) {
+  box-sizing:border-box;min-height:40px;height:40px;border:1px solid var(--person-control-line);border-radius:8px;
+  background:var(--surface);color:var(--text);font:400 12px/1.5 var(--gp-font-ui);box-shadow:0 1px 2px rgb(0 0 0 / 3%);
+  transition:background-color .15s,border-color .15s;
+}
+html.galpedia[data-theme] #person-detail-dialog .person-timeline-search { padding:8px 12px;background:var(--detail-soft);font-size:13px; }
+html.galpedia[data-theme] #person-detail-dialog .person-timeline-search::placeholder { color:var(--text-muted);opacity:.8; }
+html.galpedia[data-theme] #person-detail-dialog .person-detail-sort-tools { gap:6px; }
+html.galpedia[data-theme] #person-detail-dialog .person-detail-sort-direction { width:40px;min-width:40px;padding:0;color:var(--text-muted); }
+/* Counts are secondary metadata on both sides, not boxed calls to action. */
+html.galpedia[data-theme] #person-detail-dialog :is(.person-company-row,.person-co-row) {
+  min-height:48px;padding:0 4px;align-items:center;
+}
+html.galpedia[data-theme] #person-detail-dialog .person-co-name {
+  box-sizing:border-box;min-height:44px;padding:10px 0;
+}
+html.galpedia[data-theme] #person-detail-dialog :is(.person-company-row,.person-co-row) strong {
+  color:var(--text-muted);font-size:13px;font-weight:400;
+}
+html.galpedia[data-theme] #person-detail-dialog .person-peer-expand {
+  min-height:44px;padding:0;gap:5px;align-self:center;border:0;border-radius:3px;background:transparent;color:var(--text-muted);
+  transition:color .15s;
+}
+html.galpedia[data-theme] #person-detail-dialog .person-peer-expand:is(:hover,:active,[aria-expanded=true]) {
+  background:transparent;color:var(--accent);
+}
+html.galpedia[data-theme] #person-detail-dialog .person-peer-chevron { transition:transform .15s; }
+html.galpedia[data-theme] #person-detail-dialog #person-detail-close {
+  width:40px;min-width:40px;height:40px;min-height:40px;border:1px solid var(--person-control-line);border-radius:10px;background:var(--surface);color:var(--text-muted);box-shadow:none;
+}
+html.galpedia[data-theme] #person-detail-dialog :is(.person-representative-tabs button,.person-detail-sort-direction,#person-detail-close,.detail-mobile-back):active:not(:disabled) {
+  background:var(--person-control-selected);color:var(--accent);
+}
+@media(hover:hover) {
+  html.galpedia[data-theme] #person-detail-dialog :is(.person-representative-tabs button:not([aria-pressed=true]),.person-detail-sort-direction,#person-detail-close,.detail-mobile-back):hover:not(:disabled) {
+    background:var(--person-control-hover);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,var(--surface));
+  }
+  html.galpedia[data-theme] #person-detail-dialog #person-detail-page-tabs > button:hover { background:var(--detail-soft);color:var(--accent); }
+  html.galpedia[data-theme] #person-detail-dialog :is(.person-timeline-search,.person-timeline-year,.person-detail-sort):hover { border-color:color-mix(in srgb,var(--accent) 35%,var(--surface)); }
+}
+html.galpedia[data-theme] #person-detail-dialog :is(.person-representative-tabs button,#person-detail-page-tabs > button,.person-detail-sort-direction,#person-detail-close,.detail-mobile-back,input,select):focus-visible {
+  outline:2px solid var(--focus);outline-offset:2px;
+}
+@media(max-width:700px) {
+  html.galpedia[data-theme] #person-detail-dialog .person-detail-navigation .person-representative-tabs { width:auto;align-self:stretch; }
+  html.galpedia[data-theme] #person-detail-dialog :is(.person-representative-tabs button,.person-peer-expand,.person-timeline-search,.person-timeline-year,.person-detail-sort,.person-detail-sort-direction) { min-height:44px; }
+  html.galpedia[data-theme] #person-detail-dialog .person-detail-sort-direction { width:44px;min-width:44px; }
+  html.galpedia[data-theme] #person-detail-dialog .person-timeline-toolbar { gap:8px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html.galpedia[data-theme] #person-detail-dialog :is(button,input,select,.person-peer-chevron) { transition:none; }
+}
+
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work.is-image-missing .person-representative-work-copy{grid-column:1 / -1}
+html.galpedia[data-theme] .person-detail-dialog .person-representative-work.is-image-missing>.managed-work-thumbnail{display:none}
+
+/* Reserve width only on the active scroller, not on its stacked children. */
+html.galpedia[data-theme] .person-detail-dialog .person-detail-content { scrollbar-gutter:stable; }
+@media(max-width:899px) {
+ html.galpedia[data-theme] .person-detail-dialog .person-detail-layout { scrollbar-gutter:stable;overscroll-behavior:contain; }
+ html.galpedia[data-theme] .person-detail-dialog :is(.person-detail-identity,.person-detail-content,.person-detail-works) { overflow:visible;scrollbar-gutter:auto; }
+}
+
+@media(max-width:360px) {
+ html.galpedia[data-theme] #person-detail-dialog .person-representative-tabs button { padding-inline:4px; }
+}

@@ -1,0 +1,1 @@
+export const STATIC_DETAIL_INDEX = Object.freeze({"dataRevision":"a0c0367b8270b080feef0ef1fe65522144dc62343feb9d752729d92867d0d639","basePath":"../runtime-data/work-static-details-v1/","index":{"bytes":33236,"sha256":"8815badd4202a215f6a5c0552d1971403f2c199ae90639b99957dd61b52fd0aa"}});

@@ -1,0 +1,16 @@
+.cp-identity-note{margin:5px 0 0;font-size:11px;line-height:1.6;color:var(--cp-muted);overflow-wrap:anywhere}
+.cp-identity-note a{color:var(--cp-accent);text-decoration:underline;text-underline-offset:3px}
+.cp-role-summary{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.cp-role-summary span,.cp-role-badge{display:inline-block;font-size:11px;line-height:1.6;padding:2px 7px;border:1px solid var(--cp-line);border-radius:4px;color:var(--cp-text);background:var(--cp-bg)}
+.cp-role-badge[data-role=publishing]{color:light-dark(#795216,#f0ca8d);border-color:light-dark(#e0caa4,#7d643e);background:light-dark(#fff8eb,#342b1d)}
+.cp-role-badge[data-role=development]{color:var(--cp-accent)}
+.cp-role-note{font-size:11px;color:var(--cp-muted);line-height:1.55;margin:5px 0 0}
+.cp-work-roles{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.cp-work-role-scope{display:block;margin-top:4px;color:var(--cp-muted);font-size:10px;line-height:1.5}
+.cp-card-role{display:block;font-size:10px;line-height:1.4;opacity:.9;margin-top:3px}
+.cp-root .company-detail-heading>div:nth-child(2){min-width:0}
+.cp-root .company-directory-work{background:var(--cp-panel)!important;color:var(--cp-text)!important;border:1px solid var(--cp-line)!important}
+.cp-root .company-directory-work-title{color:var(--cp-text)!important}
+.cp-root .company-directory-work-meta{color:var(--cp-muted)!important}
+.cp-root .company-directory-work:hover{background:var(--cp-bg)!important}
+@media(max-width:420px){.cp-role-summary span{padding:1px 5px;font-size:10px}.cp-role-note{font-size:10px}.cp-identity-note{font-size:10px}}

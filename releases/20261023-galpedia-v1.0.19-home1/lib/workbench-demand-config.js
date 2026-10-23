@@ -1,0 +1,1 @@
+export const WORKBENCH_DEMAND = Object.freeze({"enabled":true,"manifestPath":"../runtime-data/workbench-demand/manifest.json","sha256":"d04d95800be9fae04f2e3dbd2a13dadf7bfa3ae894b5c4db3ef4295068630107","firstPage":{"path":"first-page.9af5daa4c8a7c4f7.json","sha256":"9af5daa4c8a7c4f70c2a27d6e0146a58e8ba53d50c48a1ad1ea7a0b32ea3c3d1"}});

@@ -1,0 +1,18 @@
+html.galpedia .cp-root.cp-detail-portal #company-detail{grid-template-rows:auto auto auto minmax(0,1fr)!important}
+.cp-root .cp-scope-bar{display:flex!important;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:0 20px 8px;color:var(--cp-muted);font-size:12px}
+.cp-root .cp-scope-bar select{width:auto!important;flex:0 0 140px;background:var(--cp-panel);color:var(--cp-text);border:1px solid var(--cp-line);border-radius:6px;font:inherit;padding:7px 28px 7px 10px;min-height:36px}
+.cp-root .cp-scope-caption{font-size:11px}
+.cp-root .cp-scope-empty{padding:20px;color:var(--cp-muted);line-height:1.8}
+.cp-root .cp-work-role-scope:empty{display:none}
+.cp-root .cp-profile-note{margin:0 0 12px;color:var(--cp-muted);font-size:12px;line-height:1.65}
+.cp-root .company-directory-work-copy{min-width:0}
+@media(max-width:600px){.cp-root .cp-scope-bar{gap:7px;margin-bottom:3px;padding:0 12px 3px}.cp-root .cp-scope-caption{flex-basis:100%}.cp-root .cp-scope-bar select{min-height:40px}}
+
+.cp-root .cp-work-roles[hidden]{display:none!important}
+.cp-root .cp-work-rating{font-size:11px;line-height:1.6;margin-top:2px}
+.cp-root .cp-family-versions .company-directory-work{box-shadow:none!important}
+.cp-root .cp-family-versions{padding:8px 10px;background:var(--cp-bg)}
+.cp-root .cp-family-versions .company-directory-work-cover{width:32px;min-width:32px;height:46px}
+.cp-root .cp-family-help[hidden]{display:none!important}
+
+.cp-related-records{grid-column:1/-1;border-top:1px solid var(--border-color,#d9e4ed);padding:12px}.cp-related-records summary{cursor:pointer;min-height:40px}.cp-related-records .company-directory-work{width:100%;margin:8px 0}.cp-related-records .cp-family-help{font-size:12px}

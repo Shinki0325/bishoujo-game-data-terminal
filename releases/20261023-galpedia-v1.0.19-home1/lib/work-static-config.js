@@ -1,0 +1,1 @@
+export const WORK_STATIC = Object.freeze({"url":"../runtime-data/work-static-v1/manifest.json","revision":"aa1bc6d207c50d308870065756eb73773b9d7c8d68473c0fb164c7a08c472eeb","bytes":2847,"sha256":"984445fcc035815c86c1dbc1ff33aa3e7095d1e16acebb1fd3b8c68d36082e79","sourceManifestSha256":"d04d95800be9fae04f2e3dbd2a13dadf7bfa3ae894b5c4db3ef4295068630107"});
