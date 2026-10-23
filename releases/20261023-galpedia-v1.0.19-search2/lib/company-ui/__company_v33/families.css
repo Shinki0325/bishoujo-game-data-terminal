@@ -1,0 +1,11 @@
+.cp-root .cp-work-family{min-width:0;align-self:start;border:1px solid var(--cp-line);border-radius:10px;overflow:hidden;background:var(--cp-panel)}
+.cp-root .cp-work-family>.company-directory-work{width:100%;border:0!important;border-radius:0!important;margin:0}
+.cp-root .cp-family-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:0;border-top:1px solid var(--cp-line);padding:8px 12px;background:var(--cp-bg);color:var(--cp-muted);font:inherit;font-size:12px;cursor:pointer;text-align:left}
+.cp-root .cp-family-toggle:hover{color:var(--cp-text)}
+.cp-root .cp-family-toggle:focus-visible{outline:2px solid var(--cp-text);outline-offset:-3px}
+.cp-root .cp-family-versions{padding:8px;display:grid;gap:8px;border-top:1px solid var(--cp-line)}
+.cp-root .cp-family-versions[hidden]{display:none}
+.cp-root .cp-family-versions .company-directory-work{width:100%;margin:0;padding:8px!important;gap:8px!important}
+.cp-root .cp-family-versions .company-directory-work-cover{width:38px;min-width:38px;height:54px}
+.cp-root .cp-family-versions .company-directory-work-title{font-size:12px}
+.cp-root .cp-family-help{margin:8px 0 12px;color:var(--cp-muted);font-size:12px;line-height:1.65}

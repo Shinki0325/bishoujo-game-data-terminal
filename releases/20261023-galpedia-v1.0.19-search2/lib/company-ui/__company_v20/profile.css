@@ -1,0 +1,28 @@
+.cp-root{--cp-bg:light-dark(#f7f9fb,#182532);--cp-panel:light-dark(#fff,#20303e);--cp-line:light-dark(#dce5ec,#3d5263);--cp-text:light-dark(#263b4d,#e9f0f6);--cp-muted:light-dark(#687d8d,#a9bccb);--cp-accent:light-dark(#28788c,#8ed0df);color-scheme:light;color:var(--cp-text)}
+html[data-theme=dark] .cp-root{color-scheme:dark}
+.cp-root [hidden]{display:none!important}
+html.galpedia .cp-root .company-directory-layout{display:block!important;max-width:1160px;width:100%;margin:0 auto}
+html.galpedia .cp-root .company-directory-list{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))!important}
+html.company-details-open,html.company-details-open body{overflow:hidden;overscroll-behavior:none}
+.cp-root .cp-dialog{width:min(900px,calc(100vw - 28px));height:min(760px,calc(100dvh - 40px));max-width:none;max-height:none;margin:auto;padding:0;overflow:hidden;border:1px solid var(--cp-line);border-radius:8px;background:var(--cp-panel);color:var(--cp-text)}
+.cp-root .cp-dialog::backdrop{background:rgba(11,16,20,.62)}
+html.galpedia .cp-root #company-detail{display:grid!important;grid-template-rows:auto auto minmax(0,1fr);position:static!important;max-height:none!important;overflow:hidden!important;width:100%;height:100%;padding:0!important;box-sizing:border-box;background:var(--cp-panel);border:0;border-radius:0}
+.cp-root .cp-detail-scroll{overflow-y:auto;min-height:0;scrollbar-gutter:stable;overscroll-behavior:contain;touch-action:pan-y;padding:20px}
+
+
+.cp-root .company-detail-heading{border-bottom:0!important;margin:0!important;padding:18px 20px 12px;gap:16px!important}
+.cp-root #company-detail-title{font-size:25px!important;line-height:1.3}
+.cp-root #company-detail-meta{color:var(--cp-muted);font-size:12px;line-height:1.8;margin-top:7px}
+.cp-root #company-detail-close{display:inline-flex!important;width:36px;height:36px;align-items:center;justify-content:center;flex:none}
+.cp-root .cp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--cp-line);margin:0;position:static;background:var(--cp-panel);padding:0 16px}
+.cp-root .cp-tabs button{flex:0 1 auto;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--cp-muted);padding:12px 18px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.cp-root .cp-tabs button[aria-selected=true]{color:var(--cp-accent);border-color:var(--cp-accent);font-weight:600}
+.cp-root .company-card-v20{margin:0;display:block}
+.cp-root .company-directory-works{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-height:none!important;overflow:visible!important}
+.cp-root .company-directory-work{width:100%;min-width:0}
+.cp-root .company-detail-works-heading{justify-content:space-between;flex-wrap:wrap}
+.cp-root #company-monthly-v18{border:0;padding:0}
+html.galpedia .cp-root .company-card-v20 #company-monthly-v18 .cm-body{grid-template-columns:minmax(260px,1fr) minmax(280px,1fr)}
+.cp-root :focus-visible{outline:2px solid var(--cp-accent);outline-offset:3px}
+@media(max-width:760px){.cp-root .cp-detail-scroll{padding:16px}.cp-root .cp-tabs{gap:0}.cp-root .cp-tabs button{flex:1;padding:12px 5px;font-size:12px}.cp-root .company-directory-works{grid-template-columns:repeat(2,minmax(0,1fr))}html.galpedia .cp-root .company-card-v20 #company-monthly-v18 .cm-body{grid-template-columns:1fr}}
+@media(max-width:420px){.cp-root .cp-detail-scroll{padding:12px}.cp-root .company-detail-heading{padding:12px!important}.cp-root .cp-tabs{padding:0 6px}.cp-root .cp-dialog{width:calc(100vw - 16px);height:calc(100dvh - 24px)}.cp-root .company-directory-works{grid-template-columns:1fr}.cp-root #company-detail-title{font-size:22px!important}.cp-root .company-detail-avatar{width:48px;height:48px;flex:none}}

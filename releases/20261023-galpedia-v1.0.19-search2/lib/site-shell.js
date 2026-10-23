@@ -1,0 +1,61 @@
+import {createActionIcon} from './action-icons.js';
+const THEME_KEY='egs-tier-terminal:theme-v1';
+// Keep the existing route controls and listeners; only group global navigation.
+function installPrimaryNavigation(){
+ const header=document.querySelector('.galpedia-header'),tabs=document.getElementById('workspace-mode');
+ const workbench=header?.querySelector('.analysis-nav'),handbook=document.getElementById('site-info-button');
+ if(!header||!tabs||!workbench||!handbook||header.querySelector('.site-primary-navigation'))return;
+ const navigation=document.createElement('nav');navigation.className='site-primary-navigation';navigation.setAttribute('aria-label','主导航');
+ tabs.before(navigation);navigation.append(tabs);
+ const extras=document.createElement('div');extras.className='site-navigation-extras';navigation.append(extras);
+ const explore=document.createElement('details');explore.className='site-explore';
+ const summary=document.createElement('summary');summary.textContent='探索';
+ const panel=document.createElement('div');panel.className='site-explore-panel';
+ explore.append(summary,panel);extras.append(explore);workbench.textContent='数据分析';panel.append(workbench,handbook);
+ const birthday=document.createElement('a');birthday.className='site-birthday-link';birthday.href=location.pathname.includes('/analysis/')?'/#birthdays':'#birthdays';birthday.textContent='角色生日历';panel.prepend(birthday);
+ const syncBirthday=()=>{const active=/^#birthdays(?:\?|$)/.test(location.hash);birthday.toggleAttribute('aria-current',active);if(active)birthday.setAttribute('aria-current','page');explore.classList.toggle('is-current',active||workbench.getAttribute('aria-current')==='page');};
+ for(const link of [birthday,workbench])link.addEventListener('click',()=>{explore.open=false;});addEventListener('hashchange',syncBirthday);syncBirthday();
+ const room=document.createElement('div');room.className='site-explore-upcoming';
+ const title=document.createElement('span');title.textContent='收藏室';
+ const status=document.createElement('small');status.textContent='开发中';room.append(title,status);panel.append(room);
+ explore.addEventListener('keydown',event=>{if(event.key==='Escape'&&explore.open){event.preventDefault();event.stopPropagation();explore.open=false;summary.focus();}});
+ document.addEventListener('click',event=>{if(!explore.contains(event.target))explore.open=false;});
+ // The handbook uses document capture, so close before its click handler.
+ addEventListener('click',event=>{if(handbook.contains(event.target))explore.open=false;},true);
+ navigation.addEventListener('focusout',event=>{if(!navigation.contains(event.relatedTarget))explore.open=false;});
+ addEventListener('hashchange',()=>{explore.open=false;});
+}
+export function installSiteShell({analysis=false}={}){
+ installPrimaryNavigation();
+ const root=document.documentElement,button=document.getElementById('theme-toggle');
+ const render=()=>{const dark=root.dataset.theme==='dark';button.replaceChildren(createActionIcon(document,dark?'sun':'moon'));button.setAttribute('aria-label',dark?'切换到亮色界面':'切换到暗色界面');button.title=button.getAttribute('aria-label');button.setAttribute('aria-pressed',String(!dark));};
+ if(analysis){
+  for(const [id,icon] of [['mode-selection','library'],['mode-company','building'],['mode-person','person'],['mode-ranking','ranking']]){
+   const link=document.getElementById(id),label=document.createElement('span');label.textContent=link.textContent.trim();const svg=createActionIcon(document,icon);svg.classList.add('workspace-tab-icon');link.replaceChildren(svg,label);
+  }
+  let helpPromise;
+  const helpStyle = name => new Promise((resolve,reject) => {
+   const href=new URL('../'+name,import.meta.url).href;
+   const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(link=>link.href===href);
+   if(existing?.sheet){resolve();return;}
+   const link=existing??document.createElement('link');link.rel='stylesheet';link.href=href;
+   link.addEventListener('load',resolve,{once:true});link.addEventListener('error',()=>{link.remove();reject(Error('Handbook stylesheet unavailable'));},{once:true});
+   if(!existing)document.head.append(link);
+  });
+  for(const [id,icon,intent] of [['global-search-open','search','search'],['site-info-button','book','help']]){
+   const control=document.getElementById(id);control.replaceChildren(createActionIcon(document,icon));if(intent==='help'){const label=document.createElement('span');label.className='handbook-label';label.textContent='庭守手册';control.append(label);}control.addEventListener('click',async()=>{
+    if(intent==='search'){location.assign('/?siteAction='+intent);return;}
+    control.disabled=true;
+    try{
+     helpPromise??=Promise.all([helpStyle('galpedia-help.css'),helpStyle('galpedia-keeper.css'),import('./galpedia-help.js')]).then(([, ,module])=>module.createHelpDrawer()).catch(error=>{helpPromise=null;throw error;});
+     const help=await helpPromise;control.querySelector('.handbook-label').textContent='庭守手册';help.open('analysis.overview',control);
+    }catch{control.querySelector('.handbook-label').textContent='手册加载失败，点击重试';control.closest('details').open=true;}
+    finally{control.disabled=false;}
+   });
+  }
+  button.addEventListener('click',()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem(THEME_KEY,root.dataset.theme);}catch{}render();});
+ }
+ addEventListener('storage',event=>{if(event.key===THEME_KEY){root.dataset.theme=event.newValue==='dark'?'dark':'light';render();}});
+ render();
+ if(!analysis){const url=new URL(location.href),intent=url.searchParams.get('siteAction');if(['search','help'].includes(intent)){url.searchParams.delete('siteAction');history.replaceState(history.state,'',url);document.getElementById(intent==='search'?'global-search-open':'site-info-button').click();}}
+}
