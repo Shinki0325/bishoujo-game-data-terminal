@@ -1,1 +1,0 @@
-export const PERSON_STATIC = Object.freeze({"bytes":3938,"path":"manifest.json","revision":"e351d52bca19fb779d7f44e4ab24448e14541fd7dc36e60a7b12d6721ff247e6","sha256":"0fc056123c3a29cb975e18904ac720fb68fbe408790e93f79d9105f67f811d99","url":"../runtime-data/effective-person-directory-v1/manifest.json"});

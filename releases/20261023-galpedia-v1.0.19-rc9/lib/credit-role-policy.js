@@ -1,4 +1,0 @@
-export const CREDIT_ROLE_ALIASES = Object.freeze({"SD原画":"artwork","art":"artwork","chardesign":"character-design","staff":"other","主题歌作曲":"composition","主题歌作词":"lyrics","主题歌演出":"vocalist","人物设定":"character-design","企画":"planning","制作人":"producer","剧本":"scenario","动画制作":"animation","协力":"assistance","原作":"original-story","原画":"artwork","发行":"publisher","声优":"voice-actor","导演":"director","开发":"developer","插入歌演出":"vocalist","程序":"programmer","美工":"graphics","脚本":"scenario","音乐":"music","音响监督":"sound-director"});
-const MUSIC_ROLES = new Set(["arrangement","composition","lyrics","music","songs","sound-director","vocal","vocalist"]);
-export const canonicalRole = role => CREDIT_ROLE_ALIASES[role] || role || 'unknown';
-export const directoryRoleFor = role => MUSIC_ROLES.has(canonicalRole(role)) ? 'music' : canonicalRole(role);
