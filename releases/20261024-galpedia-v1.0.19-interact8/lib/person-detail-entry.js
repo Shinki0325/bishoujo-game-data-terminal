@@ -1,3 +1,4 @@
+import {resolveAssetUrl as resolveProjectedAssetUrl} from './asset-url-core.js';
 import {attachPersonDetailView,bindSharedDetailStack,openBoundDetail,installSharedDetailBehavior} from './shared-detail-runtime.js';
 import {captureDialogState,restoreDialogState} from './detail-stack.js';
 import {parseUiLocationHash,formatUiLocationHash} from './ui-location-state.js';
@@ -11,6 +12,19 @@ export function createPersonDetailEntry({activateFull,navigate}){
   let personClient;
   const loadPersonClient=()=>personClient??=import('./person-sections-client.js').then(m=>m.getStaticPersonDetailClient()).catch(error=>{personClient=null;throw error;});
   let context,route,view,stack,sequence=0,families,suspended=false;
+  let nextPageTimer=null;
+  const cancelNextPage=()=>{if(nextPageTimer!==null){clearTimeout(nextPageTimer);nextPageTimer=null;}};
+  const prepareNextPage=(requestRoute,page,ticket)=>{
+    cancelNextPage();
+    if(requestRoute.query||page.remotePage.pageNumber>=page.remotePage.pageCount)return;
+    const connection=navigator.connection;
+    if(connection?.saveData||['slow-2g','2g'].includes(connection?.effectiveType))return;
+    nextPageTimer=setTimeout(()=>{
+      nextPageTimer=null;
+      if(ticket!==sequence||!context?.personDirectoryOpen||document.hidden)return;
+      void loadDirectoryClient().then(client=>client.getPage({...requestRoute,pageNumber:page.remotePage.pageNumber+1})).catch(()=>{});
+    },800);
+  };
   let mediaResolver;
   const prepareMedia=()=>mediaResolver??=import('./asset-url.js').catch(error=>{mediaResolver=null;throw error;});
   const get=id=>document.getElementById(id);
@@ -54,7 +68,7 @@ export function createPersonDetailEntry({activateFull,navigate}){
   async function openIndependentCompany(id,options={}){
     const entry=await ensureCompanyEntry();if(options.isCurrent?.()===false)return;return entry?.open(id,options);
   }
-  let viewPending,resolveAssetUrl;
+  let viewPending,resolveAssetUrl=resolveProjectedAssetUrl;
   const ensurePersonView=()=>viewPending??=attachPersonDetailView({
     root:get('person-view'),
     familyForWork:id=>families?.familyForWork(String(id))??null,
@@ -62,16 +76,17 @@ export function createPersonDetailEntry({activateFull,navigate}){
     onLoadPerson:async (id, summary, options)=>{
       const pending=loadPersonClient().then(client=>client.loadPerson(id, {...options,onFull:prepare}));
       pending.catch(()=>{});
-      await prepareMedia().then(module=>{resolveAssetUrl=module.resolveAssetUrl;});
       if (!options?.section || options.section==='full') {
-        const [person]=await Promise.all([pending,prepare()]);return person;
+        const [person]=await Promise.all([pending,prepare(),prepareMedia().then(module=>{resolveAssetUrl=module.resolveAssetUrl;})]);return person;
       }
       const person=await pending;
-      if (!person?.detailSections && options.section==='overview') await prepare();
+      if(options.intentOnly&&!person)return null;
+      if (!person?.detailSections && options.section==='overview') await Promise.all([prepare(),prepareMedia().then(module=>{resolveAssetUrl=module.resolveAssetUrl;})]);
+      else if(options.section==='records')await prepareMedia().then(module=>{resolveAssetUrl=module.resolveAssetUrl;});
       return person;
     },
     onSelect(id){
-      if(id!==null){void stack.open('person',id);return false;}
+      if(id!==null){cancelNextPage();void stack.open('person',id);return false;}
       if(id===null&&stack.close('person'))return;
       context.selectedPersonId=id;
       if(id===null)navigate(formatUiLocationHash({...route,personId:null}));
@@ -107,8 +122,9 @@ export function createPersonDetailEntry({activateFull,navigate}){
   installSharedDetailBehavior();
   get('person-search-clear').addEventListener('click',()=>{if(suspended||!context?.personDirectoryOpen)return;navigate(formatUiLocationHash({...route,personId:null,query:'',pageNumber:1}));});
   return {
-    suspendCompany(){suspended=true;sequence++;companySuspended=true;companyEntry?.cancel();},
+    suspendCompany(){cancelNextPage();suspended=true;sequence++;companySuspended=true;companyEntry?.cancel();},
     async show(hash){
+      cancelNextPage();
       const ticket=++sequence;
       route=parseUiLocationHash(hash);
       const workMatch=/^#(?:works\/)?work\/([1-9][0-9]*)(?:\?|$)/u.exec(hash);
@@ -142,6 +158,7 @@ export function createPersonDetailEntry({activateFull,navigate}){
           get('person-directory-total').textContent=page.totalPersonCount.toLocaleString('zh-CN')+' 位人物';
           view.render(page);setListState({status:loading,state:'ready'});
           get('person-view').setAttribute('aria-busy','false');
+          prepareNextPage(requestRoute,page,ticket);
         }catch(error){if(!current())return;get('person-view').setAttribute('aria-busy','false');setListState({status:loading,state:'ready'});throw error;}
         return;
       }
