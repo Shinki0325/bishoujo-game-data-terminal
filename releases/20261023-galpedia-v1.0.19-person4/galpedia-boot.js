@@ -51,7 +51,14 @@ const STATIC_SITE_MODE = true;
 function finishLanding() {
   landing?.dispose();landing=null;personLanding?.dispose();personLanding=null;
 }
-let mobileLibrary,mobileLibraryPending;
+let mobileLibrary,mobileLibraryPending,desktopLibrary,desktopLibraryPending;
+function desktopLibraryRoute(hash=location.hash){
+  if(runtimePromise||globalThis.matchMedia('(max-width: 899px)').matches||!/^#works(?:\?|$)/u.test(hash)||location.search.includes('legacyWorkbench'))return false;
+  if([...new URLSearchParams(hash.split('?')[1]??'').keys()].some(k=>!['query','sort','page'].includes(k)))return false;
+  // Local uploads stay with the authoritative IndexedDB/workbench reader.
+  try{if(localStorage.getItem('egs-tier-terminal:egs-tier-100-v1')?.includes('custom-local-'))return false;}catch{}
+  return true;
+}
 const mobileTools=installMobileTools({navigate,openTool:async (route,action,isCurrent=()=>true)=>{
   const alreadyReady=runtimeReady;
   if(location.hash!==route)navigate(route);
@@ -145,7 +152,8 @@ function pageLoadingTitle() {
   return '正在加载作品库';
 }
 function showLoadingError(message, error) {
-  placeLoadingStatus();
+  clearTimeout(statusRevealTimer);
+  placeLoadingStatus();status.hidden=false;
   runtimeTicket?.fail(message);runtimeTicket=null;runtimeLoading=null;
   statusText.textContent='';statusText.classList.add('visually-hidden');
   loadIndicator.removeAttribute('aria-hidden');loadIndicator.setAttribute('role','status');
@@ -180,7 +188,7 @@ function syncHome() {
   const active = isHome() || Boolean(nativeEntryId());
   root.dataset.detailRoute=String(/^#(?:(?:works\/)?work\/|persons\/person\/|companies\/company\/)/u.test(location.hash));
   root.dataset.mobileLibrary=String(mobileLibraryRoute());
-  if(active||isBirthdayRoute())mobileLibrary?.suspend();
+  if(active||isBirthdayRoute()){mobileLibrary?.suspend();desktopLibrary?.suspend();}
   const birthday = isBirthdayRoute();
   root.dataset.birthday=String(birthday);
   if(!birthday)hideBirthdayRoute();
@@ -220,6 +228,7 @@ paintTheme();
 
 async function ensureRuntime() {
   if (!runtimePromise) {
+    desktopLibrary?.dispose();
     personDetailEntry?.suspendCompany();
     routeSession.suspend();
     directoryController?.dispose(); directoryController = null;
@@ -258,7 +267,7 @@ async function ensureRuntime() {
       .then(module=>module.getStaticWorkbench()).catch(()=>{});
     const mainReady = import('./main.js?v=20260911b');
     mainReady.catch(()=>{});
-    void import('./lib/workbench-landing.js').then(module=>{
+    if(!desktopLibrary)void import('./lib/workbench-landing.js').then(module=>{
       if(runtimeReady||runtimeFailed)return;
       landing=module.createWorkbenchLanding({isReady:()=>runtimeReady||runtimeFailed,navigate,onVisible:()=>{
         clearTimeout(statusRevealTimer);runtimeTicket?.finish();runtimeTicket=null;status.hidden=true;
@@ -330,6 +339,7 @@ async function ensureRoute() {
   const light=mobileLibraryRoute();
   root.dataset.mobileLibrary=String(light);
   if(light){
+    desktopLibrary?.suspend();
     const hash=location.hash,ticket=routeSession.begin(hash);
     mobileLibraryPending??=import('./lib/mobile-library-entry.js').then(m=>mobileLibrary=m.createMobileLibrary({navigate,openTools:mobileTools.open,openFilter:()=>mobileTools.activate('filter'),queryFiltered:async route=>(await ensureRuntime()).queryMobileLibrary(route),openWork:async id=>{
       // This click will need both modules. Load them together without creating
@@ -342,6 +352,22 @@ async function ensureRoute() {
     return;
   }
   mobileLibrary?.suspend();
+  if(desktopLibraryRoute()){
+    const hash=location.hash,ticket=routeSession.begin(hash);
+    desktopLibraryPending??=import('./lib/desktop-library-entry.js').then(m=>desktopLibrary=m.createDesktopLibrary({navigate,isActive:desktopLibraryRoute,
+      openWork:async id=>{void import('./lib/work-detail-entry.js').catch(()=>{});return (await ensurePersonDetailEntry()).openEntityDetail('work',id);},
+      activateWorkbench:async(id,origin)=>{const api=await ensureRuntime();if(location.hash!==origin)return;
+        const trigger=document.getElementById(id);if(trigger)trigger.disabled=false;
+        if(id==='desktop-analysis-open'){const menu=document.getElementById('site-analysis-bar');if(menu)menu.open=true;return;}
+        if(id==='filter-toggle')return api.activateMobileTool('filter',()=>location.hash===origin);
+        if(id==='compare-mode-toggle')return api.activateMobileTool('compare',()=>location.hash===origin);
+        const button=id==='desktop-resume-work-filter'?document.querySelector('.gp-resume-work-filter:not([hidden])'):document.getElementById(id);button?.click();
+      }
+    })).catch(error=>{desktopLibraryPending=null;throw error;});
+    try{const entry=await desktopLibraryPending;if(!ticket.isCurrent())return;await entry.show(hash);if(ticket.isCurrent()){ticket.complete();status.hidden=true;}}
+    catch(error){if(ticket.fail(error))showLoadingError('作品库暂时没能打开',error);}return;
+  }
+  desktopLibrary?.suspend();
   if (runtimePromise) {
     if (!runtimeReady && !runtimeFailed && createRuntimeLoading() && !runtimeTicket) {
       runtimeTicket = runtimeLoading.begin(pageLoadingTitle());

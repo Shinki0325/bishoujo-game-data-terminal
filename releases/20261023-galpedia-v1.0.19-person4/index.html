@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-app-revision="20261023-galpedia-v1.0.19-search2" data-person-directory="full-wiki">
+<html lang="zh-CN" data-app-revision="20261023-galpedia-v1.0.19-person4" data-person-directory="full-wiki">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,9 +18,14 @@
       // execute it or initialize hidden workspaces. Unsupported browsers ignore it.
       const entryBase = document.querySelector('base') || /\/releases\/[^/]+\//.test(location.pathname) ? './' : './releases/' + document.documentElement.dataset.appRevision + '/';
       const entryHints = ['galpedia-boot.js'];
-      if ((!matchMedia('(max-width: 899px)').matches || !/^#works(?:[?]|$)/.test(location.hash) || /[?&]tools=/.test(location.hash)) && /^#(?:works(?:[?]|$)|companies(?:[?]|$)|ranking(?:[/?]|$))/.test(location.hash)) {
+      const desktopBrowse = !matchMedia('(max-width: 899px)').matches && /^#works(?:[?]|$)/.test(location.hash) && !location.search.includes('legacyWorkbench') && [...new URLSearchParams(location.hash.split('?')[1] || '').keys()].every(key => ['query', 'sort', 'page'].includes(key));
+      if (desktopBrowse) {
+        entryHints.push('lib/desktop-library-entry.js');
+      } else if ((!matchMedia('(max-width: 899px)').matches || !/^#works(?:[?]|$)/.test(location.hash) || /[?&]tools=/.test(location.hash)) && /^#(?:works(?:[?]|$)|companies(?:[?]|$)|ranking(?:[/?]|$))/.test(location.hash)) {
         entryHints.push('main.js?v=20260911b', 'lib/work-static-client.js');
       }
+      if (/^#persons(?:[/?]|$)/.test(location.hash)) entryHints.push('lib/person-detail-entry.js');
+      if (/^#persons(?:[?]|$)/.test(location.hash)) entryHints.push('lib/person-static-client.js', 'lib/person-directory-projection.js');
       for (const entry of entryHints) {
         const hint = document.createElement('link'); hint.rel = 'modulepreload'; hint.href = entryBase + entry;
         document.head.append(hint);

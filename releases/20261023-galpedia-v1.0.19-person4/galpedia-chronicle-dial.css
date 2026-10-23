@@ -31,8 +31,8 @@ html.galpedia .galpedia-load-status > button {
 /* Before the runtime has results, an empty grid and fake pagination are not
    content. Hide them from the first paint, not only after the dial's delay.
    Keep their layout space; a validated early preview uses its own container. */
-html.galpedia:not([data-workbench-ready="true"]) #catalog-grid,
-html.galpedia:not([data-workbench-ready="true"]) #selection-pagination {
+html.galpedia:not([data-workbench-ready="true"]):not([data-desktop-browse-ready="true"]) #catalog-grid,
+html.galpedia:not([data-workbench-ready="true"]):not([data-desktop-browse-ready="true"]) #selection-pagination {
   visibility: hidden;
 }
 html.galpedia #catalog-results,

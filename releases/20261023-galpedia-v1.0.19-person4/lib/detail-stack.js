@@ -16,6 +16,23 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
  const session=crypto.randomUUID(),records=new Map();let frames=[],serial=0,sequence=0,restoring=false,pending=null,closing=false,activeKey=null,origin=null;
  historyOwner=state=>state?.galpediaDetailStack?.session===session&&records.has(state.galpediaDetailStack.key);
  const current=()=>frames.at(-1),dialog=kind=>adapters[kind].dialog();
+ // Native close events are queued. They can arrive after reconciliation has
+ // finished (or a new route has started), so `restoring` is not an event guard.
+ // Stack-owned closes already cancel/restore their adapters; do not replay
+ // them as user dismissals that navigate away from the new page.
+ const managedCloses=new WeakMap();
+ function closeForRestore(d){
+  if(!d?.open)return;
+  if(!managedCloses.has(d)){
+   managedCloses.set(d,0);
+   d.addEventListener('close',event=>{
+    const count=managedCloses.get(d);
+    if(count){managedCloses.set(d,count-1);event.stopImmediatePropagation();}
+   },true);
+  }
+  managedCloses.set(d,managedCloses.get(d)+1);d.close();
+ }
+
  function captureFocus(){const e=document.activeElement;return {element:e,id:e?.id,token:e?.dataset.detailFocusToken,href:e?.getAttribute('href'),work:e?.closest('[data-work-id]')?.dataset.workId};}
  function restoreFocus(focus){
   if(!focus)return;const root=current()?dialog(current().kind):document;
@@ -41,7 +58,7 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
   const token=++sequence;restoring=true;pending=null;document.documentElement.dataset.detailRestoring='true';
   try{
    const kinds=new Set(target.map(f=>f.kind));
-   for(const kind of Object.keys(adapters))if(!kinds.has(kind)){adapters[kind].cancel?.();if(dialog(kind)?.open)dialog(kind).close();}
+   for(const kind of Object.keys(adapters))if(!kinds.has(kind)){adapters[kind].cancel?.();closeForRestore(dialog(kind));}
    frames=target.map(f=>({...f}));if(!frames.length){
     if(origin){restoreContext(origin.context);await frame();if(token!==sequence)return;window.scrollTo({left:origin.x,top:origin.y,behavior:'instant'});restoreFocus(origin.focus);}
     return;
@@ -60,7 +77,7 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
    restoreContext(current().context);
    // Reusing the same entity type may reopen a lower frame above its parent.
    // Raise surviving dialogs in frame order without destroying their DOM.
-   for(const frame of [...latest.values()].sort((a,b)=>frames.indexOf(a)-frames.indexOf(b))){const d=dialog(frame.kind);if(d?.open)d.close();d?.showModal();}
+   for(const frame of [...latest.values()].sort((a,b)=>frames.indexOf(a)-frames.indexOf(b))){const d=dialog(frame.kind);closeForRestore(d);d?.showModal();}
    // showModal() focuses its first control; restore positions only after that
    // native focus step and the view's queued layout updates have completed.
    await frame();await frame();if(token!==sequence)return;
@@ -80,7 +97,7 @@ export function createDetailStack({adapters,readContext,restoreContext,onError})
   pending=(async()=>{
    try{
     await adapters[kind].open(id);if(token!==sequence)return;
-    const d=dialog(kind);if(d?.open){d.close();d.showModal();}
+    const d=dialog(kind);if(d?.open){closeForRestore(d);d.showModal();}
     capture(frame);history.pushState(historyState(),'');
    }catch(error){if(token===sequence){await reconcile(frames.slice(0,-1));restoreFocus(focus);onError?.(error);}}
    finally{if(token===sequence)pending=null;}
