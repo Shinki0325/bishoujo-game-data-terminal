@@ -19,6 +19,10 @@ export function createDesktopLibrary({navigate,openWork,activateWorkbench,isActi
  const selected=new Set((()=>{try{return JSON.parse(storageRead('egs-tier-terminal:egs-tier-100-v1'))?.selectedWorkIds??[];}catch{return [];}})());
  let state=null,page=null,activeHash=null,shownHash=null,shownDisplay=null,sequence=0,timer,composing=false,disposed=false;
  const recent=new Map(),scrolls=new Map();
+ // The heading is the whole-library count; the result summary belongs to the
+ // current query. Reuse the pinned default list, never count editions or matches.
+ let totalPending;
+ const libraryTotal=()=>totalPending??=data.query({query:'',sort:'voteCount-desc',pageNumber:1}).then(r=>{if(r.status!=='ok')throw Error('作品总数未就绪');return r.page.total;}).catch(e=>{totalPending=null;throw e;});
  const current=ticket=>!disposed&&ticket===sequence&&isActive()&&location.hash===activeHash&&!root.hidden;
  const save=()=>{if(activeHash&&!root.hidden&&root.getClientRects().length){scrolls.set(activeHash,{x:scrollX,y:scrollY});while(scrolls.size>20)scrolls.delete(scrolls.keys().next().value);}};
  const move=patch=>navigate(formatUiLocationHash({...state,...patch,workId:null}));
@@ -69,12 +73,12 @@ export function createDesktopLibrary({navigate,openWork,activateWorkbench,isActi
    grid.inert=true;grid.setAttribute('aria-busy','true');el('selection-page-next').disabled=el('selection-page-previous').disabled=true;
    setListState({status,state:'loading',layout:'text',message:'正在查找作品…'});
    try{
-    let cached=recent.get(hash);if(!cached){const result=await data.query(state);if(!current(ticket))return;if(result.status!=='ok')throw Error('作品查询未完成');const works=await data.cards(result.workIds);if(!current(ticket))return;cached={result,works};recent.set(hash,cached);while(recent.size>3)recent.delete(recent.keys().next().value);}
+    let cached=recent.get(hash);if(!cached){const [result,total]=await Promise.all([data.query(state),libraryTotal()]);if(!current(ticket))return;if(result.status!=='ok')throw Error('作品查询未完成');const works=await data.cards(result.workIds);if(!current(ticket))return;cached={result,works,total};recent.set(hash,cached);while(recent.size>3)recent.delete(recent.keys().next().value);}
     if(!current(ticket))return;const {result,works}=cached;page=result.page;
     const fragment=document.createDocumentFragment();works.forEach((work,i)=>fragment.append(createSelectionCard(document,work,{view:'full',selected:selected.has(work.workId),selectionEnabled:false,assetBase,display,eagerCover:i<12,priorityCover:i===0,
      coverUrl:resolveAssetUrl(work.projectedThumbnailPath??work.thumbnailPath??work.coverPath,assetBase),previewUrl:work.projectedPreviewPath?resolveAssetUrl(work.projectedPreviewPath,assetBase):null,mobileSortKey:key,onToggle:()=>{},onOpenDetails:()=>{save();void openWork(work.workId);}})));
     grid.replaceChildren(fragment);document.documentElement.dataset.desktopBrowseReady="true";grid.inert=false;grid.setAttribute('aria-busy','false');shownHash=hash;shownDisplay=displayKey;
-    el('catalog-total-count').textContent=page.total.toLocaleString()+' 部作品';el('catalog-result-count').textContent=page.total.toLocaleString()+' 项';el('active-filter-summary').textContent=state.query?'搜索：'+state.query:'全部作品';
+    el('catalog-total-count').textContent=cached.total.toLocaleString()+' 部作品';el('catalog-result-count').textContent=page.total.toLocaleString()+' 项';el('active-filter-summary').textContent=state.query?'搜索：'+state.query:'全部作品';
     el('selection-pagination').hidden=!page.total;el('selection-page-input').value=String(page.pageNumber);el('selection-page-total').textContent=page.pageCount;el('selection-page-next').disabled=page.pageNumber>=page.pageCount;el('selection-page-previous').disabled=page.pageNumber<=1;
     setListState({status,state:works.length?'ready':'empty',layout:'text',message:'没有找到相关作品'});
     const pos=scrolls.get(hash);requestAnimationFrame(()=>{if(current(ticket))scrollTo(pos?.x??0,pos?.y??0);});
