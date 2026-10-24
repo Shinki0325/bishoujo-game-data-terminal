@@ -2,7 +2,10 @@
 export function selectionCardImageSizes(image,gridSizes=image.dataset?.workGridSizes){
  if(!gridSizes)return null;
  const list=image.ownerDocument?.documentElement?.dataset.workCardLayout==='list';
- return list?`${image.loading==='lazy'?'auto, ':''}(max-width: 899px) 68px, 80px`:gridSizes;
+ // Avoid sizes=auto: older embedded Chromium uses its 300x150 placeholder
+ // as the object-fit ratio. Explicit slot widths retain responsive sources
+ // and native lazy loading without triggering that rendering path.
+ return list?'(max-width: 899px) 68px, 80px':gridSizes.replace(/^\s*auto\s*,\s*/i,'');
 }
 export function syncSelectionCardImageSizes(root=document){
  for(const image of root.querySelectorAll('.selection-card-cover img[data-work-grid-sizes]')){

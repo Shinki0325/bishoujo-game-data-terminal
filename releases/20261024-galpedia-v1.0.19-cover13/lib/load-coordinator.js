@@ -33,16 +33,16 @@ export function estimateModelBytes(value, limit = Infinity) {
 }
 
 export function createLoadCoordinator({
-  concurrency = 24, backgroundConcurrency = 2, maxPending = 1024,
+  concurrency = 24, backgroundConcurrency = 2, mediaConcurrency = Math.min(6, concurrency), maxPending = 1024,
   maxEntries = 64, maxCacheBytes = 0,
   estimate = value => estimateModelBytes(value, maxCacheBytes),
   now = () => globalThis.performance?.now?.() ?? Date.now()
 } = {}) {
-  if (![concurrency, backgroundConcurrency, maxPending, maxEntries].every(n => Number.isSafeInteger(n) && n > 0)
-    || backgroundConcurrency > concurrency || !Number.isFinite(maxCacheBytes) || maxCacheBytes < 0) throw new TypeError('加载预算无效');
+  if (![concurrency, backgroundConcurrency, mediaConcurrency, maxPending, maxEntries].every(n => Number.isSafeInteger(n) && n > 0)
+    || backgroundConcurrency > concurrency || mediaConcurrency > concurrency || !Number.isFinite(maxCacheBytes) || maxCacheBytes < 0) throw new TypeError('加载预算无效');
   const jobs = new Map(), cache = new Map();
   const counters = { started: 0, joined: 0, hits: 0, completed: 0, failed: 0, cancelled: 0, evicted: 0, waitMs: 0, runMs: 0 };
-  let active = 0, background = 0, cacheBytes = 0, pumpScheduled = false;
+  let active = 0, background = 0, mediaActive = 0, cacheBytes = 0, pumpScheduled = false;
   const rank = job => Math.min(...[...job.consumers].map(c => priorities[c.priority]));
   function removeCache(key) {
     const entry = cache.get(key);
@@ -72,7 +72,7 @@ export function createLoadCoordinator({
     queueMicrotask(() => { pumpScheduled = false; pump(); });
   }
   function settle(job, error, value) {
-    active--; if (job.background) background--;
+    active--; if (job.background) background--; if (job.lane === 'media') mediaActive--;
     counters.runMs += Math.max(0, now() - job.startedAt);
     const owned = jobs.get(job.key) === job;
     if (owned) jobs.delete(job.key);
@@ -94,12 +94,14 @@ export function createLoadCoordinator({
         if (job.started || !job.consumers.size) continue;
         const priority = rank(job);
         if (priority >= 2 && background >= backgroundConcurrency) continue;
+        // Cover classification must not fill every slot before the next page's data.
+        if (job.lane === 'media' && mediaActive >= mediaConcurrency) continue;
         if (priority < chosenRank) { chosen = job; chosenRank = priority; }
       }
       if (!chosen) break;
       const job = chosen;
       job.started = true; job.background = chosenRank >= 2; job.startedAt = now();
-      active++; if (job.background) background++;
+      active++; if (job.background) background++; if (job.lane === 'media') mediaActive++;
       counters.started++; counters.waitMs += Math.max(0, job.startedAt - job.createdAt);
       Promise.resolve().then(() => {
         if (job.controller.signal.aborted) throw aborted();
@@ -108,9 +110,10 @@ export function createLoadCoordinator({
     }
   }
   return Object.freeze({
-    read(key, run, { signal, priority = 'action', retain = true } = {}) {
+    read(key, run, { signal, priority = 'action', retain = true, lane = 'data' } = {}) {
       if (typeof key !== 'string' || !key || typeof run !== 'function') return Promise.reject(new TypeError('读取键或加载器无效'));
       priority = loadingPriority(priority);
+      if (!['data','media'].includes(lane)) return Promise.reject(new TypeError('未知读取类型'));
       if (signal?.aborted) return Promise.reject(aborted());
       if (cache.has(key)) {
         const entry = cache.get(key);
@@ -123,7 +126,7 @@ export function createLoadCoordinator({
       let job = jobs.get(key);
       if (!job) {
         if (jobs.size >= maxPending) return Promise.reject(new Error('加载队列繁忙，请重试'));
-        job = { key, run, retain, createdAt: now(), controller: new AbortController(), consumers: new Set(), started: false };
+        job = { key, run, retain, lane, createdAt: now(), controller: new AbortController(), consumers: new Set(), started: false };
         jobs.set(key, job);
       } else { counters.joined++; job.retain ||= retain; }
       job.demanded ||= priorities[priority] < 2;
@@ -157,7 +160,7 @@ export function createLoadCoordinator({
         if (priorities[priority] < priorities[consumer.priority]) consumer.priority = priority;
       schedule(); return true;
     },
-    inspect: () => Object.freeze({ ...counters, active, background,
+    inspect: () => Object.freeze({ ...counters, active, background, mediaActive, mediaConcurrency,
       pending: jobs.size, queued: [...jobs.values()].filter(job => !job.started).length,
       cached: cache.size, speculativeCached: [...cache.values()].filter(entry => entry.speculative).length,
       estimatedCacheBytes: cacheBytes, maxCacheBytes })

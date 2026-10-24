@@ -2808,6 +2808,10 @@ async function initialize() {
       return requestWorkbenchFilterChange(next,interactionMetrics.begin('filter'));
     },
     personOptions: [],
+    async resolvePersonIdentities(ids) {
+      const {loadPersonFilterIdentities}=await import('./lib/person-directory-projection.js');
+      return loadPersonFilterIdentities(ids);
+    },
     onPersonFilterFocus() {
       void ensurePersonFilterOptions();
     },
@@ -3738,8 +3742,10 @@ async function initialize() {
   return { queryMobileLibrary:async route=>{
     const filterState=mobileFilterState(route),size=24;
     await ensureFilterWorker();
-    const personWorkIndex=filterState.personIds.length?await personWorkIndexRuntime.load():null;
-    const result=await filterWorkerClient.query({filterState,selectedWorkIds:controller.inspectState().selectedWorkIds,paged:true,pageNumber:Math.floor((route.pageNumber-1)*size/SELECTION_PAGE_SIZE)+1,includeProjectedCounts:false,...(personWorkIndex?{personWorkIndex}:{})});
+    // A restored person filter needs its relations installed before the first query.
+    // Merely loading them (or passing them to query) does not initialize the worker.
+    if(filterState.personIds.length)await ensurePersonFilterIndex();
+    const result=await filterWorkerClient.query({filterState,selectedWorkIds:controller.inspectState().selectedWorkIds,paged:true,pageNumber:Math.floor((route.pageNumber-1)*size/SELECTION_PAGE_SIZE)+1,includeProjectedCounts:false});
     if(result.status!=='ok')return result;
     const total=result.page.total,pageCount=Math.max(1,Math.ceil(total/size)),pageNumber=Math.min(Math.max(1,route.pageNumber),pageCount),start=(pageNumber-1)*size,end=Math.min(total,start+size),offset=start-result.page.start;
     if(offset<0||offset+end-start>result.workIds.length)throw Error('筛选分页范围不符');

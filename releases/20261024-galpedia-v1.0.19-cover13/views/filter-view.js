@@ -263,6 +263,7 @@ export function createFilterView({
   onRequestCounts,
   onAttributeSelectionChange = () => {},
   onPersonFilterFocus = () => {},
+  resolvePersonIdentities = null,
   personOptions = []
 }) {
   if (!Array.isArray(filters) || !Array.isArray(brands)) {
@@ -356,6 +357,30 @@ export function createFilterView({
   let personPopupActive = false;
   let personOptionsState = Array.isArray(personOptions) ? [...personOptions] : [];
   let personOptionsLoading = false;
+  const personIdentities = new Map(), pendingPersonIdentities = new Set();
+  const failedPersonIdentities = new Set();
+  let refreshingPersonLabels = false;
+  function selectedPerson(id) {
+    return personOptionsState.find(item => personIdOf(item) === id) ?? personIdentities.get(id);
+  }
+  function selectedPersonLabel(id, person) {
+    if(person)return personNameOf(person);
+    return personIdentities.has(id)||failedPersonIdentities.has(id)?'人物资料暂不可用':'正在加载姓名…';
+  }
+  function restorePersonLabels() {
+    if(!resolvePersonIdentities||refreshingPersonLabels)return;
+    const ids=(currentState.personIds??[]).filter(id=>!selectedPerson(id)&&!personIdentities.has(id)&&!pendingPersonIdentities.has(id));
+    if(!ids.length)return;
+    ids.forEach(id=>{pendingPersonIdentities.add(id);failedPersonIdentities.delete(id);});
+    Promise.resolve().then(()=>resolvePersonIdentities(ids)).then(identities=>{
+      ids.forEach(id=>personIdentities.set(id,identities.get(id)??null));
+    }).catch(()=>{ids.forEach(id=>failedPersonIdentities.add(id));}).finally(()=>{
+      ids.forEach(id=>pendingPersonIdentities.delete(id));
+      // Only update labels. A late response must never restore removed selections.
+      refreshingPersonLabels=true;
+      try{renderSelectedPersons();renderActiveChips();}finally{refreshingPersonLabels=false;}
+    });
+  }
   let suppressCompanyFocusOpen = false;
   let pendingFocus = null;
   let formulaCompletion = null;
@@ -677,14 +702,15 @@ export function createFilterView({
   }
 
   function renderSelectedPersons() {
+    restorePersonLabels();
     if (!elements.personSelected) return;
     const chips = (currentState.personIds ?? []).map(personId => {
-      const person = personOptionsState.find(item => personIdOf(item) === personId);
+      const person = selectedPerson(personId);
       const button = documentRef.createElement('button');
       button.type = 'button';
       button.className = 'filter-chip person-chip';
       button.dataset.personId = personId;
-      const label = person ? personNameOf(person) : personId;
+      const label = selectedPersonLabel(personId, person);
       const role = person ? personRoleLabel(person) : '人物参与';
       button.textContent = `${label} · ${role} ×`;
       button.setAttribute('aria-label', `移除人物 ${label}（${role}）`);
@@ -725,9 +751,7 @@ export function createFilterView({
         if (next.has(personId)) next.delete(personId); else next.add(personId);
         emit({
           ...currentState,
-          personIds: personOptionsState
-            .map(item => personIdOf(item))
-            .filter(id => next.has(id))
+          personIds: [...next]
         });
         renderPersonOptions();
       });
@@ -1005,6 +1029,7 @@ export function createFilterView({
   }
 
   function renderActiveChips() {
+    restorePersonLabels();
     if(draftEditing)return;
     const chips = [];
     function addChip(key, label, removeCondition) {
@@ -1060,8 +1085,8 @@ export function createFilterView({
       }));
     }
     for (const personId of currentState.personIds ?? []) {
-      const person = personOptionsState.find(item => personIdOf(item) === personId);
-      const label = person ? personNameOf(person) : personId;
+      const person = selectedPerson(personId);
+      const label = selectedPersonLabel(personId, person);
       addChip(`person:${personId}`, `人物 ${label}`, () => emit({
         ...currentState,
         personIds: currentState.personIds.filter(id => id !== personId)
@@ -1867,6 +1892,7 @@ export function createFilterView({
       personOptionsState = Array.isArray(options) ? [...options].sort((left, right) => personNameCollator.compare(personNameOf(left), personNameOf(right))) : [];
       personOptionsLoading = false;
       renderPersons();
+      renderActiveChips();
     },
     setPersonOptionsLoading(loading = true) {
       personOptionsLoading = Boolean(loading);

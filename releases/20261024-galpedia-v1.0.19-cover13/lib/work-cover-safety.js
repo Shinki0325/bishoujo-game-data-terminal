@@ -13,7 +13,7 @@ export function createCoverSafetyIndex({config,sourceManifest,fetchImpl=globalTh
     check(d&&/^(?:manifest|covers-[a-f0-9]{2})\.[a-f0-9]{64}\.json\.gz$/u.test(d.path)&&d.path.includes('.'+d.sha256+'.')
       &&shaPattern.test(d.sha256)&&Number.isSafeInteger(d.bytes)&&d.bytes>0&&d.bytes<=1024*1024
       &&Number.isSafeInteger(d.rawBytes)&&d.rawBytes>0&&d.rawBytes<=4*1024*1024,'图片分级描述无效');
-    return request(new URL(config.basePath+d.path,baseUrl),{label:'图片分级投影',validationKey:d.sha256,validate:async bytes=>{
+    return request(new URL(config.basePath+d.path,baseUrl),{label:'图片分级投影',lane:globalThis.matchMedia?.('(min-width: 900px)').matches?'media':'data',validationKey:d.sha256,validate:async bytes=>{
       check(bytes.byteLength===d.bytes&&await sha(bytes)===d.sha256,'图片分级投影摘要不符');
       const reader=new Blob([bytes]).stream().pipeThrough(new decompress('gzip')).getReader(),chunks=[];let size=0;
       try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;check(size<=d.rawBytes,'图片分级解压超限');chunks.push(value);}}

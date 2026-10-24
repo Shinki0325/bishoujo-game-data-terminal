@@ -115,6 +115,17 @@ export function createPersonDirectoryProjection({ source, fetchImpl = globalThis
   return {
     prepare:manifest,
     getPresentations,
+    async getIdentities(ids) {
+      const canonicalIds=ids.map(id=>CREDIT_SCOPE.personRedirects?.[id]??id);
+      const m=await manifest(),keys=await Promise.all(canonicalIds.map(id=>keyFor(id,m)));
+      const loaded=await loadBuckets(keys,m);
+      // Keep the requested ID as the key: resolving a label must not rewrite a filter.
+      return new Map(ids.map((id,i)=>{
+        const row=loaded.get(keys[i]).get(canonicalIds[i]);
+        return [id,row?{personId:id,displayName:row.displayName,canonicalName:row.canonicalName,
+          roles:row.roles,primaryRole:row.primaryRole}:null];
+      }));
+    },
     getVocalStats() { return stats().then(v => v.rows); },
     async getPersonStats(id) { id=CREDIT_SCOPE.personRedirects?.[id]??id; const m = await manifest(),key=await keyFor(id,m);return (await loadBuckets([key],m)).get(key).get(id)?.roleStats; },
     getRoleStats() { return stats().then(v => v.roleRows); },
@@ -161,3 +172,9 @@ export function createPersonDirectoryProjection({ source, fetchImpl = globalThis
 
 let statsClient;
 export const loadPersonRoleStats = id => (statsClient ??= createPersonDirectoryProjection({source:PERSON_STATIC}))?.getPersonStats(id);
+
+export const loadPersonFilterIdentities = ids => {
+  const client=statsClient??=createPersonDirectoryProjection({source:PERSON_STATIC});
+  if(!client)throw Error('人物资料投影不可用');
+  return client.getIdentities(ids);
+};

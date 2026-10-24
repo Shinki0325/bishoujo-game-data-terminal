@@ -175,10 +175,10 @@ export function createSelectionCard(documentRef, work, {
     if (!coverUrl.startsWith('blob:')) image.crossOrigin = 'anonymous';
     const resolvedCardSize = cardSize ?? (documentRef.defaultView?.getComputedStyle?.(documentRef.documentElement)
       .getPropertyValue('--selection-card-size')?.trim() || '180px');
-    image.dataset.workGridSizes=`${eagerCover ? '' : 'auto, '}(max-width: 720px) calc((100vw - 44px) / 3), ${resolvedCardSize}`;
+    image.dataset.workGridSizes=`(max-width: 720px) calc((100vw - 44px) / 3), ${resolvedCardSize}`;
     applyAdaptiveImageSource(image, { thumbnailUrl: coverUrl, previewUrl,
       thumbnailWidth: work.coverWidth, previewWidth: work.previewWidth,
-      sizes: `${eagerCover ? '' : 'auto, '}(max-width: 720px) calc((100vw - 44px) / 3), ${resolvedCardSize}` });
+      sizes: `(max-width: 720px) calc((100vw - 44px) / 3), ${resolvedCardSize}` });
   } else {
     try {
       imageAsset(image, work, assetBase);
